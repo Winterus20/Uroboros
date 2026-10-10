@@ -174,6 +174,35 @@ export function maxBuyPacksCap(singularities: number): number {
   return singularities > 0 ? MAX_BUY_PACKS_CAP_PRESTIGE : MAX_BUY_PACKS_CAP_FIRST_RUN
 }
 
+// ---- Azalan Getirili Yumuşak Tavan (ADR-0054) ----
+// Ölçüm (brain/scratchpad/harness/out/run-fullbuff-active.mjs, "hold" modu): full buff
+// aktif oyuncu resetleri tutup 1 saat beklediğinde kütle 1e6.840.000'a ulaştı. Sebep
+// üç çarpanın "taban^alım sayısı" ile süresiz büyümesi + D8→D1 zincirinin her çarpanı
+// 8 kez uygulaması (log10(kütle) ≈ 8 × log10(1/galaxyBonus) × tickspeed alımı).
+// Maliyet ivmesi (ADR-0051) yalnızca maliyeti değil, bu iki üstel gücü de besliyordu.
+//
+// Kural: eşik ALTINDAHAM davranış byte-identical — erken/orta oyun ve mevcut
+// testler kirlenmez. Eşik üstünde etkili alım sayısı logaritmik büyür:
+//   eff = threshold + log2(fazlalık + 1) × gain
+// Böylece üretim çarpanı tekrar maliyetle yarışır, döngü kazancı 1'in altına iner
+// ve koşu sonlu bir denge noktasında (yumuşak tavan) durur.
+export const TICKSPEED_CAP_THRESHOLD = 500
+export const TICKSPEED_CAP_GAIN = 20
+export const BUCKET_CAP_THRESHOLD = 500
+export const BUCKET_CAP_GAIN = 20
+export const SHIFT_CAP_THRESHOLD = 20
+export const SHIFT_CAP_GAIN = 1
+
+/**
+ * Ham satın alma/kovasayaçını "azalan getirili" etkili sayıya çevirir.
+ * Saf fonksiyon: eşik altı ham değeri aynen döndürür (deterministik, test edilebilir).
+ */
+export function diminishingPurchaseCount(raw: number, threshold: number, gain: number): number {
+  if (!Number.isFinite(raw)) return 0
+  if (raw <= threshold) return Math.max(0, raw)
+  return threshold + Math.log2(raw - threshold + 1) * gain
+}
+
 // ---- Kademeli Maliyet İvmelenmesi (ADR-0051) ----
 // Antimatter Dimensions "Break Infinity" adaptasyonu: erken oyunda kova maliyeti
 // sabit oranla (COST_MULTS) büyürken geç oyunda oranın KENDİSİ kova sayısıyla

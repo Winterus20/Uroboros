@@ -1,7 +1,7 @@
 // Boyut/tickspeed/shift/galaxy/uretim getter parcalari. `this`, StoreApi ile tiplenmistir.
 import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
 import { hasAchievementReward } from '../../game/achievements'
-import { BASE_UNLOCKED_DIMENSIONS, CHALLENGE_C7_GALAXY_COST_MULT, CHALLENGE_C7_TIER_COST_STEP, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, resolvedUnlockedDimensionCount } from '../../game/balance'
+import { BASE_UNLOCKED_DIMENSIONS, BUCKET_CAP_GAIN, BUCKET_CAP_THRESHOLD, CHALLENGE_C7_GALAXY_COST_MULT, CHALLENGE_C7_TIER_COST_STEP, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, SHIFT_CAP_GAIN, SHIFT_CAP_THRESHOLD, TICKSPEED_CAP_GAIN, TICKSPEED_CAP_THRESHOLD, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, diminishingPurchaseCount, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { ALL_CHALLENGES_COMPLETE_MULT, challengeTimeTierMult, getChallengeById, isAllChallengesComplete } from '../../game/challenges'
 import { FORMAT_UNLOCK_BUFF_MULT, FORMAT_UNLOCK_BUFF_SECONDS, formatUnlockBuffMult, getTierIdentity, tierProductionMult, tierShiftReqMult } from '../../game/dimension_identity'
 import { dimMultCacheKey, memoChallengeEffects, memoNeuralEffects, _dimCostCache, _dimMultCache } from './cache'
@@ -66,7 +66,11 @@ export const dimensionGetters = {
       const activeMods = state.activeChallenge ? getChallengeById(state.activeChallenge)?.modifiers : undefined
       const buyScale = activeMods?.tickspeedBuyMultScale ?? 1
       const baseMult = activeMods?.tickspeedBaseMult ?? 1
-      let mult = Decimal.pow(1 / galaxyBonus, state.tickspeedBought * buyScale).times(baseMult)
+      // ADR-0054: eşik altı ham sayı, üstü logaritmik azalan getiri (döngü kazancı < 1)
+      let mult = Decimal.pow(
+        1 / galaxyBonus,
+        diminishingPurchaseCount(state.tickspeedBought * buyScale, TICKSPEED_CAP_THRESHOLD, TICKSPEED_CAP_GAIN)
+      ).times(baseMult)
       const espresso = state.activeBuffs.find((b) => b.type === 'espresso')
       if (espresso) {
         mult = mult.times(espresso.multiplier)
@@ -202,7 +206,11 @@ export const dimensionGetters = {
     },
 
     shiftPowerMultiplier(this: StoreApi, state: GameState): Decimal {
-      return Decimal.pow(this.singleShiftPower, state.dimensionShifts)
+      // ADR-0054: sıçrama gücü üssü de yumuşak tavanlı (parite: getDimensionMultiplier)
+      return Decimal.pow(
+        this.singleShiftPower,
+        diminishingPurchaseCount(state.dimensionShifts, SHIFT_CAP_THRESHOLD, SHIFT_CAP_GAIN)
+      )
     },
 
     // C7 (Hesap Kısıtlaması): kilitli tier yerine D6 istenir; ADR-0025 erken tier hedefi
@@ -373,8 +381,11 @@ export const dimensionGetters = {
       const cached = _dimMultCache.get(tier)
       if (cached && cached.key === cacheKey) return cached.val
 
-      // Satın alınan her 10 adet için DIM_PER_TEN_MULT katı
-      let mult = Decimal.pow(DIM_PER_TEN_MULT, Math.floor(dim.bought / 10))
+      // Satın alınan her 10 adet için DIM_PER_TEN_MULT katı (ADR-0054: üstünde yumuşak tavan)
+      let mult = Decimal.pow(
+        DIM_PER_TEN_MULT,
+        diminishingPurchaseCount(Math.floor(dim.bought / 10), BUCKET_CAP_THRESHOLD, BUCKET_CAP_GAIN)
+      )
 
       // Video Çözünürlük Kademesi (Resolution Milestones: 360p, 720p, 1080p, 4K...)
       let resolutionMult = D_1
@@ -387,12 +398,17 @@ export const dimensionGetters = {
       }
       mult = mult.times(resolutionMult)
 
-      // Akış Sıçraması (Shift/Boost) bonusu (C7 ve başarım güçlendirir)
+      // Akış Sıçraması (Shift/Boost) bonusu (C7 ve başarım güçlendirir; ADR-0054: üs yumuşak tavanlı)
       if (state.dimensionShifts > 0) {
         const eff = memoChallengeEffects(state.completedChallenges)
         const achBase = hasAchievementReward(state.achievements, 'shift_power_boost') ? 1.9 : 1.66
         const shiftBase = Math.max(eff.shiftPower, achBase)
-        mult = mult.times(Decimal.pow(shiftBase, state.dimensionShifts))
+        mult = mult.times(
+          Decimal.pow(
+            shiftBase,
+            diminishingPurchaseCount(state.dimensionShifts, SHIFT_CAP_THRESHOLD, SHIFT_CAP_GAIN)
+          )
+        )
       }
 
       // Göz Damlası Yükseltmesi
@@ -491,7 +507,7 @@ export const dimensionGetters = {
       const matureCellsCount = relicCount >= 4 ? state.labCells.filter((c) => c.isMature && c.seedType !== null).length : 0
 
       const parts: Array<{ source: string; mult: Decimal }> = []
-      parts.push({ source: 'per-ten', mult: Decimal.pow(DIM_PER_TEN_MULT, Math.floor(dim.bought / 10)) })
+      parts.push({ source: 'per-ten', mult: Decimal.pow(DIM_PER_TEN_MULT, diminishingPurchaseCount(Math.floor(dim.bought / 10), BUCKET_CAP_THRESHOLD, BUCKET_CAP_GAIN)) })
 
       let resolutionMult = D_1
       for (const m of RESOLUTION_MILESTONES) {
@@ -507,7 +523,7 @@ export const dimensionGetters = {
         const eff = memoChallengeEffects(state.completedChallenges)
         const achBase = hasAchievementReward(state.achievements, 'shift_power_boost') ? 1.9 : 1.66
         const shiftBase = Math.max(eff.shiftPower, achBase)
-        parts.push({ source: 'shift', mult: Decimal.pow(shiftBase, state.dimensionShifts) })
+        parts.push({ source: 'shift', mult: Decimal.pow(shiftBase, diminishingPurchaseCount(state.dimensionShifts, SHIFT_CAP_THRESHOLD, SHIFT_CAP_GAIN)) })
       }
 
       if (eyeDropsLvl > 0) {
