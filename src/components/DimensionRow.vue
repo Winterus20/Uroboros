@@ -160,12 +160,14 @@ const showFlowRate = computed(() => flowRate.value.value.gt(0))
 const displayCostText = ref('')
 const displayFlowText = ref('')
 const displayMultText = ref('')
+const displayAmountText = ref('')
 let textThrottleInterval: number | null = null
 
 function refreshDisplayText() {
   displayCostText.value = format(displayCost.value, 2, store.settings.notation)
   displayFlowText.value = flowRateFormatted.value
   displayMultText.value = format(multiplier.value, 2, store.settings.notation)
+  displayAmountText.value = format(props.dimension.amount, 2, store.settings.notation)
 }
 
 onMounted(() => {
@@ -330,7 +332,7 @@ function buy(e?: MouseEvent) {
     <!-- Orta: Miktar & Üretim Hızı Telemetrisi (Tablet & Masaüstü) -->
     <div class="hidden sm:flex flex-col items-end gap-0.5 text-xs font-mono tabular-nums shrink-0 min-w-[80px]">
       <div class="flex items-center gap-1.5 text-slate-300">
-        <span class="font-bold text-slate-100">{{ format(props.dimension.amount, 2, store.settings.notation) }}</span>
+        <span class="font-bold text-slate-100">{{ displayAmountText }}</span>
         <span class="text-slate-500 text-[11px]">({{ props.dimension.bought }})</span>
       </div>
       <span

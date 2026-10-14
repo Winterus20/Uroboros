@@ -1,5 +1,27 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-14] ✔ — Faz 0 Doruk Noktası (Climax), 1e160-1e308 Köprü Kilitleri ve VDOM Optimizasyonu
+
+### Problem:
+- 1e160 (`guilt_slackers`) sonrasında 1e308 (`night_watch`) Tekillik eşiğine kadar 148 dekad boyunca sıradaki kilit merdiveni boş kalıyordu; oyuncu saatlerce tek bir kilit ilerlemesi görüyordu.
+- 1.79e308 g Tekillik (Big Crunch) eşiğine ulaşıldığında işitsel ve görsel doruk noktası (climax) yetersizdi; `playSingularity()` eski temadan kalma 6 AM kuş cıvıltılarını çalıyordu.
+- `DimensionRow.vue` içinde sahip olunan miktar metni doğrudan şablonda her 50ms'lik render'da `format(...)` çağırarak VDOM yükü yaratıyordu.
+
+### Çözüm:
+- **Dekad Köprü Basamakları:** `src/game/unlocks.ts` içine 3 adet ara kozmik basamak eklendi:
+  - 1e200: `event_horizon_lens` ("Olay Ufku Merceği")
+  - 1e240: `hawking_resonator` ("Hawking Rezonatörü")
+  - 1e280: `cosmic_filament` ("Kozmik İplikçik Dokuması")
+  Sıradaki kilit başlığı artık derin kozmik aşamaları adım adım oyuncuya hissettirir.
+- **Kozmik Climax & Görsel/İşitsel Efekt:**
+  - `src/components/header/CounterDisplay.vue` içine `canSingularity` aktifleştiğinde çalan kristal bildirim akoru (`playAffordableNotice`) ve altın renkli nabız animasyonlu `EVRENSEL TEKİLLİK EŞİĞİ AŞILDI — KOZMİK ÇÖKÜŞ HAZIR` durum rozeti eklendi.
+  - `src/core/audio/effects.ts` içindeki `playSingularity()` sesi modernize edildi: eski sabah kuşları kaldırıldı, yerine derin gravitasyonel içe çöküş (880Hz → 110Hz sawtooth sweep), Lydian kuantum rezonans ışıması (C5, E5, G5, B5, E6) ve epik kozmik fanfar akorları entegre edildi.
+- **VDOM Performansı:** `DimensionRow.vue` içindeki `format(props.dimension.amount, ...)` çağrısı 220ms'lik `displayAmountText` reaktif önbelleğine taşındı.
+
+### Doğrulama:
+- `npm test`: **17 dosya, 257/257 test yeşil**.
+- `npm run build`: **0 tip hatası, 0 derleme hatası**.
+
 ## [2026-10-14] ✔ — Faz 0 (0 → 1e308 g) Kapsamlı İnceleme, Tematik Stabilizasyon & Mimari Hata Düzeltmeleri (ADR-0055)
 
 ### Problem:

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useGameStore } from "../../stores/game";
 import { format, getMassScaleBadge } from "../../core/format";
 import { Decimal, D_1 } from "../../core/math";
@@ -56,6 +56,12 @@ const formattedDopamine = computed(() => format(store.matter, 2, store.settings.
 const massScaleBadge = computed(() => getMassScaleBadge(store.matter));
 const formattedPerSec = computed(() => format(store.matterPerSecond, 2, store.settings.notation));
 const singularityReady = computed(() => store.canSingularity);
+
+watch(singularityReady, (ready, prev) => {
+  if (ready && !prev) {
+    sounds.playAffordableNotice();
+  }
+});
 
 const displayDopamine = ref("");
 const displayPerSec = ref("");
@@ -183,6 +189,14 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center text-center my-4 py-1 relative z-10">
+    <div
+      v-if="singularityReady"
+      class="inline-flex items-center gap-1.5 px-3 py-1 mb-2 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-mono font-bold animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+    >
+      <span class="text-amber-400">⚡</span>
+      <span>EVRENSEL TEKİLLİK EŞİĞİ AŞILDI — KOZMİK ÇÖKÜŞ HAZIR</span>
+    </div>
+
     <span class="text-xs font-bold text-slate-400 flex items-center gap-1.5 mb-0.5">
       <Zap class="w-3.5 h-3.5 text-purple-400" />
       <span>Yutulan Kütle</span>

@@ -322,6 +322,27 @@ export const FEATURE_UNLOCKS: FeatureUnlock[] = [
     order: 1600
   },
   {
+    id: 'event_horizon_lens',
+    name: 'Olay Ufku Merceği',
+    hint: '1e200 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(200) },
+    order: 2000
+  },
+  {
+    id: 'hawking_resonator',
+    name: 'Hawking Rezonatörü',
+    hint: '1e240 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(240) },
+    order: 2400
+  },
+  {
+    id: 'cosmic_filament',
+    name: 'Kozmik İplikçik Dokuması',
+    hint: '1e280 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(280) },
+    order: 2800
+  },
+  {
     id: 'night_watch',
     name: 'Büyük Kozmik Çöküş',
     hint: `1e${ARC_LOG10_MAX} g Kütle biriktir — Tekillik eşiği`,

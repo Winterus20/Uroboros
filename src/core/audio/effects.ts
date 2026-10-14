@@ -431,48 +431,62 @@ export class SoundEffects extends SoundManagerBase {
     })
   }
 
-  // Sabah 06:00 Çöküşü (Güneş Doğdu Ama Duramıyorum! Sub-boom + Kuş Cıvıltısı + Fanfar)
+  // Büyük Kozmik Çöküş (Evrensel Tekillik: Gravitasyonel Çöküş + Kuantum Rezonans + Kozmik Fanfar)
   playSingularity() {
     const ctx = this.getContext()
     if (!ctx) return
 
-    // Derin sub-bass patlaması
+    // 1. Derin gravitasyonel tekillik sub-bass patlaması
     const boomOsc = ctx.createOscillator()
     const boomGain = ctx.createGain()
     boomOsc.type = 'sine'
-    boomOsc.frequency.setValueAtTime(130, ctx.currentTime)
-    boomOsc.frequency.exponentialRampToValueAtTime(32, ctx.currentTime + 0.7)
+    boomOsc.frequency.setValueAtTime(120, ctx.currentTime)
+    boomOsc.frequency.exponentialRampToValueAtTime(28, ctx.currentTime + 0.85)
 
-    boomGain.gain.setValueAtTime(this.safeVolume() * 0.7, ctx.currentTime)
-    boomGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7)
+    boomGain.gain.setValueAtTime(this.safeVolume() * 0.75, ctx.currentTime)
+    boomGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.85)
 
     boomOsc.connect(boomGain)
     boomGain.connect(ctx.destination)
     this.registerCleanup(boomOsc, boomGain)
     boomOsc.start()
-    boomOsc.stop(ctx.currentTime + 0.7)
+    boomOsc.stop(ctx.currentTime + 0.85)
 
-    // Sabah kuş cıvıltıları (Morning chirps)
-    const chirps = [1760, 2349, 1975, 2637, 2093]
-    chirps.forEach((freq, i) => {
+    // 2. Gravitasyonel içe çöküş (Olay ufku girdap sweep'i)
+    const sweepOsc = ctx.createOscillator()
+    const sweepGain = ctx.createGain()
+    sweepOsc.type = 'sawtooth'
+    sweepOsc.frequency.setValueAtTime(880, ctx.currentTime)
+    sweepOsc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.45)
+    sweepGain.gain.setValueAtTime(this.safeVolume() * 0.28, ctx.currentTime)
+    sweepGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45)
+    sweepOsc.connect(sweepGain)
+    sweepGain.connect(ctx.destination)
+    this.registerCleanup(sweepOsc, sweepGain)
+    sweepOsc.start()
+    sweepOsc.stop(ctx.currentTime + 0.45)
+
+    // 3. Kuantum rezonans kristal ışıması (Lydian yükselişi)
+    const shimmer = [523.25, 659.25, 783.99, 987.77, 1318.51] // C5, E5, G5, B5, E6
+    shimmer.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.type = 'sine'
-      const chirpStart = ctx.currentTime + i * 0.055
-      osc.frequency.setValueAtTime(freq, chirpStart)
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.25, chirpStart + 0.04)
+      const shimmerStart = ctx.currentTime + 0.12 + i * 0.05
+      osc.frequency.setValueAtTime(freq, shimmerStart)
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.05, shimmerStart + 0.08)
 
-      gain.gain.setValueAtTime(this.safeVolume() * 0.38, chirpStart)
-      gain.gain.exponentialRampToValueAtTime(0.001, chirpStart + 0.05)
+      gain.gain.setValueAtTime(this.safeVolume() * 0.35, shimmerStart)
+      gain.gain.exponentialRampToValueAtTime(0.001, shimmerStart + 0.09)
 
       osc.connect(gain)
       gain.connect(ctx.destination)
       this.registerCleanup(osc, gain)
-      osc.start(chirpStart)
-      osc.stop(chirpStart + 0.05)
+      osc.start(shimmerStart)
+      osc.stop(shimmerStart + 0.09)
     })
 
-    // Epik fanfar akorları
+    // 4. Epik fanfar akorları
     const fanfare = [392, 523.25, 659.25, 783.99, 1046.50, 1318.51]
     fanfare.forEach((freq, i) => {
       const osc = ctx.createOscillator()
