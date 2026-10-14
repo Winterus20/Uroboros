@@ -25,9 +25,8 @@ export const neuralActions = {
       this.clickCombo.lastClickAt = now
 
       const gain = this.manualClickPower
-      this.matter = this.matter.plus(gain)
+      this.addMatter(gain, true)
       this.stats.manualClicks++
-      this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(gain)
       this.stats.totalManualDopamine = this.stats.totalManualDopamine.plus(gain)
 
       // Kuantum Reaktör Plazma Şarjı (Superconductor modu hariç ve canlı akışta değilken)
@@ -102,7 +101,20 @@ export const neuralActions = {
       if (NEURAL_LEGACY_UPGRADE_IDS.has(id)) {
         this.singularityUpgrades[id] = currentLvl + 1
       }
-      sounds.playBuy(4)
+      if (id === 'break_singularity') {
+        sounds.playSingularity()
+        safeConfetti({
+          particleCount: 160,
+          spread: 120,
+          origin: { y: 0.5 },
+          colors: ['#a855f7', '#06b6d4', '#f59e0b', '#ffffff']
+        })
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('doomscroll:screen-shake', { detail: { level: 'hard' } }))
+        }
+      } else {
+        sounds.playBuy(4)
+      }
       return true
     },
 
@@ -267,8 +279,7 @@ export const neuralActions = {
           ? currentPerSec.times(120)
           : this.manualClickPower.times(300)
 
-        this.matter = this.matter.plus(instantReward)
-        this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(instantReward)
+        this.addMatter(instantReward, true)
       }
 
       if (this.isComboActive) {
@@ -328,8 +339,7 @@ export const neuralActions = {
         const refundRatio = (1.20 + immunityLvl * 0.15) * this.neuralEffects.crisisRewardMult
         const refund = slacker.leechedDopamine.times(refundRatio)
 
-        this.matter = this.matter.plus(refund)
-        this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(refund)
+        this.addMatter(refund, true)
         this.stats.slackersFired++
 
         this.slackers.splice(index, 1)

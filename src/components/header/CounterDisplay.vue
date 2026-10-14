@@ -190,7 +190,14 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col items-center justify-center text-center my-4 py-1 relative z-10">
     <div
-      v-if="singularityReady"
+      v-if="store.isMatterCapped"
+      class="inline-flex items-center gap-1.5 px-3 py-1 mb-2 rounded-full bg-gradient-to-r from-rose-500/25 via-rose-500/35 to-rose-500/25 border border-rose-400/60 text-rose-200 text-xs font-mono font-bold animate-pulse shadow-[0_0_18px_rgba(244,63,94,0.35)]"
+    >
+      <span class="text-rose-400">⚠️</span>
+      <span>PLANCK DUVARI KİLİTLİ: OLAY UFKU DOYDU (1.79e308 g) — ÇÖKÜŞ ZORUNLU</span>
+    </div>
+    <div
+      v-else-if="singularityReady"
       class="inline-flex items-center gap-1.5 px-3 py-1 mb-2 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-mono font-bold animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.25)]"
     >
       <span class="text-amber-400">⚡</span>
@@ -230,9 +237,12 @@ onUnmounted(() => {
           flameOn ? 'dps-burn' : 'text-purple-100'
         ]"
       >
-        <span>+{{ displayPerSec }}/s</span>
-        <span v-if="mpsTrend === 1" class="dps-delta-up" aria-hidden="true">▲</span>
-        <span v-else-if="mpsTrend === -1" class="dps-delta-down" aria-hidden="true">▼</span>
+        <span v-if="store.isMatterCapped" class="text-rose-400 font-bold text-[13px] tracking-wide animate-pulse">
+          0 g/s [Olay Ufku Kilitli]
+        </span>
+        <span v-else>+{{ displayPerSec }}/s</span>
+        <span v-if="!store.isMatterCapped && mpsTrend === 1" class="dps-delta-up" aria-hidden="true">▲</span>
+        <span v-else-if="!store.isMatterCapped && mpsTrend === -1" class="dps-delta-down" aria-hidden="true">▼</span>
         <span v-if="dpsSurgeActive && dpsSurgeDelta" class="text-emerald-300 font-bold text-[11px] animate-pulse">{{ dpsSurgeDelta }}</span>
       </span>
       <span

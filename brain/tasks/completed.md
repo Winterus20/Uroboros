@@ -1,5 +1,27 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-14] ✔ — Planck Duvarı Sert Kilit (Hard-Cap) ve Break Singularity Ritüeli (ADR-0056)
+
+### Problem:
+- `break_singularity` yükseltmesi satın alınmamışken bile kütle $1.797 \times 10^{308}\text{ g}$ (`D_INFINITY`) sınırını aşabiliyor, bu da "Planck Duvarı"nın gerçek bir engel olma anlamını ve duvarı kırma anındaki dopamini yok ediyordu.
+- Break Singularity alındığında taktil geribildirim sıradan bir pasif yükseltme gibiydi; kırılma anına özel ses, ekran sarsıntısı ve görsel patlama yoktu.
+- `SingularityTab.vue` içinde `singularityBroken` yalnızca `store.singularityUpgrades?.break_singularity` kontrol ediyordu; Nöral Ağaç üzerinden alınan yükseltmeyle tam senkron değildi.
+
+### Çözüm:
+- **Sert Kilit (Hard-Cap):** `actions-misc.ts` içinde `addMatter()` metoduna ve ana tick döngüsüne sert tavan eklendi: `!hasBreakSingularity && matter.gte(D_INFINITY)` iken kütle `D_INFINITY` değerinde durur.
+- **SP & Eşik Sözleşmesi:** Planck Duvarı kırılmamışken kütle tavanda durur ve ilk çöküş tam 1 SP verir (ADR-0034 ile tam uyumlu); `nextSingularityPointAt` kilitliyken `D_INFINITY` döner. Kırıldıktan sonra $10^{318}$ (5 SP), $10^{332}$ (10 SP) üstel büyümesi başlar.
+- **Taktil Kırılma Ritüeli:** `buyNeuralNode` ve `buySingularityUpgrade` içinde `break_singularity` alındığında `sounds.playSingularity()`, 160 parçacıklı kozmik konfeti ve `doomscroll:screen-shake` (level: `hard`) ekran sarsıntısı tetiklenir.
+- **Olay Ufku Doyum UI Bildirimi:**
+  - `CounterDisplay.vue`: Kütle tavana ulaştığında (`isMatterCapped`) sayacın üstünde kırmızı neon `⚠️ PLANCK DUVARI KİLİTLİ: OLAY UFKU DOYDU (1.79e308 g) — ÇÖKÜŞ ZORUNLU` uyarısı çıkar ve saniyelik üretim `0 g/s [Olay Ufku Kilitli]` olarak netleşir.
+  - `SingularityTab.vue`: TabHero rozeti `⚠️ Planck Duvarı Kilitli` ve `⚡ Planck Sınırı Yıkıldı` durumlarına bağlanır; sonraki SP eşiği duvar durumunu yansıtır.
+- **Testler:** `src/stores/balance.test.ts` güncellendi ve yeni sert kilit/serbest bırakma testleri eklendi.
+
+### Doğrulama:
+- `npm test`: **17 dosya, 259/259 test yeşil**.
+- `npm run harness:smoke`: **30 dk aktif koşu log10=90.72, 8 shift, 0 hata — 2-3 saatlik ilk çöküş bandı korundu**.
+- `npm run build`: **0 tip hatası, 0 derleme hatası, 1781 modül derlendi**.
+- ADR: `brain/decisions/0056-break-singularity-hard-cap-and-progression.md`.
+
 ## [2026-10-14] ✔ — Faz 0 Doruk Noktası (Climax), 1e160-1e308 Köprü Kilitleri ve VDOM Optimizasyonu
 
 ### Problem:

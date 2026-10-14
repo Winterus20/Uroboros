@@ -1,7 +1,7 @@
 // Durus, bot, haber, basarim, sekme, oyun dongusu ve muzik/ayar action parcalari. `this`, StoreApi ile tiplenmistir.
 import { sounds } from '../../core/audio'
 import { isPageVisible, safeConfetti } from '../../core/celebrate'
-import { D_0, Decimal } from '../../core/math'
+import { D_0, D_INFINITY, Decimal } from '../../core/math'
 import { musicEngine } from '../../core/music-engine'
 import { ACHIEVEMENTS } from '../../game/achievements'
 import { AUTOBUYER_BULK_COST, AUTOBUYER_COSTS, AUTOBUYER_MAX_COST, getAutobuyerInterval } from '../../game/autobuyer-data'
@@ -17,6 +17,25 @@ import type { AchievementContext, AutobuyerMode, LabCell, LabSeedType, MusicTrac
 import type { StoreApi } from './store-api'
 
 export const miscActions = {
+    // Kütle Ekleme ve Planck Duvarı (Hard-Cap) Güvencesi
+    addMatter(this: StoreApi, amount: Decimal, trackTotal = true): void {
+      if (amount.lte(0)) return
+      if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+        this.matter = D_INFINITY
+        return
+      }
+      this.matter = this.matter.plus(amount)
+      if (trackTotal) {
+        this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(amount)
+      }
+      if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+        this.matter = D_INFINITY
+      }
+      if (this.matter.gt(this.stats.highestMatter)) {
+        this.stats.highestMatter = this.matter
+      }
+    },
+
     // Gece Duruşunu Değiştir (Çılgın Kaydırma / Düşük Parlaklık: D1×50 ile açılır)
     setStance(this: StoreApi, stance: StanceType): void {
       if (this.currentStance === stance) return
@@ -783,8 +802,15 @@ export const miscActions = {
           })
         }
 
-        this.matter = this.matter.plus(netProduced)
-        this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(netProduced)
+        if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+          this.matter = D_INFINITY
+        } else {
+          this.matter = this.matter.plus(netProduced)
+          this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(netProduced)
+          if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+            this.matter = D_INFINITY
+          }
+        }
 
         if (this.matter.gt(this.stats.highestMatter)) {
           this.stats.highestMatter = this.matter

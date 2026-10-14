@@ -83,13 +83,26 @@ export const prestigeActions = {
         if (NEURAL_LEGACY_UPGRADE_IDS.has(id)) {
           this.neuralNodesBought = { ...this.neuralNodesBought, [id]: currentLvl + 1 }
         }
-        sounds.playBuy(4)
-        safeConfetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#f59e0b', '#a855f7', '#06b6d4']
-        })
+        if (id === 'break_singularity') {
+          sounds.playSingularity()
+          safeConfetti({
+            particleCount: 160,
+            spread: 120,
+            origin: { y: 0.5 },
+            colors: ['#a855f7', '#06b6d4', '#f59e0b', '#ffffff']
+          })
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('doomscroll:screen-shake', { detail: { level: 'hard' } }))
+          }
+        } else {
+          sounds.playBuy(4)
+          safeConfetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 },
+            colors: ['#f59e0b', '#a855f7', '#06b6d4']
+          })
+        }
         return true
       }
       return false

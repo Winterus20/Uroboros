@@ -14,7 +14,7 @@ import { ref } from 'vue'
 const store = useGameStore()
 
 // Break Singularity alındıysa hero rozeti "Sınır Yıkıldı" durumuna geçer
-const singularityBroken = computed(() => (store.singularityUpgrades?.break_singularity || 0) >= 1)
+const singularityBroken = computed(() => store.hasBreakSingularity)
 
 // Faz 2 kilometre taşı: Kolektif Kozmik Tekillik (1e308 g Kütle — ADR-0033).
 // İlerleme şafak yoluyla aynı ölçekte: 0 → 1e308 = %0 → %100.
@@ -77,8 +77,8 @@ const challengeButtonLabel = computed(() => {
       :icon="Sunrise"
       icon-class="text-amber-400"
       title="Kozmik Çöküş (Uroboros Tekilliği)"
-      :badge="singularityBroken ? '⚡ Planck Sınırı Yıkıldı' : 'Katman 1 Tekillik'"
-      badge-class="ds-badge-amber"
+      :badge="singularityBroken ? '⚡ Planck Sınırı Yıkıldı' : (store.isMatterCapped ? '⚠️ Planck Duvarı Kilitli' : 'Katman 1 Tekillik')"
+      :badge-class="singularityBroken ? 'ds-badge-amber' : (store.isMatterCapped ? 'bg-rose-500/20 text-rose-300 border border-rose-400/40' : 'ds-badge-amber')"
       subtitle="Su damlasındaki moleküllerden Samanyolu'na kadar tüm kütle olay ufkunda birleşti! 1.79e308 g Kütleye ulaştığında evreni tek noktaya çökerterek kalıcı Tekillik Puanı (SP) kazan."
       :accent="store.canSingularity ? 'amber' : 'slate'"
     >
@@ -104,8 +104,10 @@ const challengeButtonLabel = computed(() => {
           </span>
         </button>
         <div v-if="store.canSingularity && !inChallenge" class="text-[11px] font-mono text-slate-400 flex items-center justify-between w-full pt-1 border-t border-white/5">
-          <span>Sonraki +1 SP Eşiği:</span>
-          <span class="text-amber-300 font-bold tabular-nums">{{ nextSpMatterFormatted }} g Kütle</span>
+          <span>{{ store.hasBreakSingularity ? 'Sonraki +1 SP Eşiği:' : 'Planck Duvarı:' }}</span>
+          <span :class="store.hasBreakSingularity ? 'text-amber-300' : 'text-rose-400 font-bold'" class="tabular-nums">
+            {{ store.hasBreakSingularity ? `${nextSpMatterFormatted} g Kütle` : 'Kilitli (1.79e308 g Tavanı)' }}
+          </span>
         </div>
       </template>
       <template #progress>

@@ -37,6 +37,7 @@ export interface StoreApi extends GameState {
   canSingularity: boolean
   challengeGoalReached: boolean
   hasBreakSingularity: boolean
+  isMatterCapped: boolean
   isCockpitMode: boolean
   isAutobuyerCockpitMode: boolean
   activeAutobuyersCount: number
@@ -158,6 +159,7 @@ export interface StoreApi extends GameState {
   buyTickspeed(playSound?: boolean): boolean;
   buyMaxTickspeed(playSound?: boolean, feedbackSurge?: boolean): boolean;
   maxAll(): void;
+  addMatter(amount: Decimal, trackTotal?: boolean): void;
   manualClick(coords?: { x: number; y: number }): void;
   sacrificeDimensions(playSound?: boolean): boolean;
   celebrateFormatUnlock(tier: number): void;

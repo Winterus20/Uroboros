@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { useGameStore } from './game'
-import { Decimal } from '../core/math'
+import { Decimal, D_INFINITY } from '../core/math'
 
 describe('Denge ve Mimari Doğrulama Testleri', () => {
   it('challengeGoalReached: C1 hedefi 1e40 iken 1e40 seviyesinde tetiklenir (1e308 beklemez)', () => {
@@ -57,12 +57,30 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(store.singularityGain.toNumber()).toBe(1)
   })
 
-  it('break_singularity yokken de kütle 1e500 e çıktığında Antimatter Dimensions gibi kütleye göre artan SP verir', () => {
+  it('break_singularity yokken Planck Duvarı kilitlidir: kütle 1e500 olsa dahi 1 SP verir ve nextSingularityPointAt D_INFINITY döner', () => {
     const store = useGameStore()
     store.matter = new Decimal('1e500')
     expect(store.hasBreakSingularity).toBe(false)
-    expect(store.singularityGain.toNumber()).toBeGreaterThan(1)
-    expect(store.singularityGain.toNumber()).toBe(83)
+    expect(store.singularityGain.toNumber()).toBe(1)
+    expect(store.nextSingularityPointAt.eq(D_INFINITY)).toBe(true)
+  })
+
+  it('break_singularity yokken addMatter kütleyi D_INFINITY de durdurur (hard-cap) ve isMatterCapped true olur', () => {
+    const store = useGameStore()
+    store.matter = new Decimal('1.79e308')
+    expect(store.isMatterCapped).toBe(false)
+    store.addMatter(new Decimal('1e307'))
+    expect(store.isMatterCapped).toBe(true)
+    expect(store.matter.eq(D_INFINITY)).toBe(true)
+  })
+
+  it('break_singularity alındığında kütle D_INFINITY üstüne serbestçe çıkabilir', () => {
+    const store = useGameStore()
+    store.neuralNodesBought = { break_singularity: 1 }
+    store.matter = new Decimal('1.79e308')
+    store.addMatter(new Decimal('1e310'))
+    expect(store.isMatterCapped).toBe(false)
+    expect(store.matter.gt(D_INFINITY)).toBe(true)
   })
 
   it('break_singularity alındığında 1.8e308 eşiğinde taban 3 SP verir', () => {

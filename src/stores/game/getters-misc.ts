@@ -20,6 +20,11 @@ export const miscGetters = {
       )
     },
 
+    // Olay Ufku Doyumu / Kütle Tavanı aktif mi? (Planck Duvarı kırılmadıysa ve kütle D_INFINITY'e dayandıysa)
+    isMatterCapped(this: StoreApi, state: GameState): boolean {
+      return !this.hasBreakSingularity && state.matter.gte(D_INFINITY)
+    },
+
     activeAutobuyersCount(this: StoreApi, state: GameState): number {
       return Object.values(state.autobuyers).filter((b) => b.unlocked && b.enabled).length
     },
@@ -158,26 +163,27 @@ export const miscGetters = {
       if (state.activeChallenge) return D_0
       if (state.matter.lt(D_INFINITY)) return D_0
 
-      const hasBreak = (state.singularityUpgrades?.break_singularity || 0) >= 1 ||
-                       (state.neuralNodesBought?.break_singularity || 0) >= 1
-
-      // Antimatter Dimensions mantığı: Kütle ne kadar fazlaysa o kadar çok SP kazanılır!
-      const logMatter = state.matter.log10().toNumber()
+      const hasBreak = this.hasBreakSingularity
       const dawnSpeedMult = memoNeuralEffects(state.neuralNodesBought || {}).dawnSpeedMult
       const spMult = memoChallengeEffects(state.completedChallenges).spMult
       const relicSpMult = this.reactorRelicBonuses.spGainMult
       const totalMult = dawnSpeedMult * spMult * relicSpMult
 
+      // Planck Duvarı kırılmadıysa kütle D_INFINITY eşiğinde kilitlidir; ilk çöküş taban 1 SP verir
+      if (!hasBreak) {
+        const baseGain = Decimal.floor(new Decimal(1).times(totalMult))
+        return baseGain.gte(1) ? baseGain : D_1
+      }
+
+      // Break Singularity alındığında: Antimatter Dimensions tarzı kütle büyüdükçe SP üstel katlanır
+      const logMatter = state.matter.log10().toNumber()
       const logDiff = Math.max(0, logMatter - 308)
-      // Break Singularity yokken divisor = 100, taban 1x
-      // Break Singularity varken divisor = 45, taban 3x (daha agresif üstel büyüme)
-      const divisor = hasBreak ? 45 : 100
-      const basePoints = hasBreak ? 3 : 1
+      const divisor = 45
+      const basePoints = 3
 
       const rawGain = Decimal.pow(10, logDiff / divisor).times(basePoints).times(totalMult)
       const floored = Decimal.floor(rawGain)
-      const minGain = hasBreak ? 3 : 1
-      return floored.gte(minGain) ? floored : new Decimal(minGain)
+      return floored.gte(3) ? floored : new Decimal(3)
     },
 
     /**
@@ -186,15 +192,20 @@ export const miscGetters = {
 
     nextSingularityPointAt(this: StoreApi, state: GameState): Decimal {
       if (state.activeChallenge) return D_INFINITY
-      const hasBreak = (state.singularityUpgrades?.break_singularity || 0) >= 1 ||
-                       (state.neuralNodesBought?.break_singularity || 0) >= 1
+      const hasBreak = this.hasBreakSingularity
+
+      // Planck Duvarı kırılmadığı sürece kütle tavanı aşılamaz, sonraki SP hedefi kilitlidir
+      if (!hasBreak) {
+        return D_INFINITY
+      }
+
       const dawnSpeedMult = memoNeuralEffects(state.neuralNodesBought || {}).dawnSpeedMult
       const spMult = memoChallengeEffects(state.completedChallenges).spMult
       const relicSpMult = this.reactorRelicBonuses.spGainMult
       const totalMult = Math.max(0.001, dawnSpeedMult * spMult * relicSpMult)
 
-      const divisor = hasBreak ? 45 : 100
-      const basePoints = hasBreak ? 3 : 1
+      const divisor = 45
+      const basePoints = 3
 
       const currentGain = this.singularityGain
       const nextTarget = currentGain.plus(1)
