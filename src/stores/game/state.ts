@@ -81,20 +81,20 @@ export function buildInitialState() {
     reactorMomentum: 1.0, // Tatlı Nokta Rezonans Momenti (1.0x - 5.0x)
     reactorCooldowns: {} as Record<string, number>,
 
-    // Otomatik Kaydırma Botları (Autobuyers - Hibrit tekli/toplu/max)
+    // Otonom Çekim Botları (Autobuyers - Hibrit tekli/toplu/max)
     autobuyers: {
-      dim1: { id: 'dim1', name: 'Kedi Videoları Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim2: { id: 'dim2', name: 'Sokak Lezzetleri Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim3: { id: 'dim3', name: 'ASMR Sabun Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim4: { id: 'dim4', name: 'Subway Surfers Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim5: { id: 'dim5', name: 'Sigma Girişimci Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim6: { id: 'dim6', name: 'Hint Dizisi Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim7: { id: 'dim7', name: 'Kriz Belgeseli Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      dim8: { id: 'dim8', name: 'Beyin Çürümesi Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
-      tickspeed: { id: 'tickspeed', name: 'Frekans (Hz) Botu', enabled: false, unlocked: false, mode: 'single', interval: 10.0, timer: 0 },
-      shift: { id: 'shift', name: 'Akış Sıçraması Botu', enabled: false, unlocked: false, mode: 'single', interval: 15.0, timer: 0 },
-      galaxy: { id: 'galaxy', name: 'Akış Kümeleri Botu', enabled: false, unlocked: false, mode: 'single', interval: 20.0, timer: 0 },
-      singularity: { id: 'singularity', name: 'Şafak Nöbeti Botu', enabled: false, unlocked: false, mode: 'single', interval: 10.0, timer: 0, minGainSp: 1 }
+      dim1: { id: 'dim1', name: 'Moleküler Ayırıcı Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim2: { id: 'dim2', name: 'Orbital Vakum Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim3: { id: 'dim3', name: 'Çekirdek Sıyırıcı Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim4: { id: 'dim4', name: 'Kuark Emici Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim5: { id: 'dim5', name: 'Makro Çöküş Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim6: { id: 'dim6', name: 'Gezegen Tuzağı Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim7: { id: 'dim7', name: 'Yıldız Yutucu Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      dim8: { id: 'dim8', name: 'Samanyolu Tekillik Botu', enabled: false, unlocked: false, mode: 'single', interval: 8.0, timer: 0 },
+      tickspeed: { id: 'tickspeed', name: 'Çekim Hızı (Hz) Botu', enabled: false, unlocked: false, mode: 'single', interval: 10.0, timer: 0 },
+      shift: { id: 'shift', name: 'Ölçek Sıçraması Botu', enabled: false, unlocked: false, mode: 'single', interval: 15.0, timer: 0 },
+      galaxy: { id: 'galaxy', name: 'Kozmik Kümeler Botu', enabled: false, unlocked: false, mode: 'single', interval: 20.0, timer: 0 },
+      singularity: { id: 'singularity', name: 'Kozmik Çöküş Botu', enabled: false, unlocked: false, mode: 'single', interval: 10.0, timer: 0, minGainSp: 1 }
     } as Record<string, AutobuyerConfig>,
     autobuyerBulkUnlocked: false,
     autobuyerMaxUnlocked: false,

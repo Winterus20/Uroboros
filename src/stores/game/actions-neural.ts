@@ -146,10 +146,10 @@ export const neuralActions = {
         desc = '60 saniyeliğine tüm kütle çekimini 7× katlar!'
       } else if (chosenType === 'heart_frenzy') {
         title = 'Kütle Patlaması!'
-        desc = '15 saniyeliğine Manuel Yutma gücünü 300× fırlatır!'
+        desc = '15 saniyeliğine Manuel Yutma gücünü 777× fırlatır!'
       } else if (chosenType === 'void') {
         title = 'Kozmik Tekillik Dalgalanması!'
-        desc = 'Garanti kombo: 30sn 7× + 15sn 300× aynı anda!'
+        desc = 'Garanti kombo: 30sn 7× + 15sn 777× aynı anda!'
         lifetime = 9
       } else {
         title = 'Hawking Işıması Zirvesi!'
@@ -227,14 +227,14 @@ export const neuralActions = {
           this.activeBuffs.push({
             id: `buff-frenzy-${Date.now()}`,
             type: 'heart_frenzy',
-            name: '🌌 Kütle Patlaması (100× Çekim)',
+            name: '🌌 Kütle Patlaması (777× Çekim)',
             duration: Math.floor(15 * durMult),
             remaining: Math.floor(15 * durMult),
-            multiplier: 100
+            multiplier: 777
           })
         }
       } else if (anomaly.type === 'void') {
-        // Void Tekillik: garanti kombo — 30sn 7× üretim + 15sn 300× çekim
+        // Void Tekillik: garanti kombo — 30sn 7× üretim + 15sn 777× çekim
         const fyp = this.activeBuffs.find((b) => b.type === 'fyp')
         if (fyp) {
           fyp.remaining = Math.min(fyp.remaining + 30 * durMult, 90 * durMult)
@@ -255,10 +255,10 @@ export const neuralActions = {
           this.activeBuffs.push({
             id: `buff-frenzy-void-${Date.now()}`,
             type: 'heart_frenzy',
-            name: '🌌 Kütle Patlaması (100× Çekim)',
+            name: '🌌 Kütle Patlaması (777× Çekim)',
             duration: Math.floor(15 * durMult),
             remaining: Math.floor(15 * durMult),
-            multiplier: 100
+            multiplier: 777
           })
         }
       } else if (anomaly.type === 'sponsor') {
@@ -325,7 +325,7 @@ export const neuralActions = {
       if (slacker.clicksRemaining <= 0) {
         const immunityLvl = this.singularityUpgrades?.guilt_immunity || 0
         // Nöral Ağaç: Kriz Ganimeti / Demir Sabır düğümleri prim çarpanını büyütür
-        const refundRatio = (1.05 + immunityLvl * 0.15) * this.neuralEffects.crisisRewardMult
+        const refundRatio = (1.20 + immunityLvl * 0.15) * this.neuralEffects.crisisRewardMult
         const refund = slacker.leechedDopamine.times(refundRatio)
 
         this.matter = this.matter.plus(refund)

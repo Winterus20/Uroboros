@@ -1,5 +1,30 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-14] ✔ — Faz 0 (0 → 1e308 g) Kapsamlı İnceleme, Tematik Stabilizasyon & Mimari Hata Düzeltmeleri (ADR-0055)
+
+### Problem:
+- 3 uzman subagent incelemesiyle tespit edilen tematik kalıntılar: Autobuyer isimleri "Kedi Videoları", "Subway Surfers"; Nöral Ağaç "Göz Damlası", "120W GaN Adaptör"; Header telemetrisi 02:47 gece saatinde kalmıştı.
+- `DimensionsTab.vue` içinde Antimatter Galaxy kartının adı "Kozmik Çöküş" idi ve 1.79e308 Tekillik prestijiyle çakışıyordu.
+- Kütle Patlaması anomali çarpanı kodda `100` iken UI ve GDD `777×` diyordu (gizli nerf).
+- Wrinkler (Parazit) ilk koşuda %105 iade ediyordu (GDD %120 vaat ediyordu).
+- Web Audio sıfır seste `RangeError` veriyordu.
+- `game-loop.ts` 250ms clamp ile lag durumlarında saniyeleri çöpe atıyordu.
+- Çevrimdışı ilerlemede autobuyer'lar 300 sn kaba adımda yalnızca 1 alım yapıyordu.
+- `AlgorithmicSwirl.vue` her 60 FPS karesinde `tickspeedMultiplier` Decimal getter'ını hesaplatıyor ve unmount'ta WebGL kaynaklarını sızdırıyordu.
+
+### Çözüm:
+- **Tematik Senkron:** Autobuyer isimleri `state.ts`'te Uroboros kozmik boyut isimlerine dönüştürüldü. `NEURAL_TREE` düğümleri Uroboros terminolojisiyle senkronlandı (ID'ler birebir korundu).
+- **Kavram Ayrışımı:** Galaksi kartı "Kozmik Kümeler" (`Cosmic Galaxies`), butonu "Küme Kur" olarak düzeltildi. D4 ve D5 arasına özel neon "Planck Yırtılması / Mikro Karadelik" bariyeri eklendi.
+- **Header Telemetrisi:** 02:47 gece saati kaldırıldı; yerine `1eX g` logaritmik kozmik telemetri ve ilerleme çubuğu konuldu.
+- **Matematik & Denge:** Kütle Patlaması çarpanı 777×'e eşitlendi. Wrinkler iade oranı %120'ye (`1.20`) yükseltildi. Kombo metinleri eşitlendi.
+- **Mimari & Performans:** Web Audio `safeVolume()` tabanı `0.0001`'e çekildi; sessizde `getContext()` bypass edildi. `game-loop.ts` 1 saniye ve üstünü `simulateOfflineProgress`'e yönlendirdi, 1 sn altı için 20 adıma kadar accumulator tamponu sağlandı. Çevrimdışı autobuyer alımı birikim kadar (`min(triggers, 30)`) çalıştırıldı. WebGL shader'da `tickspeedMultiplier` okuması 500ms throttle edildi; unmount'ta shader ve buffer'lar temizlendi. `D_INFINITY` `Object.freeze` ile donduruldu. `unlockProgressFraction` log10 taşması düzeltildi.
+
+### Doğrulama:
+- `npm test`: **17 dosya, 257/257 test yeşil**.
+- `npm run build`: **0 tip hatası, 0 derleme hatası**.
+- ADR: `brain/decisions/0055-phase0-comprehensive-stabilization.md`.
+- Master Rapor: `phase-0-comprehensive-review.md`.
+
 ## [2026-10-10] ✔ — Test Harness Konsolidasyonu (ADR-0053, Tek Kapı)
 
 ### Problem:

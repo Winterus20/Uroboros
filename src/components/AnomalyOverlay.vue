@@ -444,7 +444,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
         class="edition-poly px-4 py-1.5 rounded-full border border-purple-500/50 text-purple-100 text-xs font-mono font-bold flex items-center gap-2 shadow-xl backdrop-blur-md"
       >
         <Flame class="w-3.5 h-3.5 text-rose-300 animate-pulse" />
-        <span>Rezonans Hipnozu: 7× üretim + 300× kaydırma aktif</span>
+        <span>Süper Rezonans: 7× Kütle + 777× Çekim Aktif</span>
       </div>
 
       <!-- Tekil Buff Sayaçları — kutlama hapı: gradient zemin, kalın border, ss→mm:ss -->

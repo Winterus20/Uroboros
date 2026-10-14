@@ -8,9 +8,14 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 // WebGL referansları ve durumlar
 let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null
 let program: WebGLProgram | null = null
+let vsShader: WebGLShader | null = null
+let fsShader: WebGLShader | null = null
+let positionBuffer: WebGLBuffer | null = null
 let animId: number | null = null
 let lastTime = 0
 let totalShaderTime = 0
+let cachedHzLog = 0
+let lastHzCheckTime = 0
 const isSupported = ref(true)
 
 // Shader Uniform Lokasyonları
@@ -153,14 +158,14 @@ function initWebGL(): boolean {
     return false
   }
 
-  const vs = createShader(gl, gl.VERTEX_SHADER, VS_SOURCE)
-  const fs = createShader(gl, gl.FRAGMENT_SHADER, FS_SOURCE)
-  if (!vs || !fs) return false
+  vsShader = createShader(gl, gl.VERTEX_SHADER, VS_SOURCE)
+  fsShader = createShader(gl, gl.FRAGMENT_SHADER, FS_SOURCE)
+  if (!vsShader || !fsShader) return false
 
   program = gl.createProgram()
   if (!program) return false
-  gl.attachShader(program, vs)
-  gl.attachShader(program, fs)
+  gl.attachShader(program, vsShader)
+  gl.attachShader(program, fsShader)
   gl.linkProgram(program)
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -171,7 +176,7 @@ function initWebGL(): boolean {
   gl.useProgram(program)
 
   // Full-screen quad pozisyonları
-  const positionBuffer = gl.createBuffer()
+  positionBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
   gl.bufferData(
     gl.ARRAY_BUFFER,
@@ -286,17 +291,22 @@ function getTargetParams(): SwirlParams {
     }
   } catch { /* yoksay — dingin geceye düş */ }
 
-  // 4. Normal Dingin Gece (Algoritma Frekansı / Hz ile ivmelenir)
-  let hzLog = 0
-  try {
-    const mult = store.tickspeedMultiplier
-    if (mult && mult.gt(1)) {
-      hzLog = Math.min(6, Math.max(0, mult.log10().toNumber()))
+  // 4. Normal Dingin Gece (Çekim Hızı / Hz ile ivmelenir — 500ms throttle ile hafifletilmiştir)
+  const nowMs = performance.now()
+  if (nowMs - lastHzCheckTime > 500) {
+    lastHzCheckTime = nowMs
+    try {
+      const mult = store.tickspeedMultiplier
+      if (mult && mult.gt(1)) {
+        cachedHzLog = Math.min(6, Math.max(0, mult.log10().toNumber()))
+      } else {
+        cachedHzLog = 0
+      }
+    } catch {
+      cachedHzLog = 0
     }
-  } catch {
-    hzLog = 0
   }
-  const speed = 0.8 + 0.28 * hzLog
+  const speed = 0.8 + 0.28 * cachedHzLog
 
   return {
     c1: [0.04, 0.05, 0.09, 1.0], // Koyu Gece Mavisi
@@ -412,9 +422,25 @@ onUnmounted(() => {
   window.removeEventListener('resize', resizeCanvas)
   document.removeEventListener('visibilitychange', handleVisibility)
 
-  if (gl && program) {
-    gl.deleteProgram(program)
-    program = null
+  if (gl) {
+    if (program) {
+      if (vsShader) gl.detachShader(program, vsShader)
+      if (fsShader) gl.detachShader(program, fsShader)
+      gl.deleteProgram(program)
+      program = null
+    }
+    if (vsShader) {
+      gl.deleteShader(vsShader)
+      vsShader = null
+    }
+    if (fsShader) {
+      gl.deleteShader(fsShader)
+      fsShader = null
+    }
+    if (positionBuffer) {
+      gl.deleteBuffer(positionBuffer)
+      positionBuffer = null
+    }
     gl = null
   }
 })

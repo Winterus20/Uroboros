@@ -24,35 +24,31 @@ export class GameLoop {
     this.lastTime = performance.now()
     this.accumulator = 0
 
+    const store = useGameStore()
     const loop = (currentTime: number) => {
       if (!this.isRunning) return
 
       const rawDelta = currentTime - this.lastTime
       this.lastTime = currentTime
-      const store = useGameStore()
 
       if (rawDelta < 0) {
         // Sistem saati geriye atladı (NTP düzeltmesi vb.) — delta'yı yok say
         this.accumulator = 0
-      } else if (rawDelta > BACKGROUND_CATCHUP_THRESHOLD * 1000) {
-        // Arka plan sekmesi / sekme değişimi: birikmiş süre offline yakalamaya devredilir
+      } else if (rawDelta >= 1000) {
+        // 1 saniye ve üzeri duraklamalar / sekme değişimi: offline simülasyona devret
         // (24 saat ile sınırlıdır; Welcome Back raporu store.offlineReport'a yazılır)
         store.simulateOfflineProgress(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
         this.accumulator = 0
       } else {
         this.accumulator += rawDelta
-        // Spiral-of-death koruması: birikimi TICK_RATE*5 ile clamp'la.
-        this.accumulator = Math.min(this.accumulator, this.TICK_RATE * 5)
-        // Ticksel simülasyon: sabit adımlı accumulator pattern (spiral-of-death korumalı: kare başına max 5 tick)
+        // 1 saniyelik azami tampon (20 tick) — küçük kare düşüşlerinde ilerleme buharlaşmaz
+        this.accumulator = Math.min(this.accumulator, 1000)
+        // Sabit adımlı accumulator pattern: kare başına azami 20 tick çalıştır
         let steps = 0
-        while (this.accumulator >= this.TICK_RATE) {
+        while (this.accumulator >= this.TICK_RATE && steps < 20) {
           store.update(this.TICK_RATE / 1000)
           this.accumulator -= this.TICK_RATE
           steps++
-          if (steps >= 5) {
-            this.accumulator = Math.min(this.accumulator, this.TICK_RATE * 5)
-            break
-          }
         }
       }
 

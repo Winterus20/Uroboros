@@ -53,8 +53,8 @@ function requestChallengeExit(): void {
   showChallengeExitConfirm.value = true;
 }
 
-// Gece saati — Şafak ilerlemesiyle senkron (02:47 → 06:15 arası, 208 dk gece)
-const nightProgress = computed(() => {
+// Kozmik Telemetri — Kütleçekim Tekillik Çöküş İlerlemesi (0 → 308.25 dekad)
+const cosmicProgress = computed(() => {
   try {
     const m = store.matter;
     if (m.isNan() || Number.isNaN(m.mag)) return 0;
@@ -66,14 +66,18 @@ const nightProgress = computed(() => {
     return 0;
   }
 });
-const nightClock = computed(() => {
-  const totalMinutes = Math.round(167 + nightProgress.value * 208);
-  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-  const mm = String(totalMinutes % 60).padStart(2, "0");
-  return `${hh}:${mm}`;
+const cosmicTelemetry = computed(() => {
+  try {
+    const m = store.matter;
+    if (m.isNan() || Number.isNaN(m.mag) || m.lt(10)) return "1e0 g";
+    const logVal = Math.floor(m.log10().toNumber());
+    return `1e${logVal} g`;
+  } catch {
+    return "1e0 g";
+  }
 });
 const nightPhase = computed(() => {
-  const p = nightProgress.value;
+  const p = cosmicProgress.value;
   if (p >= 1) return { label: "Kozmik Tekillik", dot: "bg-amber-300", text: "text-amber-200" };
   if (p >= 0.8) return { label: "Galaktik Olay Ufku", dot: "bg-orange-300", text: "text-orange-200" };
   if (p >= 0.55) return { label: "Makro Çöküş", dot: "bg-purple-300", text: "text-purple-200" };
@@ -288,20 +292,20 @@ onUnmounted(() => {
   <header class="w-full glass-panel-glow rounded-2xl p-4 md:p-5 mb-6 relative overflow-hidden border border-white/[0.08]">
     <!-- 1. ÜST STATUS BAR (Kozmik Telemetri & Kuantum Rezonans Çubuğu) -->
     <div class="flex items-center justify-between text-xs font-mono border-b border-white/[0.06] pb-2.5 mb-4 text-slate-400 select-none flex-wrap gap-2">
-      <!-- Sol: Kozmik Zaman & Çöküş Fazı -->
+      <!-- Sol: Kozmik Telemetri & Çöküş Fazı -->
       <div
         class="flex items-center gap-2 min-w-0"
-        v-tip="`Telemetri Zamanı ${nightClock} — Faz: ${nightPhase.label}. 1.79e308 g kütlede Kozmik Çöküş tetiklenir.`"
+        v-tip="`Kozmik Telemetri: ${cosmicTelemetry} / 1.79e308 g — Faz: ${nightPhase.label}. 1.79e308 g kütlede Kozmik Çöküş tetiklenir.`"
       >
         <span class="inline-block w-2 h-2 rounded-full shrink-0" :class="[nightPhase.dot, 'shadow-xs animate-pulse']"></span>
-        <span class="font-bold tracking-wider tabular-nums text-slate-200">{{ nightClock }}</span>
+        <span class="font-bold tracking-wider tabular-nums text-slate-200">{{ cosmicTelemetry }}</span>
         <span class="text-[10px] text-slate-400 font-semibold truncate hidden sm:inline">{{ nightPhase.label }}</span>
         <!-- Kozmik İlerleme İnce Şeridi -->
         <span class="hidden md:inline-block w-16 h-1 rounded-full overflow-hidden bg-black/50 border border-white/[0.06] shrink-0" aria-hidden="true">
           <span
             class="block h-full rounded-full transition-all duration-500"
             :style="{
-              width: `${Math.round(nightProgress * 100)}%`,
+              width: `${Math.round(cosmicProgress * 100)}%`,
               background: 'linear-gradient(to right, #00f0ff, #a855f7, #f59e0b)'
             }"
           ></span>

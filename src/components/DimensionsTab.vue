@@ -346,11 +346,23 @@ function handleTouchEnd(e: TouchEvent) {
 
     <!-- 4. Format Listesi (D1-D8 Kompakt Satırlar) — mobilde 44px hitbox çakışmasını önlemek için space-y-2 -->
     <div class="space-y-2 sm:space-y-1.5">
-      <DimensionRow
-        v-for="dim in visibleDimensions"
-        :key="dim.tier"
-        :dimension="dim"
-      />
+      <template v-for="dim in visibleDimensions" :key="dim.tier">
+        <!-- Planck Yırtılması Neon Bariyeri (D4 Kuark ile D5 Şehir arasında) -->
+        <div
+          v-if="dim.tier === 5"
+          class="relative my-2.5 py-2 px-3 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/50 flex items-center justify-between text-[11px] overflow-hidden shadow-lg shadow-cyan-950/30 select-none"
+        >
+          <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
+          <div class="flex items-center gap-2 text-cyan-300 font-mono font-semibold">
+            <span class="text-sm">💥</span>
+            <span class="tracking-wide">PLANCK YIRTILMASI / MİKRO KARADELİK</span>
+          </div>
+          <span class="text-[10px] font-mono text-cyan-300/90 uppercase tracking-wider bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/25 hidden sm:inline">
+            Atomaltı ➔ Kozmik Yutuş
+          </span>
+        </div>
+        <DimensionRow :dimension="dim" />
+      </template>
     </div>
 
     <!-- ADR-0027: sıradaki format teaser'ı -->
@@ -416,13 +428,13 @@ function handleTouchEnd(e: TouchEvent) {
         </button>
       </div>
 
-      <!-- Kozmik Çöküş / Olay Ufku (Galaxies — D8 çağında açılır) -->
+      <!-- Kozmik Kümeler / Olay Ufku (Galaxies — D8 çağında açılır) -->
       <div
         v-if="showGalaxyCard"
         v-tilt="{ max: 6, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface glass-panel-card p-3 rounded-xl flex items-center justify-between gap-3 border border-white/[0.06] transition-all"
         :class="store.canBuyGalaxy && (store.settings.holoCardsEnabled ?? true) ? 'edition-poly' : ''"
-        v-tip="'Tüm katmanları sıfırlar; Çekim Hızı (Hz) çarpan gücünü katlar'"
+        v-tip="'Tüm boyutları sıfırlar; Çekim Hızı (Hz) çarpan gücünü kalıcı katlar'"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] text-amber-400 flex items-center justify-center shrink-0">
@@ -430,7 +442,7 @@ function handleTouchEnd(e: TouchEvent) {
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
-              <span class="font-semibold text-xs text-slate-200">Kozmik Çöküş</span>
+              <span class="font-semibold text-xs text-slate-200">Kozmik Kümeler</span>
               <span class="text-[10px] font-mono text-amber-400">Adet: {{ store.galaxies }}</span>
             </div>
             <div v-if="isGalaxyTierLocked" class="text-[11px] font-sans text-slate-500 leading-tight">
@@ -450,13 +462,13 @@ function handleTouchEnd(e: TouchEvent) {
         <button
           @click="triggerGalaxy($event)"
           :disabled="!store.canBuyGalaxy"
-          aria-label="Kozmik çöküş yap"
+          aria-label="Kozmik küme kur"
           class="btn-tactile px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border shrink-0"
           :class="store.canBuyGalaxy
             ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/40 cursor-pointer'
             : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
         >
-          Çöküş Yap
+          Küme Kur
         </button>
       </div>
 

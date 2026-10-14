@@ -196,7 +196,7 @@ export function unlockProgressFraction(ctx: UnlockContext, feature: FeatureUnloc
   if (req.kind === 'dopamine') {
     const peak = lifetimeUnlockDopamine(ctx.matter, ctx.lifetimePeakMatter)
     if (peak.isNan() || Number.isNaN(peak.mag)) return 0
-    const target = Math.log10(new Decimal(req.amount).toNumber())
+    const target = log10Of(new Decimal(req.amount))
     if (!Number.isFinite(target) || target <= 0) return 0
     const current = Math.min(log10Of(peak), target)
     return Math.max(0, Math.min(1, current / target))

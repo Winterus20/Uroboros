@@ -623,34 +623,47 @@ export const miscActions = {
           if (this.challengeHaltUntil > 0 && key !== 'singularity') return
           bot.timer += deltaSeconds * botSpeedMult
           if (bot.timer >= bot.interval) {
+            const triggers = bot.interval > 0 ? Math.floor(bot.timer / bot.interval) : 1
             bot.timer = bot.interval > 0 ? bot.timer % bot.interval : 0
-const effectiveMode: AutobuyerMode = bot.mode || 'single'
+            const effectiveMode: AutobuyerMode = bot.mode || 'single'
+            // Çevrimdışı veya büyük adımlarda (deltaSeconds > bot.interval) botları birikim kadar çalıştır
+            const runCount = effectiveMode === 'max' ? Math.min(triggers, 3) : Math.min(triggers, 30)
+
+            for (let r = 0; r < runCount; r++) {
               if (key.startsWith('dim')) {
                 const tier = parseInt(key.replace('dim', ''), 10)
                 // Bot modları ×1 / ×10 / Maks: tek basışta 1 adet, 1 paket (10 adet), ya da alabildiği kadar
                 if (effectiveMode === 'max' && this.autobuyerMaxUnlocked) {
-                  this.buyMaxDimension(tier, false, false)
+                  if (!this.buyMaxDimension(tier, false, false)) break
                 } else if (effectiveMode === 'bulk' && this.autobuyerBulkUnlocked) {
-                  this.buyDimension(tier, false)
+                  if (!this.buyDimension(tier, false)) break
                 } else {
-                  this.buyOneUnit(tier, false)
+                  if (!this.buyOneUnit(tier, false)) break
                 }
               } else if (key === 'tickspeed') {
-              if (effectiveMode === 'max' && this.autobuyerMaxUnlocked) {
-                this.buyMaxTickspeed(false, false)
-              } else if (effectiveMode === 'bulk' && this.autobuyerBulkUnlocked) {
-                // ×10 tutarlılığı: Hz botu da her basışta 10 adet alır
-                for (let i = 0; i < 10; i++) {
+                if (effectiveMode === 'max' && this.autobuyerMaxUnlocked) {
+                  if (!this.buyMaxTickspeed(false, false)) break
+                } else if (effectiveMode === 'bulk' && this.autobuyerBulkUnlocked) {
+                  // ×10 tutarlılığı: Hz botu da her basışta 10 adet alır
+                  let boughtAny = false
+                  for (let i = 0; i < 10; i++) {
+                    if (this.buyTickspeed(false)) boughtAny = true
+                    else break
+                  }
+                  if (!boughtAny) break
+                } else {
                   if (!this.buyTickspeed(false)) break
                 }
-              } else {
-                this.buyTickspeed(false)
+              } else if (key === 'shift') {
+                if (this.canShift) this.dimensionShift(false)
+                else break
+              } else if (key === 'galaxy') {
+                if (this.canBuyGalaxy) this.buyGalaxy(false)
+                else break
               }
-            } else if (key === 'shift') {
-              if (this.canShift) this.dimensionShift(false)
-            } else if (key === 'galaxy') {
-              if (this.canBuyGalaxy) this.buyGalaxy(false)
-            } else if (key === 'singularity') {
+            }
+
+            if (key === 'singularity') {
               // G1 (kritik): challenge içinde bot SP basıp koşuyu baypas edemez —
               // eşik aşılınca challenge tamamlanır.
               if (this.shouldAutoSingularity()) {

@@ -58,14 +58,14 @@ export class SoundManagerBase {
     }
   }
 
-  /** Çağrı başında kelepçelenmiş ses seviyesi (NaN → 0.5, aralık 0..1). */
+  /** Çağrı başında kelepçelenmiş ses seviyesi (Web Audio exponentialRampToValueAtTime için > 0 olmalıdır; NaN → 0.5, aralık 0.0001..1). */
   protected safeVolume(): number {
     if (!Number.isFinite(this._volume)) return 0.5
-    return Math.min(1, Math.max(0, this._volume))
+    return Math.min(1, Math.max(0.0001, this._volume))
   }
 
   protected getContext(): AudioContext | null {
-    if (!this.enabled || this.suppressed) return null
+    if (!this.enabled || this.suppressed || this._volume <= 0.0001) return null
     // Çağrı başında volume sanitize — sonraki tüm setValueAtTime kazançları
     // sonlu olur (NaN sızarsa Web Audio TypeError atardı).
     if (!Number.isFinite(this._volume)) this._volume = 0.5
