@@ -357,6 +357,11 @@ export const miscActions = {
     update(this: StoreApi, deltaSeconds: number): void {
       if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return
 
+      // Planck Duvarı Sert Kilit Güvencesi: Break Singularity yoksa kütle D_INFINITY değerini geçemez
+      if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+        this.matter = D_INFINITY
+      }
+
       // 0. Özellik Merdiveni senkronizasyonu (yapışkan kilitlemeler — 0.5 sn seyreltilir).
       // ADR-0035: tepe noktalar merdiven tamamlandıktan sonra da yükselmeye devam eder,
       // bu yüzden "hepsi açıldı" durumunda erken çıkma YOK.

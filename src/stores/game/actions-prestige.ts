@@ -92,7 +92,7 @@ export const prestigeActions = {
             colors: ['#a855f7', '#06b6d4', '#f59e0b', '#ffffff']
           })
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('doomscroll:screen-shake', { detail: { level: 'hard' } }))
+            window.dispatchEvent(new CustomEvent('doomscroll:shake', { detail: { level: 'hard' } }))
           }
         } else {
           sounds.playBuy(4)

@@ -52,3 +52,13 @@
 - **Birim Testleri:** `src/stores/balance.test.ts` güncellendi ve genişletildi (259/259 test yeşil).
 - **Harness Doğrulaması:** `npm run harness:smoke` çalıştırıldı — 30 dakikalık aktif oyunda log10=90.72, 8 sıçrama, ekonomi donmasız çalıştı.
 - **Pacing:** İlk koşu ~2 saat 28 dakikalık matematiksel bandını korur; $1.79 \times 10^{308}\text{ g}$'ye ulaşıldığında kütle durur, oyuncu ilk çöküşünü yapar (1 SP), birkaç koşu sonra `break_singularity`'i kırarak $10^{350}-10^{4000}$ evresine adım atar.
+
+---
+
+## 4. Bağımsız QA Denetimi & Su Geçirmezlik Güçlendirmeleri (Post-Audit)
+
+Bağımsız QA Subagent denetimi sonrasında aşağıdaki kritik sertleştirmeler tamamlanmıştır:
+1. **Event Senkronizasyonu:** `actions-neural.ts` ve `actions-prestige.ts` içindeki event adı `doomscroll:shake` olarak düzeltildi; `JuiceLayer.vue` geriye dönük uyum için `doomscroll:screen-shake` takma adını da dinler hale getirildi.
+2. **Kütle Kaçaklarının Kapatılması:** `actions-crisis.ts` (soğutma ve 3 ikilem ödülü), `actions-lab.ts` (hasat ve viral boşalım), `actions-dimensions.ts` (alım nabzı) ve `CommentTicker.vue` (haber tıklamaları) doğrudan kütle atamalarından `this.addMatter(amount, true)` metoduna geçirildi.
+3. **Global Koruma (Universal Guard):** `actions-misc.ts` (`update()` en başı) ve `actions-save.ts` (`deserialize()` sonu) içerisine Break Singularity öncesi kütleyi `D_INFINITY`'e sabitleyen global koruyucu yerleştirildi.
+4. **Tooltip Netliği:** `SingularityButton.vue` içindeki tooltip, Break Singularity öncesinde kütlenin Planck Duvarı'nda kilitli olduğunu oyuncuya dürüstçe açıklar.

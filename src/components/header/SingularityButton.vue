@@ -14,7 +14,7 @@ const singularityBroken = computed(() => store.hasBreakSingularity);
 const singularityTip = computed(() =>
   singularityBroken.value
     ? `Kozmik Çöküş hazır! +${singularityGainText.value} SP (Sonraki SP: ${nextSpMatterText.value} g) — Planck sınırı yıkıldı, üstel büyüme devrede.`
-    : `Kozmik Çöküş hazır! +${singularityGainText.value} SP (Sonraki SP: ${nextSpMatterText.value} g) — Kütle arttıkça kazanç katlanır!`
+    : `Kozmik Çöküş hazır! +${singularityGainText.value} SP — Planck Duvarı kilitli (1.79e308 g). Sınırı aşmak için Nöral Ağaç'tan Planck Duvarını Yıkma yükseltmesini almalısın.`
 );
 
 const inChallenge = computed(() => !!store.activeChallenge);

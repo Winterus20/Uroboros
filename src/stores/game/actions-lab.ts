@@ -65,8 +65,7 @@ export const labActions = {
         reward = reward.times(FLUCTUATION_HARVEST_DOUBLE_MULT)
       }
 
-      this.matter = this.matter.plus(reward)
-      this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(reward)
+      this.addMatter(reward, true)
       this.stats.labHarvests = (this.stats.labHarvests || 0) + 1
 
       // Plazma barına +2.5% taktil katkı (Superconductor modunda durur)
@@ -122,8 +121,7 @@ export const labActions = {
       }
       reward = reward.times(this.achievementLabYield)
 
-      this.matter = this.matter.plus(reward)
-      this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(reward)
+      this.addMatter(reward, true)
       this.stats.labHarvests = (this.stats.labHarvests || 0) + 3
 
       this.isViralActive = true

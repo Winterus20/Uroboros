@@ -1,6 +1,6 @@
 // Kayit slot + serialize/deserialize + cevrimdisi simulasyon action parcalari. `this`, StoreApi ile tiplenmistir.
 import { sounds } from '../../core/audio'
-import { D_0, D_1, Decimal } from '../../core/math'
+import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
 import { musicEngine } from '../../core/music-engine'
 import { SaveSystem } from '../../core/save'
 import { MIN_SUPPORTED_SAVE_VERSION, SAVE_VERSION, SaveVersionError } from '../../core/save-version'
@@ -844,6 +844,9 @@ export const saveActions = {
           restoredShifts = Math.max(restoredShifts, SACRIFICE_SHIFT_REQ)
         }
         this.lifetimePeakShifts = Math.floor(restoredShifts)
+        if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
+          this.matter = D_INFINITY
+        }
         this.syncUnlocks()
 
         const now = Date.now()

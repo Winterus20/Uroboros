@@ -538,6 +538,7 @@ onMounted(() => {
   window.addEventListener('resize', resizeCanvas)
   window.addEventListener('doomscroll:tap', handleTapEvent)
   window.addEventListener('doomscroll:shake', handleShakeEvent)
+  window.addEventListener('doomscroll:screen-shake', handleShakeEvent)
   window.addEventListener('doomscroll:shockwave', handleShockwaveEvent)
   window.addEventListener('doomscroll:juice-mode', handleJuiceModeEvent as EventListener)
 
@@ -554,6 +555,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', resizeCanvas)
   window.removeEventListener('doomscroll:tap', handleTapEvent)
   window.removeEventListener('doomscroll:shake', handleShakeEvent)
+  window.removeEventListener('doomscroll:screen-shake', handleShakeEvent)
   window.removeEventListener('doomscroll:shockwave', handleShockwaveEvent)
   window.removeEventListener('doomscroll:juice-mode', handleJuiceModeEvent as EventListener)
 

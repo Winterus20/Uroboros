@@ -65,7 +65,7 @@ export const dimensionActions = {
       }
       const d1 = this.dimensions[0]
       if (d1 && d1.amount.gt(0) && this.matterPerSecond.gt(0)) {
-        this.matter = this.matter.plus(this.matterPerSecond.times(PURCHASE_MATTER_TICK_SECONDS))
+        this.addMatter(this.matterPerSecond.times(PURCHASE_MATTER_TICK_SECONDS), true)
       }
     },
 

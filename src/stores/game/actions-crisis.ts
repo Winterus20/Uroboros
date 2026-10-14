@@ -154,8 +154,7 @@ export const crisisActions = {
         if (this.slackers.length > 0) {
           this.slackers.forEach((s) => {
             const refund = s.leechedDopamine.times(1.75)
-            this.matter = this.matter.plus(refund)
-            this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(refund)
+            this.addMatter(refund, true)
             this.stats.slackersFired++
           })
           this.slackers = []
@@ -316,8 +315,7 @@ export const crisisActions = {
         this.reactorHeat = Math.max(0, this.reactorHeat - 25)
         const gain = this.matterPerSecond.times(30)
         if (gain.gt(0)) {
-          this.matter = this.matter.plus(gain)
-          this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(gain)
+          this.addMatter(gain, true)
         }
       } else if (opt.effect === 'overcharge') {
         this.reactorHeat = Math.min(100, this.reactorHeat + 20)
@@ -347,8 +345,7 @@ export const crisisActions = {
         if (this.slackers.length > 0) {
           this.slackers.forEach((s) => {
             const refund = s.leechedDopamine.times(2.0)
-            this.matter = this.matter.plus(refund)
-            this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(refund)
+            this.addMatter(refund, true)
             this.stats.slackersFired++
           })
           this.slackers = []
@@ -356,8 +353,7 @@ export const crisisActions = {
       } else if (opt.effect === 'hyper_surge') {
         this.reactorHeat = Math.min(100, this.reactorHeat + 20)
         const blast = this.matterPerSecond.gt(0) ? this.matterPerSecond.times(120) : this.manualClickPower.times(2000)
-        this.matter = this.matter.plus(blast)
-        this.stats.totalMatterProduced = this.stats.totalMatterProduced.plus(blast)
+        this.addMatter(blast, true)
       }
 
       this.caffeineEnergy = this.reactorHeat

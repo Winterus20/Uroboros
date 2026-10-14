@@ -231,8 +231,7 @@ function handleTickerClick(e: MouseEvent) {
         }
         if (result.bonusMatter) {
           try {
-            store.matter = store.matter.plus(result.bonusMatter)
-            store.stats.totalMatterProduced = store.stats.totalMatterProduced.plus(result.bonusMatter)
+            store.addMatter(result.bonusMatter, true)
           } catch {
             /* break_eternity koruması */
           }
@@ -246,7 +245,7 @@ function handleTickerClick(e: MouseEvent) {
   try {
     const mps = store.matterPerSecond
     const reward = mps.gt(0) ? mps.times(0.2) : new Decimal(10)
-    store.matter = store.matter.plus(reward)
+    store.addMatter(reward, true)
   } catch {
     /* break_eternity koruması */
   }
