@@ -13,6 +13,10 @@ export const neuralActions = {
     manualClick(this: StoreApi, coords?: { x: number; y: number }): void {
       // Combo serisi: 1.5 sn içinde gelen tıklamalar seriyi uzatır, aksi halde seri 1'den başlar
       const now = Date.now()
+      // Tıklama throttle: insanüstü CPS istismarını (boşluk tuşu key-repeat vb.)
+      // engeller; aktif/passif parite korunur. Max 10 tıklama/sn.
+      if (this.clickCombo.lastClickAt !== 0 && now - this.clickCombo.lastClickAt < 100) return
+
       if (now - this.clickCombo.lastClickAt <= COMBO_DECAY_MS) {
         this.clickCombo.count++
       } else {
@@ -204,7 +208,7 @@ export const neuralActions = {
       if (anomaly.type === 'fyp') {
         const existing = this.activeBuffs.find((b) => b.type === 'fyp')
         if (existing) {
-          existing.remaining += 60 * durMult
+          existing.remaining = Math.min(existing.remaining + 60 * durMult, 180 * durMult)
         } else {
           this.activeBuffs.push({
             id: `buff-fyp-${Date.now()}`,
@@ -218,22 +222,22 @@ export const neuralActions = {
       } else if (anomaly.type === 'heart_frenzy') {
         const existing = this.activeBuffs.find((b) => b.type === 'heart_frenzy')
         if (existing) {
-          existing.remaining += 15 * durMult
+          existing.remaining = Math.min(existing.remaining + 15 * durMult, 45 * durMult)
         } else {
           this.activeBuffs.push({
             id: `buff-frenzy-${Date.now()}`,
             type: 'heart_frenzy',
-            name: '🌌 Kütle Patlaması (300× Çekim)',
+            name: '🌌 Kütle Patlaması (100× Çekim)',
             duration: Math.floor(15 * durMult),
             remaining: Math.floor(15 * durMult),
-            multiplier: 300
+            multiplier: 100
           })
         }
       } else if (anomaly.type === 'void') {
         // Void Tekillik: garanti kombo — 30sn 7× üretim + 15sn 300× çekim
         const fyp = this.activeBuffs.find((b) => b.type === 'fyp')
         if (fyp) {
-          fyp.remaining += 30 * durMult
+          fyp.remaining = Math.min(fyp.remaining + 30 * durMult, 90 * durMult)
         } else {
           this.activeBuffs.push({
             id: `buff-fyp-void-${Date.now()}`,
@@ -246,15 +250,15 @@ export const neuralActions = {
         }
         const frenzy = this.activeBuffs.find((b) => b.type === 'heart_frenzy')
         if (frenzy) {
-          frenzy.remaining += 15 * durMult
+          frenzy.remaining = Math.min(frenzy.remaining + 15 * durMult, 45 * durMult)
         } else {
           this.activeBuffs.push({
             id: `buff-frenzy-void-${Date.now()}`,
             type: 'heart_frenzy',
-            name: '🌌 Kütle Patlaması (300× Çekim)',
+            name: '🌌 Kütle Patlaması (100× Çekim)',
             duration: Math.floor(15 * durMult),
             remaining: Math.floor(15 * durMult),
-            multiplier: 300
+            multiplier: 100
           })
         }
       } else if (anomaly.type === 'sponsor') {

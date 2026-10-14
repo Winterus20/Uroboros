@@ -404,6 +404,8 @@ export function computeNeuralEffects(bought: Record<string, number>): NeuralEffe
   if (lvl('prod_echo') > 0) productionMult *= Math.pow(1.25, lvl('prod_echo'))
   if (has('dream_lucid')) productionMult *= 1.75
   if (has('apex_doomscroll')) productionMult *= 10
+  // Soft cap: tek deep run / nöral zincir patlamasını engeller (25× üstü logaritmik)
+  if (productionMult > 25) productionMult = 25 + Math.log2(Math.max(1, productionMult / 25)) * 3
 
   if (has('click_momentum')) clickMult *= 1.3
   if (has('neural_symphony')) clickMult *= 3.0

@@ -411,9 +411,12 @@ export const dimensionGetters = {
         )
       }
 
-      // Göz Damlası Yükseltmesi
+      // Göz Damlası Yükseltmesi (soft cap)
       if (eyeDropsLvl > 0) {
-        mult = mult.times(Decimal.pow(2, eyeDropsLvl))
+        const effEyeDropsLvl = eyeDropsLvl <= 3
+          ? eyeDropsLvl
+          : 3 + Math.log2(Math.max(1, eyeDropsLvl - 2))
+        mult = mult.times(Decimal.pow(2, effEyeDropsLvl))
       }
 
       // Önbellek Temizleme (Sacrifice) Bonusu: Sadece D8 Saf Beyin Çürümesine devasa çarpan!
@@ -422,8 +425,10 @@ export const dimensionGetters = {
       }
 
       // Algoritmik Ayna Sinerjisi (D1 <-> D8, D2 <-> D7, D3 <-> D6, D4 <-> D5 yakıt pompası)
+      // Soft cap: partner etkisi üst sınır 4× ile sınırlanır.
       if (partnerDim && partnerBought > 0) {
-        mult = mult.times(1 + Math.sqrt(partnerBought) * 0.15)
+        const partnerFactor = Math.min(4, 1 + Math.sqrt(partnerBought) * 0.15)
+        mult = mult.times(partnerFactor)
       }
 
       // Kozmik Relik Seviye 4: Rezonanstaki hücre başına boyutlara evrensel ivme
@@ -433,7 +438,11 @@ export const dimensionGetters = {
       }
 
       // Nöral Ağaç pasif dalı: kalıcı üretim çarpanı (tüm istasyonlar)
-      mult = mult.times(neuralProd)
+      // Soft cap: 25× üstü logaritmik azalan getiriye döner.
+      const effNeuralProd = neuralProd <= 25
+        ? neuralProd
+        : 25 + Math.log2(Math.max(1, neuralProd / 25)) * 3
+      mult = mult.times(effNeuralProd)
       // NOT: offlineSimBoost burada her boyuta çarparak 1800x katlanmaması için
       // doğrudan update() içindeki son dopamin adımında tekil olarak uygulanır.
 

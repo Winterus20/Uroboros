@@ -417,16 +417,21 @@ export const dimensionActions = {
     // Koşu sıfırlama alt-kümesi: SP bloğu hariç her şey — challenge giriş/çıkış/
     // tamamlama SP vermeden yalnızca bunu çağırır. Kapsamın tek kaynağı
     // SCALE_LAYERS.singularity.scope'tur (src/game/layers.ts).
-    resetRunState(this: StoreApi): void {
+    resetRunState(this: StoreApi, refundChoiceNodes: boolean = true): void {
       // ADR-0035: şafak çöküşü / meydan okuma girişi de dopamini sıfırlar.
       // Tek burada çağrıldığı için dört yol (singularityReset, enterChallenge,
       // exitChallenge, completeChallenge) tek kancayla korunur.
+      // K2 fix: meydan okuma giriş/çıkış/tamamlama koşusunda choice SP iadesi
+      // engellenir; iade yalnızca gerçek singularity (prestige) koşusunda uygulanır.
       this.syncUnlocks()
 
       // ADR-0036 / Kokpit Garantisi: Prestijli oyuncuların botları asla sıfırlanmaz
       this.ensureAutobuyersPreserved()
 
-      applyResetScope(this, SCALE_LAYERS.singularity.scope, NEURAL_TREE)
+      const scope = refundChoiceNodes
+        ? SCALE_LAYERS.singularity.scope
+        : { ...SCALE_LAYERS.singularity.scope, refundChoiceNodes: false }
+      applyResetScope(this, scope, NEURAL_TREE)
     },
 
     // Manuel satın alma: ad bazlı maks — param 1 adete yetiyorsa buton aktiftir

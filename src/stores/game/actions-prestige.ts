@@ -109,7 +109,9 @@ export const prestigeActions = {
     powerNap(this: StoreApi): boolean {
       if (!this.canPowerNap) return false
       const gain = this.powerNapGain
-      this.napMultiplier = this.napMultiplier.times(gain)
+      // Power Nap tavansız kalıcı çarpanını engeller: 20× üstüne çıkamaz.
+      const nextNap = this.napMultiplier.times(gain)
+      this.napMultiplier = nextNap.gt(20) ? new Decimal(20) : nextNap
       this.napCount++
       this.neuralBots = new Decimal(1) // Nöral çekirdek korunur
       sounds.playSacrifice()

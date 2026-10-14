@@ -419,7 +419,7 @@ export const saveActions = {
                         : '👆 Başparmak Histerisi (300× Kaydır)',
                 duration: b.type === 'fyp' ? 60 : b.type === 'espresso' ? 30 : b.type === 'planck_surge' ? 20 : b.type === 'resonance_boost' ? 30 : 15,
                 remaining,
-                multiplier: b.type === 'fyp' ? 7 : b.type === 'espresso' ? 3 : b.type === 'planck_surge' ? 4 : b.type === 'resonance_boost' ? 5 : 300
+                multiplier: b.type === 'fyp' ? 7 : b.type === 'espresso' ? 3 : b.type === 'planck_surge' ? 4 : b.type === 'resonance_boost' ? 5 : 100
               }
             })
             .filter((b) => b.remaining > 0)

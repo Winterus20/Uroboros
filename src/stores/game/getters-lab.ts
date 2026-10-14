@@ -256,8 +256,13 @@ export const labGetters = {
         spGainMult: count >= 3 ? 1 + (count - 2) * 0.5 : 1,
         // Seviye 4: Rezonanstaki hücre başına boyutlara evrensel ivme
         dimensionalBoostPerCell: count >= 4 ? 0.10 + (count - 4) * 0.05 : 0,
-        // Seviye 5+: Sınırsız ölçeklenen evrensel kütle relik çarpanı
-        universalMassMult: count >= 5 ? Decimal.pow(2, count - 4) : D_1
+        // Seviye 5+: Ölçeklenen evrensel kütle relik çarpanı (soft cap: 8 güçten sonra
+        // logaritmik azalan getiri; per-tier zincir patlamasını engeller)
+        universalMassMult: count >= 5
+          ? Decimal.pow(2, count - 4 <= 4
+              ? count - 4
+              : 4 + Math.log2(Math.max(1, count - 7)))
+          : D_1
       }
     },
 }

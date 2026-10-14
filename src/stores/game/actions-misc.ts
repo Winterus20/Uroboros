@@ -752,6 +752,8 @@ const effectiveMode: AutobuyerMode = bot.mode || 'single'
           .times(this.achievementProductionMult)
           .times(this.colonyMultiplier)
           .times(this.napMultiplier)
+          .times(this.reactorMassMult)
+          .times(this.reactorRelicBonuses.universalMassMult)
           .times(this.offlineSimBoost > 1 ? this.offlineSimBoost : 1)
           .times(this.crisisBackfireDebuff > 0 ? 0.5 : 1.0)
           .times(this.challengeProdMult)

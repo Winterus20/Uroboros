@@ -49,7 +49,7 @@ export const crisisActions = {
       if (def.unlock && !checkUnlock(this.unlockContext, { id, name: def.name, hint: '', req: def.unlock, order: def.order })) {
         return false
       }
-      this.resetRunState()
+      this.resetRunState(false)
       this.activeChallenge = id
       this.challengeElapsed = 0
       this.challengeHaltUntil = 0
@@ -64,7 +64,7 @@ export const crisisActions = {
     // Cezasız vazgeç: koşu sıfırlanır, sayaçlar temizlenir, ödül yok.
     exitChallenge(this: StoreApi): boolean {
       if (!this.activeChallenge) return false
-      this.resetRunState()
+      this.resetRunState(false)
       this.activeChallenge = null
       this.challengeElapsed = 0
       this.challengeHaltUntil = 0
@@ -105,7 +105,7 @@ export const crisisActions = {
         this.pastSingularities.pop()
       }
 
-      this.resetRunState()
+      this.resetRunState(false)
       this.activeChallenge = null
       this.challengeElapsed = 0
       this.challengeHaltUntil = 0

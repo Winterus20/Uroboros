@@ -165,7 +165,7 @@ export interface StoreApi extends GameState {
   performScaleJump(layer: ScaleLayerId, playSound?: boolean): boolean;
   dimensionShift(playSound?: boolean): boolean;
   buyGalaxy(playSound?: boolean): boolean;
-  resetRunState(): void;
+  resetRunState(refundChoiceNodes?: boolean): void;
   singularityReset(playSound?: boolean): boolean;
   enterChallenge(id: string): boolean;
   exitChallenge(): boolean;
