@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
 import { Decimal, D_0 } from '../core/math'
+import { pushDirectionFor, isPressFeedbackFresh, CARD_PUSH_MS, CARD_RELEASE_MS } from '../core/card-physics'
 import type { DimensionData } from '../models/types'
 import { getTierGlyph, getTierAccent } from '../game/dimension_identity'
 import { Link } from 'lucide-vue-next'
@@ -12,8 +13,72 @@ const props = defineProps<{
 }>()
 
 const store = useGameStore()
+const shellRef = ref<HTMLElement | null>(null)
 const cardRef = ref<HTMLElement | null>(null)
 let bounceTimer: number | null = null
+
+// ---- Faz 0 Taktil Cila (Sütun 3): bas-bırak lastik gerilmesi (spring damping) ----
+// Butona basılı tutunca kart lastik gibi gerilir (scale3d(1.04, 0.92, 1)),
+// bırakılınca yay (overshoot) ile geri oturur. Sarmalayıcı (shell) üzerinde
+// çalışır: iç karttaki v-tilt inline transform'u ile çakışmaz.
+let isPressing = false
+let pressReleaseAt = 0
+let releaseTimer: number | null = null
+
+function pressStart(e: PointerEvent) {
+  if (e.button !== 0) return
+  if (store.settings.reduceAnimations) return
+  const shell = shellRef.value
+  if (!shell) return
+  isPressing = true
+  if (releaseTimer !== null) {
+    clearTimeout(releaseTimer)
+    releaseTimer = null
+  }
+  shell.classList.remove('card-released')
+  shell.classList.add('card-squash')
+  // Basılı tutarken buton "yetersiz kütle" ile disabled olursa pointerup
+  // butona uğramaz; pencere güvenlik ağı gerilmenin takılı kalmasını önler.
+  window.addEventListener('pointerup', finishPress)
+}
+
+function finishPress() {
+  window.removeEventListener('pointerup', finishPress)
+  if (!isPressing) return
+  isPressing = false
+  pressReleaseAt = performance.now()
+  const shell = shellRef.value
+  if (!shell) return
+  shell.classList.add('card-released')
+  shell.classList.remove('card-squash')
+  if (releaseTimer !== null) clearTimeout(releaseTimer)
+  releaseTimer = window.setTimeout(() => {
+    shell.classList.remove('card-released')
+    releaseTimer = null
+  }, CARD_RELEASE_MS + 60)
+}
+
+// ---- Push Dynamics: manuel satın almada komşu satırlar 2.5px yana açılır ----
+let pushTimer: number | null = null
+
+function onNeighborBuy(e: Event) {
+  if (store.settings.reduceAnimations) return
+  const detail = (e as CustomEvent<{ tier?: number }>).detail
+  if (!detail || typeof detail.tier !== 'number') return
+  const dir = pushDirectionFor(props.dimension.tier, detail.tier)
+  if (!dir) return
+  const shell = shellRef.value
+  if (!shell) return
+  const cls = dir === 'up' ? 'card-push-up' : 'card-push-down'
+  shell.classList.remove('card-push-up', 'card-push-down')
+  void shell.offsetWidth // ardışık alımlarda animasyonu yeniden başlat
+  shell.classList.add(cls)
+  if (pushTimer !== null) clearTimeout(pushTimer)
+  pushTimer = window.setTimeout(() => {
+    shell.classList.remove(cls)
+    pushTimer = null
+  }, CARD_PUSH_MS + 40)
+}
 
 function bounceCard() {
   if (store.settings.reduceAnimations) return
@@ -174,6 +239,7 @@ function refreshDisplayText() {
 onMounted(() => {
   refreshDisplayText()
   textThrottleInterval = window.setInterval(refreshDisplayText, 220)
+  window.addEventListener('doomscroll:dimension-buy', onNeighborBuy)
 })
 
 onUnmounted(() => {
@@ -181,6 +247,16 @@ onUnmounted(() => {
     clearTimeout(bounceTimer)
     bounceTimer = null
   }
+  if (releaseTimer !== null) {
+    clearTimeout(releaseTimer)
+    releaseTimer = null
+  }
+  if (pushTimer !== null) {
+    clearTimeout(pushTimer)
+    pushTimer = null
+  }
+  window.removeEventListener('pointerup', finishPress)
+  window.removeEventListener('doomscroll:dimension-buy', onNeighborBuy)
   if (textThrottleInterval !== null) {
     clearInterval(textThrottleInterval)
     textThrottleInterval = null
@@ -257,7 +333,20 @@ function buy(e?: MouseEvent) {
   const flowBefore = props.dimension.tier === 1 ? D_0 : store.getDimensionChainFeedPerSecond(props.dimension.tier)
   const success = store.buyDimensionUnits(props.dimension.tier)
   if (success) {
-    bounceCard()
+    // Bas-bırak döngüsü geri bildirimin sahibiyse (taze squash/yay), eski
+    // buy-bounce bastırılır — çift hareket yığılması olmaz. Klavye
+    // aktivasyonunda damga boş kalır ve bounce çalışır.
+    if (!isPressing && !isPressFeedbackFresh(pressReleaseAt, performance.now())) {
+      bounceCard()
+    }
+    // Komşu itme yalnız tek tık alımlarında oynar; hold-spam'de titreşim üretmez.
+    if (!isPressing) {
+      window.dispatchEvent(
+        new CustomEvent('doomscroll:dimension-buy', {
+          detail: { tier: props.dimension.tier }
+        })
+      )
+    }
     window.dispatchEvent(
       new CustomEvent('doomscroll:tap', {
         detail: {
@@ -272,15 +361,18 @@ function buy(e?: MouseEvent) {
 </script>
 
 <template>
-  <div
-    ref="cardRef"
-    v-tilt="{ max: 4, scale: 1.008, disabled: !(store.settings.holoCardsEnabled ?? true) }"
-    class="card-tilt-surface glass-panel-card relative pl-3.5 pr-3 py-2.5 rounded-xl flex items-center justify-between gap-3 border border-white/[0.07] hover:border-white/[0.14] transition-all overflow-hidden"
-    :class="[
-      formatDiscoverGlow ? 'ring-2 ring-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.2)]' : '',
-      comboRowGlow ? 'ring-1 ring-amber-400/30' : ''
-    ]"
-  >
+  <!-- .card-physics-shell: Sütun 3 gerilme/itme katmanı — v-tilt ve kaplama iç
+       kartta kalır; inline tilt transform'u ile sınıf transform'ları çakışmaz. -->
+  <div ref="shellRef" class="card-physics-shell">
+    <div
+      ref="cardRef"
+      v-tilt="{ max: 4, scale: 1.008, disabled: !(store.settings.holoCardsEnabled ?? true) }"
+      class="card-tilt-surface glass-panel-card relative pl-3.5 pr-3 py-2.5 rounded-xl flex items-center justify-between gap-3 border border-white/[0.07] hover:border-white/[0.14] transition-all overflow-hidden"
+      :class="[
+        formatDiscoverGlow ? 'ring-2 ring-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.2)]' : '',
+        comboRowGlow ? 'ring-1 ring-amber-400/30' : ''
+      ]"
+    >
     <!-- Sol Tier Vurgu Çizgisi — alınabilir satır mor yanar, diğerleri sönük -->
     <span class="absolute left-0 top-0 bottom-0 w-1 shrink-0" :class="canAfford ? 'bg-purple-500/80' : 'bg-white/[0.06]'"></span>
 
@@ -363,6 +455,10 @@ function buy(e?: MouseEvent) {
     <div class="flex items-center gap-2 shrink-0">
       <button
         @click="buy($event)"
+        @pointerdown="pressStart"
+        @pointerup="finishPress"
+        @pointercancel="finishPress"
+        @pointerleave="finishPress"
         v-hold="buy"
         :disabled="!canAfford"
         :aria-label="`D${props.dimension.tier} boyutu satın al`"
@@ -394,6 +490,7 @@ function buy(e?: MouseEvent) {
           ></div>
         </div>
       </button>
+      </div>
     </div>
   </div>
 </template>

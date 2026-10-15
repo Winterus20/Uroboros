@@ -2414,3 +2414,40 @@ Oyun içi lo-fi radyosu (`src/core/music/tracks/lofi-chill.ts`) teknik altyapıs
 ### Doğrulama:
 - `npm run build` (`vue-tsc && vite build`) → 0 hata, production paketi derlendi.
 - Ses kontrollü test tarifi: müzik açıkken intro (davulsuz) → ~13 sn sonra beat girişi → zirve → çöküş → son bölümde plak yavaşlaması (perde çöküşü) ve yeni parçaya geçiş duyulmalı.
+
+---
+## 2026-10-15 — Görsel Dil Geçişi (Yazı → Renk/Görsel) — `dfa4dce`
+
+**Problem:** UI yazı/tooltip ağırlıklıydı (44+ v-tip); AD/Cookie Clicker tarzı renk, glif, çubuk ve ritimle anlatım eksikti.
+
+**Yapılanlar:**
+1. **Rezerve Renk Sözleşmesi (A):** `dimension_identity.ts`'e D1-D8 özgün dizgi glifi (ϱ ϵ Ω χ Ξ ⊕ ✶ ◉) + accent kanalı; `style.css`'e `--ds-prestige/locked/bonus/danger` rezervleri + üç durumlu uygunluk rampası (`.ds-ramp-locked/partial/ready`) + `.dim-glyph` (tabular, jitter yok).
+2. **Metni görsele çevirme (B):** DimensionRow'da rozette AD-tarzı glif (D n ünitesi silindi), butonda üç durumlu ramp, akışta ↑ yön oku.
+3. **Nav renk-lengüajı (D):** Sol kenarlık rengi = ikon rengi (purple/emerald/cyan/blue/violet/amber/rose); aktifte ikon+yazı, pasifte sade ikon + 2px üst çizgi (`navClass`/`navLabelClass`).
+4. **Header combo rampası (C):** Rozet rose→cyan rampaya bağlandı (bonus durumu; amber/rose rezerve).
+5. **Motion 3-state (E):** `motionMode: full|reduced|off` (type+state), kök `.motion-off`, ayarlarda 3 durumlu segment; `reduceAnimations` geriye uyumlu senkron.
+6. **Juice altyapısı:** `.juice-punch` (140ms impuls+decay), `.juice-bloom`, `.rise-float` keyframe'leri.
+
+**Doğrulama:** `vue-tsc --noEmit` 0 hata; `vite build` ✓ 12.93s.
+
+**Not:** Subagent spawn'ları `Unauthorized` hatası verdiği için Dalga 2-3 doğrudan ana ajanca yapıldı; Dalga 1 agent'ı kapsam aşımı yapıp App/Header/useNavigation'ı yarım bırakmıştı, tamamlandı.
+
+**Kalanlar (sonraki faz):** F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı); B — DimensionsTab shift/galaxy bar metin sadeleştirmesi; v-tip sayısının azaltılması (Header 14→daha az).
+
+---
+## 2026-10-15 — Balatro Sütun 3: Taktil Kart Fiziği — Spring Damping & Push Dynamics (ADR-0057)
+
+**Problem:** Yol haritasının son taktil sütunu uygulanmamıştı. `v-tilt` ayar değişimini canlı izlemiyor, dokunmatikte kaydırma jank'ı üretiyor ve oyun içi `motionMode` kontratına bağlı değildi. Bas-bırak geri bildirimi yoktu: `buy-bounce` v-hold spam'inde her 100ms yeniden başlayıp titriyordu; komşu kartların satın almada açılması (push dynamics) hiç yoktu.
+
+**Çözüm:**
+1. **`src/core/card-physics.ts` (yeni saf çekirdek):** `pushDirectionFor()` (D1-D8 sınır korumalı komşu yönü) + `isPressFeedbackFresh()` (300ms pencere) + süre sabitleri; `card-physics.test.ts` ile pinlendi. Sınır testi, tier 0/9'un yanlışlıkla komşu sayılmasını yakalattı ve koruma eklendi.
+2. **`core/tilt.ts` sertleştirme:** `updated` kancası (canlı disabled), `pointerType === 'touch'` koruması, yay bırakışı (`cubic-bezier(0.34, 1.56, 0.64, 1)` / 500ms), `motionBlocked()` ile `.reduce-anim` / `.motion-off` + OS tercihi etkileşim anında okunur; hover sırasında kısıt gelirse tilt anında geri oturur.
+3. **`DimensionRow.vue`:** Yeni `.card-physics-shell` sarmalayıcı katmanı (inline tilt transform'u ile sınıf transform'ları çakışmaz): pointerdown → squash `scale3d(1.04, 0.92, 1)`; bırakınca 420ms spring release; pencere seviyesi `pointerup` güvenlik ağı (buton basılıyken disabled olursa takılı kalmaz). `doomscroll:dimension-buy` CustomEvent ile ±1 tier komşular 2.5px / 240ms açılır — yalnız tek tık alımlarında (hold-spam'de titreşimsiz). Bas-bırak penceresi tazeyken eski `buy-bounce` bastırılır; klavye aktivasyonunda bounce korunur.
+4. **`style.css`:** `.card-squash` / `.card-released` / `.card-push-up/down` keyframe'leri + OS `prefers-reduced-motion` kapsamı.
+
+**Doğrulama:**
+- `npm test`: **18 dosya, 263/263 test yeşil** (4 yeni test).
+- `npm run typecheck`: 0 hata. `npm run build`: 1782 modül, 0 hata.
+- `npm run harness:smoke`: 30 dk aktif koşu log10=90.72, 8 shift — ADR-0056 tabanıyla birebir aynı (denge regresyonu yok).
+- ADR: `brain/decisions/0057-balatro-column3-card-physics.md`.
+- Ortam notu: Termux `node_modules/.bin` shebang'leri `termux-fix-shebang` ile düzeltildi (temiz kurulum sonrası tekrarlanabilir).

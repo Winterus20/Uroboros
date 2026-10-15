@@ -12,7 +12,10 @@
   - [x] GPU hızlandırmalı yaylanan rozet katmanı (`SequentialStrikeLayer.vue`).
   - [x] Ayarlar modalında "Sıralı Reels Vuruşu" toggle anahtarı ve reduceAnimations entegrasyonu.
   - [x] 5 yeni birim testi (162/162 yeşil) ve Playwright canlı tarayıcı doğrulaması.
-- [ ] **Sütun 3: Taktil 3D Kart Fiziği & Gerçek "Reels Yukarı İtme" (Spring Damping)**
+- [x] **Sütun 3: Taktil 3D Kart Fiziği & Gerçek "Reels Yukarı İtme" (Spring Damping)** ✅ *(ADR-0057)*
+  - [x] v-tilt sertleştirme: canlı `disabled` (updated kancası), dokunmatik koruması, yay bırakışı (spring overshoot), `motionMode` kontratı.
+  - [x] Bas-bırak lastik gerilmesi: pointerdown → squash `scale3d(1.04, 0.92, 1)`, bırakınca 420ms spring release; hold-spam'de eski bounce bastırılır.
+  - [x] Push Dynamics: manuel satın almada ±1 tier komşu satır 2.5px açılır (`doomscroll:dimension-buy` + `core/card-physics.ts`).
 - [ ] **Sütun 4: Dört Özel Format Sürümü (Foil, Holo, Poly, Negative)**
 - [x] **Sütun 5: Mekanik Slot Odometresi & Veri Kanalı Olarak Screen Shake** ✅ *(v0.29.0)*
   - [x] Hız-reaktif sayaç: 250ms throttle, logaritmik ısı kademesi, basamak rulo, dekad flaşı (`Header.vue` + `style.css`).
@@ -68,7 +71,7 @@ GDD (`GAME_DESIGN.md` §7) dört prestij katmanı vaat ediyor. Gerçekte:
 | :--- | :--- |
 | Faz 0 — Yatak & Telefon | ✅ Çalışıyor |
 | Faz 1 — Sabah 06:00 Çöküşü | ✅ Çalışıyor (SP, Nöral Ağaç, botlar, krizler, 8 meydan okuma) |
-| **Faz 2 — Kolektif Gece Nöbeti** | ❌ **Tek bayrak**: `nightWatchUnlocked` 1e4000'de `true` olur, `SingularityTab` "FAZ 2 AÇIK" rozeti basar — arkasında hiçbir şey yok |
+| **Faz 2 — Kolektif Gece Nöbeti** | ❌ **Tek bayrak**: `nightWatchUnlocked` 1e308'de (kod: `NIGHT_WATCH_THRESHOLD`; alttaki 1e4000 notu bayattı) `true` olur, `SingularityTab` "FAZ 2 AÇIK" rozeti basar — arkasında hiçbir şey yok |
 | **Faz 3 — Evrensel Doomscroll** | ❌ **Hiç yok** |
 
 `singularityGain = 10^((log10 - 308) / 308)` sayısal bir sonsuz döngü verir, ama
@@ -79,8 +82,11 @@ arkasında yeni mekanik yok. Oyuncu 1e4000'e gelip **aynı 9 sekmeyle** tekrar o
       `challenges.ts` altyapısına en yakın aday; prestij döngüsüne doğal oturur.
 - [ ] Gece Ekipmanları (**Talismans** — donanım soketleri). Daha görsel, daha hızlı.
 - [ ] Kadim Gece Varlıkları (**Celestials**) + The Script Engine (Faz 3).
-- [ ] **"Sonraki Açılacak" bandını gerçekten uygula** (altyapısı hazır, yüzeyi eksik —
-      yukarıdaki düzeltilmiş maddeye bak).
+- [x] ~~**"Sonraki Açılacak" bandını gerçekten uygula** (altyapısı hazır, yüzeyi eksik)~~
+      **DÜZELTME (2026-10-15):** Uygulanmış durumda — `useNavigation.ts` `nextLocked()` +
+      `unlockProgressFraction()` → `App.vue` içinde "Sonraki Açılacak" bandı
+      (`nextUnlockLabel` + `nextUnlockPercent`) olarak canlı; ADR-0032 sırasında
+      tamamlanmıştı, bu satır bayat kalmıştı.
 
 - [x] **Gece Krizleri & Viral Bildirimler (Altın Kurabiye Mekaniği):**
   - [x] Ekranda süzülen ışıltılı anomaliler (RNG spawn, 3 farklı etki).
