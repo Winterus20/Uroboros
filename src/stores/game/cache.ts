@@ -11,8 +11,26 @@ import type { NeuralEffects } from '../../models/types'
 // ---- Performans: saf-fonksiyon memo'ları (Vue computed iç fonksiyonları her çağrıda yeniden hesaplar) ----
 export let _challengeEffKey = ''
 export let _challengeEffVal: ChallengeRewardEffects | null = null
+
+// completedChallenges join'u: getDimensionMultiplier ve memoChallengeEffects aynı
+// diziyi tick başına onlarca kez birleştiriyordu (2026-10-15 ölçümü). Dizi ya
+// push ile büyür (uzunluk değişir) ya da yeni referansla değiştirilir (reset/kayıt
+// yükleme) — (referans, uzunluk) anahtarı bu iki mutasyon biçimini de yakalar.
+let _completedJoinSrc: readonly string[] | null = null
+let _completedJoinLen = -1
+let _completedJoinVal = ''
+export function memoCompletedJoin(completed: readonly string[]): string {
+  if (_completedJoinSrc === completed && _completedJoinLen === completed.length) {
+    return _completedJoinVal
+  }
+  _completedJoinSrc = completed
+  _completedJoinLen = completed.length
+  _completedJoinVal = completed.join(',')
+  return _completedJoinVal
+}
+
 export function memoChallengeEffects(completed: readonly string[]): ChallengeRewardEffects {
-  const key = completed.join(',')
+  const key = memoCompletedJoin(completed)
   if (_challengeEffVal && _challengeEffKey === key) return _challengeEffVal
   _challengeEffKey = key
   _challengeEffVal = computeChallengeRewardEffects(completed)

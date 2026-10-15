@@ -136,7 +136,11 @@ export const dimensionActions = {
           ? calcDimensionExactTotal(tier, dim.baseCost, dim.costMult, dim.bought, packs, flat)
           : D_0
       }
-      const mpsBefore = this.matterPerSecond
+      // Performans (2026-10-15): bot yolları (feedbackSurge=false) bu değeri hiç
+      // tüketmez — finalizeDimensionPurchase yalnızca feedbackSurge'de çağrılır.
+      // Erken okuma, her bot alımında pahalı matterPerSecond getter'ını boşuna
+      // yeniden hesaplıyordu (geç oyunda tick bütçesinin ~%6'sı).
+      const mpsBefore = feedbackSurge ? this.matterPerSecond : D_0
       if (packs > 0) {
         this.matter = this.matter.minus(total)
         dim.amount = dim.amount.plus(10 * packs)
@@ -226,7 +230,8 @@ export const dimensionActions = {
         } else break
       }
       if (this.matter.lt(total)) return false
-      const mpsBefore = this.matterPerSecond
+      // Performans: bot yolu (feedbackSurge=false) mpsBefore'ı tüketmez (yukarı bkz.)
+      const mpsBefore = feedbackSurge ? this.matterPerSecond : D_0
       this.matter = this.matter.minus(total)
       this.tickspeedBought += n
       this.registerChallengeBuy(n)

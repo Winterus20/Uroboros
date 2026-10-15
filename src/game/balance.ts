@@ -297,8 +297,24 @@ export function dimensionCostWithoutAcceleration(
  * Kova maliyeti — tüm satın alma yollarının (buyDimension, buyMaxDimension,
  * buyDimensionUnits, buyOneUnit, botlar, UI fiyat gösterimi) tek darboğazı.
  * B0 eşiği altına dokunmaz; eşik üstüne kademeli ivmelenme çarpanını uygular.
+ *
+ * PERFORMANS (2026-10-15 ölçümü): Tek çağrı iki Decimal.pow içerdiği için
+ * ~18µs sürüyordu; autobuyer'lar her tick aynı kovaları yüzlerce kez yeniden
+ * hesaplıyordu (geç oyunda tick ~13ms). Kova maliyeti (tier, kova) girdisiyle
+ * deterministiktir ve baseCost/fullMult koşu boyunca modül sabitlerinin
+ * referanslarıdır (hiçbir yerde atanmaz). Referans eşitliği koruması sayesinde
+ * farklı bir girdi referansı görülürse o tier'ın cache'i sıfırlanır; test ve
+ * kayıt göçü senaryolarında her zaman doğru sonuç döner.
  */
-export function dimensionCostForBucket(
+interface BucketCostCache {
+  baseCost: Decimal
+  fullMult: Decimal
+  costs: Map<number, Decimal>
+}
+
+const bucketCostCache = new Map<number, BucketCostCache>()
+
+function computeBucketCost(
   tier: number,
   bucket: number,
   baseCost: Decimal,
@@ -307,6 +323,24 @@ export function dimensionCostForBucket(
   const cost = dimensionCostWithoutAcceleration(tier, bucket, baseCost, fullMult)
   if (bucket <= B0_BUCKET_THRESHOLD) return cost
   return cost.times(dimensionCostAccelerationFactor(bucket))
+}
+
+export function dimensionCostForBucket(
+  tier: number,
+  bucket: number,
+  baseCost: Decimal,
+  fullMult: Decimal
+): Decimal {
+  let entry = bucketCostCache.get(tier)
+  if (!entry || entry.baseCost !== baseCost || entry.fullMult !== fullMult) {
+    entry = { baseCost, fullMult, costs: new Map() }
+    bucketCostCache.set(tier, entry)
+  }
+  const cached = entry.costs.get(bucket)
+  if (cached !== undefined) return cached
+  const value = computeBucketCost(tier, bucket, baseCost, fullMult)
+  entry.costs.set(bucket, value)
+  return value
 }
 
 export function calcDimensionExactTotal(
@@ -323,9 +357,13 @@ export function calcDimensionExactTotal(
   let cursor = bought
   while (remaining > 0) {
     const bucket = Math.floor(cursor / 10)
-    const unitPrice = dimensionCostForBucket(tier, bucket, baseCost, fullMult).div(10)
     const take = Math.min(10 - (cursor % 10), remaining)
-    total = total.plus(unitPrice.times(take))
+    const bucketCost = dimensionCostForBucket(tier, bucket, baseCost, fullMult)
+    // Performans: hizalı tam kovalarda birim fiyat (kova/10) yeniden çarpılmaz;
+    // kova fiyatının kendisi toplanır. Kısmi kovalarda eski yol birebir korunur.
+    total = take === 10
+      ? total.plus(bucketCost)
+      : total.plus(bucketCost.div(10).times(take))
     cursor += take
     remaining -= take
   }
@@ -438,6 +476,16 @@ export function calcTickspeedExactTotal(
   hasDiscount: boolean,
   effMult: number
 ): Decimal {
+  if (count <= 0) return D_0
+  // Performans (2026-10-15 ölçümü: 120 adımda ~0.5ms): indirim/floor katmanları
+  // devrede değilken toplam saf geometrik seridir; adım adım toplamak yerine
+  // kapalı form kullanılır. Bu, buyMaxTickspeed'in tahmin (calcMaxPacks) ile
+  // birebir aynı formülü olduğundan ileri/geri düzeltme döngüleri de kısalır.
+  // floor katmanı varken (özel mod/başarım/meydan okuma) her adım değeri
+  // değiştirdiği için eski döngü birebir korunur — maliyet matematiği değişmez.
+  if (!isPrivate && !hasDiscount && effMult === 1) {
+    return calcGeometricTotal(base.times(infl), ratio, start, count)
+  }
   let total = D_0
   for (let i = 0; i < count; i++) {
     total = total.plus(tickspeedStepCost(start + i, base, ratio, infl, isPrivate, hasDiscount, effMult))

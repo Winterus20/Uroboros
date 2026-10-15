@@ -1,5 +1,16 @@
 import Decimal from 'break_eternity.js'
 
+// PERFORMANS (2026-10-15 ölçümü): Pinia/Vue state'i derindir; Decimal örnekleri
+// de reaktivite proxy'sine sarılıyordu ve tick döngüsündeki HER Decimal metodu
+// proxy `get` tuzağından geçiyordu (geç oyun CPU profilinde tick süresinin
+// ~%25'i, tek çarpım ~4µs). Decimal'ler bu kod tabanında değişmez değerlerdir:
+// hiçbir yerde yerinde mutasyon yapılmaz (`.mag =`, `.assign()`, `.copyFrom()`
+// kullanımı yok — tarama 2026-10-15); her güncelleme yeni örnek atamasıyla olur
+// ve o atama zaten reaktif bir `set` tetikler. Prototipe Vue'nun `markRaw`
+// bayrağını (__v_skip) koymak tüm Decimal örneklerini proxy'siz bırakır:
+// oyun davranışı birebir aynı kalır, sarmalama maliyeti sıfırlanır.
+Object.defineProperty(Decimal.prototype, '__v_skip', { value: true })
+
 export { Decimal }
 
 export type DecimalSource = Decimal | number | string

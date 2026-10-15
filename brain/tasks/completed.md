@@ -1,5 +1,24 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-15] ✔ — Geç Oyun Tick Performansı: Reaktivite Muafiyeti, Memoizasyon ve Deterministik Perf Bench (ADR-0059, v0.38.1)
+
+### Problem:
+- Termux/Android ölçümünde geç oyun **churn** senaryosu (break_singularity sonrası, shift/galaksi botları sürekli prestige ederken) mean **~20.5 ms**, p95 **~62 ms**; CPU profilinde tick bütçesinin **~%25'i** Pinia/Vue derin reaktivite proxy `get` tuzağında eriyordu — her Decimal örneği proxy'ye sarılıyordu.
+- `dimensionCostForBucket` ~18.2 µs/çağrı (iki `Decimal.pow`), küçük sayı biçimlendirmesi ~73 µs (`Intl` formatter her çağrıda yeniden kuruluyordu), satın alma botlarında tüketilmeyen `matterPerSecond` okuması ve tick başına onlarca kez `completedChallenges.join(',')` tekrarı.
+- Eski perf kurgusu reset tetikleyen botlar yüzünden farkında olmadan "reset sonrası ara durum" ölçüyordu; A/B karşılaştırması güvenilir değildi.
+
+### Çözüm:
+- `src/core/math.ts`: `Decimal.prototype.__v_skip` — tüm Decimal'ler reaktivite proxy'sinden muaf. Güvenlik kanıtı: kod tabanında Decimal yerinde mutasyonu YOK (`.mag =`, `.assign()`, `.copyFrom()` taraması); her güncelleme yeni örnek atamasıdır ve atama reaktif `set`'i zaten tetikler.
+- `src/game/balance.ts`: `dimensionCostForBucket` Map memoizasyonu (baseCost/fullMult **referans korumalı**), `calcDimensionExactTotal` hizalı kova (`take === 10`) hızlı yolu, `calcTickspeedExactTotal` kapalı form (floor katmanı — özel mod/başarım/meydan okuma — devredeyken eski döngü birebir korunur).
+- `src/core/format.ts`: sabit seçenekli tek `Intl.NumberFormat` örneği yeniden kullanılır.
+- `src/stores/game/`: `memoCompletedJoin` (`cache.ts`, referans+uzunluk anahtarlı) — `memoChallengeEffects` ve `getDimensionMultiplier` paylaşır; bot yollarında `mpsBefore = feedbackSurge ? this.matterPerSecond : D_0`.
+- **Kalıcı perf altyapısı:** `brain/scratchpad/harness/perf-tick.ts` (churn/wall senaryoları; `Math.random` sabit + `Date.now` sanal → deterministik) + `build-perf.mjs` + `npm run harness:perf`.
+
+### Doğrulama (A/B kanıtı — git stash karşılaştırması, 3 koşu):
+- **churn mean: ~20.5 ms → ~5.9 ms (~3.5×)**; p50 14→5.5 ms, p95 62→13.8 ms, p99 ~69→~15 ms. **wall mean: 1.35 → 0.79 ms (~1.7×).**
+- İki derlemede `warmupState`/`endState`/`workload` sayaçları **birebir eşit** → optimizasyonlar davranışı değiştirmedi, yalnızca hızlandırdı.
+- `npm test`: **18 dosya, 263/263 yeşil** · `npm run build`: **0 hata** · `npm run harness:smoke`: **PASS** (log10=90.7, 8 shift).
+
 ## [2026-10-14] ✔ — Planck Duvarı Sert Kilit (Hard-Cap) ve Break Singularity Ritüeli (ADR-0056)
 
 ### Problem:

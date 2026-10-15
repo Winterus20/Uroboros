@@ -4,7 +4,7 @@ import { hasAchievementReward } from '../../game/achievements'
 import { BASE_UNLOCKED_DIMENSIONS, BUCKET_CAP_GAIN, BUCKET_CAP_THRESHOLD, CHALLENGE_C7_GALAXY_COST_MULT, CHALLENGE_C7_TIER_COST_STEP, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, SHIFT_CAP_GAIN, SHIFT_CAP_THRESHOLD, TICKSPEED_CAP_GAIN, TICKSPEED_CAP_THRESHOLD, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, diminishingPurchaseCount, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { ALL_CHALLENGES_COMPLETE_MULT, challengeTimeTierMult, getChallengeById, isAllChallengesComplete } from '../../game/challenges'
 import { FORMAT_UNLOCK_BUFF_MULT, FORMAT_UNLOCK_BUFF_SECONDS, formatUnlockBuffMult, getTierIdentity, tierProductionMult, tierShiftReqMult } from '../../game/dimension_identity'
-import { dimMultCacheKey, memoChallengeEffects, memoNeuralEffects, _dimCostCache, _dimMultCache } from './cache'
+import { dimMultCacheKey, memoChallengeEffects, memoCompletedJoin, memoNeuralEffects, _dimCostCache, _dimMultCache } from './cache'
 import type { ResolutionMilestone } from '../../models/types'
 import type { GameState } from './state'
 import type { StoreApi } from './store-api'
@@ -360,7 +360,7 @@ export const dimensionGetters = {
       const partnerDim = state.dimensions[9 - tier - 1]
       const partnerBought = partnerDim ? partnerDim.bought : 0
       const neuralProd = memoNeuralEffects(state.neuralNodesBought || {}).productionMult
-      const completedJoin = state.completedChallenges.join(',')
+      const completedJoin = memoCompletedJoin(state.completedChallenges)
       const sacStr = tier === 8 ? state.sacrificeMultiplier.toString() : '1'
       const dim1GrowthStr = tier === 1 ? state.challengeDim1Growth.toString() : '1'
       const unlocked = resolvedUnlockedDimensionCount(state)
