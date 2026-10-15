@@ -55,7 +55,7 @@ const dimensionSummary = computed(() => {
           </div>
           <span
             class="font-mono font-bold tabular-nums shrink-0"
-            :class="row.value >= 1 ? 'text-emerald-300' : 'text-rose-300'"
+            :class="row.value > 1 ? 'text-cyan-300' : 'text-slate-400'"
           >
             ×{{ format(row.value, 2, store.settings.notation) }}
           </span>
@@ -67,10 +67,10 @@ const dimensionSummary = computed(() => {
     <div class="glass-panel-card p-3.5 rounded-xl border border-white/[0.06]">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <MousePointerClick class="w-4 h-4 text-pink-400" />
+          <MousePointerClick class="w-4 h-4 text-blue-400" />
           <span class="text-xs font-bold text-slate-200">Manuel Yutma Gücü (Taktil Çekim) Kırılımı</span>
         </div>
-        <span class="text-xs font-mono font-bold text-pink-300 tabular-nums">
+        <span class="text-xs font-mono font-bold text-blue-300 tabular-nums">
           {{ format(store.manualClickPower, 2, store.settings.notation) }} / Dokunuş
         </span>
       </div>
@@ -83,7 +83,7 @@ const dimensionSummary = computed(() => {
           v-tip="row.desc"
         >
           <span class="text-slate-300 font-medium truncate">{{ row.name }}</span>
-          <span class="font-mono font-bold text-pink-300 tabular-nums shrink-0">
+          <span class="font-mono font-bold text-blue-300 tabular-nums shrink-0">
             {{ row.value }}
           </span>
         </div>
@@ -121,7 +121,7 @@ const dimensionSummary = computed(() => {
     <div class="glass-panel-card p-3.5 rounded-xl border border-white/[0.06]">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <Layers class="w-4 h-4 text-amber-400" />
+          <Layers class="w-4 h-4 text-purple-400" />
           <span class="text-xs font-bold text-slate-200">İstasyon Kademeleri (D1–D8)</span>
         </div>
         <span class="text-[11px] font-mono text-slate-400">
@@ -145,7 +145,7 @@ const dimensionSummary = computed(() => {
             </div>
           </div>
           <div class="text-right shrink-0 ml-2">
-            <div class="font-mono font-bold text-amber-300 tabular-nums">
+            <div class="font-mono font-bold text-purple-300 tabular-nums">
               ×{{ format(d.mult, 2, store.settings.notation) }}
             </div>
             <div class="text-[10px] text-slate-400 font-mono tabular-nums">

@@ -5,6 +5,8 @@ import { format, getMassScaleBadge } from "../../core/format";
 import { Decimal, D_1 } from "../../core/math";
 import { sounds } from "../../core/audio";
 import { Zap } from "lucide-vue-next";
+import { getTierGlyph, getTierAccent } from "../../game/dimension_identity";
+import { isMotionOff } from "../../composables/useMotion";
 import { useCounterHeat } from "../../composables/useCounterHeat";
 import { useMpsTrend } from "../../composables/useMpsTrend";
 
@@ -22,6 +24,8 @@ const comboUnlocked = computed(() => (store.neuralNodesBought["combo_unlock"] ||
 const comboActive = computed(() => comboUnlocked.value && comboCount.value >= 2);
 
 function popCounter(intensity: 0 | 1 | 2 = 0): void {
+  // Hareket 'off' ise sayaç pop sınıfı eklenmez (reduced davranışı CSS'te korunur).
+  if (isMotionOff()) return;
   const el = counterRef.value?.parentElement ?? counterRef.value;
   if (!el) return;
   const comboClass = comboActive.value
@@ -135,7 +139,7 @@ function onProductionBump(e: Event): void {
     popCounter(1);
   }
   const el = perSecRef.value;
-  if (el) {
+  if (el && !isMotionOff()) {
     el.classList.remove("dps-surge");
     void el.offsetWidth;
     el.classList.add("dps-surge");
@@ -243,14 +247,15 @@ onUnmounted(() => {
         <span v-else>+{{ displayPerSec }}/s</span>
         <span v-if="!store.isMatterCapped && mpsTrend === 1" class="dps-delta-up" aria-hidden="true">▲</span>
         <span v-else-if="!store.isMatterCapped && mpsTrend === -1" class="dps-delta-down" aria-hidden="true">▼</span>
-        <span v-if="dpsSurgeActive && dpsSurgeDelta" class="text-emerald-300 font-bold text-[11px] animate-pulse">{{ dpsSurgeDelta }}</span>
+        <span v-if="dpsSurgeActive && dpsSurgeDelta" class="text-cyan-300 font-bold text-[11px] animate-pulse">{{ dpsSurgeDelta }}</span>
       </span>
       <span
         v-if="store.formatUnlockBuffActive"
-        class="text-[10px] font-mono text-cyan-200 bg-cyan-500/15 px-1.5 py-0.5 rounded border border-cyan-400/30 tabular-nums shrink-0"
+        class="text-[10px] font-mono text-cyan-200 bg-cyan-500/15 px-1.5 py-0.5 rounded border border-cyan-400/30 tabular-nums shrink-0 inline-flex items-center gap-1"
         v-tip="'Yeni format keşfi: bu tier üretimine kısa süre ×1.25'"
       >
-        📺 D{{ store.formatUnlockBuffTier }} · {{ store.formatUnlockBuffSecondsRemaining }}s
+        <span class="dim-glyph" :class="getTierAccent(store.formatUnlockBuffTier)">{{ getTierGlyph(store.formatUnlockBuffTier) }}</span>
+        <span>D{{ store.formatUnlockBuffTier }} · {{ store.formatUnlockBuffSecondsRemaining }}s</span>
       </span>
     </div>
   </div>

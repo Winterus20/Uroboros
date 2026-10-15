@@ -46,7 +46,7 @@ function getCellSeedDef(seedType: LabSeedType | null) {
             </span>
             <span
               v-else
-              class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"
+              class="ds-badge ds-badge-slate text-[9px]"
             >
               <HelpCircle class="w-3 h-3" />
               <span>Kilitli</span>
@@ -61,7 +61,7 @@ function getCellSeedDef(seedType: LabSeedType | null) {
       <!-- Ebeveyn İpuçları -->
       <div class="flex items-center gap-1.5 text-xs font-mono bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10 text-slate-300 shrink-0">
         <span>{{ getCellSeedDef(recipe.parent1)?.icon }} {{ getCellSeedDef(recipe.parent1)?.name }}</span>
-        <span class="text-amber-400">+</span>
+        <span class="text-slate-400">+</span>
         <span>{{ getCellSeedDef(recipe.parent2)?.icon }} {{ getCellSeedDef(recipe.parent2)?.name }}</span>
       </div>
     </div>

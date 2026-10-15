@@ -99,11 +99,11 @@ async function copyReport(): Promise<void> {
       <div class="space-y-2 pt-2 border-t border-white/[0.05] text-xs">
         <!-- 1. Yazma Süresi -->
         <div class="flex items-start gap-2 text-slate-300 leading-relaxed">
-          <Clock class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <Clock class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
           <div>
             <span>
               Saniyede 3 basamak hızla aralıksız yazsaydınız, bu kütleyi yazmak
-              <strong class="text-amber-300 font-mono font-bold">{{ bio.writingParadox.writingTimeFormatted }}</strong>
+              <strong class="text-slate-300 font-mono font-bold">{{ bio.writingParadox.writingTimeFormatted }}</strong>
               sürerdi.
             </span>
             <span class="text-[10px] text-slate-500 block mt-0.5 font-mono">
@@ -147,10 +147,10 @@ async function copyReport(): Promise<void> {
       <div class="glass-panel-card p-4 rounded-xl border border-white/[0.06] space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <BatteryMedium class="w-4 h-4 text-emerald-400" />
+            <BatteryMedium class="w-4 h-4 text-cyan-400" />
             <h4 class="text-xs font-bold text-slate-200">Kozmik Kararlılık (Kritik Kütle)</h4>
           </div>
-          <span class="text-xs font-mono font-bold text-emerald-300 tabular-nums">
+          <span class="text-xs font-mono font-bold text-cyan-300 tabular-nums">
             %{{ bio.mentalBatteryPct }}
           </span>
         </div>
@@ -160,9 +160,9 @@ async function copyReport(): Promise<void> {
             class="h-full transition-all duration-300"
             :class="
               bio.mentalBatteryPct > 50
-                ? 'bg-emerald-500'
+                ? 'bg-cyan-500'
                 : bio.mentalBatteryPct > 20
-                ? 'bg-amber-500'
+                ? 'bg-slate-500'
                 : 'bg-rose-500 animate-pulse'
             "
             :style="{ width: `${bio.mentalBatteryPct}%` }"
@@ -220,7 +220,7 @@ async function copyReport(): Promise<void> {
         class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all cursor-pointer shadow-lg shrink-0"
         :class="
           copied
-            ? 'bg-emerald-600 shadow-emerald-900/50'
+            ? 'bg-cyan-600 shadow-cyan-900/50'
             : 'bg-purple-600 hover:bg-purple-500 active:scale-95 shadow-purple-900/50'
         "
         @click="copyReport"

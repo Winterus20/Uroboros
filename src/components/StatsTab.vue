@@ -68,10 +68,10 @@ const pastRunsCount = computed(() => store.pastSingularities.length);
         </div>
 
         <div class="stat-box">
-          <Zap class="w-4 h-4 text-pink-400 shrink-0" />
+          <Zap class="w-4 h-4 text-cyan-400 shrink-0" />
           <div>
             <div class="stat-box-label">Zirve Debi</div>
-            <div class="stat-box-value text-pink-200 tabular-nums">
+            <div class="stat-box-value text-cyan-200 tabular-nums">
               {{ format(store.stats.highestDps, 2, store.settings.notation) }}/s
             </div>
           </div>

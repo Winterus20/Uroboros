@@ -4,6 +4,7 @@ import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
 import { Decimal, D_0 } from '../core/math'
 import { pushDirectionFor, isPressFeedbackFresh, CARD_PUSH_MS, CARD_RELEASE_MS } from '../core/card-physics'
+import { isMotionReduced } from '../composables/useMotion'
 import type { DimensionData } from '../models/types'
 import { getTierGlyph, getTierAccent } from '../game/dimension_identity'
 import { Link } from 'lucide-vue-next'
@@ -27,7 +28,7 @@ let releaseTimer: number | null = null
 
 function pressStart(e: PointerEvent) {
   if (e.button !== 0) return
-  if (store.settings.reduceAnimations) return
+  if (isMotionReduced()) return
   const shell = shellRef.value
   if (!shell) return
   isPressing = true
@@ -62,7 +63,7 @@ function finishPress() {
 let pushTimer: number | null = null
 
 function onNeighborBuy(e: Event) {
-  if (store.settings.reduceAnimations) return
+  if (isMotionReduced()) return
   const detail = (e as CustomEvent<{ tier?: number }>).detail
   if (!detail || typeof detail.tier !== 'number') return
   const dir = pushDirectionFor(props.dimension.tier, detail.tier)
@@ -81,7 +82,7 @@ function onNeighborBuy(e: Event) {
 }
 
 function bounceCard() {
-  if (store.settings.reduceAnimations) return
+  if (isMotionReduced()) return
   const el = cardRef.value
   if (!el) return
   el.classList.remove('buy-bounce')
@@ -370,7 +371,7 @@ function buy(e?: MouseEvent) {
       class="card-tilt-surface glass-panel-card relative pl-3.5 pr-3 py-2.5 rounded-xl flex items-center justify-between gap-3 border border-white/[0.07] hover:border-white/[0.14] transition-all overflow-hidden"
       :class="[
         formatDiscoverGlow ? 'ring-2 ring-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.2)]' : '',
-        comboRowGlow ? 'ring-1 ring-amber-400/30' : ''
+        comboRowGlow ? 'ring-1 ring-cyan-400/30' : ''
       ]"
     >
     <!-- Sol Tier Vurgu Çizgisi — alınabilir satır mor yanar, diğerleri sönük -->
@@ -428,7 +429,7 @@ function buy(e?: MouseEvent) {
             v-tip="`Kuantum Rezonans Bağı: ${partnerInfo.label} (${partnerInfo.partnerBought} adet) bu boyuta ×${partnerInfo.mult.toFixed(2)} çarpan sağlıyor`"
           >
             <Link class="w-2.5 h-2.5 text-cyan-400" />
-            <span>D{{ partnerInfo.partnerTier }}: ×{{ partnerInfo.mult.toFixed(2) }}</span>
+            <span><span class="dim-glyph" :class="getTierAccent(partnerInfo.partnerTier)">{{ getTierGlyph(partnerInfo.partnerTier) }}</span> D{{ partnerInfo.partnerTier }}: ×{{ partnerInfo.mult.toFixed(2) }}</span>
           </span>
         </div>
 
@@ -443,10 +444,10 @@ function buy(e?: MouseEvent) {
       </div>
       <span
         v-if="showFlowRate"
-        class="text-[10px] font-medium text-emerald-400/90 inline-flex items-center gap-0.5"
+        class="text-[10px] font-medium text-cyan-400/90 inline-flex items-center gap-0.5"
         v-tip="flowRate.hint"
       >
-        <span class="text-emerald-300">↑</span>
+        <span class="text-cyan-300">↑</span>
         +{{ displayFlowText }}{{ flowRate.suffix }}
       </span>
     </div>
@@ -467,7 +468,7 @@ function buy(e?: MouseEvent) {
           canAfford
             ? 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-100 border-purple-500/40 cursor-pointer shadow-xs affordance-pulse'
             : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${affordRampClass}`,
-          completesPack && canAfford ? 'ring-1 ring-emerald-400/40' : ''
+          completesPack && canAfford ? 'ring-1 ring-cyan-400/40' : ''
         ]"
         v-tip="canAfford ? `+${affordableUnits} adet için ${displayCostText} (bu alımla ${packProgress + affordableUnits} adet olur)` : 'Yetersiz Kütle'"
       >
@@ -477,7 +478,7 @@ function buy(e?: MouseEvent) {
 
         <div class="flex items-center gap-1 text-[10px] font-sans leading-none mt-1 z-10 tabular-nums">
           <span :class="canAfford ? 'text-purple-300/80' : 'text-slate-500'">{{ packProgress }}/10</span>
-          <span v-if="canAfford && affordableUnits > 0" class="text-emerald-400 font-bold">
+          <span v-if="canAfford && affordableUnits > 0" class="text-cyan-400 font-bold">
             (+{{ affordableUnits }})
           </span>
         </div>

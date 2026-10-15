@@ -58,7 +58,7 @@ function handleSingularity(): void {
       aria-label="Kozmik çöküşü başlat veya meydan okumayı tamamla"
       class="btn-tactile h-11 px-2.5 sm:px-3 rounded-xl border text-xs font-bold font-mono flex items-center gap-1.5 cursor-pointer shrink-0 min-w-[70px] sm:min-w-[90px]"
       :class="inChallenge && !singularityReady
-        ? 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed opacity-60'
+        ? 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed ds-ramp-partial'
         : 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300 shadow-md animate-pulse'"
       v-tip="inChallenge ? challengeTip : singularityTip"
     >

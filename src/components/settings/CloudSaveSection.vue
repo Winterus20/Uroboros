@@ -30,7 +30,7 @@ const authStore = useAuthStore();
             <span class="text-xs font-mono font-bold text-white">Bulut Senkronizasyonu (Cloud Save)</span>
             <span
               v-if="authStore.isAuthenticated"
-              class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold border border-emerald-500/30"
+              class="px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[9px] font-mono font-bold border border-cyan-500/30"
             >
               Aktif
             </span>
@@ -81,7 +81,7 @@ const authStore = useAuthStore();
           :disabled="authStore.isSyncing"
           class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
         >
-          <DownloadCloud class="w-3 h-3 text-emerald-400" />
+          <DownloadCloud class="w-3 h-3 text-cyan-400" />
           <span>Buluttan Çek</span>
         </button>
       </div>
@@ -92,8 +92,8 @@ const authStore = useAuthStore();
       <AlertTriangle class="w-3.5 h-3.5 shrink-0 text-rose-400" />
       <span>{{ authStore.error }}</span>
     </div>
-    <div v-else-if="authStore.syncStatus === 'success'" class="mt-2.5 p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium flex items-center gap-1.5 animate-fade-in">
-      <CheckCircle2 class="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+    <div v-else-if="authStore.syncStatus === 'success'" class="mt-2.5 p-2 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-medium flex items-center gap-1.5 animate-fade-in">
+      <CheckCircle2 class="w-3.5 h-3.5 shrink-0 text-cyan-400" />
       <span>İlerlemeniz buluta başarıyla yedeklendi!</span>
     </div>
   </div>

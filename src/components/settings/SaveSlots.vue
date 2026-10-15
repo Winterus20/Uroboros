@@ -50,10 +50,10 @@ defineExpose({ refreshSlots });
   <div class="space-y-2.5">
     <div class="flex items-center justify-between">
       <span class="text-xs font-mono font-bold text-slate-200 flex items-center gap-1.5">
-        <HardDrive class="w-4 h-4 text-emerald-400" />
+        <HardDrive class="w-4 h-4 text-cyan-400" />
         Çoklu Kayıt Slotları (3 Slot)
       </span>
-      <span v-if="slotActionSuccess" class="text-[11px] font-mono text-emerald-400 font-bold">
+      <span v-if="slotActionSuccess" class="text-[11px] font-mono text-cyan-400 font-bold">
         {{ slotActionSuccess }}
       </span>
     </div>
@@ -64,7 +64,7 @@ defineExpose({ refreshSlots });
         :key="s"
         class="glass-panel-card p-3 rounded-xl border relative flex flex-col justify-between transition-all"
         :class="store.settings.activeSlot === s
-          ? 'border-emerald-500/50 bg-emerald-500/[0.06] shadow-sm'
+          ? 'border-cyan-500/50 bg-cyan-500/[0.06] shadow-sm'
           : 'border-white/[0.07] bg-black/40'"
       >
         <div>
@@ -72,7 +72,7 @@ defineExpose({ refreshSlots });
             <span class="text-xs font-mono font-bold text-white">Slot {{ s }}</span>
             <span
               v-if="store.settings.activeSlot === s"
-              class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold border border-emerald-500/30"
+              class="ds-badge ds-badge-cyan"
             >
               Aktif
             </span>
@@ -95,7 +95,7 @@ defineExpose({ refreshSlots });
             v-if="store.settings.activeSlot !== s"
             @click="switchSlot(s)"
             :aria-label="`Slot ${s}'e geç`"
-            class="btn-tactile flex-1 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold transition-all cursor-pointer"
+            class="btn-tactile flex-1 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-[10px] font-mono font-bold transition-all cursor-pointer"
           >
             Geç
           </button>

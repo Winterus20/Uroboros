@@ -45,7 +45,7 @@ const affordable = computed(() => store.matter.gte(effectiveCost.value));
         <span
           v-else
           class="text-[10px] font-mono tabular-nums"
-          :class="affordable ? 'text-cyan-300' : 'text-slate-500'"
+          :class="affordable ? 'text-slate-100' : 'text-slate-500'"
         >
           {{ formatNumber(effectiveCost, store.settings.notation) }}
         </span>

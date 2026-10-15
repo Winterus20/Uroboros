@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
 import { sounds } from '../core/audio'
+import { isMotionOff } from '../composables/useMotion'
 import { ArrowUp, Cpu, Layers, Flame, AlertTriangle } from 'lucide-vue-next'
 
 const store = useGameStore()
@@ -12,14 +13,36 @@ const tickspeedCost = computed(() => format(store.tickspeedCost, 2, store.settin
 const tickspeedMultiplier = computed(() => format(store.tickspeedMultiplier, 2, store.settings.notation))
 const canAffordTickspeed = computed(() => store.matter.gte(store.tickspeedCost))
 
-const canAffordAny = computed(() => {
+// Hz rampası: kısmi = tek adım fiyatı (paket/10) karşılanıyor ama tam yükseltme değil.
+const tickspeedPartial = computed(
+  () => !canAffordTickspeed.value && store.matter.gte(store.tickspeedCost.div(10))
+)
+const tickspeedRampClass = computed(() =>
+  tickspeedPartial.value ? 'ds-ramp-partial' : 'ds-ramp-locked'
+)
+
+// Tümü rampası — Header ile aynı ayrım: tam paket → ready, yalnız birim → partial.
+const canAffordFullPack = computed(() => {
   if (canAffordTickspeed.value) return true
   for (let i = 1; i <= store.unlockedDimensionsCount; i++) {
-    const pack = store.getDimensionCost(i)
-    if (store.matter.gte(pack)) return true
-    if (store.matter.gte(pack.div(10))) return true
+    if (store.matter.gte(store.getDimensionCost(i))) return true
   }
   return false
+})
+
+const canAffordSingleUnit = computed(() => {
+  if (canAffordTickspeed.value) return true
+  for (let i = 1; i <= store.unlockedDimensionsCount; i++) {
+    if (store.matter.gte(store.getDimensionCost(i).div(10))) return true
+  }
+  return false
+})
+
+const canAffordAny = computed(() => canAffordFullPack.value || canAffordSingleUnit.value)
+
+const maxAllRampClass = computed(() => {
+  if (canAffordFullPack.value) return ''
+  return canAffordSingleUnit.value ? 'ds-ramp-partial' : 'ds-ramp-locked'
 })
 
 function handleConsume(e: MouseEvent | TouchEvent) {
@@ -66,6 +89,15 @@ function handleMaxAll() {
   if (!canAffordAny.value) return
   store.maxAll()
 }
+
+// Ortak punch kalıbı: dokunma geri bildirimi pointerdown anında (≤100 ms, tek impuls).
+function punchTap(e: PointerEvent): void {
+  if (isMotionOff()) return
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  el.classList.add('juice-punch')
+  window.setTimeout(() => el.classList.remove('juice-punch'), 160)
+}
 </script>
 
 <template>
@@ -81,19 +113,24 @@ function handleMaxAll() {
       <button
         type="button"
         @click="handleTickspeed"
+        @pointerdown="punchTap"
         v-hold="handleTickspeed"
         :disabled="!canAffordTickspeed"
         class="btn-tactile h-11 px-2.5 rounded-xl text-xs font-mono font-medium transition-all flex flex-col items-center justify-center shrink-0 border"
         :class="canAffordTickspeed
-          ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border-cyan-500/35 cursor-pointer shadow-xs'
-          : 'bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-50'"
+          ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border-cyan-500/35 cursor-pointer shadow-xs affordance-pulse'
+          : `bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed ${tickspeedRampClass}`"
+        :style="canAffordTickspeed ? { '--pulse-c1': 'rgba(0, 240, 255, 0.3)', '--pulse-c2': 'rgba(0, 240, 255, 0.7)' } : undefined"
         v-tip="'Çekim Hızı (Hz)'"
       >
         <div class="flex items-center gap-1 leading-none">
           <Cpu class="w-3 h-3 text-cyan-400" />
           <span class="text-[10px] font-bold text-white">×{{ tickspeedMultiplier }}</span>
         </div>
-        <span class="text-[9px] text-cyan-300/80 font-normal tabular-nums truncate max-w-[50px] leading-tight">
+        <span
+          class="text-[9px] font-normal tabular-nums truncate max-w-[50px] leading-tight"
+          :class="canAffordTickspeed ? 'text-slate-200' : 'text-slate-500'"
+        >
           {{ tickspeedCost }}
         </span>
       </button>
@@ -102,11 +139,13 @@ function handleMaxAll() {
       <button
         type="button"
         @click="handleMaxAll"
+        @pointerdown="punchTap"
         :disabled="!canAffordAny"
         class="btn-tactile h-11 px-2.5 rounded-xl font-mono text-xs font-bold transition-all flex flex-col items-center justify-center shrink-0 border"
-        :class="canAffordAny
-          ? 'bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20 cursor-pointer shadow-xs'
-          : 'bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
+        :class="canAffordFullPack
+          ? 'bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20 cursor-pointer shadow-xs affordance-pulse'
+          : `bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed ${maxAllRampClass}`"
+        :style="canAffordFullPack ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
         v-tip="'Tümünü Maks Al'"
       >
         <div class="flex items-center gap-1 leading-none">
@@ -120,6 +159,7 @@ function handleMaxAll() {
       <button
         type="button"
         @click="handleConsume($event)"
+        @pointerdown="punchTap"
         class="btn-tactile flex-1 h-11 px-3.5 rounded-xl bg-purple-600/35 hover:bg-purple-600/45 text-white font-bold text-xs font-mono flex items-center justify-between gap-1.5 shadow-[0_0_20px_rgba(168,85,247,0.25)] active:scale-95 transition-all border border-purple-400/50 cursor-pointer"
         :class="{ 'cta-beacon': store.dimensions[0]?.bought === 0 }"
         v-tip="'Kütleçekim Vakumu / Taktil Yutuş'"
@@ -137,8 +177,8 @@ function handleMaxAll() {
         </div>
 
         <!-- Durum Rozeti (Kombo veya Kriz Debuff) -->
-        <div v-if="store.isComboActive" class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/35 text-amber-300 text-[10px] font-bold animate-pulse">
-          <Flame class="w-2.5 h-2.5 fill-amber-400" />
+        <div v-if="store.isComboActive" class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/35 text-cyan-300 text-[10px] font-bold animate-pulse">
+          <Flame class="w-2.5 h-2.5 fill-cyan-400" />
           <span>{{ store.comboMultiplier.toFixed(1) }}x</span>
         </div>
         <div v-else-if="store.crisisBackfireDebuff > 0" class="flex items-center gap-0.5 px-1 py-0.5 rounded-md bg-rose-500/20 border border-rose-400/35 text-rose-300 text-[9px] font-bold">

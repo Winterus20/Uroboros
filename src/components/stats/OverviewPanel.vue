@@ -41,7 +41,7 @@ const kpiOverview = computed(() => [
     label: "Zirve Çekim Hızı",
     value: `${format(store.stats.highestDps, 2, store.settings.notation)} / sn`,
     icon: Zap,
-    color: "text-pink-400",
+    color: "text-cyan-400",
     subtext: "Ulaşılan en yüksek saniyelik debi"
   },
   {
@@ -107,7 +107,7 @@ const ratio = computed(() => store.activeVsPassiveRatio);
 
       <div class="w-full h-3 rounded-full bg-black/50 overflow-hidden flex border border-white/[0.06]">
         <div
-          class="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-300"
+          class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300"
           :style="{ width: `${ratio.manualPct}%` }"
           v-tip="`Manuel Yutma: %${ratio.manualPct}`"
         ></div>
@@ -119,8 +119,8 @@ const ratio = computed(() => store.activeVsPassiveRatio);
       </div>
 
       <div class="flex items-center justify-between text-[11px] font-mono mt-2">
-        <span class="text-pink-300 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-pink-400 inline-block"></span>
+        <span class="text-blue-300 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>
           🌌 Manuel Yutma: %{{ ratio.manualPct }}
         </span>
         <span class="text-cyan-300 flex items-center gap-1.5">

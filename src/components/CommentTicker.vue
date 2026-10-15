@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { sounds } from '../core/audio'
+import { isMotionReduced, useMotionMode } from '../composables/useMotion'
 import { Radio, Zap, ChevronRight, Sparkles, Pause, Gauge } from 'lucide-vue-next'
 import { Decimal } from '../core/math'
 import { safeConfetti } from '../core/celebrate'
@@ -26,6 +27,34 @@ const trackTextRef = ref<HTMLElement | null>(null)
 let restartTimer: number | null = null
 let resizeObserver: ResizeObserver | null = null
 let discoTimeout: number | null = null
+
+// 3 durumlu hareket kapısı — kritik: kısıtlı/devre dışı harekette marquee HİÇ başlatılmaz.
+// Kök sınıflar animasyon süresini 0.001s'e çektiği için çalışan bir marquee `animationend`i
+// her karede tetikler ve sonsuz haber döngüsü açardı. Haber metni statik gösterilir;
+// döndürme işini aşağıdaki JS timer üstlenir (gizli sekmede duraklar, unmount'ta temizlenir).
+const motionMode = useMotionMode()
+const REDUCED_ROTATE_MS = 9000
+let reducedRotateTimer: number | null = null
+
+/** Statik bant modu: reaktif hareket modu 'full' dışı ya da kök-sınıf mührü kısıtlı. */
+function isStaticTicker(): boolean {
+  return motionMode.value !== 'full' || isMotionReduced()
+}
+
+/** Statik modda haberleri sabit aralıkla döndüren timer (marquee zinciri olmadan). */
+function startReducedRotation() {
+  stopReducedRotation()
+  reducedRotateTimer = window.setInterval(() => {
+    pickNextNews()
+  }, REDUCED_ROTATE_MS)
+}
+
+function stopReducedRotation() {
+  if (reducedRotateTimer !== null) {
+    clearInterval(reducedRotateTimer)
+    reducedRotateTimer = null
+  }
+}
 
 // Havuz: Kilitli olmayan ve kriz/şafak aşamasına uygun haberler
 const availableNews = computed(() => {
@@ -119,6 +148,13 @@ function startScroll() {
 
   isAnimating.value = false
 
+  // Statik bant: marquee sınıfı/animasyonu ve animationend zinciri KURULMAZ;
+  // haber döndürmeyi JS rotasyon timer'ı üstlenir.
+  if (isStaticTicker()) {
+    startReducedRotation()
+    return
+  }
+
   nextTick(() => {
     const container = trackContainerRef.value
     const textEl = trackTextRef.value
@@ -145,6 +181,8 @@ function startScroll() {
  * Bir önceki haber sol taraftan tamamen çıktığında tarayıcı tarafından tetiklenir
  */
 function onAnimationEnd() {
+  // Güvenlik kapısı: statik moddayken zincir ASLA yeniden başlamaz (sonsuz döngü koruması).
+  if (isStaticTicker()) return
   pickNextNews()
   startScroll()
 }
@@ -254,10 +292,31 @@ function handleTickerClick(e: MouseEvent) {
 }
 
 function handleVisibilityChange() {
-  if (!document.hidden && !isAnimating.value) {
+  if (document.hidden) {
+    // Statik rotasyon gizli sekmede duraklar (görünür olunca aşağıdaki dal devam ettirir).
+    stopReducedRotation()
+    return
+  }
+  if (!isAnimating.value) {
     startScroll()
   }
 }
+
+// Ayar değişince canlı uygula: 'full' → marquee, kısıtlı → statik gösterim + JS rotasyon.
+watch(motionMode, (mode) => {
+  if (mode !== 'full') {
+    if (restartTimer !== null) {
+      clearTimeout(restartTimer)
+      restartTimer = null
+    }
+    // Koşan marquee'yi durdur: animasyon sınıfı kalkar, animationend zinciri kırılır.
+    isAnimating.value = false
+    startReducedRotation()
+  } else {
+    stopReducedRotation()
+    startScroll()
+  }
+})
 
 onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -289,6 +348,7 @@ onUnmounted(() => {
     clearTimeout(restartTimer)
     restartTimer = null
   }
+  stopReducedRotation()
   if (discoTimeout !== null) {
     clearTimeout(discoTimeout)
     discoTimeout = null
@@ -370,14 +430,14 @@ onUnmounted(() => {
             <!-- Özel Kategori İkonu -->
             <Sparkles
               v-if="currentNews.category === 'secret' || isDiscoActive"
-              class="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse"
+              class="w-3.5 h-3.5 text-white shrink-0 animate-pulse"
             />
 
             <!-- Haber Metni -->
             <span
               class="text-slate-200 font-normal tracking-tight"
               :class="{
-                'text-amber-300 font-semibold drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]': currentNews.category === 'secret',
+                'text-white font-semibold drop-shadow-[0_0_8px_rgba(255,255,255,0.28)]': currentNews.category === 'secret',
                 'rainbow-text font-bold': isDiscoActive
               }"
             >

@@ -60,12 +60,12 @@ const { dialogRef } = useFocusTrap(
       aria-modal="true"
       :aria-labelledby="titleId"
       tabindex="-1"
-      class="relative w-full max-w-2xl bg-dark-900 border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden p-6 max-h-[90vh] overflow-y-auto outline-none"
+      class="relative w-full max-w-2xl bg-dark-900 border border-slate-600/60 rounded-2xl shadow-2xl overflow-hidden p-6 max-h-[90vh] overflow-y-auto outline-none"
     >
       
       <!-- Başlık Çubuğu -->
       <div class="flex items-center gap-3 pb-4 border-b border-dark-800">
-        <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+        <div class="p-2.5 rounded-xl bg-slate-500/10 border border-slate-400/30 text-slate-300">
           <AlertTriangle class="w-6 h-6 animate-pulse" />
         </div>
         <div>
@@ -131,17 +131,17 @@ const { dialogRef } = useFocusTrap(
         <!-- Sağ: Buluttaki İlerleme -->
         <div
           class="flex flex-col justify-between p-4 rounded-xl bg-dark-950/70 border transition-all"
-          :class="isCloudAhead ? 'border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30' : 'border-slate-700/60'"
+          :class="isCloudAhead ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30' : 'border-slate-700/60'"
         >
           <div>
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span class="flex items-center gap-2 text-sm font-bold text-emerald-400">
-                <Cloud class="w-4 h-4 text-emerald-400" />
+              <span class="flex items-center gap-2 text-sm font-bold text-cyan-400">
+                <Cloud class="w-4 h-4 text-cyan-400" />
                 Buluttaki Kayıt
               </span>
               <span
                 v-if="isCloudAhead"
-                class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold flex items-center gap-1"
+                class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold flex items-center gap-1"
               >
                 <Sparkles class="w-2.5 h-2.5" />
                 Daha İleride
@@ -154,7 +154,7 @@ const { dialogRef } = useFocusTrap(
             <div class="space-y-3 mt-4 text-xs">
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kütle:</span>
-                <span class="font-mono font-bold text-emerald-300 text-sm">
+                <span class="font-mono font-bold text-cyan-300 text-sm">
                   {{ formatMatter(conflict.cloudMeta.matter) }}
                 </span>
               </div>
@@ -181,7 +181,7 @@ const { dialogRef } = useFocusTrap(
 
           <button
             @click="choose('cloud')"
-            class="mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-black bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-500/20 active:scale-95 flex items-center justify-center gap-2"
           >
             <RefreshCw class="w-3.5 h-3.5" />
             Buluttakini Yükle (Cihazı Güncelle)

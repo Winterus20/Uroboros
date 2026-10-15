@@ -2451,3 +2451,23 @@ Oyun içi lo-fi radyosu (`src/core/music/tracks/lofi-chill.ts`) teknik altyapıs
 - `npm run harness:smoke`: 30 dk aktif koşu log10=90.72, 8 shift — ADR-0056 tabanıyla birebir aynı (denge regresyonu yok).
 - ADR: `brain/decisions/0057-balatro-column3-card-physics.md`.
 - Ortam notu: Termux `node_modules/.bin` shebang'leri `termux-fix-shebang` ile düzeltildi (temiz kurulum sonrası tekrarlanabilir).
+
+---
+## 2026-10-15 — Görsel Dil Yayılımı: Tüm Proje (Rezerve Renk, 3-State Ramp, Metin→Görsel, Motion Kapısı) — ADR-0058
+
+**Problem:** `dfa4dce` görsel dili yalnız `DimensionRow` + nav + ayarlarda konuşuyordu. Denetim (4 paralel subagent): 24 satın alma yüzeyi ikili durumda, 46 dosyada 147 renk sapması, 19 metin-oran çubuksuz, ~30 konfeti çağrısı motion kapısız, legacy kayıtta `motionMode` migrasyonu yok, `CommentTicker` kısıtlı harekette sonsuz `animationend` zinciri riski taşıyordu.
+
+**Çözüm (Dalga 1-4, subagent'lı):**
+1. **Sözleşme:** `brain/research/visual-language-adoption-spec-2026-10.md` (5 kural + acceptance) — uygulama ve QA tek gerçeğe karşı koştu; brief `brain/scratchpad/visual-language-wave2-brief.md`.
+2. **Paylaşılan altyapı (orchestrator):** `src/composables/useMotion.ts` (yeni: `useMotionMode` reaktif + `isMotionOff`/`isMotionReduced` kök-sınıf mührü); `core/celebrate.ts` `safeConfetti` motion kapısı (`force` ritüel opsiyonu); `actions-save.ts` legacy `motionMode` migrasyonu (`reduceAnimations:true → 'reduced'` — HEAD taban çizgisiyle aynı; her yazımda çift alan senkronu); `style.css` `.ds-badge-slate`, `.btn-primary-violet`, `.crisis-aura-cyan`, `rise-float` düzeltmesi.
+3. **Uygulama (5 paralel subagent, dosya sahipliği bölüşülmüş):** Tüm satın alma yüzeylerinde ready/partial/locked ramp (ready = kimlik hue + pulse; `ds-ramp-ready` DOM'a yazılmaz); rezerve renk sözleşmesi tüm sekmelerde (amber=milestone, cyan=bonus, rose=tehlike, kimlik hue'ları korunur); 19+ oran göstergesi `progress-track` çubuğa; Header duruş çipleri + NeuralTree etkileri görünür karşılık kazandı (tooltip additive kaldı, bilgi kaybı yok); `CommentTicker` statik mod (marquee hiç başlamaz, 9s JS rotasyon, gizli sekmede duraklar); tüm pointerdown geri bildirimleri `juice-punch` + motion kapılı.
+4. **Bağımsız QA (ayrı subagent):** İlk tur CONDITIONAL PASS → fix dalgası: sponsor ekran aurası amber→cyan (`.crisis-aura-cyan`), plaket filtre çipi nötr-parlak (`bg-white/[0.10] border-white/25 text-white`), 3 ölü `ds-ramp-ready` dönüşü `""` (ready şablon dalında). Doğrulama turu: **FINAL QA VERDICT: PASS**.
+
+**Doğrulama:**
+- `npm test`: **18 dosya, 263/263 test yeşil** (baseline birebir).
+- `npm run build` (`vue-tsc && vite build`): 1783 modül, 0 hata.
+- `npm run harness:smoke`: 30 dk aktif koşu **log10=90.72, 8 shift** — ADR-0056/0057 tabanıyla birebir (denge regresyonu yok).
+- ADR: `brain/decisions/0058-visual-language-adoption.md`.
+- Kapsam: 58 dosya değişti + 3 yeni (`useMotion.ts`, sözleşme, brief).
+
+**Kalanlar (kapsam dışı bırakılanlar):** F — Prestige ritüeli (iki ekran kuralı) ayrı iş; bloklamayan NIT'ler ADR-0058 §4'te listeli (`progress-track-lg` tanımsız sınıfı önceden beri var; kök-sınıf mührü setup okumaları savunma amaçlı).

@@ -205,6 +205,7 @@
 .ds-badge-amber { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
 .ds-badge-rose { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.35); color: #fda4af; }
 .ds-badge-violet { background: rgba(139, 92, 246, 0.14); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd; }
+.ds-badge-slate { background: rgba(100, 116, 139, 0.14); border-color: rgba(100, 116, 139, 0.35); color: #cbd5e1; }
 
 /* --- İlerleme çubukları (tek dil, 3 boy) --- */
 .progress-track {
@@ -325,6 +326,8 @@
 }
 .btn-primary-purple { background: rgba(147, 51, 234, 0.25); border-color: rgba(168, 85, 247, 0.4); color: #e9d5ff; }
 .btn-primary-purple:not(:disabled):hover { background: rgba(147, 51, 234, 0.35); }
+.btn-primary-violet { background: rgba(139, 92, 246, 0.22); border-color: rgba(139, 92, 246, 0.4); color: #ddd6fe; }
+.btn-primary-violet:not(:disabled):hover { background: rgba(139, 92, 246, 0.32); }
 .btn-primary-amber { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fde68a; }
 .btn-primary-amber:not(:disabled):hover { background: rgba(245, 158, 11, 0.3); }
 .btn-primary-cyan { background: rgba(6, 182, 212, 0.2); border-color: rgba(6, 182, 212, 0.4); color: #a5f3fc; }
@@ -856,6 +859,9 @@ body::after {
 .crisis-aura-amber {
   box-shadow: inset 0 0 75px 12px rgba(245, 158, 11, 0.32);
 }
+.crisis-aura-cyan {
+  box-shadow: inset 0 0 75px 12px rgba(34, 211, 238, 0.3);
+}
 .crisis-aura-void {
   box-shadow: inset 0 0 80px 14px rgba(34, 211, 238, 0.3), inset 0 0 120px 30px rgba(168, 85, 247, 0.22);
 }
@@ -1342,7 +1348,9 @@ body::after {
 }
 
 /* 3) Yükselen "+N" — translateY(0 → -28px) + opacity(1 → 0), 600ms ease-out.
-   FloatingThumbBar / JuiceLayer uçan metinleri bunu tüketir. */
+   DOM tabanlı yükselen "+N" metinleri için ayrılmış util. Canvas JuiceLayer
+   uçan yazıları kendi fiziğiyle çizer; SequentialStrikeLayer sahne rozetleri
+   kendi zamanlamasına sahiptir — bu sınıf yalnız DOM tüketicileri içindir. */
 @keyframes rise-float-anim {
   0% {
     transform: translate3d(0, 0, 0);

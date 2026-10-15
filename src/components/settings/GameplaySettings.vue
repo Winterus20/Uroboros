@@ -177,7 +177,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleConfirmDialogs"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="store.settings.confirmDialogs ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="store.settings.confirmDialogs ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ store.settings.confirmDialogs ? 'Açık' : 'Kapalı' }}
       </button>
@@ -192,7 +192,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleOfflineProgressModal"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.offlineProgressModal !== false) ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.offlineProgressModal !== false) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.offlineProgressModal !== false) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -207,7 +207,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleHotkeys"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.hotkeysEnabled !== false) ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.hotkeysEnabled !== false) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.hotkeysEnabled !== false) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -217,20 +217,20 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
   <!-- =================== GÖRSEL & EKRAN =================== -->
   <div v-else-if="section === 'visuals'" class="space-y-4">
     <!-- Pil & Performans Tasarrufu -->
-    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between bg-gradient-to-r from-emerald-500/[0.08] to-transparent border-emerald-500/30">
+    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between bg-gradient-to-r from-cyan-500/[0.08] to-transparent border-cyan-500/30">
       <div class="flex items-center gap-2.5">
-        <div class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300">
+        <div class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300">
           <BatteryCharging class="w-4 h-4" />
         </div>
         <div>
-          <div class="text-xs font-mono font-bold text-emerald-200">Pil &amp; Düşük GPU Tasarrufu</div>
+          <div class="text-xs font-mono font-bold text-cyan-200">Pil &amp; Düşük GPU Tasarrufu</div>
           <div class="text-[10px] text-slate-400 mt-0.5">Neon blur ve ağır filtreleri kapatarak CPU/GPU yükünü en aza indirir</div>
         </div>
       </div>
       <button
         @click="toggleBatterySaver"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="store.settings.batterySaver ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="store.settings.batterySaver ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ store.settings.batterySaver ? 'Aktif' : 'Kapalı' }}
       </button>
@@ -250,7 +250,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           @click="setMotionMode(opt.value)"
           class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border"
           :class="(store.settings.motionMode ?? (store.settings.reduceAnimations ? 'reduced' : 'full')) === opt.value
-            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+            ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'"
         >
           {{ opt.label }}
@@ -267,7 +267,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleScreenShake"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.screenShake ?? true) ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.screenShake ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.screenShake ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -293,7 +293,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           @click="setJuiceMode('balanced')"
           class="btn-tactile p-2 rounded-xl text-center border text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.juiceMode ?? 'balanced') === 'balanced'
-            ? 'bg-purple-500/20 text-purple-200 border-purple-500/40'
+            ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-black/40 text-slate-500 border-white/[0.06] hover:text-slate-300'"
         >
           Dengeli (Önerilen)
@@ -302,7 +302,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           @click="setJuiceMode('tilt')"
           class="btn-tactile p-2 rounded-xl text-center border text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.juiceMode ?? 'balanced') === 'tilt'
-            ? 'bg-rose-500/20 text-rose-200 border-rose-500/40'
+            ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-black/40 text-slate-500 border-white/[0.06] hover:text-slate-300'"
         >
           Full Tilt (Parti)
@@ -323,7 +323,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           @click="setSwirlShaderQuality('high')"
           class="btn-tactile p-2 rounded-xl text-center border text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.swirlShaderQuality ?? 'balanced') === 'high'
-            ? 'bg-purple-500/20 text-purple-200 border-purple-500/40'
+            ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-black/40 text-slate-500 border-white/[0.06] hover:text-slate-300'"
         >
           Yüksek (0.75x)
@@ -341,7 +341,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           @click="setSwirlShaderQuality('off')"
           class="btn-tactile p-2 rounded-xl text-center border text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.swirlShaderQuality ?? 'balanced') === 'off'
-            ? 'bg-rose-500/20 text-rose-200 border-rose-500/40'
+            ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-black/40 text-slate-500 border-white/[0.06] hover:text-slate-300'"
         >
           Kapalı (Statik)
@@ -358,7 +358,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleCrt"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.crtEffect ?? true) ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.crtEffect ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.crtEffect ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -388,7 +388,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleScreenOverlay"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.screenOverlayEffects ?? true) ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.screenOverlayEffects ?? true) ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.screenOverlayEffects ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -403,7 +403,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleSequentialStrike"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.sequentialStrike ?? true) ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.sequentialStrike ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.sequentialStrike ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -433,7 +433,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <button
         @click="toggleNewsTicker"
         class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.newsTickerEnabled ?? true) ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+        :class="(store.settings.newsTickerEnabled ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.newsTickerEnabled ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
@@ -460,7 +460,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           type="button"
           @click="setSwipeSensitivity('low')"
           class="px-2 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all text-center cursor-pointer"
-          :class="store.settings.swipeSensitivity === 'low' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-black/40 text-slate-400 border-white/[0.06] hover:text-slate-200'"
+          :class="store.settings.swipeSensitivity === 'low' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-400 border-white/[0.06] hover:text-slate-200'"
         >
           Düşük (Sert)
         </button>
@@ -468,7 +468,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           type="button"
           @click="setSwipeSensitivity('off')"
           class="px-2 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all text-center cursor-pointer"
-          :class="store.settings.swipeSensitivity === 'off' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-black/40 text-slate-400 border-white/[0.06] hover:text-slate-200'"
+          :class="store.settings.swipeSensitivity === 'off' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-400 border-white/[0.06] hover:text-slate-200'"
         >
           Kapalı
         </button>

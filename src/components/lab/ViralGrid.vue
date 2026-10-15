@@ -93,6 +93,23 @@ function canAffordSeed(seedType: LabSeedType): boolean {
   return store.matter.gte(effective);
 }
 
+// Toplu ek uygunluğu: mevcut kilit/keşif şartları korunur; kütle eşiği görünür rampa ile eklenir.
+// Kısmi karşılanabilirlikte buton AKTİF kalır — mevcut kısmi ekim davranışı bozulmaz, yalnız görünürlük kazanır.
+const bulkPlantable = computed(
+  () =>
+    emptyCellCount.value > 0 &&
+    !isSeedLocked(props.selectedSeedType) &&
+    !(selectedSeed.value.isMutationOnly && !isSeedDiscovered(props.selectedSeedType))
+);
+
+const bulkPlantRampClass = computed(() => {
+  if (!bulkPlantable.value) return 'ds-ramp-locked';
+  const unitCost = store.labSeedEffectiveCost(props.selectedSeedType);
+  if (store.matter.lt(unitCost)) return 'ds-ramp-locked';
+  if (store.matter.gte(unitCost.times(emptyCellCount.value))) return '';
+  return 'ds-ramp-partial';
+});
+
 function handleCellClick(cellId: number) {
   const cell = store.labCells[cellId];
   if (!cell) return;
@@ -152,8 +169,8 @@ function isColResonant(colIndex: number): boolean {
         class="px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
         :class="[
           matureCellCount > 0
-            ? 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300'
-            : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-60'
+            ? 'border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 affordance-pulse'
+            : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed ds-ramp-locked'
         ]"
       >
         <Sparkles class="w-3.5 h-3.5" />
@@ -161,19 +178,21 @@ function isColResonant(colIndex: number): boolean {
       </button>
       <button
         @click="handleBulkPlant"
-        :disabled="emptyCellCount === 0 || isSeedLocked(selectedSeedType) || (selectedSeed.isMutationOnly && !isSeedDiscovered(selectedSeedType))"
+        :disabled="bulkPlantRampClass === 'ds-ramp-locked'"
         v-tip="'Seçili tohumu tüm boş hücrelere ek'"
         class="px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
         :class="[
-          emptyCellCount > 0 && !isSeedLocked(selectedSeedType) && !(selectedSeed.isMutationOnly && !isSeedDiscovered(selectedSeedType))
-            ? 'border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300'
-            : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-60'
+          bulkPlantRampClass === ''
+            ? 'border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 affordance-pulse'
+            : bulkPlantRampClass === 'ds-ramp-partial'
+              ? 'bg-white/5 border-white/10 text-slate-400 cursor-pointer ds-ramp-partial'
+              : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed ds-ramp-locked'
         ]"
       >
         <Layers class="w-3.5 h-3.5" />
         <span>Toplu Ek: {{ selectedSeed.name }} ({{ emptyCellCount }})</span>
       </button>
-      <span v-if="bulkHarvestInfo" class="text-[10px] font-mono text-emerald-400">
+      <span v-if="bulkHarvestInfo" class="text-[10px] font-mono text-cyan-400">
         {{ bulkHarvestInfo }}
       </span>
     </div>
@@ -195,7 +214,7 @@ function isColResonant(colIndex: number): boolean {
         <span>Merkez Çekirdek: Hücre 4</span>
       </span>
       <span class="flex items-center gap-1">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+        <span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span>
         <span>Rezonans Akısı: Dolu Satır/Sütun ×1.12</span>
       </span>
     </div>
@@ -206,7 +225,7 @@ function isColResonant(colIndex: number): boolean {
         :key="cell.id"
         class="relative rounded-xl border flex flex-col items-center justify-between p-2.5 transition-all select-none overflow-hidden"
         :class="[
-          cell.id === 4 ? 'ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]' : '',
+          cell.id === 4 ? 'ring-1 ring-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : '',
           isRowResonant(Math.floor(cell.id / 3)) ? 'border-cyan-500/40' : '',
           isColResonant(cell.id % 3) ? 'border-cyan-500/40' : '',
           cell.seedType === null
@@ -220,7 +239,7 @@ function isColResonant(colIndex: number): boolean {
         <!-- Merkez Odak Çekirdeği Rozeti -->
         <div
           v-if="cell.id === 4"
-          class="absolute top-1 left-1 z-10 text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30"
+          class="absolute top-1 left-1 z-10 text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
           v-tip="'Kuantum Odak Çekirdeği (Merkez): Kendi çarpanı ×1.5 katlanır ve 4 komşusuna +%20 plazma yayar!'"
         >
           Odak Çekirdeği

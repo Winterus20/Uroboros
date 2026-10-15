@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { sounds } from '../core/audio'
+import { isMotionReduced } from '../composables/useMotion'
 
 interface QuantumRipple {
   id: number
@@ -30,7 +31,8 @@ const QUANTUM_COLORS = [
 ]
 
 function spawnRipple(x: number, y: number) {
-  if (store.settings.reduceAnimations) {
+  // Kısıtlı/devre dışı hareket (3 durumlu kapı): ripple çizilmez; ses + manualClick devam eder.
+  if (isMotionReduced()) {
     sounds.playHapticTap()
     store.manualClick({ x, y })
     return

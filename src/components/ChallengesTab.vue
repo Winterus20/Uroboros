@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { CHALLENGES, type ChallengeDef } from '../game/challenges'
-import { checkUnlock, unlockProgress } from '../game/unlocks'
+import { checkUnlock, unlockProgress, unlockProgressFraction } from '../game/unlocks'
 import { Swords } from 'lucide-vue-next'
 import TabHero from './TabHero.vue'
 import ConfirmModal from './ConfirmModal.vue'
@@ -33,6 +33,14 @@ function lockInfo(def: ChallengeDef): { hint: string; progress: string } {
     return { hint: `${req.count} Kozmik Çöküş yaşa`, progress: `${p.current}/${p.target}` }
   }
   return { hint: 'Kilitli', progress: `${p.current}/${p.target}` }
+}
+
+/** Kilit ipucu çubuğu: 0..1 oranı yüzdeye çevirir (dopamin kapıları log ölçekli). */
+function lockPercent(def: ChallengeDef): number {
+  if (!def.unlock) return 0
+  const req = def.unlock
+  const feature = { id: def.id, name: def.name, hint: '', req, order: def.order }
+  return Math.round(unlockProgressFraction(store.unlockContext, feature) * 100)
 }
 
 function bestTime(id: string): string | null {
@@ -138,11 +146,11 @@ function confirmExit() {
         v-tilt="{ max: 8, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface p-3 rounded-xl border flex flex-col gap-1.5 transition-all relative overflow-hidden"
         :class="isCompleted(def.id)
-          ? 'edition-holo bg-emerald-950/40 border-emerald-500/40'
+          ? 'edition-holo bg-cyan-950/40 border-cyan-500/40'
           : isActive(def.id)
             ? 'edition-poly bg-rose-950/40 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.3)]'
             : isLocked(def)
-              ? 'bg-black/30 border-white/[0.04] opacity-45'
+              ? 'ds-ramp-locked'
               : 'bg-black/30 border-white/[0.07] hover:border-rose-500/30'"
       >
         <div class="flex items-center gap-2">
@@ -151,7 +159,7 @@ function confirmExit() {
           </span>
           <span
             class="text-xs font-bold"
-            :class="isCompleted(def.id) ? 'text-emerald-200' : isActive(def.id) ? 'text-rose-200' : 'text-slate-300'"
+            :class="isCompleted(def.id) ? 'text-cyan-200' : isActive(def.id) ? 'text-rose-200' : 'text-slate-300'"
           >
             {{ def.name }}
           </span>
@@ -168,8 +176,13 @@ function confirmExit() {
         <div class="text-[11px] leading-snug text-slate-400">
           🎯 1.79e308 g Kütle · 🏆 {{ def.rewardDesc }}
         </div>
-        <div v-if="isLocked(def)" class="text-[11px] font-mono text-slate-500 tabular-nums">
-          {{ lockInfo(def).hint }} · {{ lockInfo(def).progress }}
+        <div v-if="isLocked(def)" class="flex items-center gap-2 min-w-0">
+          <span class="text-[11px] font-mono text-slate-500 tabular-nums shrink-0">
+            {{ lockInfo(def).hint }} · {{ lockInfo(def).progress }}
+          </span>
+          <span class="progress-track progress-track-mini flex-1" aria-hidden="true">
+            <span class="progress-fill progress-fill-slate block h-full" :style="{ width: `${lockPercent(def)}%` }"></span>
+          </span>
         </div>
         <div v-if="isActive(def.id)" class="space-y-1">
           <div class="flex justify-between text-[11px] font-mono">
@@ -184,7 +197,7 @@ function confirmExit() {
           </div>
         </div>
         <div v-if="isCompleted(def.id) && bestTime(def.id)" class="text-[11px] font-mono text-slate-400 tabular-nums">
-          ⏱ En iyi süre: <span class="text-emerald-300 font-bold">{{ bestTime(def.id) }}</span>
+          ⏱ En iyi süre: <span class="text-cyan-300 font-bold">{{ bestTime(def.id) }}</span>
         </div>
         <div class="mt-auto pt-1 flex gap-2">
           <button
@@ -220,13 +233,13 @@ function confirmExit() {
             <div class="text-[11px] text-slate-500">Tüm meydan okumaları tamamla: tüm boyutlar kalıcı +%25</div>
           </div>
         </div>
-        <span class="ds-badge tabular-nums" :class="doneCount >= totalCount ? 'ds-badge-emerald' : ''">
+        <span class="ds-badge tabular-nums" :class="doneCount >= totalCount ? 'ds-badge-cyan' : ''">
           {{ doneCount }}/{{ totalCount }}
         </span>
       </div>
       <div class="progress-track progress-track-sm progress-track-bordered">
         <div
-          class="progress-fill progress-fill-emerald"
+          class="progress-fill progress-fill-cyan"
           :style="{ width: `${(doneCount / Math.max(1, totalCount)) * 100}%` }"
         ></div>
       </div>

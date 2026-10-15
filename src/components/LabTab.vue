@@ -72,8 +72,8 @@ function handleCollapseReactor() {
         <div class="stat-box flex-wrap gap-y-2">
           <div>
             <div class="stat-box-label">Pasif Akı</div>
-            <div class="stat-box-value text-emerald-400 flex items-center gap-1.5">
-              <Sparkles class="w-3.5 h-3.5 text-emerald-400" />
+            <div class="stat-box-value text-cyan-400 flex items-center gap-1.5">
+              <Sparkles class="w-3.5 h-3.5 text-cyan-400" />
               <span>×{{ formatNumber(store.labPassiveMultiplier, store.settings.notation) }}</span>
             </div>
           </div>
@@ -87,7 +87,7 @@ function handleCollapseReactor() {
           <div class="h-6 w-[1px] bg-white/[0.08] hidden sm:block"></div>
           <div>
             <div class="stat-box-label">Parçacık Atlası</div>
-            <div class="stat-box-value text-amber-400">
+            <div class="stat-box-value text-cyan-400">
               +{{ store.labCodexBonusPercent }}% Kalıcı
             </div>
           </div>
@@ -135,7 +135,7 @@ function handleCollapseReactor() {
               </span>
             </div>
             <p class="text-[11px] text-slate-300 leading-snug">
-              Plazma şarjı <b class="text-rose-300">%80 daha hızlı</b> dolar. Süperkritik boşalımda anında <b class="text-rose-300">2× Kütle</b> fışkırır!
+              Plazma şarjı <b class="text-cyan-300">%80 daha hızlı</b> dolar. Süperkritik boşalımda anında <b class="text-cyan-300">2× Kütle</b> fışkırır!
             </p>
           </div>
           <div class="mt-2 text-[10px] font-mono text-slate-400 flex items-center gap-1">
@@ -151,26 +151,26 @@ function handleCollapseReactor() {
           class="p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between"
           :class="[
             store.labMode === 'superconductor'
-              ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+              ? 'bg-slate-500/15 border-slate-400/50 shadow-[0_0_15px_rgba(148,163,184,0.15)]'
               : 'bg-black/40 border-white/[0.06] hover:border-white/[0.15]'
           ]"
         >
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm font-bold font-mono text-amber-300 flex items-center gap-1.5">
-                <Activity class="w-4 h-4 text-amber-400" />
+              <span class="text-sm font-bold font-mono text-slate-200 flex items-center gap-1.5">
+                <Activity class="w-4 h-4 text-slate-300" />
                 <span>Süperiletken (Superconductor)</span>
               </span>
-              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/15">
                 AFK & Durgunluk
               </span>
             </div>
             <p class="text-[11px] text-slate-300 leading-snug">
-              Plazma şarjı dondurulur. Matrisin ürettiği kalıcı pasif kütle çarpanı <b class="text-amber-300">2.5×</b> katına çıkar.
+              Plazma şarjı dondurulur. Matrisin ürettiği kalıcı pasif kütle çarpanı <b class="text-cyan-300">2.5×</b> katına çıkar.
             </p>
           </div>
           <div class="mt-2 text-[10px] font-mono text-slate-400 flex items-center gap-1">
-            <span :class="store.labMode === 'superconductor' ? 'text-amber-400 font-bold' : ''">
+            <span :class="store.labMode === 'superconductor' ? 'text-slate-200 font-bold' : ''">
               {{ store.labMode === 'superconductor' ? '● Aktif Rejim' : '○ Seçmek için tıkla' }}
             </span>
           </div>
@@ -227,7 +227,7 @@ function handleCollapseReactor() {
           <div class="space-y-2.5 text-xs text-slate-400 leading-relaxed">
             <div class="p-2.5 rounded-xl bg-black/40 border border-white/[0.06]">
               <div class="font-bold text-slate-200 font-mono flex items-center gap-1.5 mb-1 text-[11px]">
-                <Zap class="w-3.5 h-3.5 text-amber-400" />
+                <Zap class="w-3.5 h-3.5 text-cyan-400" />
                 <span>Kuantum Odak Çekirdeği (Merkez Hücre 4)</span>
               </div>
               <p class="text-[10px] text-slate-400">
@@ -284,12 +284,12 @@ function handleCollapseReactor() {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3 text-xs font-mono">
         <div class="p-2.5 rounded-lg border border-white/[0.06] bg-black/40">
           <div class="text-slate-400 text-[10px]">Seviye 1: Çekim Hızı (Hz)</div>
-          <div class="text-emerald-300 font-bold mt-1">-%{{ (store.reactorRelicBonuses.tickspeedBase * 100).toFixed(0) }} Taban</div>
+          <div class="text-cyan-300 font-bold mt-1">-%{{ (store.reactorRelicBonuses.tickspeedBase * 100).toFixed(0) }} Taban</div>
           <div class="text-[9px] text-slate-500">Kalıcı frekans indirimi</div>
         </div>
         <div class="p-2.5 rounded-lg border border-white/[0.06] bg-black/40">
           <div class="text-slate-400 text-[10px]">Seviye 2: Kriz Süreleri</div>
-          <div class="text-amber-300 font-bold mt-1">+{{ store.reactorRelicBonuses.crisisDuration }}s İlave</div>
+          <div class="text-cyan-300 font-bold mt-1">+{{ store.reactorRelicBonuses.crisisDuration }}s İlave</div>
           <div class="text-[9px] text-slate-500">Tüm buff sürelerine ek</div>
         </div>
         <div class="p-2.5 rounded-lg border border-white/[0.06] bg-black/40">
@@ -299,7 +299,7 @@ function handleCollapseReactor() {
         </div>
         <div class="p-2.5 rounded-lg border border-white/[0.06] bg-black/40">
           <div class="text-slate-400 text-[10px]">Seviye 4: Hücre Başı İvme</div>
-          <div class="text-rose-300 font-bold mt-1">+%{{ (store.reactorRelicBonuses.dimensionalBoostPerCell * 100).toFixed(0) }} / hücre</div>
+          <div class="text-cyan-300 font-bold mt-1">+%{{ (store.reactorRelicBonuses.dimensionalBoostPerCell * 100).toFixed(0) }} / hücre</div>
           <div class="text-[9px] text-slate-500">Boyutlara evrensel ivme</div>
         </div>
         <div class="p-2.5 rounded-lg border border-white/[0.06] bg-black/40">
@@ -316,8 +316,10 @@ function handleCollapseReactor() {
         class="w-full py-2.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
         :class="[
           store.canCollapseReactor
-            ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-cyan-500 text-white hover:opacity-95 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-[1.01]'
-            : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed opacity-60'
+            ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-cyan-500 text-white hover:opacity-95 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-[1.01] affordance-pulse'
+            : store.labCodexDiscoveredCount > 0
+              ? 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed ds-ramp-partial'
+              : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed ds-ramp-locked'
         ]"
       >
         <Crown class="w-4 h-4" />
@@ -328,6 +330,14 @@ function handleCollapseReactor() {
           Reaktör Çöküşü Kilitli (4 Egzotik Formülün Tamamı Sentezlenmeli: {{ store.labCodexDiscoveredCount }}/4)
         </span>
       </button>
+
+      <!-- Egzotik formül keşif ilerlemesi (görsel çubuk) -->
+      <div class="mt-2.5 progress-track progress-track-mini">
+        <div
+          class="progress-fill progress-fill-cyan"
+          :style="{ width: `${(store.labCodexDiscoveredCount / LAB_RECIPES.length) * 100}%` }"
+        ></div>
+      </div>
     </div>
 
     <!-- Parçacık Seçim Paleti -->
@@ -363,7 +373,7 @@ function handleCollapseReactor() {
               <div class="text-xs font-bold font-mono text-slate-400">???</div>
               <div class="text-[10px] text-slate-500 mt-1">Keşif için komşuları eşleştir</div>
             </div>
-            <div class="mt-2 text-[9px] font-mono text-amber-400/70">
+            <div class="mt-2 text-[9px] font-mono text-slate-400">
               Atlas'tan ipucuna bak
             </div>
           </div>
@@ -386,15 +396,15 @@ function handleCollapseReactor() {
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         @click.self="showCodexModal = false"
       >
-        <div class="glass-panel-card max-w-2xl w-full p-5 rounded-2xl border border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.2)] space-y-4 max-h-[85vh] overflow-y-auto">
+        <div class="glass-panel-card max-w-2xl w-full p-5 rounded-2xl border border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.2)] space-y-4 max-h-[85vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-white/10 pb-3">
             <div class="flex items-center gap-2">
-              <BookOpen class="w-5 h-5 text-amber-400" />
+              <BookOpen class="w-5 h-5 text-cyan-400" />
               <div>
                 <h2 class="text-base font-bold font-mono text-slate-100">
                   Kuantum Parçacık Atlası & Sentez Kodeksi
                 </h2>
-                <div class="text-xs text-amber-300 font-mono">
+                <div class="text-xs text-cyan-300 font-mono">
                   Keşfedilen: {{ store.labCodexDiscoveredCount }}/{{ LAB_RECIPES.length }} Formül (+{{ store.labCodexBonusPercent }}% Kalıcı Global Kütle)
                 </div>
               </div>

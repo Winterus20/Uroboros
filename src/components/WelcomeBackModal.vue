@@ -70,10 +70,10 @@ const { dialogRef } = useFocusTrap(() => report.value !== null, {
 
       <div class="rounded-xl border border-white/[0.06] bg-black/40 p-4 space-y-3">
         <div class="flex items-center gap-2">
-          <Zap class="w-4 h-4 text-amber-300 shrink-0" />
+          <Zap class="w-4 h-4 text-cyan-300 shrink-0" />
           <div class="min-w-0 flex-1">
             <div class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Toplanan Kütle</div>
-            <div class="text-lg font-bold font-mono tabular-nums text-amber-200 leading-tight">+{{ gainedText }}</div>
+            <div class="text-lg font-bold font-mono tabular-nums text-cyan-200 leading-tight">+{{ gainedText }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono tabular-nums">

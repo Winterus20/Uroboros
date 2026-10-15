@@ -76,7 +76,7 @@ const hoverDpsText = computed(() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <span v-if="hoverDpsText" class="text-[11px] font-mono text-amber-300 tabular-nums">
+        <span v-if="hoverDpsText" class="text-[11px] font-mono text-cyan-300 tabular-nums">
           {{ hoverDpsText.timeText }}: {{ hoverDpsText.valText }} / sn
         </span>
         <span v-else class="text-[11px] font-mono text-purple-300 tabular-nums">
@@ -125,7 +125,7 @@ const hoverDpsText = computed(() => {
           y1="0"
           :x2="(hoverIndex / (store.dpsHistory.length - 1)) * SPARK_W"
           :y2="SPARK_H"
-          stroke="rgba(251, 191, 36, 0.8)"
+          stroke="rgba(34, 211, 238, 0.8)"
           stroke-width="1"
           stroke-dasharray="2,2"
           vector-effect="non-scaling-stroke"

@@ -390,7 +390,7 @@ function hardReset() {
         </button>
       </div>
 
-      <div v-if="feedback" class="px-4 py-1.5 text-xs font-mono text-emerald-300 bg-emerald-500/10 border-b border-emerald-500/20">
+      <div v-if="feedback" class="px-4 py-1.5 text-xs font-mono text-cyan-300 bg-cyan-500/10 border-b border-cyan-500/20">
         {{ feedback }}
       </div>
 
@@ -443,8 +443,8 @@ function hardReset() {
           <div class="flex flex-wrap gap-1.5">
             <button @click="spawnAnomalies" class="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Anomali Doğur</button>
             <button @click="clearAnomalies" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Anomali Temizle</button>
-            <button @click="spawnGuilt" class="px-2 py-1.5 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 text-orange-200 border border-orange-500/30 cursor-pointer">5 Vicdan Doğur</button>
-            <button @click="cashoutGuilt" class="px-2 py-1.5 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 text-orange-200 border border-orange-500/30 cursor-pointer">Primli Bozdur</button>
+            <button @click="spawnGuilt" class="px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">5 Vicdan Doğur</button>
+            <button @click="cashoutGuilt" class="px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">Primli Bozdur</button>
             <button @click="clearGuilt" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Vicdan Sil</button>
           </div>
         </section>
@@ -494,7 +494,7 @@ function hardReset() {
             <button @click="forceShift" class="px-2 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-100 border border-violet-500/40 cursor-pointer">Shift Zorla</button>
             <button @click="forceGalaxy" class="px-2 py-1.5 rounded-lg bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-100 border border-fuchsia-500/40 cursor-pointer">Galaksi Zorla</button>
             <button @click="forceSingularity" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-500/40 cursor-pointer">Tekillik Zorla</button>
-            <button @click="hardReset" class="px-2 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/40 cursor-pointer">Hard Reset</button>
+            <button @click="hardReset" class="px-2 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/40 cursor-pointer">Hard Reset</button>
           </div>
         </section>
 

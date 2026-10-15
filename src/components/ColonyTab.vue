@@ -30,6 +30,26 @@ const timeToNapMinutes = computed(() => {
 
 const canAffordCore = computed(() => store.matter.gte(COLONY_CORE_COST))
 
+// Çekirdek butonu rampası: %10 eşiği karşılanıyorsa partial, hiç karşılanmıyorsa locked.
+const coreRampClass = computed(() => {
+  if (canAffordCore.value) return ''
+  if (store.matter.gte(COLONY_CORE_COST.div(10))) return 'ds-ramp-partial'
+  return 'ds-ramp-locked'
+})
+
+// Toplu Çöküş rampası: hazır = amber + pulse; bot üremiş ama eşik altı = partial; hiç yoksa locked.
+const napRampClass = computed(() => {
+  if (store.canPowerNap) return ''
+  return store.neuralBots.gt(0) ? 'ds-ramp-partial' : 'ds-ramp-locked'
+})
+
+// Toplu Çöküş ilerlemesi: bot sayısının asgari eşiğe oranı (görsel çubuk için).
+const napProgressPercent = computed(() => {
+  if (store.canPowerNap) return 100
+  if (store.minNapBots.lte(0)) return 0
+  return Math.min(100, store.neuralBots.div(store.minNapBots).toNumber() * 100)
+})
+
 function hatch() {
   if (store.hatchCore()) {
     window.dispatchEvent(new CustomEvent('doomscroll:tap', { detail: { x: window.innerWidth / 2, y: window.innerHeight * 0.4, text: '🧠 Çekirdek Aktif!' } }))
@@ -96,7 +116,7 @@ const showNapConfirm = ref(false)
         @click="hatch"
         class="btn-primary-violet btn-tactile w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
         :disabled="!canAffordCore"
-        :class="canAffordCore ? '' : 'opacity-40 cursor-not-allowed'"
+        :class="canAffordCore ? '' : [coreRampClass, 'cursor-not-allowed']"
       >
         <Brain class="w-4 h-4" />
         <span>Çekirdek Aktif Et — {{ formatNumber(COLONY_CORE_COST) }} g Kütle</span>
@@ -108,7 +128,7 @@ const showNapConfirm = ref(false)
       <div class="grid grid-cols-2 gap-3">
         <div class="stat-box">
           <div class="stat-box-label">Üreme Hızı</div>
-          <div class="stat-box-value text-emerald-300 tabular-nums">+%{{ breedPercent }}/sn</div>
+          <div class="stat-box-value text-cyan-300 tabular-nums">+%{{ breedPercent }}/sn</div>
         </div>
         <div class="stat-box">
           <div class="stat-box-label">Koloni Pasif Çarpanı</div>
@@ -130,7 +150,7 @@ const showNapConfirm = ref(false)
         class="btn-tactile w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer border transition-all"
         :class="store.canPowerNap
           ? 'bg-amber-500/20 text-amber-200 border-amber-400/50 hover:bg-amber-500/30 affordance-pulse'
-          : 'bg-black/40 text-slate-500 border-white/[0.06] cursor-not-allowed'"
+          : ['bg-black/40 text-slate-500 border-white/[0.06] cursor-not-allowed', napRampClass]"
         :disabled="!store.canPowerNap"
       >
         <Moon class="w-4 h-4" />
@@ -142,6 +162,14 @@ const showNapConfirm = ref(false)
           <template v-if="timeToNapMinutes"> (~{{ timeToNapMinutes }} dk)</template>
         </span>
       </button>
+
+      <!-- Toplu Çöküş ilerlemesi (bot / asgari eşik) -->
+      <div class="progress-track progress-track-mini">
+        <div
+          class="progress-fill progress-fill-purple"
+          :style="{ width: `${napProgressPercent}%` }"
+        ></div>
+      </div>
 
       <div class="text-[10px] text-slate-500 leading-relaxed border-t border-white/[0.05] pt-2">
         Toplu Çöküş: kuantum alt-parçacıkları tekillik merkezinde birleşir ve
@@ -163,10 +191,10 @@ const showNapConfirm = ref(false)
 
     <!-- Nöral Yuva (SP yükseltmesi) ipucu -->
     <div class="glass-panel-card p-3 rounded-xl flex items-center gap-2">
-      <TrendingUp class="w-4 h-4 text-emerald-400 shrink-0" />
+      <TrendingUp class="w-4 h-4 text-cyan-400 shrink-0" />
       <div class="text-[11px] text-slate-400 leading-relaxed">
         Üreme hızını artırmak için Şafak sekmesindeki
-        <span class="text-emerald-300">🐜 Nöral Yuva</span> SP yükseltmesini al (+%10/seviye).
+        <span class="text-cyan-300">🐜 Nöral Yuva</span> SP yükseltmesini al (+%10/seviye).
       </div>
     </div>
   </div>

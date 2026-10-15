@@ -18,6 +18,15 @@ const hypeRatePerSec = computed(() => {
 });
 
 const isHypeFull = computed(() => store.labHype >= 100);
+
+// Boşalım butonu uygunluk rampası: hazır = cyan gradient + pulse;
+// süperiletken (donuk) = locked; şarj/bekleme akıyorsa = partial.
+const ventRampClass = computed(() => {
+  if (store.canTriggerViralDrop) return '';
+  if (store.labMode === 'superconductor') return 'ds-ramp-locked';
+  if (store.labHype > 0 || store.viralCooldownRemaining > 0) return 'ds-ramp-partial';
+  return 'ds-ramp-locked';
+});
 </script>
 
 <template>
@@ -54,14 +63,20 @@ const isHypeFull = computed(() => store.labHype >= 100);
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex flex-col gap-1">
         <button
           @click="emit('open-codex')"
-          class="px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+          class="px-2.5 py-1.5 rounded-lg border bg-white/5 border-white/10 hover:bg-white/10 text-slate-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
         >
           <BookOpen class="w-3.5 h-3.5" />
           <span>Parçacık Atlası ({{ store.labCodexDiscoveredCount }}/{{ LAB_RECIPES.length }})</span>
         </button>
+        <div class="progress-track progress-track-mini">
+          <div
+            class="progress-fill progress-fill-cyan"
+            :style="{ width: `${(store.labCodexDiscoveredCount / LAB_RECIPES.length) * 100}%` }"
+          ></div>
+        </div>
       </div>
     </div>
 
@@ -91,8 +106,8 @@ const isHypeFull = computed(() => store.labHype >= 100);
       </div>
 
       <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
-        <span class="text-emerald-400 font-bold">⚡ ×{{ store.labViralMultiplier.toFixed(1) }} Canlı Plazma Çarpanı</span>
-        <span class="text-amber-400 font-bold">✨ 3× Kozmik Kriz Yağmuru</span>
+        <span class="text-cyan-300 font-bold">⚡ ×{{ store.labViralMultiplier.toFixed(1) }} Canlı Plazma Çarpanı</span>
+        <span class="text-cyan-300 font-bold">✨ 3× Kozmik Kriz Yağmuru</span>
       </div>
     </div>
 
@@ -107,7 +122,7 @@ const isHypeFull = computed(() => store.labHype >= 100);
           <span v-if="isHypeFull" class="text-cyan-400 font-bold animate-pulse">
             REAKTÖR KRİTİK SEVİYEDE! BOŞALIMA HAZIR!
           </span>
-          <span v-else-if="store.labMode === 'superconductor'" class="text-amber-400">
+          <span v-else-if="store.labMode === 'superconductor'" class="text-slate-400">
             (Süperiletken modunda şarj durduruldu)
           </span>
           <span v-else class="text-slate-500 text-[11px]">
@@ -123,7 +138,7 @@ const isHypeFull = computed(() => store.labHype >= 100);
           ></div>
         </div>
         <div class="flex items-center justify-between text-[10px] font-mono text-slate-500 tabular-nums">
-          <span v-if="store.labMode === 'superconductor'" class="text-amber-400">
+          <span v-if="store.labMode === 'superconductor'" class="text-slate-400">
             ❄️ Plazma şarjı donduruldu (Süperiletken)
           </span>
           <span v-else>
@@ -138,8 +153,8 @@ const isHypeFull = computed(() => store.labHype >= 100);
         class="w-full py-2.5 px-4 rounded-xl font-mono text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
         :class="[
           store.canTriggerViralDrop
-            ? 'bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 text-black hover:opacity-95 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.01]'
-            : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed opacity-60'
+            ? 'bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 text-black hover:opacity-95 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.01] affordance-pulse'
+            : ['bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed', ventRampClass]
         ]"
       >
         <Rocket class="w-4 h-4" :class="store.canTriggerViralDrop ? 'animate-bounce' : ''" />

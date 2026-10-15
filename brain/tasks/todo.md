@@ -27,6 +27,18 @@
 
 ---
 
+## 🎨 Görsel Dil Yayılımı — Tüm Proje (2026-10-15, TAMAMLANDI ✅ — ADR-0058)
+*(Sözleşme: [`brain/research/visual-language-adoption-spec-2026-10.md`](../research/visual-language-adoption-spec-2026-10.md); kaynak pass `dfa4dce`)*
+- [x] **A** — Rezerve renk + 3-state ramp: tüm satın alma yüzeyleri (`DimensionsTab`, `Header`, `AutobuyersTab`, `LabTab`, `CrisisTab`, `ColonyTab`, `SingularityTab`, `NeuralTreeTab`, `ChallengesTab`, `LockedFeature`)
+- [x] **B** — Metin→çubuk: gereksinim/oran göstergeleri `progress-track` çubuklaşır + `tabular-nums`
+- [x] **C** — Tooltip→bir bakışta: Header ve NeuralTreeTab'daki v-tip bağımlılığı görsel karşılıklara indirilir (B ile birleşik)
+- [x] **D** — Motion 3-state (JS tüketicileri) + juice standardı: `juice-punch`, `rise-float`, tek `useMotion` kapısı
+- [x] **E** — Nav renk-lengüajı ✅ *(dfa4dce ile tamamlandı; yayılım boyunca korunur)*
+
+**Kalan (kapsam dışı):** F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş.
+
+---
+
 ## ⚡ Aktif & Taktil Çekirdek (Cookie Clicker & Trimps - Tamamlandı ✅)
 
 ---

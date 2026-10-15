@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore, BASE_UNLOCKED_DIMENSIONS } from '../stores/game'
 import { format } from '../core/format'
 import { D_0 } from '../core/math'
-import { getTierIdentity } from '../game/dimension_identity'
+import { getTierIdentity, getTierGlyph, getTierAccent } from '../game/dimension_identity'
+import { isMotionOff } from '../composables/useMotion'
 import DimensionRow from './DimensionRow.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import {
@@ -55,6 +56,13 @@ const nextLockedTier = computed(() => {
   return { tier, label: identity?.label ?? `D${tier}`, shiftsNeeded }
 })
 
+// Teaser ilerleme çubuğu: mevcut sıçrama / gereken sıçrama oranı (oran = çubuk, sayı ikincil).
+const nextLockedTeaserPercent = computed(() => {
+  const teaser = nextLockedTier.value
+  if (!teaser) return 0
+  return Math.min(100, (store.dimensionShifts / teaser.shiftsNeeded) * 100)
+})
+
 const shiftReq = computed(() => store.shiftRequirement)
 const isShiftUnlock = computed(() => store.dimensionShifts < 6)
 
@@ -83,6 +91,20 @@ const galaxyProgressPercent = computed(() => {
   const ratio = currentGalaxyDimAmount.value.div(galaxyReq.value).toNumber()
   return Math.min(100, Math.max(0, ratio * 100))
 })
+
+// Üç durumlu uygunluk rampası (durum ≠ hue): hazırda kimlik hue'u + pulse,
+// kısmide ds-ramp-partial, hiç yapılamıyorsa ds-ramp-locked. Rampa yalnız
+// opacity/kenarlık/zemin oynatır; buton kimlik hue'u ezilmez.
+const shiftAffordRampClass = computed(() =>
+  shiftProgressPercent.value > 0 ? 'ds-ramp-partial' : 'ds-ramp-locked'
+)
+const galaxyAffordRampClass = computed(() => {
+  if (isGalaxyTierLocked.value) return 'ds-ramp-locked'
+  return galaxyProgressPercent.value > 0 ? 'ds-ramp-partial' : 'ds-ramp-locked'
+})
+const sacrificeAffordRampClass = computed(() =>
+  store.currentSacrificeReward.gt(store.sacrificeMultiplier) ? 'ds-ramp-partial' : 'ds-ramp-locked'
+)
 
 // Önbellek Temizleme (Sacrifice) açık mı?
 // ADR-0035: artık `dimensionShifts >= 5` değil — Akış Kümesi o sayacı 0'a indirdiği
@@ -205,6 +227,15 @@ function handleSlackerClick(e: MouseEvent, id: string) {
   store.clickSlacker(id)
 }
 
+// Ortak punch kalıbı: dokunma geri bildirimi pointerdown anında (≤100 ms, tek impuls).
+function punchTap(e: PointerEvent): void {
+  if (isMotionOff()) return
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  el.classList.add('juice-punch')
+  window.setTimeout(() => el.classList.remove('juice-punch'), 160)
+}
+
 // Dokunmatik Yukarı Kaydırma (Touch Swipe-Up Gesture)
 let touchStartTime = 0
 let touchStartY = 0
@@ -316,11 +347,12 @@ function handleTouchEnd(e: TouchEvent) {
             class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 cursor-help select-none"
             v-tip="`D3 Nükleer Çekirdek Pasifi: ${d3Passive.desc}`"
           >
+            <span class="dim-glyph" :class="getTierAccent(3)">{{ getTierGlyph(3) }}</span>
             {{ d3Passive.label }}
           </span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <span class="text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">3 tıkla → %120 kütle iade</span>
+          <span class="text-[11px] font-bold text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded">3 tıkla → %120 kütle iade</span>
           <ChevronDown class="w-3.5 h-3.5 text-slate-500 transition-transform" :class="{ 'rotate-180': !slackersOpen }" />
         </div>
       </button>
@@ -330,6 +362,7 @@ function handleTouchEnd(e: TouchEvent) {
           v-for="slacker in store.slackers"
           :key="slacker.id"
           @click="handleSlackerClick($event, slacker.id)"
+          @pointerdown="punchTap"
           :aria-label="`${slacker.name} parazitini etkisizleştir`"
           class="btn-tactile px-3 py-1.5 rounded-lg border border-rose-800/40 bg-rose-950/20 hover:border-rose-500/60 cursor-pointer flex items-center gap-2 text-xs font-mono text-slate-200"
           v-tip="'Tıklayarak yok et'"
@@ -368,14 +401,20 @@ function handleTouchEnd(e: TouchEvent) {
     <!-- ADR-0027: sıradaki format teaser'ı -->
     <div
       v-if="nextLockedTier"
-      class="text-[11px] font-mono text-slate-500 px-1 flex items-center gap-1.5"
+      class="text-[11px] font-mono text-slate-500 px-1 flex items-start gap-1.5"
       v-tip="'Ölçek Sıçraması yaptıkça yeni kütle boyutları açılır'"
     >
-      <Lock class="w-3 h-3 text-slate-600 shrink-0" />
-      <span>
-        D{{ nextLockedTier.tier }} {{ nextLockedTier.label }} —
-        <span class="text-slate-400">{{ nextLockedTier.shiftsNeeded }}. Ölçek Sıçraması ile açılır</span>
-      </span>
+      <Lock class="w-3 h-3 text-slate-600 shrink-0 mt-0.5" />
+      <div class="min-w-0 flex-1">
+        <span>
+          <span class="dim-glyph" :class="getTierAccent(nextLockedTier.tier)">{{ getTierGlyph(nextLockedTier.tier) }}</span>
+          D{{ nextLockedTier.tier }} {{ nextLockedTier.label }} —
+          <span class="text-slate-400">{{ nextLockedTier.shiftsNeeded }}. Ölçek Sıçraması ile açılır</span>
+        </span>
+        <div class="progress-track progress-track-mini w-full max-w-[220px] mt-1">
+          <div class="progress-fill progress-fill-purple" :style="{ width: `${nextLockedTeaserPercent}%` }"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 5. Bento Kartlar: Sıçrama, Kümeler ve Önbellek Temizleme -->
@@ -403,11 +442,12 @@ function handleTouchEnd(e: TouchEvent) {
                 class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 cursor-help select-none"
                 v-tip="`D5 Laboratuvar & Şehir Pasifi: ${d5Passive.desc}`"
               >
+                <span class="dim-glyph" :class="getTierAccent(5)">{{ getTierGlyph(5) }}</span>
                 {{ d5Passive.label }}
               </span>
             </div>
             <div class="text-[11px] font-mono text-slate-400 tabular-nums">
-              {{ format(currentShiftDimAmount, 0, store.settings.notation) }} / {{ format(shiftReq.amount, 0, store.settings.notation) }} D{{ shiftReq.tier }}
+              {{ format(currentShiftDimAmount, 0, store.settings.notation) }} / {{ format(shiftReq.amount, 0, store.settings.notation) }} <span class="dim-glyph" :class="getTierAccent(shiftReq.tier)">{{ getTierGlyph(shiftReq.tier) }}</span> D{{ shiftReq.tier }}
             </div>
             <div class="progress-track progress-track-mini w-20 sm:w-24 mt-1">
               <div class="progress-fill progress-fill-purple" :style="{ width: `${shiftProgressPercent}%` }"></div>
@@ -421,8 +461,8 @@ function handleTouchEnd(e: TouchEvent) {
           aria-label="Ölçek sıçraması yap"
           class="btn-tactile px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border shrink-0"
           :class="store.canShift
-            ? 'bg-purple-600/25 hover:bg-purple-600/35 text-purple-200 border-purple-500/40 cursor-pointer'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
+            ? 'bg-purple-600/25 hover:bg-purple-600/35 text-purple-200 border-purple-500/40 cursor-pointer affordance-pulse'
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${shiftAffordRampClass}`"
         >
           {{ isShiftUnlock ? 'Boyut Aç' : `×${format(store.singleShiftPower, 1, store.settings.notation)} Boost` }}
         </button>
@@ -446,11 +486,11 @@ function handleTouchEnd(e: TouchEvent) {
               <span class="text-[10px] font-mono text-amber-400">Adet: {{ store.galaxies }}</span>
             </div>
             <div v-if="isGalaxyTierLocked" class="text-[11px] font-sans text-slate-500 leading-tight">
-              D{{ galaxyTier }} açılınca aktifleşir
+              <span class="dim-glyph" :class="getTierAccent(galaxyTier)">{{ getTierGlyph(galaxyTier) }}</span> D{{ galaxyTier }} açılınca aktifleşir
             </div>
             <template v-else>
               <div class="text-[11px] font-mono text-slate-400 tabular-nums">
-                {{ format(currentGalaxyDimAmount, 0, store.settings.notation) }} / {{ galaxyReq }} D{{ galaxyTier }}
+                {{ format(currentGalaxyDimAmount, 0, store.settings.notation) }} / {{ galaxyReq }} <span class="dim-glyph" :class="getTierAccent(galaxyTier)">{{ getTierGlyph(galaxyTier) }}</span> D{{ galaxyTier }}
               </div>
               <div class="progress-track progress-track-mini w-20 sm:w-24 mt-1">
                 <div class="progress-fill progress-fill-amber" :style="{ width: `${galaxyProgressPercent}%` }"></div>
@@ -465,8 +505,9 @@ function handleTouchEnd(e: TouchEvent) {
           aria-label="Kozmik küme kur"
           class="btn-tactile px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border shrink-0"
           :class="store.canBuyGalaxy
-            ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/40 cursor-pointer'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
+            ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/40 cursor-pointer affordance-pulse'
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${galaxyAffordRampClass}`"
+          :style="store.canBuyGalaxy ? { '--pulse-c1': 'rgba(245, 158, 11, 0.35)', '--pulse-c2': 'rgba(245, 158, 11, 0.75)' } : undefined"
         >
           Küme Kur
         </button>
@@ -490,7 +531,7 @@ function handleTouchEnd(e: TouchEvent) {
               <span class="text-[10px] font-mono text-rose-400 tabular-nums">×{{ format(store.sacrificeMultiplier, 1, store.settings.notation) }}</span>
             </div>
             <div class="text-[11px] font-mono text-rose-300/80 tabular-nums">
-              → ×{{ format(store.currentSacrificeReward, 1, store.settings.notation) }} D8
+              → ×{{ format(store.currentSacrificeReward, 1, store.settings.notation) }} <span class="dim-glyph" :class="getTierAccent(8)">{{ getTierGlyph(8) }}</span> D8
             </div>
             <div class="text-[9px] text-slate-500 font-mono">
               D1 birikimini D8 tekillik gücüne çevir
@@ -504,8 +545,9 @@ function handleTouchEnd(e: TouchEvent) {
           aria-label="Tekillik besle"
           class="btn-tactile px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border shrink-0 uppercase"
           :class="store.canSacrifice
-            ? 'bg-rose-500/25 hover:bg-rose-500/35 text-rose-200 border-rose-500/50 cursor-pointer shadow-sm animate-pulse'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
+            ? 'bg-rose-500/25 hover:bg-rose-500/35 text-rose-200 border-rose-500/50 cursor-pointer shadow-sm affordance-pulse'
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${sacrificeAffordRampClass}`"
+          :style="store.canSacrifice ? { '--pulse-c1': 'rgba(244, 63, 94, 0.4)', '--pulse-c2': 'rgba(244, 63, 94, 0.8)' } : undefined"
         >
           Besle
         </button>

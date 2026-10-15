@@ -2,6 +2,7 @@
 import { computed, type Component } from "vue";
 import { useGameStore, AUTOBUYER_COSTS, getAutobuyerRequirementText } from "../../stores/game";
 import { formatNumber } from "../../core/format";
+import { getTierAccent, getTierGlyph } from "../../game/dimension_identity";
 import type { AutobuyerMode } from "../../models/types";
 import {
   Bot,
@@ -24,6 +25,19 @@ const props = defineProps<{
 const store = useGameStore();
 
 const bot = computed(() => store.autobuyers[props.botKey]);
+
+// Şafak Nöbeti botunun açılış şartı (AUTOBUYER_PROGRESS_REQ.singularity ile aynı: 3 Çöküş)
+const SINGULARITY_BOT_REQUIRED = 3;
+
+// Katman kimliği: dim1..dim8 botları ada değil .dim-glyph glifine eşlik eder (durum değil, kimlik).
+const dimTier = computed<number | null>(() => {
+  if (!props.botKey.startsWith("dim")) return null;
+  const parsed = Number(props.botKey.slice(3));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+});
+
+const tierGlyph = computed(() => (dimTier.value === null ? "" : getTierGlyph(dimTier.value)));
+const tierAccent = computed(() => (dimTier.value === null ? "" : getTierAccent(dimTier.value)));
 
 // Hız çarpanı
 const speedMultiplierRaw = computed(() => store.autobuyerFleetSpeedMult);
@@ -71,6 +85,23 @@ function requirementMet(key: string): boolean {
   return store.isAutobuyerRequirementMet(String(key));
 }
 
+// Rampa: ready'de blue kimlik + pulse; şartlardan (ilerleme/kütle) tam biri karşılanmışsa partial.
+const unlockAffordable = computed(() => {
+  const cost = AUTOBUYER_COSTS[props.botKey];
+  return !!cost && store.matter.gte(cost);
+});
+
+const unlockRampClass = computed(() => {
+  if (canUnlock(props.botKey)) return ""; // ready → kimlik + pulse (ramp sınıfı yok)
+  const requirementOk = store.isAutobuyerRequirementMet(props.botKey);
+  return requirementOk || unlockAffordable.value ? "ds-ramp-partial" : "ds-ramp-locked";
+});
+
+// Tekillik botu şartı: 3 Çöküş ilerlemesi (çubukla görünür kalır)
+const singularityReqPercent = computed(() =>
+  Math.min(100, (store.singularities / SINGULARITY_BOT_REQUIRED) * 100)
+);
+
 function modeLabel(mode: string | undefined): string {
   if (mode === "bulk") return "×10";
   if (mode === "max") return "MAKS";
@@ -105,9 +136,10 @@ function onMinGainInput(event: Event, key: string): void {
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5">
           <Bot class="w-3.5 h-3.5" :class="bot.enabled ? 'text-blue-400' : 'text-slate-600'" />
+          <span v-if="dimTier !== null" class="dim-glyph text-xs" :class="tierAccent">{{ tierGlyph }}</span>
           <span class="text-xs font-mono font-bold text-slate-200">{{ bot.name }}</span>
         </div>
-        <span class="ds-badge text-[9px]" :class="bot.enabled ? 'ds-badge-emerald' : ''">
+        <span class="ds-badge text-[9px]" :class="bot.enabled ? 'ds-badge-cyan' : 'ds-badge-slate'">
           {{ bot.enabled ? 'AKTİF' : 'KAPALI' }}
         </span>
       </div>
@@ -123,23 +155,23 @@ function onMinGainInput(event: Event, key: string): void {
         <button
           @click="setMode(botKey, 'single')"
           class="py-1 rounded text-[9px] font-mono font-bold border transition-all cursor-pointer text-center"
-          :class="bot.mode === 'single' ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'"
+          :class="bot.mode === 'single' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'"
         >×1</button>
         <button
           @click="setMode(botKey, 'bulk')"
           class="py-1 rounded text-[9px] font-mono font-bold border transition-all cursor-pointer text-center"
-          :class="bot.mode === 'bulk' ? 'bg-blue-500/25 text-blue-200 border-blue-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'"
+          :class="bot.mode === 'bulk' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'"
         >×10</button>
         <button
           @click="setMode(botKey, 'max')"
           class="py-1 rounded text-[9px] font-mono font-bold border transition-all cursor-pointer text-center"
-          :class="bot.mode === 'max' ? 'bg-amber-500/25 text-amber-200 border-amber-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'"
+          :class="bot.mode === 'max' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'"
         >MAKS</button>
       </div>
       <button
         @click="store.toggleAutobuyer(botKey)"
-        class="p-1.5 rounded-lg border cursor-pointer transition-all shrink-0"
-        :class="bot.enabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'"
+        class="p-1.5 rounded-lg border cursor-pointer transition-all shrink-0 active:scale-95"
+        :class="bot.enabled ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 hover:bg-cyan-500/30' : 'bg-slate-500/20 text-slate-300 border-slate-500/40 hover:bg-slate-500/30'"
         :title="bot.enabled ? 'Botu Durdur' : 'Botu Başlat'"
       >
         <Power class="w-3.5 h-3.5" />
@@ -153,8 +185,8 @@ function onMinGainInput(event: Event, key: string): void {
     class="glass-panel-card p-4 rounded-xl border flex flex-col justify-between"
     :class="botKey === 'singularity'
       ? (bot.unlocked
-        ? bot.enabled ? 'border-amber-500/40 bg-amber-950/20' : 'border-white/[0.08] bg-black/40'
-        : 'opacity-50 border-white/[0.04] bg-black/30')
+        ? bot.enabled ? 'border-cyan-500/40 bg-cyan-950/20' : 'border-white/[0.08] bg-black/40'
+        : 'ds-ramp-locked')
       : (bot.enabled && operatorMeta ? operatorMeta.activeClass : 'border-white/[0.08] bg-black/40')"
   >
     <!-- Şafak Nöbeti (Singularity) Botu -->
@@ -162,15 +194,15 @@ function onMinGainInput(event: Event, key: string): void {
       <div>
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <Radio class="w-4 h-4 text-amber-400" />
+            <Radio class="w-4 h-4 text-cyan-400" />
             <h3 class="text-xs font-bold font-mono text-slate-200">{{ bot.name }}</h3>
           </div>
-          <span v-if="bot.unlocked" class="ds-badge" :class="bot.enabled ? 'ds-badge-amber' : ''">
+          <span v-if="bot.unlocked" class="ds-badge" :class="bot.enabled ? 'ds-badge-cyan' : 'ds-badge-slate'">
             {{ bot.enabled ? 'AKTİF' : 'BEKLEMEDE' }}
           </span>
           <span v-else class="text-[10px] font-mono text-slate-500 flex items-center gap-1">
             <Lock class="w-3 h-3" />
-            <span>3 Çöküş İster</span>
+            <span>{{ SINGULARITY_BOT_REQUIRED }} Çöküş İster</span>
           </span>
         </div>
         <div v-if="bot.unlocked">
@@ -183,19 +215,22 @@ function onMinGainInput(event: Event, key: string): void {
               step="1"
               :value="bot.minGainSp || 1"
               @change="onMinGainInput($event, 'singularity')"
-              class="w-20 bg-black/50 border border-white/[0.1] rounded px-2 py-1 text-xs font-mono font-bold text-amber-300 tabular-nums focus:outline-none focus:border-amber-500"
+              class="w-20 bg-black/50 border border-white/[0.1] rounded px-2 py-1 text-xs font-mono font-bold text-slate-200 tabular-nums focus:outline-none focus:border-cyan-500/50"
             />
           </div>
         </div>
         <div v-else class="text-[11px] text-slate-500 font-mono">
-          3 Tekillik Çöküşü tamamlandığında otomatik rampa çöküşü açılır. (Şu an: {{ store.singularities }}/3)
+          3 Tekillik Çöküşü tamamlandığında otomatik rampa çöküşü açılır. (Şu an: {{ store.singularities }}/{{ SINGULARITY_BOT_REQUIRED }})
+          <div class="progress-track progress-track-mini mt-1.5">
+            <div class="progress-fill progress-fill-amber" :style="{ width: `${singularityReqPercent}%` }"></div>
+          </div>
         </div>
       </div>
       <div v-if="bot.unlocked" class="mt-3 pt-3 border-t border-white/[0.06]">
         <button
           @click="store.toggleAutobuyer('singularity')"
-          class="w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold border cursor-pointer"
-          :class="bot.enabled ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
+          class="w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold border cursor-pointer transition-all active:scale-95"
+          :class="bot.enabled ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40' : 'bg-slate-500/20 text-slate-300 border-slate-500/40'"
         >
           {{ bot.enabled ? 'Durdur' : 'Başlat' }}
         </button>
@@ -210,7 +245,7 @@ function onMinGainInput(event: Event, key: string): void {
             <component :is="operatorMeta.icon" class="w-4 h-4" :class="operatorMeta.iconClass" />
             <h3 class="text-xs font-bold font-mono text-slate-200">{{ bot.name }}</h3>
           </div>
-          <span class="ds-badge" :class="bot.enabled ? 'ds-badge-emerald' : ''">{{ bot.enabled ? 'AKTİF' : 'KAPALI' }}</span>
+          <span class="ds-badge" :class="bot.enabled ? 'ds-badge-cyan' : 'ds-badge-slate'">{{ bot.enabled ? 'AKTİF' : 'KAPALI' }}</span>
         </div>
         <p class="text-[11px] text-slate-400 font-mono">{{ operatorMeta.desc }}</p>
         <div class="text-[11px] font-mono text-slate-300 mt-2">
@@ -219,14 +254,14 @@ function onMinGainInput(event: Event, key: string): void {
       </div>
       <div v-if="botKey === 'tickspeed'" class="mt-3 pt-3 border-t border-white/[0.06] flex items-center gap-2">
         <div class="grid grid-cols-3 gap-1 flex-1">
-          <button @click="setMode(botKey, 'single')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'single' ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'">×1</button>
-          <button @click="setMode(botKey, 'bulk')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'bulk' ? 'bg-blue-500/25 text-blue-200 border-blue-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'">×10</button>
-          <button @click="setMode(botKey, 'max')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'max' ? 'bg-amber-500/25 text-amber-200 border-amber-500/50' : 'bg-black/30 text-slate-500 border-white/[0.05]'">MAKS</button>
+          <button @click="setMode(botKey, 'single')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'single' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'">×1</button>
+          <button @click="setMode(botKey, 'bulk')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'bulk' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'">×10</button>
+          <button @click="setMode(botKey, 'max')" class="py-1 rounded text-[10px] font-mono font-bold border cursor-pointer" :class="bot.mode === 'max' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/30 text-slate-400 border-white/10 hover:text-slate-200'">MAKS</button>
         </div>
         <button
           @click="store.toggleAutobuyer(botKey)"
-          class="px-3 py-1 rounded-lg text-xs font-mono font-bold border cursor-pointer"
-          :class="bot.enabled ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
+          class="px-3 py-1 rounded-lg text-xs font-mono font-bold border cursor-pointer transition-all active:scale-95"
+          :class="bot.enabled ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40' : 'bg-slate-500/20 text-slate-300 border-slate-500/40'"
         >
           {{ bot.enabled ? 'Durdur' : 'Başlat' }}
         </button>
@@ -234,8 +269,8 @@ function onMinGainInput(event: Event, key: string): void {
       <div v-else class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-end">
         <button
           @click="store.toggleAutobuyer(botKey)"
-          class="w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold border cursor-pointer"
-          :class="bot.enabled ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
+          class="w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold border cursor-pointer transition-all active:scale-95"
+          :class="bot.enabled ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40' : 'bg-slate-500/20 text-slate-300 border-slate-500/40'"
         >
           {{ bot.enabled ? 'Durdur' : 'Başlat' }}
         </button>
@@ -250,16 +285,17 @@ function onMinGainInput(event: Event, key: string): void {
     :class="[
       bot.unlocked
         ? bot.enabled ? 'border-blue-500/40 bg-blue-950/20' : ''
-        : 'opacity-60'
+        : 'ds-ramp-locked'
     ]"
   >
     <div>
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <Bot class="w-4 h-4" :class="bot.enabled && bot.unlocked ? 'text-blue-400' : 'text-slate-600'" />
+          <span v-if="dimTier !== null" class="dim-glyph text-sm" :class="tierAccent">{{ tierGlyph }}</span>
           <h3 class="text-xs font-bold font-mono text-slate-200">{{ bot.name }}</h3>
         </div>
-        <span v-if="bot.unlocked" class="ds-badge" :class="bot.enabled ? 'ds-badge-emerald' : ''">
+        <span v-if="bot.unlocked" class="ds-badge" :class="bot.enabled ? 'ds-badge-cyan' : 'ds-badge-slate'">
           {{ bot.enabled ? 'AKTİF' : 'DEVRE DIŞI' }}
         </span>
         <span v-else class="text-[10px] font-mono text-slate-500 flex items-center gap-1">
@@ -270,12 +306,12 @@ function onMinGainInput(event: Event, key: string): void {
 
       <div class="text-[11px] text-slate-400 font-mono mt-1">
         <span v-if="bot.unlocked">
-          <span class="ds-badge mr-1.5" :class="bot.mode === 'max' ? 'ds-badge-amber' : bot.mode === 'bulk' ? 'ds-badge-blue' : 'ds-badge-emerald'">{{ modeLabel(bot.mode) }}</span>
+          <span class="ds-badge ds-badge-slate mr-1.5">{{ modeLabel(bot.mode) }}</span>
           Tetiklenme: <span class="text-slate-300 font-bold tabular-nums">{{ (bot.interval / speedMultiplierRaw).toFixed(2) }} sn</span>
         </span>
         <span v-else>
           Açılış Maliyeti: <span class="text-blue-300 font-bold tabular-nums">{{ formatNumber(AUTOBUYER_COSTS[botKey], store.settings.notation) }} g Kütle</span>
-          <span v-if="requirementText(botKey)" class="block text-[10px] mt-0.5" :class="requirementMet(botKey) ? 'text-emerald-400' : 'text-amber-400'">İster: {{ requirementText(botKey) }}</span>
+          <span v-if="requirementText(botKey)" class="block text-[10px] mt-0.5" :class="requirementMet(botKey) ? 'text-slate-200' : 'text-slate-500'">İster: {{ requirementText(botKey) }}</span>
           <span class="block text-[10px] text-slate-500 mt-0.5">×1 modda başlar (8-20sn'de 1 adet)</span>
         </span>
       </div>
@@ -293,7 +329,7 @@ function onMinGainInput(event: Event, key: string): void {
           step="1"
           :value="bot.minGainSp || 1"
           @change="onMinGainInput($event, botKey)"
-          class="w-full bg-black/40 border border-white/[0.1] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-amber-300 tabular-nums focus:outline-none focus:border-amber-500/50"
+          class="w-full bg-black/40 border border-white/[0.1] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-200 tabular-nums focus:outline-none focus:border-cyan-500/50"
           v-tip="'Bu kadar SP garantilenecek kadar bekler; eğim düşüşü ile birlikte çöker.'"
         />
         <span class="text-[10px] text-slate-400 font-mono shrink-0">SP</span>
@@ -305,7 +341,7 @@ function onMinGainInput(event: Event, key: string): void {
       <button
         @click="setMode(botKey, 'single')"
         class="py-1 rounded-md text-[10px] font-mono font-bold border transition-all cursor-pointer"
-        :class="(bot.mode || 'single') === 'single' ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50' : 'bg-black/40 text-slate-500 border-white/[0.06] hover:border-white/[0.14]'"
+        :class="(bot.mode || 'single') === 'single' ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-400 border-white/10 hover:text-slate-200'"
       >
         ×1
       </button>
@@ -314,7 +350,7 @@ function onMinGainInput(event: Event, key: string): void {
         :disabled="!store.autobuyerBulkUnlocked"
         v-tip="!store.autobuyerBulkUnlocked ? 'Önce ×10 Alım kademesini aç' : 'her basışta 1 paket (10 adet)'"
         class="py-1 rounded-md text-[10px] font-mono font-bold border transition-all cursor-pointer"
-        :class="bot.mode === 'bulk' ? 'bg-blue-500/25 text-blue-200 border-blue-500/50' : store.autobuyerBulkUnlocked ? 'bg-black/40 text-slate-400 border-white/[0.06] hover:border-blue-500/50' : 'bg-black/30 text-slate-700 border-white/[0.04] cursor-not-allowed'"
+        :class="bot.mode === 'bulk' ? 'bg-white/[0.10] text-white border-white/25' : store.autobuyerBulkUnlocked ? 'bg-black/40 text-slate-400 border-white/10 hover:text-slate-200' : 'bg-black/30 text-slate-600 border-white/[0.06] cursor-not-allowed'"
       >
         ×10
       </button>
@@ -323,7 +359,7 @@ function onMinGainInput(event: Event, key: string): void {
         :disabled="!store.autobuyerMaxUnlocked"
         v-tip="!store.autobuyerMaxUnlocked ? 'Önce Maks Alım kademesini aç' : 'her basışta paran yettiği kadar'"
         class="py-1 rounded-md text-[10px] font-mono font-bold border transition-all cursor-pointer"
-        :class="bot.mode === 'max' ? 'bg-amber-500/25 text-amber-200 border-amber-500/50' : store.autobuyerMaxUnlocked ? 'bg-black/40 text-slate-400 border-white/[0.06] hover:border-amber-500/50' : 'bg-black/30 text-slate-700 border-white/[0.04] cursor-not-allowed'"
+        :class="bot.mode === 'max' ? 'bg-white/[0.10] text-white border-white/25' : store.autobuyerMaxUnlocked ? 'bg-black/40 text-slate-400 border-white/10 hover:text-slate-200' : 'bg-black/30 text-slate-600 border-white/[0.06] cursor-not-allowed'"
       >
         MAKS
       </button>
@@ -336,8 +372,8 @@ function onMinGainInput(event: Event, key: string): void {
         @click="store.toggleAutobuyer(botKey)"
         class="btn-tactile w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border"
         :class="bot.enabled
-          ? 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/30'
-          : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-emerald-500/30'"
+          ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-500/40'
+          : 'bg-slate-500/15 hover:bg-slate-500/25 text-slate-300 border-slate-500/30'"
       >
         <ToggleRight v-if="bot.enabled" class="w-4 h-4" />
         <ToggleLeft v-else class="w-4 h-4" />
@@ -350,8 +386,8 @@ function onMinGainInput(event: Event, key: string): void {
         :disabled="!canUnlock(botKey)"
         class="btn-tactile w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border"
         :class="canUnlock(botKey)
-          ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-500/50'
-          : 'bg-black/30 text-slate-600 border-white/[0.05]'"
+          ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-500/50 affordance-pulse'
+          : `bg-black/30 text-slate-500 border-white/[0.05] ${unlockRampClass}`"
       >
         <Unlock class="w-3.5 h-3.5" />
         <span>{{ !requirementMet(botKey) ? 'Kilitli: ' + requirementText(botKey) : canUnlock(botKey) ? 'Botu Satın Al' : 'Yetersiz Kütle' }}</span>

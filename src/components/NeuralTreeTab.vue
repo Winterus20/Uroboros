@@ -85,18 +85,18 @@ function uiState(node: NeuralNode): NodeUiState {
 }
 
 const CARD_STATE_CLASS: Record<NodeUiState, string> = {
-  maxed: 'border-emerald-500/40 bg-emerald-950/20',
-  'choice-locked': 'border-white/[0.06] bg-black/30 opacity-60',
-  available: 'border-amber-500/50 bg-amber-950/10 hover:border-amber-400/70',
-  insufficient: 'border-amber-500/20 bg-black/20 opacity-55'
+  maxed: 'border-cyan-500/40 bg-cyan-950/20',
+  'choice-locked': 'ds-ramp-locked',
+  available: 'border-amber-500/50 bg-amber-950/10 hover:border-amber-400/70 affordance-pulse',
+  insufficient: 'ds-ramp-partial'
 }
 
-// Dal renk kodu: pasif = indigo, aktif = pembe/mor, hibrit = zümrüt (mevcut paletle uyumlu)
+// Dal renk kodu: pasif = indigo, aktif = pembe/mor, hibrit = gök mavisi (mevcut paletle uyumlu)
 const BRANCH_ICON_CLASS: Record<NeuralBranch, string> = {
-  root: 'text-rose-300',
+  root: 'text-amber-300',
   passive: 'text-indigo-300',
   active: 'text-fuchsia-300',
-  hybrid: 'text-emerald-300'
+  hybrid: 'text-sky-300'
 }
 
 const CHOICE_LOCK_TIP =
@@ -130,7 +130,7 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
       <div class="flex items-center gap-1.5 flex-wrap text-[10px] font-mono">
         <span class="ds-badge ds-badge-blue"><Moon class="w-3 h-3" /><span>Pasif — Uyku</span></span>
         <span class="ds-badge ds-badge-violet"><Zap class="w-3 h-3" /><span>Aktif — Başparmak</span></span>
-        <span class="ds-badge ds-badge-emerald"><Link2 class="w-3 h-3" /><span>Hibrit — Köprü</span></span>
+        <span class="inline-flex items-center gap-1 px-2 py-[0.15rem] rounded-full border border-sky-500/35 bg-sky-500/[0.12] text-sky-300 text-[10px] font-mono font-semibold whitespace-nowrap"><Link2 class="w-3 h-3" /><span>Hibrit — Köprü</span></span>
       </div>
     </div>
 
@@ -150,15 +150,15 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
             :disabled="uiState(getNode('insomnia_heart')) === 'insufficient'"
             class="btn-tactile mt-2 w-full py-1.5 px-3 rounded-lg text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border tabular-nums"
             :class="uiState(getNode('insomnia_heart')) === 'available'
-              ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
-              : 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed'"
+              ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
+              : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
             v-tip="'Ağacın tüm dallarını açar ve her çöküşte 10.000 g kütle kazandırır'"
           >
             <span>Al ({{ nodeCost(getNode('insomnia_heart')) }} SP)</span>
           </button>
-          <div v-else class="mt-2 text-[11px] font-mono text-emerald-400 flex items-center justify-center gap-1">
+          <div v-else class="mt-2 text-[11px] font-mono text-cyan-300 flex items-center justify-center gap-1">
             <Check class="w-3.5 h-3.5" />
-            <span>Kalıcı Olarak Aktif</span>
+            <span>MAKS · Kalıcı Olarak Aktif</span>
           </div>
         </div>
       </div>
@@ -194,17 +194,24 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         <div class="min-w-0 flex-1">
                           <div class="flex items-center justify-between gap-1">
                             <h4 class="text-[11px] font-bold font-mono text-slate-100 truncate">{{ getNode(id).name }}</h4>
-                            <span
-                              v-if="getNode(id).choiceGroup"
-                              class="ds-badge ds-badge-violet text-[9px] px-1 py-0 shrink-0"
-                              v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
-                            >SEÇİM</span>
+                            <span v-if="getNode(id).choiceGroup" class="flex items-center gap-1 shrink-0">
+                              <span
+                                class="ds-badge ds-badge-violet text-[9px] px-1 py-0"
+                                v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
+                              >SEÇİM</span>
+                              <span class="text-[9px] font-mono text-slate-500">Kardeşini kilitler</span>
+                            </span>
                           </div>
                           <p class="text-[10px] text-slate-400 leading-snug mt-1">{{ getNode(id).desc }}</p>
                         </div>
                       </div>
-                      <div v-if="nodeMaxLevel(getNode(id)) > 1" class="text-[10px] font-mono text-slate-400 mt-1.5 tabular-nums">
-                        Seviye: <span class="text-indigo-300 font-bold">{{ nodeLevel(getNode(id)) }}</span> / {{ nodeMaxLevel(getNode(id)) }}
+                      <div v-if="nodeMaxLevel(getNode(id)) > 1" class="mt-1.5">
+                        <div class="text-[10px] font-mono text-slate-400 tabular-nums">
+                          Seviye: <span class="text-indigo-300 font-bold">{{ nodeLevel(getNode(id)) }}</span> / {{ nodeMaxLevel(getNode(id)) }}
+                        </div>
+                        <div class="progress-track progress-track-mini mt-1">
+                          <div class="progress-fill progress-fill-purple" :style="{ width: `${(nodeLevel(getNode(id)) / nodeMaxLevel(getNode(id))) * 100}%` }"></div>
+                        </div>
                       </div>
                     </div>
                     <div class="mt-2 pt-2 border-t border-white/[0.06]">
@@ -214,18 +221,18 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         :disabled="uiState(getNode(id)) === 'insufficient'"
                         class="btn-tactile w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border tabular-nums"
                         :class="uiState(getNode(id)) === 'available'
-                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
-                          : 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed'"
+                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
+                          : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
                         v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                       >
                         <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                       </button>
                       <div
                         v-else-if="uiState(getNode(id)) === 'maxed'"
-                        class="text-center py-1 text-[10px] font-mono text-emerald-400 flex items-center justify-center gap-1"
+                        class="text-center py-1 text-[10px] font-mono text-cyan-300 flex items-center justify-center gap-1"
                       >
                         <Check class="w-3 h-3" />
-                        <span>Kalıcı</span>
+                        <span>MAKS</span>
                       </div>
                       <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500" v-tip="CHOICE_LOCK_TIP">
                         Hariç Kilitli 🔒
@@ -276,17 +283,24 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         <div class="min-w-0 flex-1">
                           <div class="flex items-center justify-between gap-1">
                             <h4 class="text-[11px] font-bold font-mono text-slate-100 truncate">{{ getNode(id).name }}</h4>
-                            <span
-                              v-if="getNode(id).choiceGroup"
-                              class="ds-badge ds-badge-violet text-[9px] px-1 py-0 shrink-0"
-                              v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
-                            >SEÇİM</span>
+                            <span v-if="getNode(id).choiceGroup" class="flex items-center gap-1 shrink-0">
+                              <span
+                                class="ds-badge ds-badge-violet text-[9px] px-1 py-0"
+                                v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
+                              >SEÇİM</span>
+                              <span class="text-[9px] font-mono text-slate-500">Kardeşini kilitler</span>
+                            </span>
                           </div>
                           <p class="text-[10px] text-slate-400 leading-snug mt-1">{{ getNode(id).desc }}</p>
                         </div>
                       </div>
-                      <div v-if="nodeMaxLevel(getNode(id)) > 1" class="text-[10px] font-mono text-slate-400 mt-1.5 tabular-nums">
-                        Seviye: <span class="text-fuchsia-300 font-bold">{{ nodeLevel(getNode(id)) }}</span> / {{ nodeMaxLevel(getNode(id)) }}
+                      <div v-if="nodeMaxLevel(getNode(id)) > 1" class="mt-1.5">
+                        <div class="text-[10px] font-mono text-slate-400 tabular-nums">
+                          Seviye: <span class="text-fuchsia-300 font-bold">{{ nodeLevel(getNode(id)) }}</span> / {{ nodeMaxLevel(getNode(id)) }}
+                        </div>
+                        <div class="progress-track progress-track-mini mt-1">
+                          <div class="progress-fill progress-fill-purple" :style="{ width: `${(nodeLevel(getNode(id)) / nodeMaxLevel(getNode(id))) * 100}%` }"></div>
+                        </div>
                       </div>
                     </div>
                     <div class="mt-2 pt-2 border-t border-white/[0.06]">
@@ -296,18 +310,18 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         :disabled="uiState(getNode(id)) === 'insufficient'"
                         class="btn-tactile w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border tabular-nums"
                         :class="uiState(getNode(id)) === 'available'
-                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
-                          : 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed'"
+                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
+                          : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
                         v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                       >
                         <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                       </button>
                       <div
                         v-else-if="uiState(getNode(id)) === 'maxed'"
-                        class="text-center py-1 text-[10px] font-mono text-emerald-400 flex items-center justify-center gap-1"
+                        class="text-center py-1 text-[10px] font-mono text-cyan-300 flex items-center justify-center gap-1"
                       >
                         <Check class="w-3 h-3" />
-                        <span>Kalıcı</span>
+                        <span>MAKS</span>
                       </div>
                       <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500" v-tip="CHOICE_LOCK_TIP">
                         Hariç Kilitli 🔒
@@ -337,11 +351,11 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
       <!-- Hibrit Köprüler: iki dalın kesişimi -->
       <div class="mt-5 pt-4 border-t border-white/[0.06]">
         <div class="flex items-center gap-2 mb-2 px-1">
-          <Link2 class="w-3.5 h-3.5 text-emerald-400" />
-          <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-300">Hibrit Köprüler — İki Daldan da Yatırım İster</span>
+          <Link2 class="w-3.5 h-3.5 text-sky-400" />
+          <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-sky-300">Hibrit Köprüler — İki Daldan da Yatırım İster</span>
         </div>
         <div class="flex justify-center mb-2" aria-hidden="true">
-          <div class="w-px h-4 bg-emerald-500/25"></div>
+          <div class="w-px h-4 bg-sky-500/25"></div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <template v-for="id in HYBRID_ROWS[0]" :key="id">
@@ -366,15 +380,15 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                   :disabled="uiState(getNode(id)) === 'insufficient'"
                   class="btn-tactile w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border tabular-nums"
                   :class="uiState(getNode(id)) === 'available'
-                    ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
-                    : 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed'"
+                    ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
+                    : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
                   v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                 >
                   <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                 </button>
-                <div v-else class="text-center py-1 text-[10px] font-mono text-emerald-400 flex items-center justify-center gap-1">
+                <div v-else class="text-center py-1 text-[10px] font-mono text-cyan-300 flex items-center justify-center gap-1">
                   <Check class="w-3 h-3" />
-                  <span>Kalıcı</span>
+                  <span>MAKS</span>
                 </div>
               </div>
             </div>

@@ -37,10 +37,10 @@ const challengeList = computed(() => {
     <div class="glass-panel-card p-3.5 rounded-xl border border-white/[0.06]">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <Swords class="w-4 h-4 text-amber-400" />
+          <Swords class="w-4 h-4 text-rose-400" />
           <span class="text-xs font-bold text-slate-200">Kozmik Kriz Meydan Okumaları Rekorları (C1–C8)</span>
         </div>
-        <span class="text-[11px] font-mono text-amber-300">
+        <span class="text-[11px] font-mono text-rose-300">
           Tamamlanan: {{ store.completedChallenges.length }} / 8
         </span>
       </div>
@@ -50,13 +50,13 @@ const challengeList = computed(() => {
           v-for="c in challengeList"
           :key="c.id"
           class="p-2.5 rounded-lg bg-black/30 border border-white/[0.04] flex items-center justify-between text-xs"
-          :class="{ 'border-emerald-500/30 bg-emerald-950/10': c.isCompleted }"
+          :class="{ 'border-cyan-500/30 bg-cyan-950/10': c.isCompleted }"
         >
           <div class="min-w-0 pr-2">
             <div class="flex items-center gap-1.5 font-bold text-slate-200 truncate">
               <span>{{ c.icon }}</span>
               <span>{{ c.name }}</span>
-              <ShieldCheck v-if="c.isCompleted" class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <ShieldCheck v-if="c.isCompleted" class="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             </div>
             <div class="text-[10px] text-slate-400 truncate mt-0.5">
               {{ c.rewardDesc }}
@@ -67,7 +67,7 @@ const challengeList = computed(() => {
             <div class="text-[10px] text-slate-500 font-mono">En İyi Süre</div>
             <div
               class="font-mono font-bold text-xs tabular-nums"
-              :class="c.isCompleted ? 'text-emerald-300' : 'text-slate-500'"
+              :class="c.isCompleted ? 'text-cyan-300' : 'text-slate-500'"
             >
               {{ c.bestTimeText }}
             </div>
@@ -80,7 +80,7 @@ const challengeList = computed(() => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
       <div class="glass-panel-card p-3 rounded-xl border border-white/[0.06] flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <Sparkles class="w-4 h-4 text-amber-300" />
+          <Sparkles class="w-4 h-4 text-cyan-300" />
           <span class="text-xs text-slate-300 font-medium">Tıklanan Kozmik Dalgalanmalar</span>
         </div>
         <span class="text-sm font-mono font-bold text-white tabular-nums">
@@ -90,10 +90,10 @@ const challengeList = computed(() => {
 
       <div class="glass-panel-card p-3 rounded-xl border border-white/[0.06] flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <Flame class="w-4 h-4 text-pink-400" />
+          <Flame class="w-4 h-4 text-rose-400" />
           <span class="text-xs text-slate-300 font-medium">Rezonans Hipnozları</span>
         </div>
-        <span class="text-sm font-mono font-bold text-pink-300 tabular-nums">
+        <span class="text-sm font-mono font-bold text-rose-300 tabular-nums">
           {{ store.stats.combosTriggered.toLocaleString("tr-TR") }}
         </span>
       </div>

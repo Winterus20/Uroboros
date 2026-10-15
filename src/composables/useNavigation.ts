@@ -3,6 +3,7 @@ import { useGameStore } from "../stores/game";
 import { sounds } from "../core/audio";
 import { nextLocked, unlockProgressFraction } from "../game/unlocks";
 import { ARC_LOG10_MAX, bandForLog10, log10Safe } from "../game/pacing";
+import { isMotionReduced, useMotionMode } from "./useMotion";
 
 export type TabId =
   | "dimensions"
@@ -147,8 +148,11 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
 
   const slideDirection = ref<"next" | "prev">("next");
 
+  // 3 durumlu hareket kapısı: 'full' dışı → yalnız soluk geçiş (kaydırma animasyonu yok).
+  const motionMode = useMotionMode();
+
   const transitionName = computed(() => {
-    if (store.settings.reduceAnimations) return "tab-fade";
+    if (motionMode.value !== "full") return "tab-fade";
     return slideDirection.value === "next" ? "tab-slide-next" : "tab-slide-prev";
   });
 
@@ -282,7 +286,12 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
       const navRect = nav.getBoundingClientRect();
       const btnRect = activeBtn.getBoundingClientRect();
       if (btnRect.left < navRect.left || btnRect.right > navRect.right) {
-        activeBtn.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+        // Kısıtlı harekette yumuşak kaydırma yerine anlık konumlama (tek sıçrama, akış yok).
+        activeBtn.scrollIntoView({
+          block: "nearest",
+          inline: "center",
+          behavior: isMotionReduced() ? "auto" : "smooth"
+        });
       }
     });
   }

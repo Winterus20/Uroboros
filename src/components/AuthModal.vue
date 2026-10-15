@@ -156,7 +156,7 @@ const { dialogRef } = useFocusTrap(
               Doomscroll Bulut Bağlantısı
               <span
                 v-if="authStore.isConfigured"
-                class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+                class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400"
               >
                 Canlı Bulut
               </span>
@@ -191,7 +191,7 @@ const { dialogRef } = useFocusTrap(
             <div class="flex items-center gap-3.5">
               <div v-if="authStore.userAvatar" class="relative">
                 <img :src="authStore.userAvatar" alt="Avatar" class="w-12 h-12 rounded-full border border-cyan-500/40 object-cover" />
-                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-dark-900"></span>
+                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-cyan-500 border-2 border-dark-900"></span>
               </div>
               <div v-else class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg border border-cyan-400/40 shadow-inner">
                 {{ authStore.userDisplayName.charAt(0).toUpperCase() }}
@@ -223,7 +223,7 @@ const { dialogRef } = useFocusTrap(
           <div class="p-4 rounded-xl bg-dark-950/60 border border-cyan-500/30 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
               <div class="flex items-center gap-2">
-                <ShieldCheck class="w-4 h-4 text-emerald-400" />
+                <ShieldCheck class="w-4 h-4 text-cyan-400" />
                 <span class="text-xs font-bold text-slate-200">Bulut Depolama Durumu</span>
               </div>
               <span class="text-[11px] font-mono text-cyan-300">
@@ -285,7 +285,7 @@ const { dialogRef } = useFocusTrap(
               :disabled="authStore.isSyncing"
               class="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-dark-950 hover:bg-dark-800 text-slate-200 border border-slate-700 hover:border-slate-500 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              <DownloadCloud class="w-4 h-4 text-emerald-400" />
+              <DownloadCloud class="w-4 h-4 text-cyan-400" />
               <span>Buluttan Yükle</span>
             </button>
           </div>
@@ -303,9 +303,9 @@ const { dialogRef } = useFocusTrap(
           <div
             v-if="localActionSuccess"
             role="alert"
-            class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-fade-in"
+            class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in"
           >
-            <CheckCircle2 class="w-4 h-4 shrink-0 text-emerald-400" />
+            <CheckCircle2 class="w-4 h-4 shrink-0 text-cyan-400" />
             <span>{{ localActionSuccess }}</span>
           </div>
 
@@ -415,8 +415,8 @@ const { dialogRef } = useFocusTrap(
               <span>{{ authStore.error }}</span>
             </div>
 
-            <div v-if="localActionSuccess" role="alert" class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-fade-in">
-              <CheckCircle2 class="w-4 h-4 shrink-0 text-emerald-400" />
+            <div v-if="localActionSuccess" role="alert" class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in">
+              <CheckCircle2 class="w-4 h-4 shrink-0 text-cyan-400" />
               <span>{{ localActionSuccess }}</span>
             </div>
 

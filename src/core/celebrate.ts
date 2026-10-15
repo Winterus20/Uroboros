@@ -13,11 +13,29 @@ export function isPageVisible(): boolean {
   return !document.hidden
 }
 
-/** Görünür sayfada konfeti patlatır; gizliyken sessizce vazgeçer. */
-export function safeConfetti(opts?: confetti.Options): boolean {
+/**
+ * Hareket kapısı — 'reduced' / 'off' modunda ağır parçacık kutlaması atlanır.
+ * Kök sınıf mührü okunur (useNavigation yazar); core katmanı store'a bağlanmaz.
+ * `force` yalnız bilinçli vitrin anları için istisnadır.
+ */
+function motionAllowsConfetti(): boolean {
+  if (typeof document === 'undefined') return false
+  const root = document.documentElement
+  return !root.classList.contains('motion-off') && !root.classList.contains('reduce-anim')
+}
+
+export interface SafeConfettiOptions extends confetti.Options {
+  /** Hareket kısıtını bilinçli olarak aş (yalnız vitrin anları). */
+  force?: boolean
+}
+
+/** Görünür sayfada konfeti patlatır; gizliyken ya da hareket kısıtlıyken sessizce vazgeçer. */
+export function safeConfetti(opts?: SafeConfettiOptions): boolean {
   if (!isPageVisible()) return false
+  const { force, ...confettiOpts } = opts ?? {}
+  if (!force && !motionAllowsConfetti()) return false
   try {
-    confetti(opts)
+    confetti(confettiOpts)
     return true
   } catch {
     return false

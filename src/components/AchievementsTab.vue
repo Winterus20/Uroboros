@@ -127,7 +127,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
         <div class="stat-box">
           <div>
             <div class="stat-box-label">Ödüllü {{ rewardedUnlocked }}/{{ rewardedTotal }}</div>
-            <div class="stat-box-value text-emerald-300 tabular-nums">%{{ globalPercent.toFixed(0) }}</div>
+            <div class="stat-box-value text-cyan-300 tabular-nums">%{{ globalPercent.toFixed(0) }}</div>
           </div>
         </div>
       </template>
@@ -155,7 +155,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
             @click="filter = f.id"
             class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
             :class="filter === f.id
-              ? 'bg-amber-500/15 border-amber-500/40 text-amber-200'
+              ? 'bg-white/[0.10] border-white/25 text-white'
               : 'bg-black/30 border-white/10 text-slate-400 hover:text-slate-200'"
           >
             {{ f.label }}
@@ -208,7 +208,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
             <span class="min-w-0">
               <span class="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
                 {{ cat.name }}
-                <span v-if="isCategoryComplete(cat.id)" class="ds-badge ds-badge-emerald">Tam satır ✓ ×1.06</span>
+                <span v-if="isCategoryComplete(cat.id)" class="ds-badge ds-badge-amber">Tam satır ✓ ×1.06</span>
                 <span v-else class="ds-badge">Tam satır → ×1.06</span>
               </span>
               <span class="text-[11px] text-slate-500 block">{{ cat.desc }}</span>
@@ -236,7 +236,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
               isUnlocked(ach.id)
                 ? 'bg-amber-500/[0.05] border-amber-500/25'
                 : 'bg-black/30 border-white/[0.04] opacity-60',
-              ach.reward && !isNext(ach.id, cat.id) ? 'border-l-2 border-l-emerald-400/70' : '',
+              ach.reward && !isNext(ach.id, cat.id) ? 'border-l-2 border-l-cyan-400/70' : '',
               isNext(ach.id, cat.id) ? 'ring-1 ring-amber-400/60 border-amber-400/40 opacity-100' : ''
             ]"
           >
@@ -256,12 +256,12 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
               <span
                 v-if="ach.reward"
                 class="ds-badge tabular-nums max-w-full text-left leading-snug break-words [white-space:normal]"
-                :class="isUnlocked(ach.id) ? 'ds-badge-emerald' : 'ds-badge-cyan'"
+                :class="isUnlocked(ach.id) ? 'ds-badge-amber' : 'ds-badge-slate'"
               >
                 <Gift class="w-3 h-3 shrink-0" aria-hidden="true" />
                 <span class="min-w-0">{{ isUnlocked(ach.id) ? '✔ ' : '' }}{{ ach.reward.desc }}</span>
               </span>
-              <span v-else-if="ach.secret && !isUnlocked(ach.id)" class="ds-badge ds-badge-purple">
+              <span v-else-if="ach.secret && !isUnlocked(ach.id)" class="ds-badge ds-badge-slate">
                 GİZLİ · ÖDÜLSÜZ
               </span>
             </div>

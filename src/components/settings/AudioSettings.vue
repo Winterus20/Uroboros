@@ -215,7 +215,7 @@ function saveCustomUrl() {
         <button
           @click="toggleSound"
           class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border"
-          :class="store.settings.soundEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+          :class="store.settings.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
         >
           {{ store.settings.soundEnabled ? 'Açık' : 'Kapalı' }}
         </button>
@@ -277,7 +277,7 @@ function saveCustomUrl() {
       <!-- Vinil Çıtırtısı -->
       <div class="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/[0.06]">
         <div class="flex items-center gap-2">
-          <Disc class="w-4 h-4 text-amber-400/80" />
+          <Disc class="w-4 h-4 text-cyan-400/80" />
           <div>
             <div class="text-xs font-mono font-medium text-slate-300">Analog Vinil / Kaset Cızırtısı</div>
             <div class="text-[10px] text-slate-500">Kozmik sıcaklık için pembe gürültü ve analog çıtırtı</div>
@@ -286,7 +286,7 @@ function saveCustomUrl() {
         <button
           @click="toggleVinyl"
           class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-          :class="store.settings.vinylCrackle ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+          :class="store.settings.vinylCrackle ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
         >
           {{ store.settings.vinylCrackle ? 'Açık' : 'Kapalı' }}
         </button>

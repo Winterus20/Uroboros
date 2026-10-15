@@ -222,8 +222,18 @@ onUnmounted(() => {
           <Lock class="w-3 h-3 text-slate-500 shrink-0" />
           <span class="text-slate-500 shrink-0">Sıradaki kilit:</span>
           <span class="text-slate-200 truncate min-w-0 font-medium">{{ nextUnlockLabel }}</span>
-          <span class="ml-auto shrink-0 tabular-nums font-mono text-cyan-400 font-semibold">
-            <span class="text-slate-600 font-normal mr-1">kilit</span>{{ nextUnlockPercent.toFixed(0) }}%
+          <span class="ml-auto shrink-0 flex items-center gap-1.5">
+            <span class="inline-block w-16">
+              <span class="progress-track progress-track-mini block">
+                <span
+                  class="progress-fill progress-fill-cyan block"
+                  :style="{ width: `${Math.min(100, Math.max(0, nextUnlockPercent))}%` }"
+                ></span>
+              </span>
+            </span>
+            <span class="tabular-nums font-mono text-cyan-400 font-semibold">
+              <span class="text-slate-600 font-normal mr-1">kilit</span>{{ nextUnlockPercent.toFixed(0) }}%
+            </span>
           </span>
         </div>
       </div>
@@ -242,35 +252,35 @@ onUnmounted(() => {
         <button @click="switchTab('dimensions')" :aria-current="activeTab === 'dimensions' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'dimensions', 'dimensions')]">
           <Layers class="w-3.5 h-3.5 text-purple-400" />
           <span :class="navLabelClass(activeTab === 'dimensions')">Katmanlar</span>
-          <span v-if="store.canShift" class="tab-dot tab-dot-purple" v-tip="'Ölçek Sıçraması hazır'"></span>
+          <span v-if="store.canShift" class="tab-dot tab-dot-cyan" v-tip="'Ölçek Sıçraması hazır'"></span>
         </button>
 
         <!-- Algoritma Laboratuvarı Sekmesi -->
         <button v-if="store.labUnlocked" @click="switchTab('lab')" :aria-current="activeTab === 'lab' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'lab', 'lab')]">
           <FlaskConical class="w-3.5 h-3.5 text-emerald-400" />
           <span :class="navLabelClass(activeTab === 'lab')">Lab</span>
-          <span v-if="hasHarvestableTrend" class="tab-dot tab-dot-emerald" v-tip="'Hasada hazır trend var'"></span>
+          <span v-if="hasHarvestableTrend" class="tab-dot tab-dot-cyan" v-tip="'Hasada hazır trend var'"></span>
         </button>
 
         <!-- Gece Kriz Yönetimi Sekmesi -->
         <button v-if="store.crisisUnlocked" @click="switchTab('crisis')" :aria-current="activeTab === 'crisis' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'crisis', 'crisis')]">
           <Zap class="w-3.5 h-3.5 text-cyan-400" />
           <span :class="navLabelClass(activeTab === 'crisis')">Kriz</span>
-          <span v-if="hasCrisisAlert" class="tab-dot tab-dot-cyan" v-tip="'Kriz sekmesinde işlem var'"></span>
+          <span v-if="hasCrisisAlert" class="tab-dot tab-dot-rose" v-tip="'Kriz sekmesinde işlem var'"></span>
         </button>
 
         <!-- Otomatik Botlar Sekmesi -->
         <button v-if="store.autobuyersUnlocked" @click="switchTab('autobuyers')" :aria-current="activeTab === 'autobuyers' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'autobuyers', 'autobuyers')]">
           <Bot class="w-3.5 h-3.5 text-blue-400" />
           <span :class="navLabelClass(activeTab === 'autobuyers')">{{ store.isAutobuyerCockpitMode ? 'Kokpit' : 'Botlar' }}</span>
-          <span v-if="hasBotAlert" class="tab-dot tab-dot-blue" v-tip="'Açılabilir bot kademesi veya alınabilir bot var'"></span>
+          <span v-if="hasBotAlert" class="tab-dot tab-dot-cyan" v-tip="'Açılabilir bot kademesi veya alınabilir bot var'"></span>
         </button>
 
         <!-- Nöral İzleme Kolonisi Sekmesi -->
         <button v-if="store.colonyUnlocked" @click="switchTab('colony')" :aria-current="activeTab === 'colony' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'colony', 'colony')]">
           <Network class="w-3.5 h-3.5 text-violet-400" />
           <span :class="navLabelClass(activeTab === 'colony')">Koloni</span>
-          <span v-if="store.canPowerNap" class="tab-dot tab-dot-violet" v-tip="'Toplu Çöküş hazır'"></span>
+          <span v-if="store.canPowerNap" class="tab-dot tab-dot-cyan" v-tip="'Toplu Çöküş hazır'"></span>
         </button>
 
         <!-- Kozmik Çöküş / Tekillik Sekmesi -->
@@ -278,7 +288,7 @@ onUnmounted(() => {
           <Sunrise class="w-3.5 h-3.5 text-amber-400" />
           <span :class="navLabelClass(activeTab === 'singularity')">Tekillik</span>
           <span v-if="store.canSingularity" class="tab-dot tab-dot-amber" v-tip="'Kozmik Çöküş hazır'"></span>
-          <span v-else-if="store.hasAffordableNeuralNode" class="tab-dot tab-dot-amber" v-tip="'Alınabilir Nöral Ağaç düğümü var'"></span>
+          <span v-else-if="store.hasAffordableNeuralNode" class="tab-dot tab-dot-cyan" v-tip="'Alınabilir Nöral Ağaç düğümü var'"></span>
         </button>
 
         <!-- Gece Kriz Meydan Okumaları Sekmesi -->

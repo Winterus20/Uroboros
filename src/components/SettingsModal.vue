@@ -165,7 +165,7 @@ function executeHardReset() {
             </h3>
             <p class="text-[10px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
               <span>Otomatik Kayıt:</span>
-              <span class="text-emerald-400 font-semibold">{{ lastSavedAgoSeconds }} sn önce</span>
+              <span class="text-cyan-400 font-semibold">{{ lastSavedAgoSeconds }} sn önce</span>
               <span>· 10 sn aralık</span>
             </p>
           </div>
@@ -175,7 +175,7 @@ function executeHardReset() {
           <button
             @click="manualSave"
             aria-label="Oyunu hemen kaydet"
-            class="btn-tactile px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+            class="btn-tactile px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             v-tip="'Anında kaydet'"
           >
             <Save class="w-3.5 h-3.5" />
@@ -231,7 +231,7 @@ function executeHardReset() {
           @click="activeTab = 'save'"
           class="btn-tactile px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer border"
           :class="activeTab === 'save'
-            ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40 shadow-xs'
+            ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 shadow-xs'
             : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03] border-transparent'"
         >
           <HardDrive class="w-3.5 h-3.5" />
@@ -331,11 +331,11 @@ function executeHardReset() {
               </div>
               <div class="py-2 flex items-center justify-between">
                 <span class="text-slate-400">M Tuşu</span>
-                <span class="text-cyan-300 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Tüm Kademeleri Satın Al (Max All)</span>
+                <span class="text-slate-300 font-bold bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/10">Tüm Kademeleri Satın Al (Max All)</span>
               </div>
               <div class="py-2 flex items-center justify-between">
                 <span class="text-slate-400">Space (Boşluk)</span>
-                <span class="text-purple-300 font-bold bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">Kütle Yut (Taktil Çekim)</span>
+                <span class="text-slate-300 font-bold bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/10">Kütle Yut (Taktil Çekim)</span>
               </div>
               <div class="py-2 flex items-center justify-between">
                 <span class="text-slate-400">Esc (Escape)</span>
@@ -343,7 +343,7 @@ function executeHardReset() {
               </div>
               <div class="py-2 flex items-center justify-between">
                 <span class="text-slate-400">GODMODE (yazın)</span>
-                <span class="text-amber-300 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Gizli Geliştirici &amp; Hile Paneli</span>
+                <span class="text-slate-300 font-bold bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/10">Gizli Geliştirici &amp; Hile Paneli</span>
               </div>
             </div>
           </div>

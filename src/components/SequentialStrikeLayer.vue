@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { sounds } from '../core/audio'
 import type { StrikeStage, SequentialStrikePayload } from '../models/types'
+import { isMotionReduced, useMotionMode } from '../composables/useMotion'
 
 interface ActiveStrikeGroup {
   id: number
@@ -37,9 +38,12 @@ let macroTimers: number[] = []
 
 // Sıralı mod kapalıyken veya hareket azaltılmışken katman hiçbir şey çizmez;
 // bu durumda geleneksel tek sayı JuiceLayer'dan gelir.
+// 3 durumlu kapı: reaktif mod terimi, ayar değişiminde computed'ın canlı yenilenmesini sağlar.
+const motionMode = useMotionMode()
+
 const isSequentialEnabled = computed(() => {
   if (store.settings.sequentialStrike === false) return false
-  if (store.settings.reduceAnimations || store.settings.batterySaver) return false
+  if (isMotionReduced() || motionMode.value !== 'full' || store.settings.batterySaver) return false
   return true
 })
 

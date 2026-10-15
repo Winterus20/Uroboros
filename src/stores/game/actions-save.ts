@@ -741,6 +741,15 @@ export const saveActions = {
           if (this.settings.swirlShaderQuality === undefined) this.settings.swirlShaderQuality = 'balanced'
           if (this.settings.decimalPlaces === undefined) this.settings.decimalPlaces = 2
           if (this.settings.batterySaver === undefined) this.settings.batterySaver = false
+          // Hareket 3-durum kontratı: legacy kayıt (motionMode alanı yok) reduceAnimations'tan
+          // türetilir ve iki alan senkron tutulur — eski RA okuyucuları 'off' kararını da görsün.
+          if (data.settings.motionMode === undefined) {
+            this.settings.motionMode = data.settings.reduceAnimations === true ? 'reduced' : 'full'
+          }
+          if (this.settings.motionMode !== 'full' && this.settings.motionMode !== 'reduced' && this.settings.motionMode !== 'off') {
+            this.settings.motionMode = 'full'
+          }
+          this.settings.reduceAnimations = this.settings.motionMode !== 'full'
           if (this.settings.floatingTexts === undefined) this.settings.floatingTexts = true
           if (this.settings.newsTickerEnabled === undefined) this.settings.newsTickerEnabled = true
           if (this.settings.swipeSensitivity === undefined) this.settings.swipeSensitivity = 'balanced'

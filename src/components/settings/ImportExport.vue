@@ -203,7 +203,7 @@ defineExpose({ setImportError, setImportSuccess });
           aria-label="Kaydı metin dosyası olarak indir"
           class="btn-tactile p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
         >
-          <Download class="w-4 h-4 text-emerald-400" />
+          <Download class="w-4 h-4 text-cyan-400" />
           <span>{{ downloadFeedback ? 'Dosya İndirildi!' : 'Dosya İndir (.txt)' }}</span>
         </button>
       </div>
@@ -253,8 +253,8 @@ defineExpose({ setImportError, setImportSuccess });
       </div>
 
       <!-- İçe Aktarma Önizleme / Doğrulama Kartı -->
-      <div v-if="importInspection?.valid && importInspection.summary" class="p-2.5 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/30 text-xs font-mono space-y-1">
-        <div class="text-emerald-300 font-bold flex items-center gap-1.5">
+      <div v-if="importInspection?.valid && importInspection.summary" class="p-2.5 rounded-xl bg-cyan-500/[0.08] border border-cyan-500/30 text-xs font-mono space-y-1">
+        <div class="text-cyan-300 font-bold flex items-center gap-1.5">
           <CheckCircle2 class="w-3.5 h-3.5" />
           Geçerli Kayıt Doğrulandı
         </div>
@@ -269,7 +269,7 @@ defineExpose({ setImportError, setImportSuccess });
       <p v-if="importError" class="text-[11px] text-rose-400 font-mono">
         {{ importError }}
       </p>
-      <p v-else-if="importSuccess" class="text-[11px] text-emerald-400 font-mono">
+      <p v-else-if="importSuccess" class="text-[11px] text-cyan-400 font-mono">
         {{ importSuccess }}
       </p>
     </div>
@@ -283,7 +283,7 @@ defineExpose({ setImportError, setImportSuccess });
       <button
         @click="restoreBackup"
         aria-label="Otomatik yedekten geri yükle"
-        class="btn-tactile px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+        class="btn-tactile px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
       >
         <RotateCcw class="w-3.5 h-3.5" />
         Yedekten Yükle

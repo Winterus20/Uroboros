@@ -4,6 +4,7 @@ import { useGameStore } from "../stores/game";
 import { D_1 } from "../core/math";
 import { sounds } from "../core/audio";
 import { safeConfetti, isPageVisible } from "../core/celebrate";
+import { isMotionReduced, useMotionMode } from "./useMotion";
 
 /**
  * Sayac isi / alev / dekad fisegi mantigi.
@@ -13,7 +14,10 @@ import { safeConfetti, isPageVisible } from "../core/celebrate";
 export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
   const store = useGameStore();
 
-  const motionOff = computed(() => store.settings.reduceAnimations || store.settings.batterySaver);
+  // 3 durumlu hareket kapısı: kök-sınıf mührü ('reduced'/'off') + reaktif mod (ayar
+  // değişince computed canlı yenilenir) + pil tasarrufu.
+  const motionMode = useMotionMode();
+  const motionOff = computed(() => isMotionReduced() || motionMode.value !== "full" || store.settings.batterySaver);
 
   function currentDecade(): number {
     try {

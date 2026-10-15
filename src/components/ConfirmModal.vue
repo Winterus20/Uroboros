@@ -49,9 +49,9 @@ const { dialogRef } = useFocusTrap(true, {
       <div class="flex items-start gap-3 mb-4">
         <div
           class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          :class="danger ? 'bg-red-500/15 border border-red-400/30' : 'bg-amber-500/15 border border-amber-400/30'"
+          :class="danger ? 'bg-rose-500/15 border border-rose-400/30' : 'bg-cyan-500/15 border border-cyan-400/30'"
         >
-          <AlertTriangle class="w-4.5 h-4.5" :class="danger ? 'text-red-300' : 'text-amber-300'" />
+          <AlertTriangle class="w-4.5 h-4.5" :class="danger ? 'text-rose-300' : 'text-cyan-300'" />
         </div>
         <div class="min-w-0">
           <h3 :id="titleId" class="text-sm font-bold text-white leading-tight">{{ title }}</h3>
@@ -68,7 +68,7 @@ const { dialogRef } = useFocusTrap(true, {
         </button>
         <button
           class="btn-tactile flex-1 h-10 rounded-xl text-white text-xs font-bold cursor-pointer"
-          :class="danger ? 'bg-red-500/90 hover:bg-red-500' : 'bg-amber-500/90 hover:bg-amber-500'"
+          :class="danger ? 'bg-rose-500/90 hover:bg-rose-500' : 'bg-cyan-500/90 hover:bg-cyan-500'"
           @click="emit('confirm')"
         >
           {{ confirmLabel || 'Onayla' }}

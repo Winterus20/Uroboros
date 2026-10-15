@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
+import { isMotionReduced } from '../composables/useMotion'
 
 const store = useGameStore()
 
@@ -51,7 +52,7 @@ const crisisAuraClass = computed(() => {
   if (primaryAnomalyType.value === 'crisis') return 'crisis-aura-rose'
   if (primaryAnomalyType.value === 'combo') return 'crisis-aura-combo'
   if (primaryAnomalyType.value === 'void') return 'crisis-aura-void'
-  if (primaryAnomalyType.value === 'sponsor') return 'crisis-aura-amber'
+  if (primaryAnomalyType.value === 'sponsor') return 'crisis-aura-cyan'
   return 'crisis-aura-purple'
 })
 
@@ -60,6 +61,8 @@ let flashTimeout: ReturnType<typeof setTimeout> | null = null
 
 function handleShockwave() {
   if (!isEnabled.value) return
+  // Flaş: pil tasarrufu veya kısıtlı harekette flaş sınıfı eklenmez; temel aura katmanı kalır.
+  if (store.settings.batterySaver || isMotionReduced()) return
   crisisFlash.value = true
   if (flashTimeout) clearTimeout(flashTimeout)
   flashTimeout = setTimeout(() => {

@@ -54,8 +54,8 @@ const speedBot = computed(() => {
           <!-- Filo Durum Kutusu -->
           <div class="stat-box">
             <div class="stat-box-label">Filo Çevrimiçi</div>
-            <div class="stat-box-value text-emerald-400 flex items-center gap-1.5">
-              <Activity class="w-3.5 h-3.5 animate-pulse text-emerald-400" />
+            <div class="stat-box-value text-cyan-300 flex items-center gap-1.5">
+              <Activity class="w-3.5 h-3.5 animate-pulse text-cyan-300" />
               <span class="tabular-nums font-mono">{{ store.activeAutobuyersCount }}/{{ store.totalAutobuyersCount }} Bot</span>
             </div>
           </div>
@@ -74,8 +74,8 @@ const speedBot = computed(() => {
             @click="toggleAll"
             class="btn-tactile px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer border shadow-lg"
             :class="allEnabled
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
-              : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'"
+              ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 hover:bg-cyan-500/30'
+              : 'bg-white/[0.06] text-slate-300 border-white/10 hover:bg-white/[0.10]'"
           >
             <Power class="w-3.5 h-3.5" />
             <span>{{ allEnabled ? 'Filoyu Durdur' : 'Filoyu Başlat' }}</span>
@@ -167,7 +167,7 @@ const speedBot = computed(() => {
             @click="toggleAll"
             class="btn-tactile px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer border"
             :class="allEnabled
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+              ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 hover:bg-cyan-500/30'
               : 'bg-black/40 text-slate-300 border-white/[0.08] hover:border-white/[0.16]'"
           >
             <Power class="w-3.5 h-3.5" />

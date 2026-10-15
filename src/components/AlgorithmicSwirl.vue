@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useGameStore } from '../stores/game'
+import { isMotionReduced, useMotionMode } from '../composables/useMotion'
 
 const store = useGameStore()
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
 // WebGL referansları ve durumlar
 let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null
+// Bağlamın sahibi canvas: v-if kapanınca eleman yeniden doğar; bayat bağlamı ayırt eder.
+let glCanvas: HTMLCanvasElement | null = null
 let program: WebGLProgram | null = null
 let vsShader: WebGLShader | null = null
 let fsShader: WebGLShader | null = null
@@ -59,11 +62,26 @@ const currentParams: SwirlParams = {
   lighting: 0.35
 }
 
-// Efektin aktif olup olmadığı (kullanıcı ayarı + pil tasarrufu + erişilebilirlik)
+// Sistem tercihi (OS seviyesi): prefers-reduced-motion — canlı dinlenir (JuiceLayer kalıbı).
+// ref: ayar/OS değişimi `isEnabled` watcher'ını tetikler; döngü kısıtlı modda durur,
+// ekranda statik fallback katmanı kalır, ayar geri alınınca canlı yeniden başlar.
+const prefersReducedMotion = ref(false)
+let reducedMotionQuery: MediaQueryList | null = null
+
+const onReducedMotionChange = (e: MediaQueryListEvent): void => {
+  prefersReducedMotion.value = e.matches
+}
+
+// 3 durumlu hareket kapısı (reaktif): 'reduced'/'off' iken tam ekran WebGL döngüsü çalışmaz.
+const motionMode = useMotionMode()
+
+// Efektin aktif olup olmadığı (kullanıcı ayarı + pil tasarrufu + hareket kapısı + OS tercihi)
 const isEnabled = computed(() => {
   if (store.settings.swirlShaderQuality === 'off') return false
   if (store.settings.batterySaver) return false
-  if (store.settings.reduceAnimations) return false
+  if (motionMode.value !== 'full') return false
+  if (isMotionReduced()) return false
+  if (prefersReducedMotion.value) return false
   return true
 })
 
@@ -143,6 +161,14 @@ function initWebGL(): boolean {
   if (!canvasRef.value) return false
   const canvas = canvasRef.value
 
+  // Canvas yeniden doğduysa eski bağlam bayattır: açıkça bırak (tarayıcı bağlam sınırı ~16).
+  if (gl && glCanvas !== canvas) {
+    const loseExt = gl.getExtension('WEBGL_lose_context')
+    loseExt?.loseContext()
+    gl = null
+    glCanvas = null
+  }
+
   const options: WebGLContextAttributes = {
     alpha: false,
     antialias: false,
@@ -157,6 +183,7 @@ function initWebGL(): boolean {
     isSupported.value = false
     return false
   }
+  glCanvas = canvas
 
   vsShader = createShader(gl, gl.VERTEX_SHADER, VS_SOURCE)
   fsShader = createShader(gl, gl.FRAGMENT_SHADER, FS_SOURCE)
@@ -390,9 +417,15 @@ watch(
   isEnabled,
   (active) => {
     if (active) {
-      if (!gl) initWebGL()
-      resizeCanvas()
-      startLoop()
+      // DOM güncellemesini bekle: v-if ile geri gelen canvas ancak flush sonrası hazır olur
+      // (aksi halde initWebGL canvasRef null'da düşer ve döngü canlı başlamaz).
+      nextTick(() => {
+        if (!isEnabled.value) return
+        // Canvas v-if ile yeniden doğduysa eski bağlam bayattır: yeni canvas'a göre kur.
+        if (!gl || glCanvas !== canvasRef.value) initWebGL()
+        resizeCanvas()
+        startLoop()
+      })
     } else {
       stopLoop()
     }
@@ -408,6 +441,15 @@ watch(
 )
 
 onMounted(() => {
+  // Sistem hareket tercihi: bir kez oku, çalışma boyunca değişiklikleri dinle (JuiceLayer kalıbı).
+  if (typeof window.matchMedia === 'function') {
+    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    prefersReducedMotion.value = reducedMotionQuery.matches
+    if (typeof reducedMotionQuery.addEventListener === 'function') {
+      reducedMotionQuery.addEventListener('change', onReducedMotionChange)
+    }
+  }
+
   if (isEnabled.value) {
     const ok = initWebGL()
     if (ok) startLoop()
@@ -421,6 +463,13 @@ onUnmounted(() => {
   stopLoop()
   window.removeEventListener('resize', resizeCanvas)
   document.removeEventListener('visibilitychange', handleVisibility)
+
+  if (reducedMotionQuery) {
+    if (typeof reducedMotionQuery.removeEventListener === 'function') {
+      reducedMotionQuery.removeEventListener('change', onReducedMotionChange)
+    }
+    reducedMotionQuery = null
+  }
 
   if (gl) {
     if (program) {
@@ -442,6 +491,7 @@ onUnmounted(() => {
       positionBuffer = null
     }
     gl = null
+    glCanvas = null
   }
 })
 </script>

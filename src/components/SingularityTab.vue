@@ -33,6 +33,11 @@ const progressToSingularity = computed(() => {
   return Math.min(100, Math.floor((logVal / 308.25) * 100))
 })
 
+// Rampa: ilerleme varsa ara durum, hiç yoksa kilitli (ready = amber kimlik + pulse)
+const singularityCtaRamp = computed(() =>
+  progressToSingularity.value > 0 ? 'ds-ramp-partial' : 'ds-ramp-locked'
+)
+
 const nextSpMatterFormatted = computed(() => formatNumber(store.nextSingularityPointAt, store.settings.notation))
 
 function handleSingularityReset() {
@@ -95,8 +100,8 @@ const challengeButtonLabel = computed(() => {
           :disabled="!store.canSingularity"
           class="btn-tactile py-2.5 px-5 rounded-xl font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border"
           :class="store.canSingularity
-            ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-400 animate-pulse'
-            : 'bg-black/30 text-slate-600 border-white/[0.05]'"
+            ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-400 affordance-pulse'
+            : `bg-black/30 text-slate-600 border-white/[0.05] ${singularityCtaRamp}`"
         >
           <Sun class="w-4 h-4" />
           <span>
@@ -105,7 +110,7 @@ const challengeButtonLabel = computed(() => {
         </button>
         <div v-if="store.canSingularity && !inChallenge" class="text-[11px] font-mono text-slate-400 flex items-center justify-between w-full pt-1 border-t border-white/5">
           <span>{{ store.hasBreakSingularity ? 'Sonraki +1 SP Eşiği:' : 'Planck Duvarı:' }}</span>
-          <span :class="store.hasBreakSingularity ? 'text-amber-300' : 'text-rose-400 font-bold'" class="tabular-nums">
+          <span :class="store.hasBreakSingularity ? 'text-amber-300' : 'text-slate-400'" class="tabular-nums">
             {{ store.hasBreakSingularity ? `${nextSpMatterFormatted} g Kütle` : 'Kilitli (1.79e308 g Tavanı)' }}
           </span>
         </div>

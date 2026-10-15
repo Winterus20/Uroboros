@@ -39,11 +39,10 @@ function getCategoryTag(type: AnomalyType | string) {
 
 
 // Tipe göre dış glow (kart parıltısı)
+// heart_frenzy (777×, pozitif), void ve jenerik/sponsor anomali: cyan ailesi.
 function getCapsuleGlow(type: AnomalyType | string) {
   if (type === 'fyp') return 'anomaly-glow-purple'
-  if (type === 'heart_frenzy') return 'anomaly-glow-rose'
-  if (type === 'void') return 'anomaly-glow-void'
-  return 'anomaly-glow-amber'
+  return 'anomaly-glow-void'
 }
 
 function getAnomalyEdition(type: AnomalyType | string) {
@@ -62,45 +61,34 @@ function getTiltConfig(type: AnomalyType | string) {
 
 function getTagStyle(type: AnomalyType | string) {
   if (type === 'fyp') return 'text-purple-300 bg-purple-500/10 border-purple-500/30'
-  if (type === 'heart_frenzy') return 'text-rose-300 bg-rose-500/10 border-rose-500/30'
-  if (type === 'void') return 'text-cyan-200 bg-cyan-500/10 border-cyan-400/40'
-  return 'text-amber-300 bg-amber-500/10 border-amber-500/30'
+  return 'text-cyan-200 bg-cyan-500/10 border-cyan-400/40'
 }
 
 function getProgressColor(type: AnomalyType | string) {
   if (type === 'fyp') return 'bg-purple-500'
-  if (type === 'heart_frenzy') return 'bg-rose-500'
-  if (type === 'void') return 'bg-cyan-400'
-  return 'bg-amber-500'
+  return 'bg-cyan-400'
 }
 
 function getRingColor(type: AnomalyType | string) {
   if (type === 'fyp') return '#c084fc'
-  if (type === 'heart_frenzy') return '#fb7185'
-  if (type === 'void') return '#22d3ee'
-  return '#fcd34d'
+  return '#22d3ee'
 }
 
 function getIconColor(type: AnomalyType | string) {
   if (type === 'fyp') return 'text-purple-400'
-  if (type === 'heart_frenzy') return 'text-rose-400'
-  if (type === 'void') return 'text-cyan-300'
   if (type === 'espresso') return 'text-cyan-400'
-  return 'text-amber-400'
+  return 'text-cyan-300'
 }
 
 function getConfettiColors(type: AnomalyType | string) {
   if (type === 'fyp') return ['#a855f7', '#c084fc', '#ffffff']
-  if (type === 'heart_frenzy') return ['#f43f5e', '#fb7185', '#ffffff']
   if (type === 'void') return ['#22d3ee', '#c084fc', '#ffffff']
-  return ['#f59e0b', '#fbbf24', '#ffffff']
+  return ['#22d3ee', '#67e8f9', '#ffffff']
 }
 
 function getShockwaveColor(type: AnomalyType | string) {
-  if (type === 'heart_frenzy') return '#f43f5e'
-  if (type === 'sponsor') return '#f59e0b'
-  if (type === 'void') return '#22d3ee'
-  return '#a855f7'
+  if (type === 'fyp') return '#a855f7'
+  return '#22d3ee'
 }
 
 function totalOf(anomaly: FloatingAnomaly): number {
@@ -247,12 +235,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                 <!-- Arka Plan Radial Glow -->
                 <div
                   class="absolute inset-0 opacity-40 blur-sm pointer-events-none"
-                  :class="{
-                    'bg-purple-600': anomaly.type === 'fyp',
-                    'bg-rose-600': anomaly.type === 'heart_frenzy',
-                    'bg-cyan-500': anomaly.type === 'void',
-                    'bg-amber-500': anomaly.type === 'sponsor'
-                  }"
+                  :class="anomaly.type === 'fyp' ? 'bg-purple-600' : 'bg-cyan-500'"
                 ></div>
 
                 <!-- FYP: Çok Katmanlı Alev SVG -->
@@ -300,7 +283,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                     class="animate-cyber-heart"
                     d="M18 29S8 21.5 8 13.5A6.5 6.5 0 0 1 18 9.2A6.5 6.5 0 0 1 28 13.5C28 21.5 18 29 18 29Z"
                     :fill="`url(#heart-${safeId(anomaly.id)})`"
-                    stroke="#fda4af"
+                    stroke="#a5f3fc"
                     stroke-width="1.2"
                   />
                   <path
@@ -313,9 +296,9 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                   />
                   <defs>
                     <linearGradient :id="`heart-${safeId(anomaly.id)}`" x1="18" y1="9" x2="18" y2="29" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#f43f5e" />
-                      <stop offset="0.7" stop-color="#be123c" />
-                      <stop offset="1" stop-color="#881337" />
+                      <stop stop-color="#22d3ee" />
+                      <stop offset="0.7" stop-color="#0891b2" />
+                      <stop offset="1" stop-color="#164e63" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -351,7 +334,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                   </defs>
                 </svg>
 
-                <!-- SPONSOR / VIRAL: Altın Viral Elmas & Dönen Yıldız SVG -->
+                <!-- SPONSOR / VIRAL: Cyan Viral Elmas & Dönen Yıldız SVG -->
                 <svg
                   v-else
                   viewBox="0 0 36 36"
@@ -360,23 +343,23 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                   class="w-7 h-7 relative z-10"
                 >
                   <g class="animate-starburst-spin" opacity="0.6">
-                    <line x1="18" y1="3" x2="18" y2="33" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="2 3" />
-                    <line x1="3" y1="18" x2="33" y2="18" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="2 3" />
-                    <line x1="7.4" y1="7.4" x2="28.6" y2="28.6" stroke="#fcd34d" stroke-width="0.8" stroke-dasharray="2 3" />
-                    <line x1="7.4" y1="28.6" x2="28.6" y2="7.4" stroke="#fcd34d" stroke-width="0.8" stroke-dasharray="2 3" />
+                    <line x1="18" y1="3" x2="18" y2="33" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="2 3" />
+                    <line x1="3" y1="18" x2="33" y2="18" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="2 3" />
+                    <line x1="7.4" y1="7.4" x2="28.6" y2="28.6" stroke="#22d3ee" stroke-width="0.8" stroke-dasharray="2 3" />
+                    <line x1="7.4" y1="28.6" x2="28.6" y2="7.4" stroke="#22d3ee" stroke-width="0.8" stroke-dasharray="2 3" />
                   </g>
                   <path
                     d="M18 6L28 15L18 30L8 15L18 6Z"
                     :fill="`url(#diamond-${safeId(anomaly.id)})`"
-                    stroke="#fef08a"
+                    stroke="#a5f3fc"
                     stroke-width="1.2"
                   />
-                  <path d="M8 15H28M18 6L14 15L18 30L22 15L18 6Z" stroke="#fef08a" stroke-width="0.7" opacity="0.85" />
+                  <path d="M8 15H28M18 6L14 15L18 30L22 15L18 6Z" stroke="#a5f3fc" stroke-width="0.7" opacity="0.85" />
                   <defs>
                     <linearGradient :id="`diamond-${safeId(anomaly.id)}`" x1="18" y1="6" x2="18" y2="30" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#fde047" />
-                      <stop offset="0.5" stop-color="#f59e0b" />
-                      <stop offset="1" stop-color="#b45309" />
+                      <stop stop-color="#67e8f9" />
+                      <stop offset="0.5" stop-color="#22d3ee" />
+                      <stop offset="1" stop-color="#0e7490" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -443,7 +426,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
         v-if="isCombo"
         class="edition-poly px-4 py-1.5 rounded-full border border-purple-500/50 text-purple-100 text-xs font-mono font-bold flex items-center gap-2 shadow-xl backdrop-blur-md"
       >
-        <Flame class="w-3.5 h-3.5 text-rose-300 animate-pulse" />
+        <Flame class="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
         <span>Süper Rezonans: 7× Kütle + 777× Çekim Aktif</span>
       </div>
 
@@ -456,7 +439,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
         >
           <component :is="getIcon(buff.type)" class="w-4 h-4" :class="getIconColor(buff.type)" />
           <span class="font-bold text-[12px]">{{ buff.name }}</span>
-          <span v-if="buff.multiplier > 1" class="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 font-black">
+          <span v-if="buff.multiplier > 1" class="text-[11px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 font-black">
             {{ buff.multiplier }}×
           </span>
           <span class="px-2 py-0.5 rounded-full bg-white/[0.1] border border-white/10 text-[11px] tabular-nums font-mono font-bold text-white">

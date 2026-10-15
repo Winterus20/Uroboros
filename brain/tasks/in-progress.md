@@ -1,9 +1,17 @@
 # Aktif Görev (In-Progress)
 
-*Şu an aktif bir görev üzerinde çalışılmıyor. Görev listesi için `brain/tasks/todo.md` dosyasına bakınız.*
+## ✅ Görsel Dil Yayılımı — Tüm Proje (2026-10-15) — TAMAMLANDI
+**Sözleşme (tek gerçek):** `brain/research/visual-language-adoption-spec-2026-10.md`
+**Sonuç kaydı:** `brain/tasks/completed.md` (2026-10-15 girişi) · **ADR:** `brain/decisions/0058-visual-language-adoption.md`
 
-**Son tamamlanan:** Balatro Sütun 3 — Taktil Kart Fiziği (Spring Damping & Push Dynamics), ADR-0057 (2026-10-15).
-**Faz 0 cila sıradaki adayları (kullanıcı onayıyla):**
-- F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — `SingularityButton` sıfırlama anı.
-- B — DimensionsTab shift/galaxy bar metin sadeleştirmesi + Header v-tip azaltma.
-- Denge kararı: ADR-0033 §3 (koşu süresi bandı) ve ADR-0034 (ilk şafak SP açlığı) hâlâ açık sorular.
+### Dalgalar
+- [x] Dalga 1 — Denetim (4 paralel subagent: buton census, renk census, glif/oran/v-tip census, hareket/juice census)
+- [x] Dalga 2 — Uygulama (5 paralel subagent, dosya sahipliği bölüşülmüş; paylaşılan dosyalar orchestrator'da)
+- [x] Dalga 3 — QA denetimi (bağımsız subagent) + fix dalgası → FINAL QA VERDICT: PASS
+- [x] Dalga 4 — `npm test` (263/263) + `npm run build` (0 hata) + `harness:smoke` (log10=90.72, 8 shift), ADR-0058, brain reconciliation, conventional commit
+
+**Şu an aktif geliştirme dalgası yok.** Sıradaki iş için `todo.md` kilit merdivenine bak.
+
+**Beklemede (kullanıcı onayı gerektiren adaylar):**
+- F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.
+- Denge kararı: ADR-0033 §3 (koşu süresi bandı) ve ADR-0034 (ilk şafak SP açlığı) açık soruları sürüyor.

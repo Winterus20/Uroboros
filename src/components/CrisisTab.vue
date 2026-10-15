@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore, CRISIS_INTERVENTIONS } from '../stores/game'
-import { getTierIdentity } from '../game/dimension_identity'
+import { getTierAccent, getTierGlyph, getTierIdentity } from '../game/dimension_identity'
 import {
   Flame,
   AlertTriangle,
@@ -23,10 +23,11 @@ import LockedFeature from './LockedFeature.vue'
 const store = useGameStore()
 
 // D4 (Bölünmüş Dikkat) pasifi: kriz spawn hızını artırır — etkinse hero'da rozet
+// Arayüzde "D4" yerine katman glifi gösterilir; teknik kimlik tooltip nüansında kalır.
 const d4Passive = computed(() => {
   const id = getTierIdentity(4)
   if (!store.passiveBadges.d4Anomaly || !id) return null
-  return { label: `D4 +${Math.round((id.passive.value - 1) * 100)}%`, desc: id.passive.desc }
+  return { label: `+${Math.round((id.passive.value - 1) * 100)}%`, desc: id.passive.desc }
 })
 
 // Müdahale kademesi (Özellik Merdiveni uyumluluğu):
@@ -76,24 +77,24 @@ const phaseConfig = computed(() => {
     case 'sweet_spot':
       return {
         label: 'TATLI NOKTA (SWEET SPOT)',
-        badgeClass: 'ds-badge-purple shadow-[0_0_12px_rgba(168,85,247,0.5)]',
+        badgeClass: 'ds-badge-cyan shadow-[0_0_12px_rgba(6,182,212,0.5)]',
         desc: '8× Kütle Akışı, +100% Anomali Hızı, %200 Parazit Primi devrede!',
         color: '#a855f7',
-        barColor: 'bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400'
+        barColor: 'progress-fill-cyan'
       }
     case 'resonance':
       return {
         label: 'REZONANS FAZI',
-        badgeClass: 'ds-badge-amber',
+        badgeClass: 'ds-badge-cyan animate-pulse',
         desc: '+50% Frekans (Hz), +30% Anomali Sıklığı aktif.',
         color: '#f59e0b',
-        barColor: 'bg-amber-400'
+        barColor: 'progress-fill-cyan'
       }
     case 'dormant':
     default:
       return {
         label: 'DURGUN FAZ',
-        badgeClass: 'ds-badge-cyan',
+        badgeClass: 'ds-badge-slate',
         desc: 'Standart reaktör durumu (1.0× baz akış).',
         color: '#06b6d4',
         barColor: 'bg-cyan-400'
@@ -113,6 +114,15 @@ function canCastIntervention(type: CrisisInterventionType): boolean {
   if (getCooldown(type) > 0) return false
   if (type === 'magnetic_vent' && (store.reactorCoolantCharges ?? 3) <= 0) return false
   return true
+}
+
+// Müdahale butonu uygunluk rampası: meltdown = locked; bekleme/kartuş şarjı = partial; hazır = pulse.
+function interventionRampClass(type: CrisisInterventionType): string {
+  if (canCastIntervention(type)) return ''
+  if (isMeltdownActive.value) return 'ds-ramp-locked'
+  if (getCooldown(type) > 0) return 'ds-ramp-partial'
+  if (type === 'magnetic_vent' && (store.reactorCoolantCharges ?? 3) <= 0) return 'ds-ramp-partial'
+  return 'ds-ramp-locked'
 }
 
 function getButtonLabel(type: CrisisInterventionType): string {
@@ -200,13 +210,14 @@ function handleIntervention(type: CrisisInterventionType) {
           </span>
         </div>
 
-        <!-- D4 Pasif Rozeti -->
+        <!-- D4 Pasif Rozeti (katman glifi + kimlik aksanı) -->
         <span
           v-if="d4Passive"
-          class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/25 shrink-0 cursor-help select-none"
+          class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-violet-500/15 border border-violet-500/25 shrink-0 cursor-help select-none flex items-center gap-1"
           v-tip="`D4 Bölünmüş Dikkat Pasifi: ${d4Passive.desc}`"
         >
-          {{ d4Passive.label }}
+          <span class="dim-glyph" :class="getTierAccent(4)">{{ getTierGlyph(4) }}</span>
+          <span class="tabular-nums" :class="getTierAccent(4)">{{ d4Passive.label }}</span>
         </span>
       </template>
 
@@ -306,8 +317,11 @@ function handleIntervention(type: CrisisInterventionType) {
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5 text-xs font-mono font-bold text-amber-300 shrink-0 bg-black/40 px-2 py-1 rounded-lg border border-amber-500/30">
-            <Clock class="w-3.5 h-3.5 text-amber-400 animate-spin" />
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono font-bold shrink-0 bg-black/40 px-2 py-1 rounded-lg border"
+            :class="isMeltdownActive ? 'text-rose-300 border-rose-500/30' : 'text-slate-300 border-white/10'"
+          >
+            <Clock class="w-3.5 h-3.5 animate-spin" :class="isMeltdownActive ? 'text-rose-400' : 'text-slate-400'" />
             <span class="tabular-nums">{{ Math.ceil(store.activeCrisisDilemma.timeLeft) }}s</span>
           </div>
         </div>
@@ -357,7 +371,7 @@ function handleIntervention(type: CrisisInterventionType) {
                   <h3 class="text-sm font-bold font-mono text-slate-100">{{ intv.name }}</h3>
                   <span
                     class="text-[11px] font-mono font-bold tabular-nums"
-                    :class="intv.heatChange > 0 ? 'text-amber-400' : 'text-cyan-400'"
+                    :class="intv.heatChange > 0 ? 'text-rose-400' : 'text-cyan-400'"
                   >
                     {{ intv.heatChange > 0 ? `+${intv.heatChange}% Isı` : `${intv.heatChange}% Soğutma` }}
                   </span>
@@ -375,14 +389,14 @@ function handleIntervention(type: CrisisInterventionType) {
                 </span>
                 <span
                   v-else-if="getCooldown(intv.id) > 0"
-                  class="ds-badge ds-badge-amber animate-pulse"
+                  class="ds-badge ds-badge-slate animate-pulse"
                 >
                   Bekleme: {{ Math.ceil(getCooldown(intv.id)) }}s
                 </span>
                 <span
                   v-else
                   class="ds-badge"
-                  :class="intv.heatChange < 0 ? 'ds-badge-cyan' : intv.heatChange > 30 ? 'ds-badge-rose' : 'ds-badge-amber'"
+                  :class="intv.heatChange < 0 ? 'ds-badge-cyan' : intv.heatChange > 30 ? 'ds-badge-rose' : 'ds-badge-slate'"
                 >
                   {{ intv.heatChange < 0 ? 'Soğutma Valfi' : intv.heatChange > 30 ? 'Yüksek Risk' : 'Dengeli' }}
                 </span>
@@ -409,8 +423,8 @@ function handleIntervention(type: CrisisInterventionType) {
             :disabled="!canCastIntervention(intv.id)"
             class="btn-tactile mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all border"
             :class="!canCastIntervention(intv.id)
-              ? 'bg-black/30 text-slate-500 border-white/[0.05] cursor-not-allowed'
-              : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-500/50 cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.2)]'"
+              ? ['bg-black/30 text-slate-500 border-white/[0.05] cursor-not-allowed', interventionRampClass(intv.id)]
+              : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-500/50 cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.2)] affordance-pulse'"
           >
             <Sparkles class="w-3.5 h-3.5" />
             <span>{{ getButtonLabel(intv.id) }}</span>

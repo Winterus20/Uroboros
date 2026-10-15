@@ -5,6 +5,7 @@ import { Decimal } from '../../core/math'
 import { GUILT_NAMES } from '../../game/balance'
 import { tierAnomalyRateMult } from '../../game/dimension_identity'
 import { COMBO_DECAY_MS, NEURAL_LEGACY_UPGRADE_IDS, NEURAL_TREE } from '../../game/neural-data'
+import { isMotionReduced } from '../../composables/useMotion'
 import type { AnomalyType } from '../../models/types'
 import type { StoreApi } from './store-api'
 
@@ -35,7 +36,8 @@ export const neuralActions = {
       }
 
       // Balatro Sütun 2: Sıralı Nedensellik (Sequential Triggering)
-      const shouldReduce = this.settings.reduceAnimations || this.settings.batterySaver
+      // 3 durumlu hareket kapısı: kök-sınıf mührü ('reduced'/'off') veya pil tasarrufu → tek sayı akışı.
+      const shouldReduce = isMotionReduced() || this.settings.batterySaver
       const isSequentialEnabled = this.settings.sequentialStrike !== false && !shouldReduce
 
       if (!isSequentialEnabled) {

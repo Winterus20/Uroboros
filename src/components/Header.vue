@@ -15,8 +15,9 @@ import {
   Lock,
   Cloud
 } from "lucide-vue-next";
-import { getFeatureById, unlockProgress } from "../game/unlocks";
+import { getFeatureById, unlockProgress, unlockProgressFraction } from "../game/unlocks";
 import { Decimal } from "../core/math";
+import { isMotionOff, isMotionReduced } from "../composables/useMotion";
 import { useAuthStore } from "../stores/auth";
 import ConfirmModal from "./ConfirmModal.vue";
 import CounterDisplay from "./header/CounterDisplay.vue";
@@ -33,6 +34,15 @@ const formattedClickPower = computed(() => format(store.manualClickPower, 2, sto
 const tickspeedCost = computed(() => format(store.tickspeedCost, 2, store.settings.notation));
 const tickspeedMultiplier = computed(() => format(store.tickspeedMultiplier, 2, store.settings.notation));
 const canAffordTickspeed = computed(() => store.matter.gte(store.tickspeedCost));
+
+// Hz rampası: kısmi = tek adım fiyatı (paket fiyatının 1/10'u) karşılanıyor ama
+// tam yükseltme değil. Hazırda cyan kimlik + pulse korunur.
+const tickspeedPartial = computed(
+  () => !canAffordTickspeed.value && store.matter.gte(store.tickspeedCost.div(10))
+);
+const tickspeedRampClass = computed(() =>
+  tickspeedPartial.value ? "ds-ramp-partial" : "ds-ramp-locked"
+);
 
 // Kozmik Çöküş hazır: 1.79e308 g Kütle eşiği aşıldı
 const singularityReady = computed(() => store.canSingularity);
@@ -96,33 +106,48 @@ const swipeTip = computed(() =>
     : "Ardışık yutmalar kombo serisi biriktirir — 1.5 sn ara verme"
 );
 
-// Alınabilir en az bir yükseltme var mı?
-const canAffordAny = computed(() => {
+// Tümünü Al rampası — iki ayrı uygunluk kaynağı:
+// tam paket (pack) → ready; yalnız birim fiyatı (pack/10) → partial; hiçbiri → locked.
+const canAffordFullPack = computed(() => {
   if (canAffordTickspeed.value) return true;
   for (let i = 1; i <= store.unlockedDimensionsCount; i++) {
-    const pack = store.getDimensionCost(i);
-    if (store.matter.gte(pack)) return true;
-    if (store.matter.gte(pack.div(10))) return true;
+    if (store.matter.gte(store.getDimensionCost(i))) return true;
   }
   return false;
 });
 
+const canAffordSingleUnit = computed(() => {
+  if (canAffordTickspeed.value) return true;
+  for (let i = 1; i <= store.unlockedDimensionsCount; i++) {
+    if (store.matter.gte(store.getDimensionCost(i).div(10))) return true;
+  }
+  return false;
+});
+
+// Alınabilir en az bir yükseltme var mı? (orijinal tek-kaynak toplamı)
+const canAffordAny = computed(() => canAffordFullPack.value || canAffordSingleUnit.value);
+
+const maxAllRampClass = computed(() => {
+  if (canAffordFullPack.value) return "";
+  return canAffordSingleUnit.value ? "ds-ramp-partial" : "ds-ramp-locked";
+});
+
 // "Sıradaki hedef" satırı: her zaman tek bir odak çizer
-const nextGoal = computed<{ label: string; value: string; ready: boolean }>(() => {
+const nextGoal = computed<{ label: string; value: string; ready: boolean; ratio: number }>(() => {
   if (singularityReady.value) {
-    return { label: "Kozmik Çöküş Hazır!", value: `+${singularityGainText.value} SP`, ready: true };
+    return { label: "Kozmik Çöküş Hazır!", value: `+${singularityGainText.value} SP`, ready: true, ratio: 1 };
   }
   if (canAffordTickspeed.value) {
-    return { label: "Frekans hazır", value: `×${tickspeedMultiplier.value} → ${tickspeedCost.value}`, ready: true };
+    return { label: "Frekans hazır", value: `×${tickspeedMultiplier.value} → ${tickspeedCost.value}`, ready: true, ratio: 1 };
   }
   for (let i = store.unlockedDimensionsCount; i >= 1; i--) {
     const cost = store.getDimensionCost(i);
     if (store.matter.gte(cost)) {
-      return { label: `D${i} alınabilir`, value: format(cost, 2, store.settings.notation), ready: true };
+      return { label: `D${i} alınabilir`, value: format(cost, 2, store.settings.notation), ready: true, ratio: 1 };
     }
   }
   let best = { label: "Sıradaki hedef", value: "", ready: false, ratio: -1 };
-  if (canAffordAny.value) return { label: "Alınabilir var", value: "", ready: true };
+  if (canAffordAny.value) return { label: "Alınabilir var", value: "", ready: true, ratio: 1 };
   for (let i = 1; i <= store.unlockedDimensionsCount; i++) {
     const cost = store.getDimensionCost(i);
     const ratio = store.matter.div(cost).toNumber();
@@ -138,19 +163,31 @@ const nextGoal = computed<{ label: string; value: string; ready: boolean }>(() =
   return best;
 });
 
+// "Sıradaki hamle" çubuğu: hazırda oran 1'dir (çubuk gizlenir), değilse fiyat hedefi oranı.
+const nextGoalPercent = computed(() => {
+  if (nextGoal.value.ready) return 100;
+  const ratio = nextGoal.value.ratio;
+  if (!Number.isFinite(ratio)) return 0;
+  return Math.min(100, Math.max(0, ratio * 100));
+});
+
 function setStance(stance: StanceType): void {
   store.setStance(stance);
 }
 
-// Stance kilitlemeleri (Özellik Merdiveni: D1 formatını 50 adet sahibi ol)
-function stanceLockHint(featureId: string): { hint: string; progress: string } | null {
+// Stance kilitlemeleri (Özellik Merdiveni: dopamin kapıları)
+function stanceLockHint(featureId: string): { hint: string; progress: string; percent: number } | null {
   if (store.isFeatureUnlocked(featureId)) return null;
   const f = getFeatureById(featureId);
   if (!f) return null;
   const p = unlockProgress(store.unlockContext, f);
   const cur = format(new Decimal(p.current), 0, store.settings.notation);
   const tgt = format(new Decimal(p.target), 0, store.settings.notation);
-  return { hint: f.hint, progress: `${cur} / ${tgt}` };
+  return {
+    hint: f.hint,
+    progress: `${cur} / ${tgt}`,
+    percent: unlockProgressFraction(store.unlockContext, f)
+  };
 }
 const stanceSpamLock = computed(() => stanceLockHint("stance_spam"));
 const stancePrivateLock = computed(() => stanceLockHint("stance_private"));
@@ -234,6 +271,11 @@ const comboDrain = ref(1);
 let comboRaf = 0;
 
 function tickComboDrain(): void {
+  // Hareket azaltılmışsa bar statik kalır: rAF zinciri başlatılmaz (temizlik korunur).
+  if (isMotionReduced()) {
+    comboRaf = 0;
+    return;
+  }
   const elapsed = Date.now() - store.clickCombo.lastClickAt;
   comboDrain.value = Math.max(0, 1 - elapsed / COMBO_DECAY_MS);
   comboRaf = comboActive.value && comboDrain.value > 0 ? requestAnimationFrame(tickComboDrain) : 0;
@@ -310,6 +352,15 @@ onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
 });
 
+// Ortak punch kalıbı: dokunma geri bildirimi pointerdown anında (≤100 ms, tek impuls).
+function punchTap(e: PointerEvent): void {
+  if (isMotionOff()) return;
+  const el = e.currentTarget as HTMLElement | null;
+  if (!el) return;
+  el.classList.add("juice-punch");
+  window.setTimeout(() => el.classList.remove("juice-punch"), 160);
+}
+
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
   if (comboRaf !== 0) {
@@ -341,6 +392,7 @@ onUnmounted(() => {
             }"
           ></span>
         </span>
+        <span class="hidden md:inline text-[10px] text-slate-500 font-normal tabular-nums shrink-0">Hedef: 1.79e308 g</span>
       </div>
 
       <!-- Orta: Kuantum Sinyal Alıcısı (U1: mobilde gizli — sayaç odaklı) -->
@@ -357,7 +409,7 @@ onUnmounted(() => {
         >
           <Cloud class="w-3.5 h-3.5" :class="authStore.isAuthenticated ? 'text-cyan-400' : 'text-slate-400'" />
           <span class="text-[11px] font-semibold">{{ authStore.isAuthenticated ? authStore.userDisplayName : "Giriş Yap" }}</span>
-          <span v-if="authStore.isAuthenticated" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span v-if="authStore.isAuthenticated" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
         </button>
 
         <!-- Tekillik Kararlılığı Göstergesi -->
@@ -365,10 +417,10 @@ onUnmounted(() => {
           class="flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] font-mono font-semibold"
           :class="store.crisisBackfireDebuff > 0
             ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
-            : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300'"
+            : 'bg-white/[0.06] text-slate-300 border-white/10'"
           v-tip="store.crisisBackfireDebuff > 0 ? 'Gravitasyonel Kararsızlık: Kriz ters tepmesi aktif' : 'Olay Ufku Kararlı: Çekim alanı dengede'"
         >
-          <Activity class="w-3.5 h-3.5" :class="store.crisisBackfireDebuff > 0 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'" />
+          <Activity class="w-3.5 h-3.5" :class="store.crisisBackfireDebuff > 0 ? 'text-rose-400 animate-pulse' : 'text-slate-400'" />
           <span class="uppercase tracking-wider text-[10px]">{{ store.crisisBackfireDebuff > 0 ? "KARARSIZ" : "KARARLI" }}</span>
         </div>
 
@@ -393,14 +445,21 @@ onUnmounted(() => {
       <div
         class="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-semibold transition-colors"
         :class="nextGoal.ready
-          ? 'bg-purple-500/15 border-purple-400/50 text-purple-100 shadow-sm'
+          ? 'bg-white/[0.08] border-white/20 text-slate-100 shadow-sm affordance-pulse'
           : 'bg-white/[0.03] border-white/[0.07] text-slate-400'"
+        :style="nextGoal.ready ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
         v-tip="nextGoal.ready ? 'Hemen satın alabileceğin bir şey var — fırsatı kaçırma!' : 'Bu hedefe yaklaştıkça yüzde doluyor.'"
       >
-        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="nextGoal.ready ? 'bg-purple-300 animate-pulse' : 'bg-slate-500'"></span>
+        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="nextGoal.ready ? 'bg-white animate-pulse' : 'bg-slate-500'"></span>
         <span class="text-slate-500 font-normal">Sıradaki hamle:</span>
         <span>{{ nextGoal.label }}</span>
         <span v-if="nextGoal.value" class="tabular-nums font-bold">{{ nextGoal.value }}</span>
+      </div>
+      <!-- Hedefe kalan fiyat oranı — oran = çubuk (tamamen hazırda çubuk gizlenir) -->
+      <div v-if="!nextGoal.ready" class="w-40 shrink-0">
+        <div class="progress-track progress-track-mini">
+          <div class="progress-fill progress-fill-purple" :style="{ width: `${nextGoalPercent}%` }"></div>
+        </div>
       </div>
     </div>
 
@@ -429,6 +488,7 @@ onUnmounted(() => {
         >
           <Moon class="w-3.5 h-3.5 text-purple-400" />
           <span>Kuantum (2×)</span>
+          <span class="text-[9px] font-sans font-normal text-slate-500">Pasif 2×</span>
         </button>
 
         <button
@@ -446,6 +506,15 @@ onUnmounted(() => {
           <Lock v-if="stanceSpamLock" class="w-3.5 h-3.5 text-slate-600" />
           <Flame v-else class="w-3.5 h-3.5 text-rose-400" />
           <span>Obur (4×)</span>
+          <span class="text-[9px] font-sans font-normal text-slate-500">Manuel 4× · %50 anomali</span>
+          <span v-if="stanceSpamLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
+            <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stanceSpamLock.progress }}</span>
+            <span class="inline-block w-16">
+              <span class="progress-track progress-track-mini block">
+                <span class="progress-fill progress-fill-slate block" :style="{ width: `${stanceSpamLock.percent * 100}%` }"></span>
+              </span>
+            </span>
+          </span>
         </button>
 
         <button
@@ -463,6 +532,15 @@ onUnmounted(() => {
           <Lock v-if="stancePrivateLock" class="w-3.5 h-3.5 text-slate-600" />
           <EyeOff v-else class="w-3.5 h-3.5 text-cyan-400" />
           <span>Kalkan</span>
+          <span class="text-[9px] font-sans font-normal text-slate-500">Hz −%15</span>
+          <span v-if="stancePrivateLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
+            <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stancePrivateLock.progress }}</span>
+            <span class="inline-block w-16">
+              <span class="progress-track progress-track-mini block">
+                <span class="progress-fill progress-fill-slate block" :style="{ width: `${stancePrivateLock.percent * 100}%` }"></span>
+              </span>
+            </span>
+          </span>
         </button>
       </div>
 
@@ -495,6 +573,7 @@ onUnmounted(() => {
         <button
           ref="swipeBtnRef"
           @click="handleManualClick($event)"
+          @pointerdown="punchTap"
           class="hidden md:flex btn-tactile h-11 px-3.5 sm:px-4 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 text-white border border-purple-400/50 text-xs font-bold font-sans items-center gap-2 cursor-pointer shadow-md active:scale-95 shrink-0 min-w-[115px] sm:min-w-[140px]"
           :class="{ 'cta-beacon': showFirstSwipeHint }"
           aria-label="Manuel kütle yut"
@@ -515,13 +594,14 @@ onUnmounted(() => {
         <!-- 2. Çekim Hızı (Hz / Tickspeed) — masaüstü ikincil kuantum modülatörü (mobilde FloatingThumbBar'da yer alır) -->
         <button
           @click="buyTickspeed"
+          @pointerdown="punchTap"
           v-hold="buyTickspeed"
           :disabled="!canAffordTickspeed"
           aria-label="Çekim hızı yükselt"
           class="hidden md:flex btn-tactile h-11 px-2.5 sm:px-3 rounded-xl text-xs font-mono font-medium transition-all items-center gap-1.5 sm:gap-2 border shrink-0 min-w-[76px] sm:min-w-[92px]"
           :class="canAffordTickspeed
             ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border-cyan-500/35 cursor-pointer affordance-pulse'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-50'"
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${tickspeedRampClass}`"
           :style="canAffordTickspeed ? { '--pulse-c1': 'rgba(0, 240, 255, 0.3)', '--pulse-c2': 'rgba(0, 240, 255, 0.7)' } : undefined"
           v-tip="'Çekim Hızını (Hz) yükseltir'"
         >
@@ -540,12 +620,14 @@ onUnmounted(() => {
         <!-- 3. Tümünü Al Butonu — masaüstü üçüncül ghost HUD butonu (mobilde FloatingThumbBar'da yer alır) -->
         <button
           @click="maxAll"
+          @pointerdown="punchTap"
           :disabled="!canAffordAny"
           aria-label="Tüm yükseltmeleri al"
           class="hidden md:flex btn-tactile h-11 px-2.5 sm:px-3 rounded-xl font-bold text-xs tracking-wider items-center gap-1.5 sm:gap-2 transition-all border font-mono shrink-0 min-w-[65px] sm:min-w-[74px]"
-          :class="canAffordAny
-            ? 'bg-white/[0.08] hover:bg-white/[0.14] text-white border-white/20 cursor-pointer'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40'"
+          :class="canAffordFullPack
+            ? 'bg-white/[0.08] hover:bg-white/[0.14] text-white border-white/20 cursor-pointer affordance-pulse'
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${maxAllRampClass}`"
+          :style="canAffordFullPack ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
           v-tip="'Tüm açık boyut ve frekans yükseltmelerini alır'"
         >
           <Layers class="w-4 h-4 text-slate-300 shrink-0" />

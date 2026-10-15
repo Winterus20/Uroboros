@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
+import { isMotionReduced, useMotionMode } from '../composables/useMotion'
 
 export interface JuiceTriggerOptions {
   x: number
@@ -92,15 +93,21 @@ const onReducedMotionChange = (e: MediaQueryListEvent): void => {
 }
 
 /**
- * Hareket bastırma birleşimi üç kaynaktan gelir:
- *  1) settings.reduceAnimations  — kullanıcı 'Animasyonları Azalt' ayarı
- *  2) prefers-reduced-motion     — işletim sistemi tercihi
- *  3) settings.batterySaver     — pil tasarrufu (aynı bastırmayı paylaşır)
- * Üçü de aynı şeyi yapar: şok dalgası, kıvılcım, gövde sarsıntısı ve uçan metin üretilmez.
+ * Hareket bastırma birleşimi dört kaynaktan gelir:
+ *  1) prefers-reduced-motion     — işletim sistemi tercihi (canlı dinlenir)
+ *  2) 3 durumlu hareket kapısı   — isMotionReduced() kök-sınıf mührü + reaktif motionMode
+ *  3) settings.reduceAnimations  — eski kayıt uyumu ('Animasyonları Azalt' bayrağı)
+ *  4) settings.batterySaver     — pil tasarrufu (aynı bastırmayı paylaşır)
+ * Hepsi aynı şeyi yapar: şok dalgası, kıvılcım, gövde sarsıntısı ve uçan metin üretilmez.
+ * Reaktif mod terimi watcher'ı da besler: 'reduced'/'off' açılınca aktif efektler anında düşer.
  */
+const motionMode = useMotionMode()
+
 function shouldReduceMotion(): boolean {
   return (
     prefersReducedMotion ||
+    isMotionReduced() ||
+    motionMode.value !== 'full' ||
     store.settings.reduceAnimations === true ||
     store.settings.batterySaver === true
   )
@@ -489,7 +496,8 @@ watch(
   { immediate: true }
 )
 
-// Azaltılmış hareket: üç kaynaktan biri açılırsa uçan efektleri hemen düşür
+// Azaltılmış hareket: dört kaynaktan biri açılırsa uçan efektleri hemen düşür
+// (OS tercihi · 3 durumlu kapı · legacy reduceAnimations · pil tasarrufu)
 watch(
   shouldReduceMotion,
   (reduced) => {

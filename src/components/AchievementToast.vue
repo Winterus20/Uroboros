@@ -59,7 +59,7 @@ onUnmounted(() => {
       <div class="min-w-0 flex-1">
         <div class="text-[11px] font-semibold text-amber-400">Başarım kazanıldı!</div>
         <div class="text-sm font-bold text-white truncate">{{ getAchievement(id)?.name || id }}</div>
-        <div v-if="getAchievement(id)?.reward" class="text-[11px] text-emerald-300 font-mono mt-0.5">
+        <div v-if="getAchievement(id)?.reward" class="text-[11px] text-cyan-300 font-mono mt-0.5">
           {{ getAchievement(id)?.reward?.desc }}
         </div>
         <div class="flex items-center gap-2 mt-1.5">
