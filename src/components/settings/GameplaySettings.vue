@@ -52,10 +52,18 @@ function toggleBatterySaver() {
   sounds.playClick();
 }
 
-function toggleAnimations() {
-  store.settings.reduceAnimations = !store.settings.reduceAnimations;
+// 3 durumlu hareket kontrolü: Tam / Azaltılmış / Kapalı
+function setMotionMode(mode: 'full' | 'reduced' | 'off') {
+  store.settings.motionMode = mode;
+  store.settings.reduceAnimations = mode !== 'full';
   sounds.playClick();
 }
+
+const motionOptions = [
+  { value: 'full' as const, label: 'Tam' },
+  { value: 'reduced' as const, label: 'Azaltılmış' },
+  { value: 'off' as const, label: 'Kapalı' }
+];
 
 function toggleScreenShake() {
   store.settings.screenShake = !(store.settings.screenShake ?? true);
@@ -229,18 +237,25 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
     </div>
 
     <!-- Animasyon Seviyesi -->
-    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between">
+    <!-- Hareket Kontrolü (3 durum: Tam / Azaltılmış / Kapalı — prefers-reduced-motion ruhu) -->
+    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between gap-3">
       <div>
-        <div class="text-xs font-mono font-semibold text-slate-200">Animasyonları Azalt</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">Nabız, titreşim ve parıltı animasyonlarını hafifletir</div>
+        <div class="text-xs font-mono font-semibold text-slate-200">Hareket Kontrolü</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">Tam: tüm animasyon · Azaltılmış: nabız/parıltı söner · Kapalı: hiçbir hareket yok</div>
       </div>
-      <button
-        @click="toggleAnimations"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="store.settings.reduceAnimations ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
-      >
-        {{ store.settings.reduceAnimations ? 'Azaltıldı' : 'Tam Animasyon' }}
-      </button>
+      <div class="flex items-center gap-1 p-0.5 rounded-lg bg-black/40 border border-white/[0.06] shrink-0">
+        <button
+          v-for="opt in motionOptions"
+          :key="opt.value"
+          @click="setMotionMode(opt.value)"
+          class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border"
+          :class="(store.settings.motionMode ?? (store.settings.reduceAnimations ? 'reduced' : 'full')) === opt.value
+            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
     </div>
 
     <!-- Ekran Sarsıntısı (Screen Shake) -->

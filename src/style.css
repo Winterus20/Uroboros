@@ -45,6 +45,45 @@
   --ds-border: rgba(255, 255, 255, 0.08);
   --ds-border-strong: rgba(255, 255, 255, 0.14);
   --ds-track: rgba(0, 0, 0, 0.5);
+
+  /* --- Rezerve durum renkleri (Görev A — "durum ≠ hue" sözleşmesi) ---
+     hue = katman KİMLİĞİ; durum = .ds-ramp-* üçlüsüyle verilir. */
+  --ds-prestige: #f59e0b; /* amber  — SADECE progression / prestige / milestone */
+  --ds-locked: #64748b;   /* gri    — kilitli (soluk slate) */
+  --ds-bonus: #06b6d2;    /* cyan   — bonus / telemetri primi */
+  --ds-danger: #f43f5e;   /* rose   — kriz / risk / parazit */
+}
+
+/* --- Üç durumlu uygunluk rampası (kilitli → ara → hazır) ---
+   Hue'yu ezmez; yalnızca opacity / kenarlık / zemin oynatır. */
+.ds-ramp-locked,
+.ds-ramp-partial,
+.ds-ramp-ready {
+  transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.ds-ramp-locked {
+  opacity: 0.5;
+  border-color: rgba(100, 116, 139, 0.32); /* #64748b — soluk gri */
+  background-color: rgba(100, 116, 139, 0.06);
+}
+.ds-ramp-partial {
+  opacity: 0.86;
+  border-color: rgba(245, 158, 11, 0.45); /* #f59e0b — sarı/amber ara durum */
+  background-color: rgba(245, 158, 11, 0.08);
+}
+.ds-ramp-ready {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.26); /* parlak, tam */
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Boyut glifi — sabit genişlik; glifler satır/zemin layout'unu zıplatmasın. */
+.dim-glyph {
+  display: inline-block;
+  min-width: 1.2em;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
 }
 
 /* --- Paneller (Obsidian HUD) --- */
@@ -1216,5 +1255,93 @@ body::after {
 }
 .decay-glitch .text-slate-200 {
   text-shadow: -1px 0 0 rgba(255, 99, 104, 0.35), 1px 0 0 rgba(60, 180, 255, 0.35);
+}
+
+/* ==========================================================================
+   GÖREV E — Juice Standardı (teemo.dev araştırması) + Reduced-Motion 3-State
+   Tıklama yığını 5 katman ≤100ms; buradaki üç katman:
+     pointerdown → .juice-punch (140ms impuls+decay)
+                → .juice-bloom  (tek boxShadow flaşı, 200ms decay)
+     yükselen +N → .rise-float  (600ms ease-out, yukarı süzülür)
+   WCAG: tekrarlayan pulse YOK — üçü de animation-iteration-count: 1 (tek
+   impuls + decay). Saniyede ≤3 flaş sınırı katmanların rate-limit'iyle
+   (JuiceLayer anti-spam) sağlanır; CSS tarafı tekrarsızdır.
+   ========================================================================== */
+
+/* 1) Taktil punch — pointerdown'da scale 1 → 1.06 → 1 (140ms, tek tur).
+   Impuls (0-45%) hızlı yükselir, decay (45-100%) cubic-bezier ile sönümlenir. */
+@keyframes juice-punch-anim {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.juice-punch {
+  animation: juice-punch-anim 140ms cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+  will-change: transform;
+}
+
+/* 2) Bloom — kısa boxShadow flaşı (tek sefer, 200ms decay, tekrar yok).
+   opacity/display DEĞİL yalnızca gölge süresi oynar; katman kimliği korunur. */
+@keyframes juice-bloom-anim {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(168, 85, 247, 0.55),
+      0 0 22px 4px rgba(56, 189, 248, 0.35);
+  }
+  35% {
+    box-shadow:
+      0 0 0 3px rgba(168, 85, 247, 0.26),
+      0 0 26px 6px rgba(56, 189, 248, 0.26);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(168, 85, 247, 0),
+      0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+.juice-bloom {
+  animation: juice-bloom-anim 200ms ease-out 1 both;
+}
+
+/* 3) Yükselen "+N" — translateY(0 → -28px) + opacity(1 → 0), 600ms ease-out.
+   FloatingThumbBar / JuiceLayer uçan metinleri bunu tüketir. */
+@keyframes rise-float-anim {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -28px, 0);
+    opacity: 0;
+  }
+}
+.rise-float {
+  animation: rise-float-anim 600ms ease-out 1 both;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Reduced-Motion 3-State — 'off' (Kapalı) durumu
+   'full'  → hiçbir sınıf   · 'reduced' → .reduce-anim (yukarıda)
+   'off'   → .motion-off: TÜM animasyon/transition sürelerini 0.001s'e çeker.
+   Bilinçli olarak YALNIZCA süre (duration/delay) ezilir; opacity, display,
+   visibility, transform'lar değiştirilmez — arayüz görünür kalır, yalnızca
+   hareket anlık biter. (WCAG 2.3.3: tek impuls + anlık decay.)
+   ========================================================================== */
+.motion-off {
+  animation-duration: 0.001s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  transition-delay: 0s !important;
+}
+.motion-off *,
+.motion-off *::before,
+.motion-off *::after {
+  animation-duration: 0.001s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  transition-delay: 0s !important;
 }
 

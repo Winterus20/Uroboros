@@ -21,6 +21,10 @@ export interface TierPassiveEffect {
 export interface TierIdentity {
   tier: number
   label: string
+  /** Özgün Unicode dizgi glifi (AD tarzı Ω ∞ Ξ taktiği — çizilmiş ikon değil, metin karakteri). */
+  glyph: string
+  /** Katman kimlik hue'u (Tailwind metin sınıfı). Durum bundan BAĞIMSIZdır: rampa `.ds-ramp-*` ile verilir. */
+  accent: string
   passive: TierPassiveEffect
 }
 
@@ -31,6 +35,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 1,
     label: 'Moleküler Bağlar',
+    glyph: 'ϱ', // rho — molekül bağı
+    accent: 'text-cyan-300',
     passive: {
       kind: 'clickSyncCapBonus',
       value: 0.005,
@@ -40,6 +46,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 2,
     label: 'Elektron Orbitalleri',
+    glyph: 'ϵ', // epsilon — orbital yörünge
+    accent: 'text-sky-300',
     passive: {
       kind: 'productionMult',
       value: 1.03,
@@ -49,6 +57,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 3,
     label: 'Nükleer Çekirdek',
+    glyph: 'Ω', // omega — çekirdek/kuvvet
+    accent: 'text-blue-300',
     passive: {
       kind: 'slackerLeechMult',
       value: 0.97,
@@ -58,6 +68,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 4,
     label: 'Kuark Çorbası',
+    glyph: 'χ', // chi — kuark renk şarjı
+    accent: 'text-violet-300',
     passive: {
       kind: 'anomalyRateMult',
       value: 1.08,
@@ -67,6 +79,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 5,
     label: 'Laboratuvar & Şehir',
+    glyph: 'Ξ', // xi — laboratuvar/nazım
+    accent: 'text-emerald-300',
     passive: {
       kind: 'shiftReqMult',
       value: 0.97,
@@ -76,6 +90,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 6,
     label: 'Gezegenler & Dünya',
+    glyph: '⊕', // Earth — gezegen simgesi
+    accent: 'text-green-300',
     passive: {
       kind: 'offlineSimMult',
       value: 1.02,
@@ -85,6 +101,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 7,
     label: 'Yıldızlar & Güneş',
+    glyph: '✶', // yıldız — sekiz kollu parıltı
+    accent: 'text-orange-300',
     passive: {
       kind: 'productionMult',
       value: 1.04,
@@ -94,6 +112,8 @@ export const TIER_IDENTITIES: TierIdentity[] = [
   {
     tier: 8,
     label: 'Samanyolu & Karadelik',
+    glyph: '◉', // olay ufkuna bakan göz — karadelik
+    accent: 'text-fuchsia-300',
     passive: {
       kind: 'productionMult',
       value: 1.06,
@@ -108,6 +128,22 @@ const identityByTier = new Map<number, TierIdentity>(
 
 export function getTierIdentity(tier: number): TierIdentity | undefined {
   return identityByTier.get(tier)
+}
+
+/** Bilinmeyen tier için nötr glif — layout sabit kalsın diye tek karakter. */
+const FALLBACK_GLYPH = '·'
+
+/** Bilinmeyen tier için nötr kimlik hue'u (kütle katmanlarının rengi). */
+const FALLBACK_ACCENT = 'text-purple-300'
+
+/** Katmanın özgün Unicode dizgi glifi (ör. D3 → Ω). Bilinmeyen tierde nötr nokta. */
+export function getTierGlyph(tier: number): string {
+  return identityByTier.get(tier)?.glyph ?? FALLBACK_GLYPH
+}
+
+/** Katmanın kimlik hue sınıfı (ör. D1 → text-cyan-300). Durum için `.ds-ramp-*` kullan. */
+export function getTierAccent(tier: number): string {
+  return identityByTier.get(tier)?.accent ?? FALLBACK_ACCENT
 }
 
 /** Production mult from tier identity when tier has bought > 0 and is unlocked. */

@@ -192,6 +192,7 @@ export interface GameSettings {
   // QoL ayarları (v10)
   confirmDialogs: boolean // Prestij/sıfırlama onay diyaloğu göster
   reduceAnimations: boolean // Animasyonları ve parçacıkları azalt
+  motionMode?: 'full' | 'reduced' | 'off' // 3 durumlu hareket kontrolü (reduceAnimations ile senkron)
   screenShake?: boolean // Taktil ekran sarsıntısı / titremesi açık/kapalı
   crtEffect: boolean // Gece 3 CRT: scanline + vinyet zemin efekti
   juiceMode: 'calm' | 'balanced' | 'tilt' // Balatro juice yoğunluğu

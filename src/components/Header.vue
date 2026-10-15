@@ -88,11 +88,12 @@ const nightPhase = computed(() => {
 // 0-state onboarding: ilk format hiç alınmamışsa oyuncuya tek bir eylem çizilir
 const showFirstSwipeHint = computed(() => store.dimensions[0]?.bought === 0);
 
-// D1 (Moleküler Bağlar) pasifi etkinse Yut tooltip'ine eklenir
+// Yut tooltip'i: temel durum (Space kbd, +güç) butonun kendi görselinde —
+// tooltip yalnız nüans taşır; D1 pasifi ek nüans olarak bağlanır
 const swipeTip = computed(() =>
   store.passiveBadges.d1Sync
-    ? "Space ile de yut — D1 pasifi: Çekim senkron tavanı +0.5%"
-    : "Space tuşuna basarak da kütle yutabilirsiniz"
+    ? "D1 pasifi: Çekim senkron tavanı +0.5%"
+    : "Ardışık yutmalar kombo serisi biriktirir — 1.5 sn ara verme"
 );
 
 // Alınabilir en az bir yükseltme var mı?
@@ -197,6 +198,36 @@ function currentComboMult(): number {
 const comboBadgeText = computed(() => {
   const mult = currentComboMult();
   return mult > 1 ? `×${mult}` : `${comboCount.value}×`;
+});
+
+// Sıradaki çarpan eşiğine yüzde ilerleme — chip'in renk rampası bunu görsel okutur
+const comboTierPct = computed(() => {
+  const count = comboCount.value;
+  const next = COMBO_THRESHOLDS.find((t) => t.count > count);
+  if (!next) return 100;
+  let prev = 0;
+  for (const t of COMBO_THRESHOLDS) {
+    if (t.count > count) break;
+    prev = t.count;
+  }
+  return Math.min(100, Math.max(0, Math.round(((count - prev) / (next.count - prev)) * 100)));
+});
+
+// Kombo renk rampası: düşük yüzde = soluk slate, yüksek = parlak cyan.
+// AMBER yalnız prestige katmanına ait — komboda yasak.
+const comboRamp = computed(() => {
+  const p = comboTierPct.value;
+  if (p >= 100)
+    return {
+      box: "bg-cyan-400/35 border-cyan-300/70 shadow-[0_0_10px_rgba(34,211,238,0.3)]",
+      text: "text-cyan-100",
+      bar: "from-cyan-300 to-cyan-400"
+    };
+  if (p >= 66)
+    return { box: "bg-cyan-500/25 border-cyan-400/55", text: "text-cyan-200", bar: "from-cyan-400 to-cyan-500" };
+  if (p >= 33)
+    return { box: "bg-cyan-500/15 border-cyan-500/30", text: "text-cyan-300", bar: "from-cyan-500 to-slate-400" };
+  return { box: "bg-slate-500/10 border-slate-400/25", text: "text-slate-300", bar: "from-slate-400 to-slate-500" };
 });
 
 const comboDrain = ref(1);
@@ -442,16 +473,19 @@ onUnmounted(() => {
           'items-center justify-end gap-1.5 sm:gap-2 shrink-0 flex-nowrap overflow-x-auto py-0.5 max-w-full md:ml-auto'
         ]"
       >
-        <!-- Hipnotik Seri rozeti: masaüstünde YUT butonunun solunda belirir (mobilde FloatingThumbBar'da gösterilir) -->
+        <!-- Hipnotik Seri rozeti: masaüstünde YUT butonunun solunda belirir (mobilde FloatingThumbBar'da gösterilir)
+             Renk rampası combo yüzdesine göre cyan→slate (bonus durumu; amber/rose rezerve) -->
         <div
           v-if="comboActive"
-          class="hidden md:flex h-11 px-2 rounded-xl bg-rose-500/15 border border-rose-500/40 flex-col items-center justify-center gap-1 min-w-[54px] shrink-0"
+          class="hidden md:flex h-11 px-2 rounded-xl border flex-col items-center justify-center gap-1 min-w-[54px] shrink-0 transition-colors duration-200"
+          :class="comboRamp.box"
           v-tip="`Hipnotik Çekim Serisi: ${comboCount} üst üste yutma — seri 1.5 sn içinde söner, devam et!`"
         >
-          <span class="text-xs font-mono font-black text-rose-300 tabular-nums leading-none">{{ comboBadgeText }}</span>
+          <span class="text-xs font-mono font-black tabular-nums leading-none" :class="comboRamp.text">{{ comboBadgeText }}</span>
           <div class="w-full h-1 rounded-full bg-black/50 overflow-hidden">
             <div
-              class="h-full bg-gradient-to-r from-rose-500 to-pink-400 rounded-full"
+              class="h-full rounded-full bg-gradient-to-r transition-all duration-150"
+              :class="comboRamp.bar"
               :style="{ width: `${comboDrain * 100}%` }"
             ></div>
           </div>

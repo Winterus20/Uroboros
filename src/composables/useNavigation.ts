@@ -31,11 +31,51 @@ export const TAB_ORDER: TabId[] = [
 export const NAV_BTN =
   "btn-tactile hit-44 shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap";
 
+// --- Signal Decay "renk dili": sol kenarlık renk-kodlu, üstte 2px aktif çizgi ---
+// Renkler ikon renkleriyle birebir eşleşir; başlık okumadan renkten tanınır.
+// Tailwind JIT taraması için TÜM sınıflar tam literaldi (dinamik birleştirme YOK).
+
+/** Sekme → sol kenarlık + aktif çizgi rengi (değerler ikon renkleriyle aynı). */
+const TAB_ACCENT: Record<TabId, string> = {
+  dimensions: "border-l-2 border-l-purple-400 before:bg-purple-400",
+  lab: "border-l-2 border-l-emerald-400 before:bg-emerald-400",
+  crisis: "border-l-2 border-l-cyan-400 before:bg-cyan-400",
+  autobuyers: "border-l-2 border-l-blue-400 before:bg-blue-400",
+  colony: "border-l-2 border-l-violet-400 before:bg-violet-400",
+  singularity: "border-l-2 border-l-amber-400 before:bg-amber-400",
+  challenges: "border-l-2 border-l-rose-400 before:bg-rose-400",
+  achievements: "border-l-2 border-l-amber-400 before:bg-amber-400",
+  stats: "border-l-2 border-l-slate-400 before:bg-slate-400"
+};
+
+// 2px ince aktif çizgi geometrisi — ikonun hemen üstünde (left-3 / w-3.5 = ikonla hizalı).
+// .hit-44 dokunma alanını ::after'da kullandığı için pseudo tercihi ::before'dir;
+// opaklık geçişiyle yumuşak söner/çıkar (layout kayması olmaz, border genişliği sabit).
+const ACTIVE_LINE =
+  "before:content-[''] before:absolute before:top-[-1px] before:left-3 before:w-3.5 before:h-[2px] before:opacity-100 before:transition-opacity before:duration-200 before:ease-out";
+const IDLE_LINE =
+  "before:content-[''] before:absolute before:top-[-1px] before:left-3 before:w-3.5 before:h-[2px] before:opacity-0 before:transition-opacity before:duration-200 before:ease-out";
+
 // Birleşik nav stilleri — tüm sekmelerde aynı dil
-export function navClass(isActive: boolean): string {
+// border-l-2 her iki durumda da vardır: yalnız renk/arka plan geçişir, ölçü sabit kalır.
+export function navClass(isActive: boolean, tab: TabId): string {
   return isActive
-    ? "bg-white/[0.08] text-white border border-white/10 shadow-xs"
-    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03] border border-transparent";
+    ? `bg-white/[0.08] text-white border border-white/10 shadow-xs relative ${ACTIVE_LINE} ${TAB_ACCENT[tab]}`
+    : `text-slate-400 hover:text-slate-200 hover:bg-white/[0.03] border border-transparent relative ${IDLE_LINE} ${TAB_ACCENT[tab]}`;
+}
+
+/**
+ * Aktif/pasif ikonlaştırma: AKTİFTE ikon + yazı, PASİFTE yalnız ikon.
+ * Pasifte max-width 0'a daralarak metin kapanır (transition ile yumuşak).
+ * -mr-1.5, flex gap-1.5'i telafi eder: etiket gizliyken ikon ↔ tab-dot mesafesi
+ * tek gap (6px) kalır, etiket varken de mr-0 ile doğal aralık korunur.
+ */
+export function navLabelClass(isActive: boolean): string {
+  const base =
+    "overflow-hidden whitespace-nowrap shrink-0 transition-all duration-200 ease-out";
+  return isActive
+    ? `${base} max-w-[8rem] opacity-100 mr-0`
+    : `${base} max-w-0 opacity-0 -mr-1.5 pointer-events-none`;
 }
 
 export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
@@ -262,16 +302,23 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
   // otomatik olaylar ilgili sekmede değilken sessiz geçer.
   watch(activeTab, (tab) => store.setActiveGameTab(tab), { immediate: true });
 
-  // QoL: animasyon azaltma ayarı — kök elemana sınıf bağlar (style.css: .reduce-anim)
-  // P0 Balatro: CRT efekti kapalıysa veya animasyon azaltma açıksa body katmanları gizlenir (.crt-off)
+  // QoL: animasyon azaltma ayarı — kök elemana sınıf bağlar (style.css: .reduce-anim / .motion-off)
+  // 3 durumlu hareket kontrolü: motionMode yoksa reduceAnimations'dan türetilir (eski kayıt uyumu).
+  function effectiveMotionMode(): 'full' | 'reduced' | 'off' {
+    const m = store.settings.motionMode;
+    if (m === 'full' || m === 'reduced' || m === 'off') return m;
+    return store.settings.reduceAnimations ? 'reduced' : 'full';
+  }
   function syncEffectClasses() {
-    document.documentElement.classList.toggle("reduce-anim", store.settings.reduceAnimations);
-    const crtOn = store.settings.crtEffect !== false && !store.settings.reduceAnimations;
+    const mode = effectiveMotionMode();
+    document.documentElement.classList.toggle("reduce-anim", mode === 'reduced');
+    document.documentElement.classList.toggle("motion-off", mode === 'off');
+    const crtOn = store.settings.crtEffect !== false && mode !== 'reduced' && mode !== 'off';
     document.documentElement.classList.toggle("crt-off", !crtOn);
     document.documentElement.classList.toggle("battery-saver", !!store.settings.batterySaver);
   }
   watch(
-    () => [store.settings.reduceAnimations, store.settings.crtEffect, store.settings.batterySaver],
+    () => [store.settings.reduceAnimations, store.settings.motionMode, store.settings.crtEffect, store.settings.batterySaver],
     () => syncEffectClasses(),
     { immediate: true }
   );

@@ -217,6 +217,7 @@ export function buildInitialState() {
       customAudioUrl: '',
       confirmDialogs: true,
       reduceAnimations: false,
+      motionMode: 'full' as const,
       screenShake: true,
       crtEffect: true,
       juiceMode: 'balanced' as const,

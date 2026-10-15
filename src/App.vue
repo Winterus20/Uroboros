@@ -31,7 +31,7 @@ import CloudConflictModal from "./components/CloudConflictModal.vue";
 import ConfirmModal from "./components/ConfirmModal.vue";
 import { useAuthStore } from "./stores/auth";
 import { Layers, BarChart3, Bot, FlaskConical, Zap, Sunrise, Trophy, Network, Swords, Lock } from "lucide-vue-next";
-import { useNavigation, NAV_BTN, navClass } from "./composables/useNavigation";
+import { useNavigation, NAV_BTN, navClass, navLabelClass } from "./composables/useNavigation";
 import { useModals } from "./composables/useModals";
 
 export type { TabId } from "./composables/useNavigation";
@@ -239,66 +239,66 @@ onUnmounted(() => {
           aria-label="Ana sekmeler"
         >
         <!-- Kütle / Katmanlar Sekmesi -->
-        <button @click="switchTab('dimensions')" :aria-current="activeTab === 'dimensions' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'dimensions')]">
+        <button @click="switchTab('dimensions')" :aria-current="activeTab === 'dimensions' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'dimensions', 'dimensions')]">
           <Layers class="w-3.5 h-3.5 text-purple-400" />
-          <span>Katmanlar</span>
+          <span :class="navLabelClass(activeTab === 'dimensions')">Katmanlar</span>
           <span v-if="store.canShift" class="tab-dot tab-dot-purple" v-tip="'Ölçek Sıçraması hazır'"></span>
         </button>
 
         <!-- Algoritma Laboratuvarı Sekmesi -->
-        <button v-if="store.labUnlocked" @click="switchTab('lab')" :aria-current="activeTab === 'lab' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'lab')]">
+        <button v-if="store.labUnlocked" @click="switchTab('lab')" :aria-current="activeTab === 'lab' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'lab', 'lab')]">
           <FlaskConical class="w-3.5 h-3.5 text-emerald-400" />
-          <span>Lab</span>
+          <span :class="navLabelClass(activeTab === 'lab')">Lab</span>
           <span v-if="hasHarvestableTrend" class="tab-dot tab-dot-emerald" v-tip="'Hasada hazır trend var'"></span>
         </button>
 
         <!-- Gece Kriz Yönetimi Sekmesi -->
-        <button v-if="store.crisisUnlocked" @click="switchTab('crisis')" :aria-current="activeTab === 'crisis' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'crisis')]">
+        <button v-if="store.crisisUnlocked" @click="switchTab('crisis')" :aria-current="activeTab === 'crisis' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'crisis', 'crisis')]">
           <Zap class="w-3.5 h-3.5 text-cyan-400" />
-          <span>Kriz</span>
+          <span :class="navLabelClass(activeTab === 'crisis')">Kriz</span>
           <span v-if="hasCrisisAlert" class="tab-dot tab-dot-cyan" v-tip="'Kriz sekmesinde işlem var'"></span>
         </button>
 
         <!-- Otomatik Botlar Sekmesi -->
-        <button v-if="store.autobuyersUnlocked" @click="switchTab('autobuyers')" :aria-current="activeTab === 'autobuyers' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'autobuyers')]">
+        <button v-if="store.autobuyersUnlocked" @click="switchTab('autobuyers')" :aria-current="activeTab === 'autobuyers' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'autobuyers', 'autobuyers')]">
           <Bot class="w-3.5 h-3.5 text-blue-400" />
-          <span>{{ store.isAutobuyerCockpitMode ? 'Kokpit' : 'Botlar' }}</span>
+          <span :class="navLabelClass(activeTab === 'autobuyers')">{{ store.isAutobuyerCockpitMode ? 'Kokpit' : 'Botlar' }}</span>
           <span v-if="hasBotAlert" class="tab-dot tab-dot-blue" v-tip="'Açılabilir bot kademesi veya alınabilir bot var'"></span>
         </button>
 
         <!-- Nöral İzleme Kolonisi Sekmesi -->
-        <button v-if="store.colonyUnlocked" @click="switchTab('colony')" :aria-current="activeTab === 'colony' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'colony')]">
+        <button v-if="store.colonyUnlocked" @click="switchTab('colony')" :aria-current="activeTab === 'colony' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'colony', 'colony')]">
           <Network class="w-3.5 h-3.5 text-violet-400" />
-          <span>Koloni</span>
+          <span :class="navLabelClass(activeTab === 'colony')">Koloni</span>
           <span v-if="store.canPowerNap" class="tab-dot tab-dot-violet" v-tip="'Toplu Çöküş hazır'"></span>
         </button>
 
         <!-- Kozmik Çöküş / Tekillik Sekmesi -->
-        <button v-if="store.singularityUnlocked" @click="switchTab('singularity')" :aria-current="activeTab === 'singularity' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'singularity')]">
+        <button v-if="store.singularityUnlocked" @click="switchTab('singularity')" :aria-current="activeTab === 'singularity' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'singularity', 'singularity')]">
           <Sunrise class="w-3.5 h-3.5 text-amber-400" />
-          <span>Tekillik</span>
+          <span :class="navLabelClass(activeTab === 'singularity')">Tekillik</span>
           <span v-if="store.canSingularity" class="tab-dot tab-dot-amber" v-tip="'Kozmik Çöküş hazır'"></span>
           <span v-else-if="store.hasAffordableNeuralNode" class="tab-dot tab-dot-amber" v-tip="'Alınabilir Nöral Ağaç düğümü var'"></span>
         </button>
 
         <!-- Gece Kriz Meydan Okumaları Sekmesi -->
-        <button v-if="store.challengesUnlocked" @click="switchTab('challenges')" :aria-current="activeTab === 'challenges' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'challenges')]">
+        <button v-if="store.challengesUnlocked" @click="switchTab('challenges')" :aria-current="activeTab === 'challenges' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'challenges', 'challenges')]">
           <Swords class="w-3.5 h-3.5 text-rose-400" />
-          <span>Meydan</span>
+          <span :class="navLabelClass(activeTab === 'challenges')">Meydan</span>
           <span v-if="store.activeChallenge" class="tab-dot tab-dot-rose" v-tip="'Aktif meydan okuma var'"></span>
         </button>
 
         <!-- Başarımlar Sekmesi -->
-        <button @click="switchTab('achievements')" :aria-current="activeTab === 'achievements' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'achievements')]">
+        <button @click="switchTab('achievements')" :aria-current="activeTab === 'achievements' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'achievements', 'achievements')]">
           <Trophy class="w-3.5 h-3.5 text-amber-400" />
-          <span>Plaket</span>
+          <span :class="navLabelClass(activeTab === 'achievements')">Plaket</span>
           <span v-if="store.hasUnseenAchievements" class="tab-dot tab-dot-amber" v-tip="'Yeni başarım var'"></span>
         </button>
 
         <!-- Gece Raporu Sekmesi -->
-        <button @click="switchTab('stats')" :aria-current="activeTab === 'stats' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'stats')]">
+        <button @click="switchTab('stats')" :aria-current="activeTab === 'stats' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'stats', 'stats')]">
           <BarChart3 class="w-3.5 h-3.5 text-slate-400" />
-          <span>Rapor</span>
+          <span :class="navLabelClass(activeTab === 'stats')">Rapor</span>
         </button>
 
         </nav>

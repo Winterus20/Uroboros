@@ -4,6 +4,7 @@ import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
 import { Decimal, D_0 } from '../core/math'
 import type { DimensionData } from '../models/types'
+import { getTierGlyph, getTierAccent } from '../game/dimension_identity'
 import { Link } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -201,6 +202,19 @@ const TIER_ACCENT_COLORS: Record<number, { bar: string; badge: string; text: str
 
 const tierStyle = computed(() => TIER_ACCENT_COLORS[props.dimension.tier] || TIER_ACCENT_COLORS[1])
 
+// Katman kimlik glifi (AD tarzı dizgi karakteri) + accent — durum'dan bağımsız kanal.
+const tierGlyph = computed(() => getTierGlyph(props.dimension.tier))
+const tierAccentClass = computed(() => getTierAccent(props.dimension.tier))
+
+// Üç durumlu uygunluk rampası (durum ≠ hue): tam=purple parlak, kısmi=sarı, kilit=gri soluk.
+// hue kimliği rozet/glif'te kalır; rampa yalnız opaklık/kenarlık/zeminle sinyal verir.
+const affordRampClass = computed(() => {
+  if (canAfford.value) return ''
+  if (packProgress.value > 0) return 'ds-ramp-partial'
+  return 'ds-ramp-locked'
+})
+
+// Akış yönü: d1 matterPerSecond için basit ↑ (her zaman pozitif akış) — yön oku görsel kanal.
 const milestoneEdition = computed(() => {
   const m = milestoneInfo.value.current
   if (!m) return null
@@ -272,13 +286,13 @@ function buy(e?: MouseEvent) {
 
     <!-- Sol: Tier Ölçek Rozeti + Başlık + Bilgi -->
     <div class="flex items-center gap-2.5 min-w-0 flex-1">
-      <!-- Metrik Planck-Ölçek Rozeti (Minimalist Bilimsel Kare) -->
+      <!-- Metrik Planck-Ölçek Rozeti (Minimalist Bilimsel Kare) — AD tarzı dizgi glifi kimlik kanalı -->
       <div
         class="w-10 h-10 rounded-lg border flex flex-col items-center justify-center shrink-0 select-none font-mono"
         :class="tierStyle.badge"
         v-tip="`${tierConfig.metric} ölçeği: ${tierConfig.scale}`"
       >
-        <span class="text-xs font-black tracking-tight leading-none">D{{ props.dimension.tier }}</span>
+        <span class="dim-glyph text-sm leading-none" :class="tierAccentClass">{{ tierGlyph }}</span>
         <span class="text-[10px] font-bold opacity-90 leading-tight mt-0.5 whitespace-nowrap">{{ tierConfig.symbol }}</span>
       </div>
 
@@ -337,9 +351,10 @@ function buy(e?: MouseEvent) {
       </div>
       <span
         v-if="showFlowRate"
-        class="text-[10px] font-medium text-emerald-400/90"
+        class="text-[10px] font-medium text-emerald-400/90 inline-flex items-center gap-0.5"
         v-tip="flowRate.hint"
       >
+        <span class="text-emerald-300">↑</span>
         +{{ displayFlowText }}{{ flowRate.suffix }}
       </span>
     </div>
@@ -355,7 +370,7 @@ function buy(e?: MouseEvent) {
         :class="[
           canAfford
             ? 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-100 border-purple-500/40 cursor-pointer shadow-xs affordance-pulse'
-            : 'bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed opacity-40',
+            : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${affordRampClass}`,
           completesPack && canAfford ? 'ring-1 ring-emerald-400/40' : ''
         ]"
         v-tip="canAfford ? `+${affordableUnits} adet için ${displayCostText} (bu alımla ${packProgress + affordableUnits} adet olur)` : 'Yetersiz Kütle'"
