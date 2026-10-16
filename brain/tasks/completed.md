@@ -1,5 +1,30 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-16] ✔ — Görsel Dil: Tipografi Pivotu — "Aç Kumarhane" Fontları (ADR-0066)
+
+### Problem:
+- ADR-0060 §2.1 m6x11'i display rolü için ertelemişti; fontlar hâlâ eski "cyberpunk HUD" dilindeydi (Chakra Petch sayaç + Inter/JetBrains Mono, el yazısı rolü yoktu). Kullanıcı fontların yeni görsel dile göre değiştirilmesini istedi.
+
+### Araştırma (rapor: `brain/research/typography-pivot-hungry-parlor-2026-10.md`):
+- **fonttools cmap doğrulaması** (`brain/scratchpad/font-coverage-check.py`): **m6x11 orijinal (12 KB/127 glif) TÜRKÇE DEĞİL** (ç-ö-ü bile yok) → elendi; **m6x11plus (17 KB/228 glif, name table teyitli) TR-TAM** (ğĞıİşŞçöü) + rakamlar sabit advance (448/1152) → `tabular-nums` doğuştan güvenli + e-notation sayaç karakterleri mevcut.
+- **Lisans:** Daniel Linssen "free to use with attribution" → `public/fonts/ATTRIBUTION.md` zorunlu (hands asset'indeki aynı desen).
+- **Aday elenmeleri:** Permanent Marker / Gochi Hand / Bowlby One / Rye → Ğ-İ-ş eksik; geçenler: Caveat, Space Mono, Ultra, Alfa Slab One, Special Elite.
+- **Izgara:** m6x11plus net render için 18-px katları (18/36/54/72); sentetik bold yasak.
+
+### Çözüm:
+- **`public/fonts/m6x11plus.ttf` + `ATTRIBUTION.md`** (self-host) · **`style.css` `@font-face`** (swap) · **`index.html`** preload + Google Fonts linki (Chakra Petch çıktı, Caveat girdi).
+- **`tailwind.config.js`:** `display: m6x11plus…` + **yeni `hand: Caveat…`** tokeni.
+- **`CounterDisplay.vue`:** 36/54/72 px (18 ızgarası), `font-bold` + `tracking-tight` kaldırıldı.
+- **`JuiceLayer.vue`:** canvas sayıları `400 …px "m6x11plus"`, boyutlar 18/36, kontur boyutla ölçekli (`max(3.5, size*0.18)`).
+- **`ScreenOverlay.vue` + `.collage-scrawl`:** K3+ GIC el yazısı annotasyonlar (ambient, aria-hidden, `--substrate-opacity` eğrisi, forced-colors'ta susar) — §4 sözleşmesindeki "el yazısı annotasyonlar" boşluğu doldu.
+- **Korunanlar:** sans (Inter) + mono (JetBrains Mono) — ADR-0049 kontratı + frenli kaos bütçesi (kullanıcı onayıyla).
+
+### Doğrulama:
+- `npm test`: **314/314** · `npm run build`: **0 hata** · `harness:contrast`: **WCAG AA** · `harness:smoke`: **log10=90.7 / 8 shift** (baseline sabit).
+- dist artifact: `.font-hand` + `@font-face m6x11plus` + `.font-display` + 36/54/72 boyutları + preload + `dist/fonts/` ✓ · Chakra Petch referansı **0** ✓ · preview sunucusu font HTTP 200 (18,192 bayt) ✓.
+- **Kısıt:** bu ortamda (Termux) Playwright/Chromium kurulamadı → ekran görüntülü görsel onay yapılamadı; kullanıcıdadır.
+- Kaynaklar: ADR [`0066-hungry-parlor-typography-pivot.md`](../decisions/0066-hungry-parlor-typography-pivot.md) · Rapor [`typography-pivot-hungry-parlor-2026-10.md`](../research/typography-pivot-hungry-parlor-2026-10.md) · Sözleşme `brain/context/visual-language.md` §7.
+
 ## [2026-10-16] ✔ — Görsel Dil Faz E: Retrofit & QA (Kapanış, ADR-0065)
 
 ### Problem:

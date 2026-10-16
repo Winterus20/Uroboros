@@ -62,12 +62,21 @@
       (CommentTicker/MusicControls) + CrisisTab tabanı + `m6x11` silme.
       Kanıt: typecheck 0 · test 314/314 · build 0 hata · `harness:smoke` log10=90.72/8 shift
       (baseline sabit) · `harness:perf` churn 6.91/wall 0.84 ms · `harness:contrast` AA.
+- [x] **Tipografi Pivotu — "Aç Kumarhane" fontları** — ✅ **TAMAMLANDI (2026-10-16)**.
+      ADR: [`0066-hungry-parlor-typography-pivot.md`](../decisions/0066-hungry-parlor-typography-pivot.md) ·
+      Rapor: [`typography-pivot-hungry-parlor-2026-10.md`](../research/typography-pivot-hungry-parlor-2026-10.md).
+      Çıktı: `public/fonts/m6x11plus.ttf` + `ATTRIBUTION.md` + `@font-face`/preload;
+      `display`=m6x11plus (CounterDisplay 36/54/72 + JuiceLayer canvas 18/36, bold yok);
+      YENİ `hand`=Caveat + K3 `.collage-scrawl` (ScreenOverlay el yazısı annotasyonlar);
+      sans/mono korunur; Chakra Petch sıfır referans.
+      Kanıt: test 314/314 · build 0 · contrast AA · smoke log10=90.72/8 shift · dist artifact ✓
+      (Playwright/Termux kurulamadı → ekran görüntülü görsel onay KULLANICIDA).
 
-**"Aç Kumarhane" pivotu (Faz A–E) KAPANDI.** Sıradaki adaylar (ayrı işler):
+**"Aç Kumarhane" pivotu (Faz A–E + Tipografi) KAPANDI.** Sıradaki adaylar (ayrı işler):
 F — Prestige ritüeli · ADR-0033 §3 / ADR-0034 denge soruları.
 
-**Sıradaki adım:** **Faz D — VS şöleni.** Tek canvas partikül (JuiceLayer genişletmesi) +
-olay sahneleri (Süpernova/Kütle Patlaması/Hawking/rezonans/ilk Big Crunch).
+**Sıradaki adım:** Yok — aktif dalga kapalı. Kullanıcıdan beklenen: m6x11plus sayaç /
+Caveat K3 notlarının **görsel onayı** (bu ortamda tarayıcı doğrulaması yapılamadı).
 
 **Beklemede (kullanıcı onayı gerektiren adaylar):**
 - F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.

@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   TIPOGRAFİ — "Aç Kumarhane" font pivotu (ADR-0066 · visual-language.md §8)
+   m6x11plus (Daniel Linssen) — Balatro'nun imza display fontu.
+   Lisans: free to use with **attribution** → public/fonts/ATTRIBUTION.md
+   Doğrulama: TR glifleri (ğşıİöçÜĞŞ) tam · rakamlar sabit advance (tabular) ·
+   e-notation sayaç karakterleri mevcut. IZGARA: font-size 18'in katları
+   (18/36/54/72) — CounterDisplay ve JuiceLayer canvas boyutları buna bağlıdır;
+   sentetik bold KULLANILMAZ (fontun tek ağırlığı Regular'dır, ızgarayı bozar).
+   ========================================================================== */
+@font-face {
+  font-family: "m6x11plus";
+  src: url("/fonts/m6x11plus.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 @layer base {
   html,
@@ -725,8 +742,22 @@
   border-right: 1px dashed rgba(255, 240, 230, 0.25);
   opacity: var(--substrate-opacity);
 }
+/* --- L2: el yazısı annotasyon (K3+ — visual-language.md §4 "El yazısı annotasyonlar") ---
+   Font: font-hand (Caveat) utility'si şablondan gelir; bu kural yalnız ambient
+   yoğunluk/tonu verir. Sayı/etiket/ramp ASLA bu sınıfa girmez (okunabilirlik kanonu). */
+.collage-scrawl {
+  position: absolute;
+  font-size: 17px;
+  line-height: 1.1;
+  white-space: nowrap;
+  /* bone tonu — motif-tone-bone ile aynı sıcak nötr aile */
+  color: rgba(255, 240, 230, 0.55);
+  text-shadow: 0 1px 0 rgba(10, 6, 8, 0.65);
+  opacity: calc(var(--substrate-opacity) * 0.85);
+  pointer-events: none;
+}
 @media (forced-colors: active) {
-  .collage-checker, .collage-floor, .collage-torn, .collage-tape { display: none !important; }
+  .collage-checker, .collage-floor, .collage-torn, .collage-tape, .collage-scrawl { display: none !important; }
 }
 
 /* --- C4: Wrinkler creepy-cute kaplaması (yalnız dekoratif katman) --- */

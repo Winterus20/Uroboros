@@ -35,8 +35,12 @@ export default {
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'Roboto Mono', 'monospace'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        // Display: oyunun imza öğesi (hero Dopamin sayacı) — cyberpunk/k HUD karakteri
-        display: ['Chakra Petch', 'Inter', 'system-ui', 'sans-serif'],
+        // Display (ADR-0066 "Aç Kumarhane" pivotu): Balatro'nun piksel fontu
+        // m6x11plus (Daniel Linssen, atıf zorunlu — public/fonts/ATTRIBUTION.md).
+        // TR kapsaması doğrulanmış; ızgara boyutları 18'in katları (style.css @font-face notu).
+        display: ['m6x11plus', 'Inter', 'system-ui', 'sans-serif'],
+        // Hand (GIC kolaj katmanı): el yazısı annotasyonlar (K3+ substrat notları).
+        hand: ['Caveat', 'Segoe Print', 'cursive'],
       },
       animation: {
         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',

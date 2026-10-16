@@ -246,7 +246,9 @@ function spawnSingle(
     life: 0,
     text,
     color,
-    size: big ? (mode === 'tilt' ? 24 : 20) : 15
+    // Boyut ızgarası: m6x11plus net render için 18 katlarında yaşamalıdır
+    // (normal 15→18 · büyük 20/24→36 — VS şölen anları hero ölçeğine çıkar).
+    size: big ? 36 : 18
   }
 
   if (particles.length >= cap) {
@@ -600,12 +602,14 @@ function loop() {
     ctx.globalAlpha = p.alpha
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    // İmza tipografi: display font, boyut parçacıkla taşınır
-    ctx.font = `700 ${p.size}px "Chakra Petch", "JetBrains Mono", monospace`
+    // İmza tipografi (ADR-0066): display font m6x11plus — ızgara boyutları 18'in
+    // katları; tek ağırlık Regular (sentetik bold piksel ızgarasını bozar).
+    ctx.font = `400 ${p.size}px "m6x11plus", "JetBrains Mono", monospace`
 
-    // Koyu kontur: her zeminde okunabilirlik (karanlık panelde de açık alanda da)
+    // Koyu kontur: her zeminde okunabilirlik (karanlık panelde de açık alanda da).
+    // Kalınlık boyutla ölçeklenir (18px'te 3.5 · 36px'te ~6.5 — eski 0.18 oranı).
     ctx.lineJoin = 'round'
-    ctx.lineWidth = 3.5
+    ctx.lineWidth = Math.max(3.5, p.size * 0.18)
     ctx.strokeStyle = 'rgba(8, 9, 13, 0.9)'
     ctx.strokeText(p.text, p.x, p.y)
 

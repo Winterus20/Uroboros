@@ -218,7 +218,7 @@ onUnmounted(() => {
       ref="counterRef"
       aria-live="off"
       :aria-label="`Yutulan Kütle: ${displayDopamine}`"
-      class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tabular-nums tracking-tight my-0.5 select-all will-change-transform"
+      class="font-display text-[36px] sm:text-[54px] lg:text-[72px] tabular-nums my-0.5 select-all will-change-transform"
       :class="[
         flameOn
           ? 'flame-text'

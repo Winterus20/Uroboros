@@ -110,7 +110,30 @@ Checklist brain/tasks/todo.md içinde tutulur:
 - Faz E — Retrofit & QA: Header/DimensionRow/DimensionsTab/ticker/modal dili + WCAG AA
   kontrast turu (yeni sıcak paletle) + npm test + npm run build + kayıt/commit
 
-## 7. Bu Belge Ne Zaman Değişir?
+## 7. TİPOGRAFİ SİSTEMİ (ADR-0066 · 2026-10-16 — uygulandı)
+
+> Araştırma raporu: [`brain/research/typography-pivot-hungry-parlor-2026-10.md`](../research/typography-pivot-hungry-parlor-2026-10.md)
+> · ADR: [`0066-hungry-parlor-typography-pivot.md`](../decisions/0066-hungry-parlor-typography-pivot.md)
+
+| Rol (token) | Font | Kullanım | Kaynak |
+| :--- | :--- | :--- | :--- |
+| `font-display` | **m6x11plus** (Balatro piksel) | hero sayaç + yüzen olay sayıları (canvas) | self-host `public/fonts/` · **atıf zorunlu** (`ATTRIBUTION.md`) |
+| `font-sans` | Inter | tüm UI metni (ADR-0049 kontratı) | Google Fonts |
+| `font-mono` | JetBrains Mono | sayı / telemetri / rozet (`tabular-nums` kanonu) | Google Fonts |
+| `font-hand` (YENİ) | Caveat | GIC el yazısı annotasyonlar (K3+ `.collage-scrawl`) | Google Fonts |
+
+**Kırılmaz kurallar:**
+1. m6x11plus **ızgara** = font-size 18'in katları (18/36/54/72); **sentetik bold yasak**
+   (tek ağırlık Regular; `font-bold` ızgarayı bozar). `tracking` elle düzeltmez.
+2. **m6x11 orijinali TÜRKÇE DEĞİL** (ğşıİöçü eksik) — yalnız `m6x11plus` (228 glif, TR tam) kullanılır.
+3. `public/fonts/ATTRIBUTION.md` **silinemez** (lisans zorunluluğu).
+4. Chakra Petch repodandır (pivot sonrası sıfır referans).
+5. Sayı/etiket/ramp katmanları el yazısına devredilmez (okunabilirlik kanonu);
+   hand rolü yalnız ambient kolaj katmanında yaşar (K0'da görünmez — bozulma fazlara bağlıdır).
+
+---
+
+## 8. Bu Belge Ne Zaman Değişir?
 
 Yeni görsel karar alındığında ya da bir stil katmanı değiştiğinde bu dosya ve kendi
 ADR'si güncellenir. Görsel işler buradan sapan değişiklik yapmaz; sapma gerekiyorsa

@@ -132,6 +132,11 @@ onUnmounted(() => {
       <div class="collage-tape" style="top: 12px; right: 8%; transform: rotate(11deg)" aria-hidden="true"></div>
       <div class="collage-tape" style="bottom: 14px; left: 12%; transform: rotate(9deg)" aria-hidden="true"></div>
       <div class="collage-tape" style="bottom: 14px; right: 12%; transform: rotate(-10deg)" aria-hidden="true"></div>
+      <!-- K3 — GIC el yazısı annotasyonlar (font-hand/Caveat): yalnız ambient,
+           aria-hidden, sayı/etiket katmanına dokunmaz (okunabilirlik kanonu). -->
+      <span class="collage-scrawl font-hand" style="top: 58px; left: 14px; transform: rotate(-9deg)" aria-hidden="true">burayı kimse okumuyor</span>
+      <span class="collage-scrawl font-hand" style="top: 44%; right: 14px; transform: rotate(6deg)" aria-hidden="true">daha çok aç...</span>
+      <span class="collage-scrawl font-hand" style="bottom: 21%; left: 14px; transform: rotate(-5deg)" aria-hidden="true">uyumak yok, not al</span>
     </template>
     <div
       v-if="corruptionLevel >= 4"
