@@ -1,5 +1,30 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-16] ✔ — Görsel Dil Faz E: Retrofit & QA (Kapanış, ADR-0065)
+
+### Problem:
+- K-2: `glass-panel` + Tailwind `bg-*` çakışması (ölü aksanlar), tanımsız `progress-track-lg` (görünmez hype barı), ticker/MusicControls çift motion kaynağı + OS boşluğu, kullanılmayan `m6x11.woff2`, WCAG AA turu.
+
+### Araştırma (birincil kaynaklar, `brain/research/phase-e-internet-research-2026-10.md`):
+- **W3C 1.4.3:** metin ≥4.5:1, büyük metin ≥3:1, yuvarlama yok, F24 (renksiz zemin/metin).
+- **W3C 1.4.11:** UI/state/grafik ≥3:1 bitişik renge; odak göstergesi (G195/C40); hover ek-yemi zorunlu değil ama kontrastı düşüremez.
+- **MDN `@layer`:** katman-dışı katman-içini her zaman ezer; dist'te `@layer` SIFIR → mekanizma düz kaynak sırası → düzeltme `:where()` (spesifite 0).
+
+### Çözüm:
+- **`src/style.css`:** `.glass-panel*` + `.panel-hero` `:where()` sarması (etkileşim > state > yüzey; ~99 noktada aksanlar canlandı) + `.progress-track-lg { 12px }`.
+- **`src/composables/useMotion.ts`:** `useMotionReduced()` tek kapı (ayar + kök mühür + OS, reaktif); `CommentTicker` + `MusicControls` geçti (ADR-0058 NIT'leri kapandı; OS boşluğu kapandı).
+- **`CrisisTab.vue`:** faz barına `progress-fill` tabanı (NIT kapandı).
+- **`public/fonts/m6x11.woff2` silindi** (4KB, sıfır referans).
+- **Verdict'ler (değişiklik yok):** `bg-black/*` 162/162 translucent; renk sözleşmesi temiz; `data-corruption` tüketimi tam.
+
+### Doğrulama:
+- `npm run typecheck`: **0 hata** · `npm test`: **24 dosya, 314/314 yeşil**.
+- `npm run build`: **0 hata** (çıktıda `:where(.glass-panel-card)` + `.progress-track-lg` doğrulandı).
+- `npm run harness:smoke`: log10=90.72, 8 shift — baseline sabit (**denge regresyonu yok**).
+- `npm run harness:perf`: churn 6.91/wall 0.84 ms — bant içinde.
+- `npm run harness:contrast`: tüm çiftler WCAG AA.
+- Kaynaklar: ADR [`0065-phase-e-retrofit-qa.md`](../decisions/0065-phase-e-retrofit-qa.md) · Derin spec [`phase-e-retrofit-qa-deep-spec-2026-10.md`](../research/phase-e-retrofit-qa-deep-spec-2026-10.md) · İnternet araştırması [`phase-e-internet-research-2026-10.md`](../research/phase-e-internet-research-2026-10.md).
+
 ## [2026-10-16] ✔ — Görsel Dil Faz D: VS Şöleni (Tek Canvas Partikül + Olay Sahneleri, ADR-0064)
 
 ### Problem:

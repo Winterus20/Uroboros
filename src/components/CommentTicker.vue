@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { sounds } from '../core/audio'
-import { isMotionReduced, useMotionMode } from '../composables/useMotion'
+import { useMotionReduced } from '../composables/useMotion'
 import { Radio, Zap, ChevronRight, Sparkles, Pause, Gauge } from 'lucide-vue-next'
 import { Decimal } from '../core/math'
 import { safeConfetti } from '../core/celebrate'
@@ -32,13 +32,15 @@ let discoTimeout: number | null = null
 // Kök sınıflar animasyon süresini 0.001s'e çektiği için çalışan bir marquee `animationend`i
 // her karede tetikler ve sonsuz haber döngüsü açardı. Haber metni statik gösterilir;
 // döndürme işini aşağıdaki JS timer üstlenir (gizli sekmede duraklar, unmount'ta temizlenir).
-const motionMode = useMotionMode()
+// Faz E (E3): tek kaynak hareket kapısı — ayar + kök mühür + OS tercihi.
+// Scoped marquee'yi global OS media query öldüremez; kapı burada JS'tedir.
+const motionReduced = useMotionReduced()
 const REDUCED_ROTATE_MS = 9000
 let reducedRotateTimer: number | null = null
 
-/** Statik bant modu: reaktif hareket modu 'full' dışı ya da kök-sınıf mührü kısıtlı. */
+/** Statik bant modu: tek computed kapı (reaktif — ayar/OS değişince döner). */
 function isStaticTicker(): boolean {
-  return motionMode.value !== 'full' || isMotionReduced()
+  return motionReduced.value
 }
 
 /** Statik modda haberleri sabit aralıkla döndüren timer (marquee zinciri olmadan). */
@@ -302,9 +304,9 @@ function handleVisibilityChange() {
   }
 }
 
-// Ayar değişince canlı uygula: 'full' → marquee, kısıtlı → statik gösterim + JS rotasyon.
-watch(motionMode, (mode) => {
-  if (mode !== 'full') {
+// Ayar/OS değişince canlı uygula: kısıtlı → statik + JS rotasyon; full → marquee.
+watch(motionReduced, (reduced) => {
+  if (reduced) {
     if (restartTimer !== null) {
       clearTimeout(restartTimer)
       restartTimer = null

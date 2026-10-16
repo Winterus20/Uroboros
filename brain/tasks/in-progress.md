@@ -54,7 +54,17 @@
       Kanıt: typecheck 0 · test 314/314 · build 0 hata · `harness:smoke` log10=90.72/8 shift
       (baseline sabit) · `harness:perf` churn 6.69/wall 0.77 ms (bant içinde) ·
       `harness:contrast` AA.
-- [ ] **Faz E — Retrofit & QA** (retrofit + WCAG AA + kapanış)
+- [x] **Faz E — Retrofit & QA** — ✅ **TAMAMLANDI (2026-10-16)**. ADR:
+      [`0065-phase-e-retrofit-qa.md`](../decisions/0065-phase-e-retrofit-qa.md) ·
+      Derin spec: [`phase-e-retrofit-qa-deep-spec-2026-10.md`](../research/phase-e-retrofit-qa-deep-spec-2026-10.md) ·
+      İnternet araştırması: [`phase-e-internet-research-2026-10.md`](../research/phase-e-internet-research-2026-10.md).
+      Çıktı: K-2 `:where()` + `progress-track-lg` + `useMotionReduced` tek kapı
+      (CommentTicker/MusicControls) + CrisisTab tabanı + `m6x11` silme.
+      Kanıt: typecheck 0 · test 314/314 · build 0 hata · `harness:smoke` log10=90.72/8 shift
+      (baseline sabit) · `harness:perf` churn 6.91/wall 0.84 ms · `harness:contrast` AA.
+
+**"Aç Kumarhane" pivotu (Faz A–E) KAPANDI.** Sıradaki adaylar (ayrı işler):
+F — Prestige ritüeli · ADR-0033 §3 / ADR-0034 denge soruları.
 
 **Sıradaki adım:** **Faz D — VS şöleni.** Tek canvas partikül (JuiceLayer genişletmesi) +
 olay sahneleri (Süpernova/Kütle Patlaması/Hawking/rezonans/ilk Big Crunch).

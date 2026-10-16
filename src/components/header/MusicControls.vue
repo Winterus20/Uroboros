@@ -3,7 +3,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useGameStore } from "../../stores/game";
 import { Play, Pause, SkipForward } from "lucide-vue-next";
 import { musicEngine, MUSIC_TRACKS } from "../../core/music-engine";
-import { useMotionMode, isMotionOff, isMotionReduced } from "../../composables/useMotion";
+import { useMotionMode, useMotionReduced } from "../../composables/useMotion";
 
 const emit = defineEmits<{ (e: "open-settings"): void }>();
 
@@ -25,12 +25,14 @@ function nextTrack(): void {
 }
 
 // 3 durumlu hareket kapısı: ekolayzer örnekleme aralığı.
-// 'off' → interval HİÇ kurulmaz (barlar statik); 'reduced' → 300ms; 'full' → 100ms.
+// 'off' → interval HİÇ kurulmaz (barlar statik); kısıtlı (reduced/OS) → 300ms; full → 100ms.
+// Faz E (E3): kısıtlı terimi tek kaynak (`useMotionReduced`) — OS boşluğu kapandı.
 const motionMode = useMotionMode();
+const motionReduced = useMotionReduced();
 
 function visualizerIntervalMs(): number | null {
-  if (isMotionOff() || motionMode.value === "off") return null;
-  if (isMotionReduced() || motionMode.value === "reduced") return 300;
+  if (motionMode.value === "off") return null;
+  if (motionReduced.value) return 300;
   return 100;
 }
 
@@ -55,8 +57,8 @@ onMounted(() => {
   restartVisualizer();
 });
 
-// Ayar değişince canlı uygula: interval durur / sadeleşir / normal hıza döner.
-watch(motionMode, () => {
+// Ayar/OS değişince canlı uygula: interval durur / sadeleşir / normal hıza döner.
+watch([motionMode, motionReduced], () => {
   restartVisualizer();
 });
 

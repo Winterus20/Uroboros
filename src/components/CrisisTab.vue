@@ -243,10 +243,10 @@ function handleIntervention(type: CrisisInterventionType) {
               <div class="w-[10%] bg-rose-950/40"></div>
             </div>
 
-            <!-- Dinamik Dolum Çubuğu -->
+            <!-- Dinamik Dolum Çubuğu (Faz E: `progress-fill` tabanı — oran=çubuk dili) -->
             <div
               class="h-full rounded-full transition-all duration-200 relative"
-              :class="phaseConfig.barColor"
+              :class="['progress-fill', phaseConfig.barColor]"
               :style="{ width: `${Math.min(100, Math.max(0, store.reactorHeat))}%` }"
             >
               <div

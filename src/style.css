@@ -123,8 +123,13 @@
   font-weight: 700;
 }
 
-/* --- Paneller (Obsidian HUD) --- */
-.glass-panel {
+/* --- Paneller (Obsidian HUD) ---
+   Faz E (K-2): seçiciler `:where()` ile sarılıdır (spesifite 0) — Tailwind
+   utility'leri (`bg-*`, `border-*-*`, `hover:*`, `transition-all`) eşitlikte
+   kazanır; katman-dışı state sınıfları (`ds-ramp-*`, `hero-accent-*`) yine
+   kazanır. Mekanizma: düz kaynak sırası (dist'te `@layer` yok) + spesifite.
+   Etkileşim > state > yüzey: hover varyantı (0,2,0) > ramp (0,1,0) > yüzey (0). */
+:where(.glass-panel) {
   background: var(--ds-panel);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -133,14 +138,14 @@
 }
 
 /* Header & Ana yüzeyler */
-.glass-panel-glow {
+:where(.glass-panel-glow) {
   background: var(--ds-panel-strong);
   border: 1px solid var(--ds-border-strong);
   box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
 }
 
 /* Katman kartları */
-.glass-panel-card {
+:where(.glass-panel-card) {
   /* Faz A: hardcoded rgba → tek kaynak token (--ds-card), sıcak ink-black. */
   background: var(--ds-card);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -148,13 +153,14 @@
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.glass-panel-card:hover {
+:where(.glass-panel-card):hover {
   background: var(--ds-card-hover);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-/* --- Birleşik sekme kahramanı (TabHero altyapısı) --- */
-.panel-hero {
+/* --- Birleşik sekme kahramanı (TabHero altyapısı) ---
+   Faz E (K-2): `:where()` — `hero-accent-*` (katman-dışı, 0,1,0) yine kazanır. */
+:where(.panel-hero) {
   position: relative;
   overflow: hidden;
   border-radius: 1rem; /* A6 yarıçap hiyerarşisi: hero 16px > kart 12px > satır 10px */
@@ -164,7 +170,7 @@
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 @media (min-width: 768px) {
-  .panel-hero {
+  :where(.panel-hero) {
     padding: 1.25rem 1.5rem;
   }
 }
@@ -255,6 +261,9 @@
 .progress-track-mini { height: 4px; }
 .progress-track-sm { height: 6px; }
 .progress-track-md { height: 8px; }
+/* Faz E (E1): `progress-track-lg` tanımsızdı (ADR-0058 NIT) — tek kullanıcı
+   `TrendReactor` hype barı 0px'e çöküyordu. Ölçek: 4/6/8/12. */
+.progress-track-lg { height: 12px; }
 .progress-track-bordered {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
