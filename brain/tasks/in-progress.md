@@ -16,7 +16,9 @@
 - [x] Dalga 3 — QA denetimi (bağımsız subagent) + fix dalgası → FINAL QA VERDICT: PASS
 - [x] Dalga 4 — `npm test` (263/263) + `npm run build` (0 hata) + `harness:smoke` (log10=90.72, 8 shift), ADR-0058, brain reconciliation, conventional commit
 
-**Şu an aktif geliştirme dalgası yok.** Sıradaki iş için `todo.md` kilit merdivenine bak.
+**Şu an aktif geliştirme dalgası yok.** Sıradaki dalga: `todo.md` başındaki **"Aç
+Kumarhane" faz-temelli görsel bozulma** girişimi (sözleşme: `brain/context/visual-language.md`,
+ADR-0060) — kullanıcı "başla" dediğinde Faz A'dan başlar.
 
 **Beklemede (kullanıcı onayı gerektiren adaylar):**
 - F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.

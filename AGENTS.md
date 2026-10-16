@@ -38,6 +38,7 @@ Her agent çalışmaya başlamadan önce ve işi bitirdiğinde repo içindeki **
 
 1. **İşe Başlarken (Context Hydration):**
    - [`brain/context/project-brief.md`](file:///c:/Users/Yigit/Documents/Incremental/brain/context/project-brief.md) ve [`brain/context/tech-context.md`](file:///c:/Users/Yigit/Documents/Incremental/brain/context/tech-context.md) dosyalarını oku.
+   - **Görsel/stil işlerinde ek olarak [`brain/context/visual-language.md`](brain/context/visual-language.md) sözleşmesini oku** (Aç Kumarhane sentezi + faz-temelli bozulma; ADR-0060).
    - [`brain/tasks/todo.md`](file:///c:/Users/Yigit/Documents/Incremental/brain/tasks/todo.md) üzerindeki sıradaki görevi incele ve [`brain/tasks/in-progress.md`](file:///c:/Users/Yigit/Documents/Incremental/brain/tasks/in-progress.md) dosyasına taşı.
 2. **Kritik Kararlar Alındığında (ADR):**
    - Yeni bir kütüphane eklendiğinde veya temel mimari değiştiğinde [`brain/decisions/`](file:///c:/Users/Yigit/Documents/Incremental/brain/decisions/) altına yeni bir ADR dosyası aç.
