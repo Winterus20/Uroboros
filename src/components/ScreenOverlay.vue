@@ -59,6 +59,10 @@ const crisisAuraClass = computed(() => {
 const crisisFlash = ref(false)
 let flashTimeout: ReturnType<typeof setTimeout> | null = null
 
+// Faz C (C2) — kolaj substrat görünürlüğü: bozulma seviyesinden TS ile açılır,
+// şiddet CSS `--substrate-opacity` tokenından gelir (Faz B eğrisi).
+const corruptionLevel = computed(() => store.corruptionLevel)
+
 function handleShockwave() {
   if (!isEnabled.value) return
   // Flaş: pil tasarrufu veya kısıtlı harekette flaş sınıfı eklenmez; temel aura katmanı kalır.
@@ -109,6 +113,30 @@ onUnmounted(() => {
       v-if="hasCrisisAura"
       class="crisis-perimeter-aura absolute inset-0 pointer-events-none transition-opacity duration-300"
       :class="[crisisAuraClass, crisisFlash ? 'opacity-90' : 'opacity-40 animate-pulse']"
+    ></div>
+
+    <!-- 4. FAZ C (C2) — GIC KOLAJ SUBSTRATI: K-seviyesiyle kademeli açılır (L2).
+         Yalnız dekoratif kenarlar; sayı/etiket dokunulmaz (okunabilirlik kanonu). -->
+    <template v-if="corruptionLevel >= 1">
+      <div class="collage-torn collage-torn-tl" aria-hidden="true"></div>
+      <div class="collage-torn collage-torn-tr" aria-hidden="true"></div>
+      <div class="collage-torn collage-torn-bl" aria-hidden="true"></div>
+      <div class="collage-torn collage-torn-br" aria-hidden="true"></div>
+    </template>
+    <template v-if="corruptionLevel >= 2">
+      <div class="collage-checker absolute inset-x-0 top-0" aria-hidden="true"></div>
+      <div class="collage-checker absolute inset-x-0 bottom-0" aria-hidden="true"></div>
+    </template>
+    <template v-if="corruptionLevel >= 3">
+      <div class="collage-tape" style="top: 12px; left: 8%; transform: rotate(-14deg)" aria-hidden="true"></div>
+      <div class="collage-tape" style="top: 12px; right: 8%; transform: rotate(11deg)" aria-hidden="true"></div>
+      <div class="collage-tape" style="bottom: 14px; left: 12%; transform: rotate(9deg)" aria-hidden="true"></div>
+      <div class="collage-tape" style="bottom: 14px; right: 12%; transform: rotate(-10deg)" aria-hidden="true"></div>
+    </template>
+    <div
+      v-if="corruptionLevel >= 4"
+      class="collage-floor absolute inset-x-0 bottom-0"
+      aria-hidden="true"
     ></div>
   </div>
 </template>

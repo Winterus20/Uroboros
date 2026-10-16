@@ -77,6 +77,25 @@
 - `npm run harness:smoke`: log10=90.72, 8 shift — baseline sabit (**denge regresyonu yok**).
 - Kaynaklar: ADR [`0062-phase-b-corruption-infrastructure.md`](../decisions/0062-phase-b-corruption-infrastructure.md) · Derin spec [`phase-b-corruption-deep-spec-2026-10.md`](../research/phase-b-corruption-deep-spec-2026-10.md).
 
+## [2026-10-16] ✔ — Görsel Dil Faz C: GIC Kimlik Kütüphanesi (Motif Slotları + Bant + Substrat + Kaplamalar, ADR-0063)
+
+### Problem:
+- Faz B mührü/tokenları kurmuştu ama görsel tüketici yoktu: boost anında yan motif bandı, kolaj substrat, Wrinkler kaplaması ve kriz/Planck vinyetleri eksikti.
+
+### Çözüm:
+- **`src/assets/motifs/*.svg` (16 YENİ) + `src/game/motifs.ts`:** slot kontratı (ad = dosya adı; `?raw` string, `currentColor` tint). Gruplar: planck (delik·göz·diş·zincir) / cosmic (tekerlek·gül·dama·yırtık) / collapse (bant·karalama·vida·çatlak) / nightwatch (ay·yıldız·saat·perde). Tonlar yalnız feast/bone/ember (rezerve hue çakışması yok); `delik` ağırlığı 2.
+- **`src/components/MotifBand.vue` (YENİ, z=45):** yüzen anomali veya aktif buff varken yan şeritler; set `motifsForCorruption`'dan (K0'da bant yok); rezonans kombosunda yoğunluk katlanır (8→14 glif, opaklık tabanı 0.45→0.8). Tek animasyon 38 sn sürüklenme; `reduced` statik, `off`/pilde gizli.
+- **`ScreenOverlay.vue`:** L2 substrat — K1 yırtık köşeler → K2 damalı şerit → K3 bantlar → K4 damalı zemin (TS `v-if` + `--substrate-opacity`).
+- **`DimensionsTab.vue`:** C4 `wrinkler-chip` (delik-göz ışıması + diş çizgisi) + C5 Planck `planck-collage` bant köşeleri (K1+).
+- **`CrisisTab.vue`:** C5 `crisis-collage-frame` (challenge/backfire/meltdown) + damalı alt/üst bar.
+- **`src/style.css`:** `.layer-motif` + Faz C kolaj bloğu (bant/substrat/kaplama + tüm motion kapıları).
+
+### Doğrulama:
+- `npm test`: **23 dosya, 301/301 yeşil** (+7 yeni).
+- `npm run build` (`vue-tsc && vite build`): **0 tip/derleme hatası**.
+- `npm run harness:smoke`: log10=90.7, 8 shift — baseline sabit (**denge regresyonu yok**).
+- Kaynaklar: ADR [`0063-phase-c-motif-substrate-identity.md`](../decisions/0063-phase-c-motif-substrate-identity.md) · Derin spec [`phase-c-motif-substrate-deep-spec-2026-10.md`](../research/phase-c-motif-substrate-deep-spec-2026-10.md).
+
 ## [2026-10-15] ✔ — Geç Oyun Tick Performansı: Reaktivite Muafiyeti, Memoizasyon ve Deterministik Perf Bench (ADR-0059, v0.38.1)
 
 ### Problem:

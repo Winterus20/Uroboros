@@ -70,10 +70,10 @@ describe('corruption — faz-temelli bozulma merdiveni (Faz B)', () => {
   })
 
   it('CORRUPTION_META şiddet eğrisi monoton artar (O3/O5: K0→K1→K2 CRT, K2→K4 substrat)', () => {
-    // CRT eğrisi: K0 %10 → K1 %35 → K2 %45
-    expect(CORRUPTION_META[0].scanlineAlpha).toBeCloseTo(0.1, 6)
-    expect(CORRUPTION_META[1].scanlineAlpha).toBeCloseTo(0.35, 6)
-    expect(CORRUPTION_META[2].scanlineAlpha).toBeCloseTo(0.45, 6)
+    // CRT eğrisi: K0 %5 → K1 %9 → K2 %13 (kullanıcı geri bildirimiyle yumuşatıldı)
+    expect(CORRUPTION_META[0].scanlineAlpha).toBeCloseTo(0.05, 6)
+    expect(CORRUPTION_META[1].scanlineAlpha).toBeCloseTo(0.09, 6)
+    expect(CORRUPTION_META[2].scanlineAlpha).toBeCloseTo(0.13, 6)
     // Substrat tavanı: K2 %25, K4 %40
     expect(CORRUPTION_META[2].substrateOpacity).toBeCloseTo(0.25, 6)
     expect(CORRUPTION_META[4].substrateOpacity).toBeCloseTo(0.4, 6)

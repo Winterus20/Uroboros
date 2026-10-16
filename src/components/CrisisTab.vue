@@ -22,6 +22,15 @@ import LockedFeature from './LockedFeature.vue'
 
 const store = useGameStore()
 
+// Faz C (C5) — kriz kolaj vinyeti: reaktör krizi anında (rose) dekoratif kolaj
+// çerçevesi takılır. Yalnız kenar süsü; metin/ramp dokunulmaz.
+const hasCrisisCollage = computed(
+  () =>
+    !!store.activeChallenge ||
+    store.crisisBackfireDebuff > 0 ||
+    store.reactorPhase === 'meltdown'
+)
+
 // D4 (Bölünmüş Dikkat) pasifi: kriz spawn hızını artırır — etkinse hero'da rozet
 // Arayüzde "D4" yerine katman glifi gösterilir; teknik kimlik tooltip nüansında kalır.
 const d4Passive = computed(() => {
@@ -142,7 +151,8 @@ function handleIntervention(type: CrisisInterventionType) {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4" :class="{ 'crisis-collage-frame rounded-xl p-2': hasCrisisCollage }">
+    <div v-if="hasCrisisCollage" class="collage-checker rounded-sm" aria-hidden="true"></div>
     <!-- Birleşik Hero: Olay Ufku Reaktörü -->
     <TabHero
       :icon="Activity"
@@ -444,5 +454,6 @@ function handleIntervention(type: CrisisInterventionType) {
         Reaktör boşta kaldığında saniyede -%1.2 doğal olarak soğur.
       </div>
     </div>
+    <div v-if="hasCrisisCollage" class="collage-checker rounded-sm" aria-hidden="true"></div>
   </div>
 </template>

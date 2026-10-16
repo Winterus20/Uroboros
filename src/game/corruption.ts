@@ -64,8 +64,8 @@ export interface CorruptionMeta {
 export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   0: {
     label: 'Steril Kumarhane',
-    crtIntensity: 0.1,
-    scanlineAlpha: 0.1,
+    crtIntensity: 0.05,
+    scanlineAlpha: 0.05,
     vignetteAlpha: 0.3,
     glowAlpha: 0.015,
     substrateOpacity: 0,
@@ -74,8 +74,8 @@ export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   },
   1: {
     label: 'Planck Aşınması',
-    crtIntensity: 0.35,
-    scanlineAlpha: 0.35,
+    crtIntensity: 0.09,
+    scanlineAlpha: 0.09,
     vignetteAlpha: 0.38,
     glowAlpha: 0.02,
     substrateOpacity: 0.06,
@@ -84,8 +84,8 @@ export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   },
   2: {
     label: 'Kozmik Yutuş',
-    crtIntensity: 0.45,
-    scanlineAlpha: 0.45,
+    crtIntensity: 0.13,
+    scanlineAlpha: 0.13,
     vignetteAlpha: 0.44,
     glowAlpha: 0.025,
     substrateOpacity: 0.25,
@@ -94,8 +94,8 @@ export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   },
   3: {
     label: 'Çöküş Sonrası',
-    crtIntensity: 0.55,
-    scanlineAlpha: 0.55,
+    crtIntensity: 0.17,
+    scanlineAlpha: 0.17,
     vignetteAlpha: 0.5,
     glowAlpha: 0.03,
     substrateOpacity: 0.32,
@@ -104,8 +104,8 @@ export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   },
   4: {
     label: 'Gece Nöbeti Substratı',
-    crtIntensity: 0.65,
-    scanlineAlpha: 0.65,
+    crtIntensity: 0.21,
+    scanlineAlpha: 0.21,
     vignetteAlpha: 0.56,
     glowAlpha: 0.035,
     substrateOpacity: 0.4,
@@ -114,8 +114,8 @@ export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   },
   5: {
     label: 'Kadim Oburluk',
-    crtIntensity: 0.75,
-    scanlineAlpha: 0.75,
+    crtIntensity: 0.26,
+    scanlineAlpha: 0.26,
     vignetteAlpha: 0.62,
     glowAlpha: 0.04,
     substrateOpacity: 0.55,

@@ -364,7 +364,7 @@ function handleTouchEnd(e: TouchEvent) {
           @click="handleSlackerClick($event, slacker.id)"
           @pointerdown="punchTap"
           :aria-label="`${slacker.name} parazitini etkisizleştir`"
-          class="btn-tactile px-3 py-1.5 rounded-lg border border-rose-800/40 bg-rose-950/20 hover:border-rose-500/60 cursor-pointer flex items-center gap-2 text-xs font-mono text-slate-200"
+          class="wrinkler-chip btn-tactile px-3 py-1.5 rounded-lg border border-rose-800/40 bg-rose-950/20 hover:border-rose-500/60 cursor-pointer flex items-center gap-2 text-xs font-mono text-slate-200"
           v-tip="'Tıklayarak yok et'"
         >
           <EyeOff class="w-3 h-3 text-rose-400" />
@@ -384,6 +384,7 @@ function handleTouchEnd(e: TouchEvent) {
         <div
           v-if="dim.tier === 5"
           class="relative my-2.5 py-2 px-3 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/50 flex items-center justify-between text-[11px] overflow-hidden shadow-lg shadow-cyan-950/30 select-none"
+          :class="{ 'planck-collage': store.corruptionLevel >= 1 }"
         >
           <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
           <div class="flex items-center gap-2 text-cyan-300 font-mono font-semibold">

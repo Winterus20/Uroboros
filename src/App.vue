@@ -11,6 +11,7 @@ import HeartBurstLayer from "./components/HeartBurstLayer.vue";
 import CommentTicker from "./components/CommentTicker.vue";
 import FloatingThumbBar from "./components/FloatingThumbBar.vue";
 import ScreenOverlay from "./components/ScreenOverlay.vue";
+import MotifBand from "./components/MotifBand.vue";
 import CrtOverlay from "./components/CrtOverlay.vue";
 import Header from "./components/Header.vue";
 import DimensionsTab from "./components/DimensionsTab.vue";
@@ -181,6 +182,10 @@ onUnmounted(() => {
 
     <!-- Doomscroll Gece Ekran Dokuları (Parmak İzi & Kriz Çatlak Camı) -->
     <ScreenOverlay />
+
+    <!-- Faz C "Aç Kumarhane": Boost anı yan motif bandı (L3, z=45 ailesi).
+         #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->
+    <MotifBand />
 
     <!-- Faz A "Aç Kumarhane": Statik CRT tüp dokusu (scanline + vinyet + fosfor).
          #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->

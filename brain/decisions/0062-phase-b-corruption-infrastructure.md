@@ -37,7 +37,8 @@ K5 gate'i yok → `Math.min(level, 4)` tavanı (Faz 3'te kaldırılacak).
 
 ### 2.2 Şiddet eğrisi (O3 kapandı)
 `CORRUPTION_META` + `[data-corruption]` CSS'i birebir aynı değerleri taşır
-(tek taraflı değişim yasak): K0 scanline %10 → K1 %35 → K2 %45; substrat K2 %25,
+(tek taraflı değişim yasak): K0 scanline %5 → K1 %9 → K2 %13 (2026-10-16 kullanıcı
+geri bildirimiyle yumuşatıldı; önce %10/%35/%45 idi); substrat K2 %25,
 K4 %40; motif K4'te %85 (sürekli akışın habercisi); glitch K3'te bölgesel (0.30).
 
 ### 2.3 Mühür ve kapsam disiplini

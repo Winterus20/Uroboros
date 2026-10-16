@@ -72,7 +72,7 @@
   --ds-vignette-warm: rgb(var(--feast-rgb) / 0.05);
 
   /* --- CRT tüp dokusu (Faz A baseline = K0; Faz B [data-corruption] yükseltir) --- */
-  --crt-scanline-alpha: 0.10;
+  --crt-scanline-alpha: 0.05;
   --crt-scanline-period: 4px;
   --crt-vignette-alpha: 0.30;
   --crt-glow-alpha: 0.015;
@@ -466,6 +466,7 @@
 }
 
 .layer-crt { z-index: 40; }
+.layer-motif { z-index: 45; }
 .layer-anomaly { z-index: 50; }
 .layer-juice { z-index: 60; }
 .layer-toast { z-index: 70; }
@@ -543,8 +544,8 @@
      görsel katmanları Faz C'de gelir.
    ========================================================================== */
 [data-corruption="K0"] {
-  --crt-intensity: 0.10;
-  --crt-scanline-alpha: 0.10;
+  --crt-intensity: 0.05;
+  --crt-scanline-alpha: 0.05;
   --crt-vignette-alpha: 0.30;
   --crt-glow-alpha: 0.015;
   --substrate-opacity: 0;
@@ -552,8 +553,8 @@
   --glitch-intensity: 0;
 }
 [data-corruption="K1"] {
-  --crt-intensity: 0.35;
-  --crt-scanline-alpha: 0.35;
+  --crt-intensity: 0.09;
+  --crt-scanline-alpha: 0.09;
   --crt-vignette-alpha: 0.38;
   --crt-glow-alpha: 0.02;
   --substrate-opacity: 0.06;
@@ -561,8 +562,8 @@
   --glitch-intensity: 0.05;
 }
 [data-corruption="K2"] {
-  --crt-intensity: 0.45;
-  --crt-scanline-alpha: 0.45;
+  --crt-intensity: 0.13;
+  --crt-scanline-alpha: 0.13;
   --crt-vignette-alpha: 0.44;
   --crt-glow-alpha: 0.025;
   --substrate-opacity: 0.25;
@@ -570,8 +571,8 @@
   --glitch-intensity: 0.12;
 }
 [data-corruption="K3"] {
-  --crt-intensity: 0.55;
-  --crt-scanline-alpha: 0.55;
+  --crt-intensity: 0.17;
+  --crt-scanline-alpha: 0.17;
   --crt-vignette-alpha: 0.50;
   --crt-glow-alpha: 0.03;
   --substrate-opacity: 0.32;
@@ -579,8 +580,8 @@
   --glitch-intensity: 0.30;
 }
 [data-corruption="K4"] {
-  --crt-intensity: 0.65;
-  --crt-scanline-alpha: 0.65;
+  --crt-intensity: 0.21;
+  --crt-scanline-alpha: 0.21;
   --crt-vignette-alpha: 0.56;
   --crt-glow-alpha: 0.035;
   --substrate-opacity: 0.40;
@@ -588,13 +589,177 @@
   --glitch-intensity: 0.45;
 }
 [data-corruption="K5"] {
-  --crt-intensity: 0.75;
-  --crt-scanline-alpha: 0.75;
+  --crt-intensity: 0.26;
+  --crt-scanline-alpha: 0.26;
   --crt-vignette-alpha: 0.62;
   --crt-glow-alpha: 0.04;
   --substrate-opacity: 0.55;
   --motif-band-opacity: 1;
   --glitch-intensity: 0.60;
+}
+
+/* ==========================================================================
+   FAZ C — GIC KİMLİK KATMANI (kolaj substrat L2 + motif bandı L3 + kaplamalar)
+   Sözleşme: visual-language.md §1/§5 + CORRUPTION_META (token tek kaynak).
+   - Kapsam: YALNIZ ambient/dekoratif seçiciler. Sayı/etiket/ramp/tooltip YOK.
+   - Renk disiplini: rezerve durum hue'ları (rose/cyan/amber/purple) kullanılmaz;
+     tonlar feast + sıcak nötrlerdir (motif-tone-*).
+   - Kapılar: .motion-off + .battery-saver → gizle; .reduce-anim + OS
+     reduced-motion → statik; forced-colors → tamamen susar.
+   ========================================================================== */
+
+/* --- L3: boost motif bandı (yanlardan süzülen glif şeridi) --- */
+.motif-band {
+  opacity: max(var(--motif-band-opacity), 0.45);
+}
+.motif-band-dense {
+  opacity: max(var(--motif-band-opacity), 0.8);
+}
+.motif-side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 46px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+.motif-side-left { left: 2px; }
+.motif-side-right { right: 2px; }
+@media (max-width: 767px) {
+  .motif-side { width: 28px; }
+  .motif-side-left { left: 0; }
+  .motif-side-right { right: 0; }
+}
+.motif-track {
+  display: flex;
+  flex-direction: column;
+  animation: motif-drift 38s linear infinite;
+  will-change: transform;
+}
+.motif-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+.motif-glyph {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+.motif-glyph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@media (max-width: 767px) {
+  .motif-glyph { width: 17px; height: 17px; }
+  .motif-half { gap: 14px; padding-bottom: 14px; }
+}
+@keyframes motif-drift {
+  to { transform: translateY(-50%); }
+}
+.motif-tone-feast { color: rgb(var(--feast-rgb) / 0.8); }
+.motif-tone-bone { color: rgba(255, 240, 230, 0.55); }
+.motif-tone-ember { color: rgba(196, 15, 46, 0.85); }
+
+/* Bant kapıları */
+.motion-off .motif-band,
+.battery-saver .motif-band {
+  display: none !important;
+}
+.reduce-anim .motif-track {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .motif-track { animation: none !important; }
+  .motif-band { display: none !important; }
+}
+@media (forced-colors: active) {
+  .motif-band { display: none !important; }
+}
+
+/* --- L2: kolaj substrat (ScreenOverlay içi, K-seviyesine göre TS ile açılır) --- */
+.collage-checker {
+  height: 12px;
+  background: repeating-conic-gradient(rgba(255, 240, 230, 0.22) 0% 25%, transparent 0% 50%) 0 0 / 12px 12px;
+  opacity: var(--substrate-opacity);
+}
+.collage-floor {
+  height: 26px;
+  background:
+    repeating-conic-gradient(rgba(255, 240, 230, 0.13) 0% 25%, transparent 0% 50%) 0 0 / 18px 18px,
+    linear-gradient(to top, rgb(var(--feast-rgb) / 0.06), transparent);
+  opacity: var(--substrate-opacity);
+}
+.collage-torn {
+  position: absolute;
+  width: 120px;
+  height: 90px;
+  background: linear-gradient(135deg, rgba(255, 240, 230, 0.07), rgba(255, 240, 230, 0.02));
+  opacity: var(--substrate-opacity);
+}
+.collage-torn-tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 62% 22%, 78% 48%, 40% 66%, 55% 100%, 0 100%); }
+.collage-torn-tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 45% 100%, 60% 66%, 22% 48%, 38% 22%); }
+.collage-torn-bl { bottom: 0; left: 0; clip-path: polygon(0 0, 55% 0, 40% 34%, 78% 52%, 62% 78%, 100% 100%, 0 100%); }
+.collage-torn-br { bottom: 0; right: 0; clip-path: polygon(45% 0, 100% 0, 100% 100%, 0 100%, 38% 78%, 22% 52%, 60% 34%); }
+.collage-tape {
+  position: absolute;
+  width: 64px;
+  height: 18px;
+  background: linear-gradient(rgba(255, 244, 230, 0.16), rgba(255, 244, 230, 0.09));
+  border-left: 1px dashed rgba(255, 240, 230, 0.25);
+  border-right: 1px dashed rgba(255, 240, 230, 0.25);
+  opacity: var(--substrate-opacity);
+}
+@media (forced-colors: active) {
+  .collage-checker, .collage-floor, .collage-torn, .collage-tape { display: none !important; }
+}
+
+/* --- C4: Wrinkler creepy-cute kaplaması (yalnız dekoratif katman) --- */
+.wrinkler-chip {
+  position: relative;
+  background-image: radial-gradient(circle at 50% 0%, rgb(var(--feast-rgb) / 0.22), transparent 62%);
+  border-top-style: dotted !important;
+}
+.wrinkler-chip::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 2px;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, rgba(255, 240, 230, 0.35) 0 3px, transparent 3px 6px);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* --- C5: Planck bariyeri kolaj bantı (K1+ TS sınıfı + tape köşeleri) --- */
+.planck-collage { position: relative; }
+.planck-collage::before,
+.planck-collage::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 52px;
+  height: 16px;
+  background: linear-gradient(rgba(255, 244, 230, 0.2), rgba(255, 244, 230, 0.1));
+  border-left: 1px dashed rgba(255, 240, 230, 0.3);
+  border-right: 1px dashed rgba(255, 240, 230, 0.3);
+  pointer-events: none;
+}
+.planck-collage::before { left: 14px; transform: rotate(-8deg); }
+.planck-collage::after { right: 14px; transform: rotate(8deg); }
+
+/* --- C5: kriz kolaj çerçevesi (rose risk anlamı korunur — çerçeve dekoratiftir) --- */
+.crisis-collage-frame {
+  position: relative;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+  box-shadow: 0 0 0 1px rgb(var(--feast-rgb) / 0.12), 0 0 24px rgb(var(--feast-rgb) / 0.08);
 }
 
 /* QoL: "Animasyonları Azalt" ayarı — nabız/parıltı/geçiş animasyonlarını söndürür

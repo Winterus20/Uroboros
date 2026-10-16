@@ -38,14 +38,17 @@
       `[data-corruption]` şiddet eğrisi (meta ile birebir).
       Kanıt: test 294/294 · build 0 hata · `harness:smoke` log10=90.72/8 shift (baseline sabit).
       Kilitli kararlar: O1 (K4 gate'i) + O3 (CRT eğrisi K0 %10/K1 %35/K2 %45) kapandı.
-- [ ] **Faz C — GIC kimlik kütüphanesi** (motif slotları + bant + Wrinkler + kolaj vinyetleri)
-- [ ] **Faz C — GIC kimlik kütüphanesi** (motif slotları + bant + Wrinkler + kolaj vinyetleri)
+- [x] **Faz C — GIC kimlik kütüphanesi** — ✅ **TAMAMLANDI (2026-10-16)**. ADR:
+      [`0063-phase-c-motif-substrate-identity.md`](../decisions/0063-phase-c-motif-substrate-identity.md) ·
+      Derin spec: [`phase-c-motif-substrate-deep-spec-2026-10.md`](../research/phase-c-motif-substrate-deep-spec-2026-10.md).
+      Çıktı: 16 SVG + `motifs.ts`/`motifs.test.ts` (7 test) + `MotifBand.vue` (z=45) +
+      substrat (ScreenOverlay) + Wrinkler/Planck/Kriz kaplamaları + kolaj CSS bloğu.
+      Kanıt: test 301/301 · build 0 hata · `harness:smoke` log10=90.7/8 shift (baseline sabit).
 - [ ] **Faz D — VS şöleni** (tek canvas partikül + olay sahneleri)
 - [ ] **Faz E — Retrofit & QA** (retrofit + WCAG AA + kapanış)
 
-**Sıradaki adım:** **Faz B — Bozulma altyapısı.** Kullanıcı "başla" dediğinde Faz B derin
-spesifikasyonu yazılır (K0–K5 türetimi + `data-corruption` mührü + CRT şiddet eğrisi).
-Faz A'nın `--crt-*` tokenları bu faz için hazır bekliyor.
+**Sıradaki adım:** **Faz D — VS şöleni.** Tek canvas partikül (JuiceLayer genişletmesi) +
+olay sahneleri (Süpernova/Kütle Patlaması/Hawking/rezonans/ilk Big Crunch).
 
 **Beklemede (kullanıcı onayı gerektiren adaylar):**
 - F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.
