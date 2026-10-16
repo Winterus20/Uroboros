@@ -88,9 +88,11 @@ export const neuralGetters = {
         })
       }
       if (this.neuralEffects.cpsSyncLevel > 0) {
+        const syncCap = CPS_SYNC_CAP + tierClickSyncCapBonus(state.dimensions)
+        const syncRate = Math.min(syncCap, CPS_SYNC_BASE + CPS_SYNC_PER_LEVEL * this.neuralEffects.cpsSyncLevel)
         rows.push({
           name: 'Nöral CPS Senkronu',
-          value: `+%${(this.neuralEffects.cpsSyncLevel * 2).toFixed(0)} CPS`,
+          value: `+%${Math.round(syncRate * 100)} CPS`,
           desc: 'Saniyelik akışın bir kısmını doğrudan her tıklamaya aktarır'
         })
       }
@@ -203,28 +205,12 @@ export const neuralGetters = {
     swipeBreakdown(this: StoreApi, state: GameState): StrikeStage[] {
       const stages: StrikeStage[] = []
 
-      // 1. Taban Akış: 1 + istasyon katkısı + %CPS senkronu + milestone + kafein
+      // 1. Taban İstasyon Tıklaması (Satın alımlardan gelen taban vuruş)
       let totalBought = 0
       state.dimensions.forEach((d) => {
         totalBought += d.bought
       })
-
-      const syncCap = CPS_SYNC_CAP + tierClickSyncCapBonus(state.dimensions)
-      const syncRate = Math.min(syncCap, CPS_SYNC_BASE + CPS_SYNC_PER_LEVEL * this.neuralEffects.cpsSyncLevel)
-      let rawBase = D_1.plus(new Decimal(totalBought).times(0.25))
-      const cpsPart = this.matterPerSecond.times(syncRate)
-      rawBase = rawBase.plus(cpsPart)
-
-      state.dimensions.forEach((d, idx) => {
-        if (d.bought >= 200 && d.amount.gt(0)) {
-          const dimPerSec = d.amount.times(this.getDimensionMultiplier(idx + 1)).times(this.tickspeedMultiplier).times(0.01)
-          rawBase = rawBase.plus(dimPerSec)
-        }
-      })
-      const caffeineLvl = state.singularityUpgrades?.caffeine_drip || 0
-      if (caffeineLvl > 0) {
-        rawBase = rawBase.plus(this.matterPerSecond.times(caffeineLvl * 0.03 * this.achievementCaffeineBoost))
-      }
+      const rawBase = D_1.plus(new Decimal(totalBought).times(0.25))
 
       stages.push({
         id: 'base',
@@ -236,7 +222,7 @@ export const neuralGetters = {
         icon: '⚡'
       })
 
-      // 2. Format Sinerjisi (Akış Sıçraması x Lab x Başarımlar x Meydan Okuma Ödülleri)
+      // 2. Format Sinerjisi (Akış Sıçraması × Lab × Başarımlar × Meydan Okuma Ödülleri)
       const synergyMult = this.shiftPowerMultiplier
         .times(this.labClickMultiplier)
         .times(this.achievementMultiplier)
@@ -255,13 +241,21 @@ export const neuralGetters = {
         })
       }
 
-      // 3. Gece Duruşu & Seri Kombo (Trimps Stance & Cookie Clicker Combo)
+      // 3. Gece Duruşu & Seri Kombo & Nöral/Başarım Tıklaması (Trimps Stance, Combo, Neural Tree, Ach Click Mult)
       const stanceMult = this.stanceMultipliers.click
       const comboMult = this.comboMultiplier
-      const combinedStanceCombo = stanceMult * comboMult
+      const neuralMult = this.neuralEffects.clickMult
+      const achClickMult = this.achievementClickMult
+      const combinedStanceCombo = stanceMult * comboMult * neuralMult * achClickMult
 
       if (combinedStanceCombo > 1.05) {
-        const stanceLabel = stanceMult > 1.05 ? 'ÇILGIN KAYDIRMA' : 'HIZLI SERİ'
+        const stanceLabel = stanceMult > 1.05
+          ? 'ÇILGIN KAYDIRMA'
+          : comboMult > 1.05
+            ? 'HIZLI SERİ'
+            : neuralMult > 1.05
+              ? 'NÖRAL SERİ'
+              : 'BAŞARIM SERİSİ'
         stages.push({
           id: 'stance_combo',
           label: stanceLabel,
@@ -274,13 +268,22 @@ export const neuralGetters = {
         })
       }
 
-      // 4. Gece Histerisi / Anomali CRIT (Başparmak Histerisi 777x veya Espresso)
-      const buffMult = this.clickBuffMultiplier
+      // 4. Gece Histerisi / Anomali CRIT / Planck Dalgalanması (10x)
+      let buffMult = this.clickBuffMultiplier
+      const planckSurge = state.activeBuffs.find((b) => b.type === 'planck_surge')
+      if (planckSurge) {
+        buffMult = buffMult.times(10)
+      }
       if (buffMult.gt(1.05)) {
         const isSuperCrit = buffMult.gte(500)
+        const critLabel = isSuperCrit
+          ? '777× HİSTERİ CRIT!'
+          : planckSurge && this.clickBuffMultiplier.lte(1.05)
+            ? 'PLANCK PATLAMASI'
+            : 'KRİZ ANOMALİSİ'
         stages.push({
           id: 'crit',
-          label: isSuperCrit ? '777× HİSTERİ CRIT!' : 'KRİZ ANOMALİSİ',
+          label: critLabel,
           text: `×${format(buffMult, 1, state.settings.notation)}`,
           color: '#fbbf24',
           bgClass: 'bg-amber-500/25 text-amber-200 border-amber-400/60 shadow-[0_0_15px_rgba(251,191,36,0.4)]',
@@ -290,7 +293,7 @@ export const neuralGetters = {
         })
       }
 
-      // 5. Final Toplam Skor (Nihai Slam Down)
+      // 5. Final Toplam Skor (Nihai Slam Down — manualClickPower ile birebir özdeş)
       const finalGain = this.manualClickPower
       stages.push({
         id: 'final',

@@ -351,7 +351,7 @@ function lerp(start: number, end: number, factor: number): number {
 }
 
 function render(now: number) {
-  if (!gl || !program || !canvasRef.value || !isEnabled.value) {
+  if (!gl || !program || !canvasRef.value || !isEnabled.value || document.hidden) {
     animId = null
     return
   }
@@ -392,7 +392,7 @@ function render(now: number) {
 
 function startLoop() {
   if (animId !== null) return
-  if (!isEnabled.value) return
+  if (!isEnabled.value || document.hidden) return
   lastTime = performance.now()
   animId = requestAnimationFrame(render)
 }
@@ -406,7 +406,7 @@ function stopLoop() {
 }
 
 function handleVisibility() {
-  if (document.visibilityState === 'hidden') {
+  if (document.hidden) {
     stopLoop()
   } else if (isEnabled.value) {
     startLoop()
@@ -420,7 +420,7 @@ watch(
       // DOM güncellemesini bekle: v-if ile geri gelen canvas ancak flush sonrası hazır olur
       // (aksi halde initWebGL canvasRef null'da düşer ve döngü canlı başlamaz).
       nextTick(() => {
-        if (!isEnabled.value) return
+        if (!isEnabled.value || document.hidden) return
         // Canvas v-if ile yeniden doğduysa eski bağlam bayattır: yeni canvas'a göre kur.
         if (!gl || glCanvas !== canvasRef.value) initWebGL()
         resizeCanvas()
@@ -450,7 +450,7 @@ onMounted(() => {
     }
   }
 
-  if (isEnabled.value) {
+  if (isEnabled.value && !document.hidden) {
     const ok = initWebGL()
     if (ok) startLoop()
   }

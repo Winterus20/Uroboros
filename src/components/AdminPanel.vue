@@ -299,6 +299,11 @@ function maxNeuralTree() {
 
 function resetNeuralTree() {
   store.neuralNodesBought = {}
+  const nextUpgrades = { ...store.singularityUpgrades }
+  NEURAL_LEGACY_UPGRADE_IDS.forEach((id) => {
+    delete nextUpgrades[id]
+  })
+  store.singularityUpgrades = nextUpgrades
   flash('Nöral Ağaç sıfırlandı (düz dükkan korunur)')
 }
 
@@ -356,16 +361,20 @@ function forceSingularity() {
 
 function hardReset() {
   if (!window.confirm('Tüm kayıt silinsin mi? (Hard Reset)')) return
+  store.$reset()
   SaveSystem.hardReset()
-  // ADR-0033: bulut kaydı kalırsa sıfırlamadan sonra eski ilerleme geri gelir.
+  SaveSystem.suppressSaves()
   CloudSaveService.forgetAllLocalRevisions()
-  const uid = authStore.user?.uid
-  if (uid) CloudSaveService.forgetMockCloud(uid)
-  if (authStore.isAuthenticated) {
-    void authStore.saveToCloud(true).then(() => window.location.reload())
+  if (!authStore.isAuthenticated) {
+    window.location.reload()
     return
   }
-  window.location.reload()
+  const uid = authStore.user?.uid
+  if (uid) CloudSaveService.forgetMockCloud(uid)
+  void authStore.saveToCloud(true).then(
+    () => window.location.reload(),
+    () => window.location.reload()
+  )
 }
 </script>
 

@@ -172,7 +172,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
     <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between">
       <div>
         <div class="text-xs font-mono font-semibold text-slate-200">Kritik Onay Pencereleri</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">Sabah 06:00 Çöküşü, Toplu Uyku ve Kayıt Yüklemede onay sor</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">Kozmik Çöküş, Boyutsal Hasat ve Kayıt Yüklemede onay sor</div>
       </div>
       <button
         @click="toggleConfirmDialogs"

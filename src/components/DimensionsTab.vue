@@ -519,7 +519,7 @@ function handleTouchEnd(e: TouchEvent) {
         v-tilt="{ max: 6, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface glass-panel-card p-3 rounded-xl flex items-center justify-between gap-3 border border-rose-500/20 bg-rose-950/10 transition-all"
         :class="store.canSacrifice && (store.settings.holoCardsEnabled ?? true) ? 'edition-negative' : ''"
-        v-tip="'D1-D7 katmanları sıfırlanır; biriken D1 miktarına göre D8 Samanyolu & Karadelik katmanına kalıcı çarpan kazandırır!'"
+        v-tip="'D1-D7 katmanların korunur; biriken D1 miktarına göre D8 Samanyolu & Karadelik katmanına kalıcı çarpan kazandırır!'"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
@@ -557,9 +557,9 @@ function handleTouchEnd(e: TouchEvent) {
       <ConfirmModal
         v-if="showSacrificeConfirm"
         title="Tekillik Besleme"
-        message="D1-D7 katmanların sıfırlanır; biriken D1 miktarına göre D8 Samanyolu & Karadelik katmanına kalıcı çarpan eklenir. Devam edilsin mi?"
+        message="D1-D7 katmanların korunur; biriken D1 miktarına göre D8 Samanyolu & Karadelik katmanına kalıcı çarpan eklenir. Devam edilsin mi?"
         confirm-label="Besle"
-        :danger="true"
+        :danger="false"
         @confirm="showSacrificeConfirm = false; doSacrifice()"
         @cancel="showSacrificeConfirm = false"
       />

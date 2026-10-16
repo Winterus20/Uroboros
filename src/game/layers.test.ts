@@ -118,6 +118,20 @@ describe('ADR-0052 applyResetScope', () => {
     expect(host.neuralNodesBought).toEqual({ plain_b: 1 })
     expect(host.singularityPoints.eq(19)).toBe(true)
   })
+
+  it('singularity: ach_26 %5 indirim ile alınan seçim düğümlerinde tam harcanan SP iade edilir (exploit önleme)', () => {
+    // 1) spCostDiscount parametresi üzerinden (0.95 indirim)
+    // choice_a (cost: 7, 2 lvl): lvl 0 -> floor(7 * 0.95) = 6, lvl 1 -> floor(7 * 0.95) = 6 => toplam 12 SP
+    const host1 = makeHost()
+    applyResetScope(host1, SCALE_LAYERS.singularity.scope, FAKE_TREE, 0.95)
+    expect(host1.singularityPoints.eq(5 + 12)).toBe(true)
+
+    // 2) host.achievementSpDiscount üzerinden
+    const host2: ScaleJumpHost & { achievementSpDiscount?: number } = makeHost()
+    host2.achievementSpDiscount = 0.95
+    applyResetScope(host2, SCALE_LAYERS.singularity.scope, FAKE_TREE)
+    expect(host2.singularityPoints.eq(5 + 12)).toBe(true)
+  })
 })
 
 describe('ADR-0052 recordJump', () => {

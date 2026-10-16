@@ -161,11 +161,23 @@ export const SCALE_LAYERS: Record<ScaleLayerId, ScaleLayerSpec> = {
 
 export const SCALE_LAYER_ORDER: ScaleLayerId[] = ['shift', 'galaxy', 'singularity']
 
+/**
+ * Düğümün belirtilen seviyedeki satın alma maliyetini hesaplar (indirim dahil).
+ */
+export function getNeuralNodeCost(
+  node: NeuralNode,
+  level: number,
+  discount: number = 1
+): number {
+  return Math.max(1, Math.floor(node.cost * Math.pow(node.costMult ?? 1, level) * discount))
+}
+
 /** Kapsamı porta uygula (saf durum mutasyonu; orkestrasyon store'dadır). */
 export function applyResetScope(
-  host: ScaleJumpHost,
+  host: ScaleJumpHost & { achievementSpDiscount?: number },
   scope: ResetScope,
-  neuralTree: NeuralNode[]
+  neuralTree: NeuralNode[],
+  spCostDiscount?: number
 ): void {
   for (const counter of scope.zeroCounters) {
     host[counter] = 0
@@ -205,12 +217,17 @@ export function applyResetScope(
     const choiceIds = new Set(
       neuralTree.filter((n) => n.choiceGroup).map((n) => n.id)
     )
+    const discount = spCostDiscount ?? (host as { achievementSpDiscount?: number }).achievementSpDiscount ?? 1
     const remaining: Record<string, number> = {}
     let refunded = 0
     for (const [nodeId, lvl] of Object.entries(host.neuralNodesBought || {})) {
       if (choiceIds.has(nodeId) && lvl > 0) {
         const node = neuralTree.find((n) => n.id === nodeId)
-        if (node) refunded += node.cost * lvl
+        if (node) {
+          for (let i = 0; i < lvl; i++) {
+            refunded += getNeuralNodeCost(node, i, discount)
+          }
+        }
       } else {
         remaining[nodeId] = lvl
       }

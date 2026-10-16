@@ -313,6 +313,9 @@ export const dimensionGetters = {
       if (Math.abs(tierProd - 1) > 0.0001) {
         push('Format D2 Pasifi', tierProd, getTierIdentity(2)?.passive.desc ?? '')
       }
+      if (this.neuralEffects.productionMult > 1) {
+        push('Nöral Ağaç', this.neuralEffects.productionMult, 'Yetenek ağacı pasif üretim çarpanı')
+      }
       push('Önbellek Silme (D8)', state.sacrificeMultiplier.gt(1) ? state.sacrificeMultiplier : 1, 'Sacrifice çarpanı yalnızca D8 üretimine uygulanır')
       return rows
     },
@@ -437,12 +440,8 @@ export const dimensionGetters = {
         mult = mult.times(1 + matureCellsCount * boostPerCell)
       }
 
-      // Nöral Ağaç pasif dalı: kalıcı üretim çarpanı (tüm istasyonlar)
-      // Soft cap: 25× üstü logaritmik azalan getiriye döner.
-      const effNeuralProd = neuralProd <= 25
-        ? neuralProd
-        : 25 + Math.log2(Math.max(1, neuralProd / 25)) * 3
-      mult = mult.times(effNeuralProd)
+      // Nöral Ağaç pasif dalı: kalıcı üretim çarpanı (tüm istasyonlar, soft cap computeNeuralEffects içinde uygulanır)
+      mult = mult.times(neuralProd)
       // NOT: offlineSimBoost burada her boyuta çarparak 1800x katlanmaması için
       // doğrudan update() içindeki son dopamin adımında tekil olarak uygulanır.
 
@@ -536,7 +535,10 @@ export const dimensionGetters = {
       }
 
       if (eyeDropsLvl > 0) {
-        parts.push({ source: 'eye-drops', mult: Decimal.pow(2, eyeDropsLvl) })
+        const effEyeDropsLvl = eyeDropsLvl <= 3
+          ? eyeDropsLvl
+          : 3 + Math.log2(Math.max(1, eyeDropsLvl - 2))
+        parts.push({ source: 'eye-drops', mult: Decimal.pow(2, effEyeDropsLvl) })
       }
 
       if (tier === 8 && state.sacrificeMultiplier.gt(1)) {
@@ -544,7 +546,8 @@ export const dimensionGetters = {
       }
 
       if (partnerDim && partnerBought > 0) {
-        parts.push({ source: 'mirror', mult: new Decimal(1 + Math.sqrt(partnerBought) * 0.15) })
+        const partnerFactor = Math.min(4, 1 + Math.sqrt(partnerBought) * 0.15)
+        parts.push({ source: 'mirror', mult: new Decimal(partnerFactor) })
       }
 
       if (relicCount >= 4 && matureCellsCount > 0) {

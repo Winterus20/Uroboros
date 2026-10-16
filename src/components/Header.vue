@@ -333,17 +333,26 @@ function handleManualClick(event?: MouseEvent): void {
   window.dispatchEvent(new CustomEvent("doomscroll:counter-pop", { detail: { intensity: 0 } }));
 }
 
-// Klavye Kısayolu: Space ile Yukarı Kaydır
+// Klavye Kısayolu: Space ile Yukarı Kaydır / Manuel Tıklama
 function handleKeydown(e: KeyboardEvent): void {
+  if (store.settings.hotkeysEnabled === false) return;
   if (e.code === "Space") {
+    if (document.querySelector('.layer-modal, [role="dialog"]')) return;
     const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        target.tagName === "BUTTON" ||
+        target.tagName === "A" ||
+        target.getAttribute("role") === "button" ||
+        target.getAttribute("role") === "tab" ||
+        Boolean(target.closest('button, a, [role="button"], [role="tab"]')))
+    ) {
       return;
     }
     e.preventDefault();
-    if (target && target.tagName === "BUTTON") {
-      target.blur();
-    }
     handleManualClick();
   }
 }

@@ -1,7 +1,6 @@
 /** Oyuncu ilerlemesi ve kayit tipleri: istatistikler, basarimlar ve serilestirilmis durum. */
 import { Decimal } from "../core/math"
 import type { StanceType } from "./dimensions"
-import type { BuffType } from "./crisis"
 import type { LabSeedType, LabMode } from "./lab"
 import type { AutobuyerMode } from "./autobuyers"
 import type { GameSettings } from "./settings"
@@ -151,9 +150,12 @@ export interface SerializedPlayerState {
   galaxies: number
   singularityPoints: string
   currentStance: StanceType
-  activeBuffs: Array<{
-    type: BuffType
+  activeBuffs?: Array<{
+    type: string
     remaining: number
+    multiplier?: number
+    duration?: number
+    name?: string
   }>
   slackers: Array<{
     name: string
@@ -270,3 +272,5 @@ export interface SerializedPlayerState {
    *  (Önbellek Temizleme) bu kalıcı tepe noktadan okur. */
   lifetimePeakShifts?: number
 }
+
+export type SerializedGameState = SerializedPlayerState

@@ -22,10 +22,12 @@ import LabSeedCard from "./lab/LabSeedCard.vue";
 import LabRecipeList from "./lab/LabRecipeList.vue";
 import ViralGrid from "./lab/ViralGrid.vue";
 import TrendReactor from "./lab/TrendReactor.vue";
+import ConfirmModal from "./ConfirmModal.vue";
 
 const store = useGameStore();
 const selectedSeedType = ref<LabSeedType>("photon_resonator");
 const showCodexModal = ref(false);
+const showCollapseConfirm = ref(false);
 
 // Parçacık kademesi (Özellik Merdiveni): Foton başlangıçta, Nükleon/Gluon/Graviton sırayla açılır
 const SEED_UNLOCK_FEATURES: Partial<Record<LabSeedType, string>> = {
@@ -49,7 +51,8 @@ function isSeedDiscovered(seedType: LabSeedType): boolean {
 
 function handleCollapseReactor() {
   if (!store.canCollapseReactor) return;
-  if (typeof window !== "undefined" && !window.confirm("Kozmik Relik Kurbanı: Tüm reaktör matrisi ve sentezlenen formüller tekilliğe feda edilecek, kalıcı Kozmik Relik Seviyesi kazanacaksınız. Onaylıyor musunuz?")) {
+  if (store.settings.confirmDialogs) {
+    showCollapseConfirm.value = true;
     return;
   }
   store.collapseReactor();
@@ -435,5 +438,16 @@ function handleCollapseReactor() {
         </div>
       </div>
     </Teleport>
+
+    <!-- Reaktör Kurbanı Onay Modalı -->
+    <ConfirmModal
+      v-if="showCollapseConfirm"
+      title="Kozmik Relik Kurbanı"
+      message="Tüm reaktör matrisi ve sentezlenen formüller tekilliğe feda edilecek, kalıcı Kozmik Relik Seviyesi kazanacaksınız. Onaylıyor musunuz?"
+      confirm-label="Kurban Et"
+      :danger="true"
+      @confirm="showCollapseConfirm = false; store.collapseReactor()"
+      @cancel="showCollapseConfirm = false"
+    />
   </div>
 </template>

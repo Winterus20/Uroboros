@@ -14,8 +14,16 @@ import { NEURAL_LEGACY_UPGRADE_IDS, NEURAL_TREE, SINGULARITY_UPGRADES } from '..
 import { FEATURE_UNLOCKS, lifetimeUnlockDopamine, raisedLifetimePeak } from '../../game/unlocks'
 import { ACHIEVEMENT_IDS, FEATURE_IDS, resetAchievementCache } from './cache'
 import { clampSavedNumber, isValidBuffType, isValidLabSeedType, isValidStanceType, parseSavedDecimal, sanitizeCustomAudioUrl } from './guards'
-import type { AutobuyerMode, LabSeedType, OfflineReport, SerializedPlayerState } from '../../models/types'
+import type { AutobuyerMode, BuffType, LabSeedType, OfflineReport, SerializedPlayerState } from '../../models/types'
 import type { StoreApi } from './store-api'
+
+interface StoreWithReset extends StoreApi {
+  $reset: () => void
+}
+
+function safeDecimal(val: string | number | undefined, fallback: Decimal): Decimal {
+  return parseSavedDecimal(val, fallback)
+}
 
 export const saveActions = {
     // Çevrimdışı İlerleme Simülatörü — 24 saat ile sınırlı, kademeli adımlı yakalama.
@@ -99,20 +107,30 @@ export const saveActions = {
     // QoL Çoklu Kayıt Slotları (v22)
     switchSaveSlot(this: StoreApi, targetSlot: number): void {
       if (![1, 2, 3].includes(targetSlot)) return
+      const currentSlot = this.settings.activeSlot
       // 1. Önce aktif slotu diske yaz
-      SaveSystem.save(this.serialize(), this.settings.activeSlot)
-      // 2. Yeni aktif slotu ayarla
-      this.settings.activeSlot = targetSlot
+      SaveSystem.save(this.serialize(), currentSlot)
       SaveSystem.setActiveSlot(targetSlot)
-      // 3. Yeni slotu yükle
+      // 2. Hedef slotu yükle
       const loaded = SaveSystem.loadDetailed(targetSlot)
       if (loaded.state) {
+        (this as unknown as StoreWithReset).$reset()
+        this.settings.activeSlot = targetSlot
         this.deserialize(loaded.state)
         this.settings.activeSlot = targetSlot
+        SaveSystem.save(this.serialize(), targetSlot)
       } else {
         // Hedef slotta henüz kayıt yoksa yeni oyun durumuna resetle ve kaydet
+        (this as unknown as StoreWithReset).$reset()
+        this.settings.activeSlot = targetSlot
         SaveSystem.save(this.serialize(), targetSlot)
-        window.location.reload()
+        if (typeof window !== 'undefined' && typeof window.location?.reload === 'function') {
+          try {
+            window.location.reload()
+          } catch {
+            // Test ortamında jsdom navigasyon kısıtını yut
+          }
+        }
       }
     },
 
@@ -177,7 +195,10 @@ export const saveActions = {
         currentStance: this.currentStance,
         activeBuffs: this.activeBuffs.map((b) => ({
           type: b.type,
-          remaining: b.remaining
+          remaining: b.remaining,
+          multiplier: b.multiplier,
+          duration: b.duration,
+          name: b.name
         })),
         slackers: this.slackers.map((s) => ({
           name: s.name,
@@ -383,6 +404,9 @@ export const saveActions = {
         if (typeof data.singularities === 'number') {
           this.singularities = Math.floor(clampSavedNumber(data.singularities, 0, 0, 1e6))
         }
+        this.singularityPoints = data.singularityPoints
+          ? safeDecimal(data.singularityPoints, new Decimal(0))
+          : new Decimal(0)
         if (typeof data.nightWatchUnlocked === 'boolean') {
           this.nightWatchUnlocked = data.nightWatchUnlocked
         }
@@ -402,13 +426,28 @@ export const saveActions = {
             .filter((b) => isValidBuffType(b.type) && b.type !== 'void' && b.type !== 'sponsor')
             .map((b) => {
               const remaining = clampSavedNumber(b.remaining, 0, 0, 86400)
-              // Süre/çarpan karşılıkları runtime ile birebir: fyp 60sn×7,
-              // espresso 30sn×3, planck_surge 20sn×4, resonance_boost 30sn×5,
-              // heart_frenzy 15sn×300.
-              return {
-                id: `buff-${b.type}-${Date.now()}`,
-                type: b.type,
-                name: b.type === 'fyp'
+              const defaultDuration =
+                b.type === 'fyp'
+                  ? 60
+                  : b.type === 'espresso'
+                    ? 30
+                    : b.type === 'planck_surge'
+                      ? 20
+                      : b.type === 'resonance_boost'
+                        ? 30
+                        : 15
+              const defaultMultiplier =
+                b.type === 'fyp'
+                  ? 7
+                  : b.type === 'espresso'
+                    ? 3
+                    : b.type === 'planck_surge'
+                      ? 4
+                      : b.type === 'resonance_boost'
+                        ? 5
+                        : 777
+              const defaultName =
+                b.type === 'fyp'
                   ? '🔥 Gece 3 Çılgınlığı (7× Dopamin)'
                   : b.type === 'espresso'
                     ? '☕ Çift Espresso (3× Frekans)'
@@ -416,10 +455,28 @@ export const saveActions = {
                       ? '💥 Planck Patlaması (4× Hz, 10× Yutma)'
                       : b.type === 'resonance_boost'
                         ? '🌌 Boyut Sıkışması (5× Boyutlar)'
-                        : '👆 Başparmak Histerisi (300× Kaydır)',
-                duration: b.type === 'fyp' ? 60 : b.type === 'espresso' ? 30 : b.type === 'planck_surge' ? 20 : b.type === 'resonance_boost' ? 30 : 15,
+                        : '🌌 Kütle Patlaması (777× Çekim)'
+
+              const duration =
+                typeof b.duration === 'number' && Number.isFinite(b.duration) && b.duration > 0
+                  ? b.duration
+                  : defaultDuration
+              const multiplier =
+                typeof b.multiplier === 'number' && Number.isFinite(b.multiplier) && b.multiplier > 0
+                  ? b.multiplier
+                  : defaultMultiplier
+              const name =
+                typeof b.name === 'string' && b.name.trim().length > 0
+                  ? b.name
+                  : defaultName
+
+              return {
+                id: `buff-${b.type}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                type: b.type as BuffType,
+                name,
+                duration,
                 remaining,
-                multiplier: b.type === 'fyp' ? 7 : b.type === 'espresso' ? 3 : b.type === 'planck_surge' ? 4 : b.type === 'resonance_boost' ? 5 : 100
+                multiplier
               }
             })
             .filter((b) => b.remaining > 0)
@@ -568,6 +625,7 @@ export const saveActions = {
 
         // ADR-0029: singularityUpgrades da beyaz listeye alındı — nöral ağaç
         // (aşağıdaki blok) zaten böyle yapıyordu; dükkân kaydı ham merge ediliyordu.
+        this.singularityUpgrades = {}
         if (data.singularityUpgrades && typeof data.singularityUpgrades === 'object') {
           for (const [upgId, rawLvl] of Object.entries(data.singularityUpgrades)) {
             const def = SINGULARITY_UPGRADES.find((u) => u.id === upgId)
@@ -864,6 +922,10 @@ export const saveActions = {
         if (diffSeconds > 3) {
           this.simulateOfflineProgress(diffSeconds)
         }
+
+        this.floatingAnomalies = []
+        this.activeCrisisDilemma = null
+        this.crisisBackfireDebuff = 0
       } catch (err) {
         console.error('Save yüklenirken hata:', err)
       }

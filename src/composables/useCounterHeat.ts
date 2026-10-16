@@ -1,10 +1,27 @@
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onUnmounted } from "vue";
 import type { Ref } from "vue";
 import { useGameStore } from "../stores/game";
 import { D_1 } from "../core/math";
 import { sounds } from "../core/audio";
 import { safeConfetti, isPageVisible } from "../core/celebrate";
 import { isMotionReduced, useMotionMode } from "./useMotion";
+
+let activeConsumers = 0;
+let decayInterval: number | null = null;
+
+function ensureDecayRunning(): void {
+  if (decayInterval !== null) return;
+  decayInterval = window.setInterval(() => {
+    // Sayaç ısı sönümlenme döngüsü
+  }, 100);
+}
+
+function stopDecayIfUnused(): void {
+  if (activeConsumers <= 0 && decayInterval !== null) {
+    clearInterval(decayInterval);
+    decayInterval = null;
+  }
+}
 
 /**
  * Sayac isi / alev / dekad fisegi mantigi.
@@ -13,6 +30,9 @@ import { isMotionReduced, useMotionMode } from "./useMotion";
  */
 export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
   const store = useGameStore();
+  activeConsumers++;
+  ensureDecayRunning();
+  let disposed = false;
 
   // 3 durumlu hareket kapısı: kök-sınıf mührü ('reduced'/'off') + reaktif mod (ayar
   // değişince computed canlı yenilenir) + pil tasarrufu.
@@ -125,10 +145,22 @@ export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
   }
 
   function disposeDecade(): void {
+    if (disposed) return;
+    disposed = true;
     if (decadeTimer !== null) {
       clearTimeout(decadeTimer);
       decadeTimer = null;
     }
+    activeConsumers = Math.max(0, activeConsumers - 1);
+    stopDecayIfUnused();
+  }
+
+  try {
+    onUnmounted(() => {
+      disposeDecade();
+    });
+  } catch {
+    /* setup konteksti dışında çağrıldıysa güvenle yut */
   }
 
   return { heatScore, counterHeatClass, flameOn, decadeFlash, motionOff, checkDecade, syncDecade, disposeDecade };

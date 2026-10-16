@@ -351,8 +351,11 @@ export function renderLofiChill(host: SynthContext, step: number, time: number):
     }
   }
 
-  // Auto-DJ: Her parça sonunda gece sıcaklığı / yoğunluğu nefes alsın
-  if (step === 63) {
-    host.intensity = Math.max(0.25, Math.min(0.85, host.intensity + (Math.random() - 0.5) * 0.06))
+  // Auto-DJ: Her parça sonunda gece sıcaklığı / filtre nefes alsın (kullanıcı ayarı host.intensity korunur)
+  if (step === 63 && host.filterNode && host.ctx) {
+    const drift = (Math.random() - 0.5) * 400
+    const baseFreq = 3800 + host.intensity * 1800
+    const targetFreq = Math.max(2200, Math.min(6500, baseFreq + drift))
+    host.filterNode.frequency.setTargetAtTime(targetFreq, t, 1.5)
   }
 }

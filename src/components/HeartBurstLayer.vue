@@ -15,6 +15,7 @@ interface QuantumRipple {
 const store = useGameStore()
 const ripples = ref<QuantumRipple[]>([])
 let nextRippleId = 1
+const activeTimeouts = new Set<number>()
 
 let lastTapTime = 0
 let lastTapX = 0
@@ -55,9 +56,11 @@ function spawnRipple(x: number, y: number) {
   store.manualClick({ x, y })
 
   // 650ms sonra temizle
-  setTimeout(() => {
+  const timerId = window.setTimeout(() => {
+    activeTimeouts.delete(timerId)
     ripples.value = ripples.value.filter((r) => r.id !== id)
   }, 650)
+  activeTimeouts.add(timerId)
 }
 
 let pointerDownTime = 0
@@ -68,6 +71,8 @@ let pointerScrollY = 0
 function handlePointerDown(e: PointerEvent) {
   // Sadece birincil dokunuş / sol tık
   if (e.isPrimary === false || (e.button !== undefined && e.button !== 0)) return
+  const target = e.target as HTMLElement | null
+  if (target?.closest('.layer-modal, [role="dialog"]')) return
   pointerDownTime = performance.now()
   pointerDownX = e.clientX
   pointerDownY = e.clientY
@@ -127,6 +132,10 @@ onUnmounted(() => {
   window.removeEventListener('pointerdown', handlePointerDown)
   window.removeEventListener('pointerup', handlePointerUp)
   window.removeEventListener('doomscroll:heart', handleCustomHeart)
+  for (const tid of activeTimeouts) {
+    window.clearTimeout(tid)
+  }
+  activeTimeouts.clear()
 })
 </script>
 

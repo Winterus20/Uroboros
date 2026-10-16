@@ -137,6 +137,20 @@ function mockKey(uid: string, slot: number): string {
 }
 
 export const CloudSaveService = {
+  getRevisionKey(slot: number): string {
+    return `${LAST_SEEN_REV_PREFIX}${slot}`
+  },
+
+  getLocalRevision(slot: number): number {
+    return readLocalRevision(slot) ?? 0
+  },
+
+  bumpLocalRevision(slot: number): number {
+    const nextRevision = (readLocalRevision(slot) ?? 0) + 1
+    writeLocalRevision(slot, nextRevision)
+    return nextRevision
+  },
+
   /** Bu cihazın en son gördüğü bulut revizyonu (yoksa null). */
   readLastSeenRevision(targetSlot?: number): number | null {
     return readLocalRevision(targetSlot ?? SaveSystem.getActiveSlot())

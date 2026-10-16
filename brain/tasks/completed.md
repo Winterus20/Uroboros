@@ -1,5 +1,34 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-16] ✔ — Kapsamlı Proje Code Review ve Kritik/Yüksek/Orta Bulguların Çözümü (v0.38.2)
+
+### Problem:
+- **Kayıt & Veri Kaybı (C1, C2, C3, C4):**
+  - `deserialize()` içinde `singularityPoints` geri yüklenmediği için F5/import sonrası harcanmamış SP sıfırlanıyordu.
+  - `SaveSystem.loadDetailed()` içinde bozuk ana kayıt `parsedMain = null` döndüğünde `readSaveVersion(null)` `1` döndürüyor ve `1 < 17` kapısı `clearSingleSlot()` çağırarak `_BAK` yedeğini kurtarmak yerine siliyordu.
+  - `switchSaveSlot()` boş slota geçerken `$reset()` çağırmadığı için eski slotu boş slota klonluyor, dolu slotlar arası geçişte `singularityUpgrades` ve geçici alanları sızdırıyordu.
+  - `AdminPanel.vue` içindeki `hardReset()`, `store.$reset()` ve `SaveSystem.suppressSaves()` çağırmadığı için reload sırasında `beforeunload` eski durumu geri yazıyordu.
+- **Oyun Matematiği & Ekonomi (H1–H6):**
+  - `deserialize()` aktif `heart_frenzy` (777×) buff'ını 100×'e, `overcharge` `espresso` (2×, 20 sn) buff'ını 3×, 30 sn'ye eziyordu.
+  - `getDimensionMultiplier` ile `getDimensionBreakdown` arasında `eye_drops` ve `mirror` softcap uyumsuzluğu ve `neuralEffects.productionMult` üzerinde çift softcap vardı.
+  - `manualClickPower` ile `swipeBreakdown` arasında işlem sırası ve çarpan (`neuralEffects.clickMult`, `achievementClickMult`, `planck_surge`) farkları vardı.
+  - `SINGULARITY_UPGRADES` ve `NEURAL_TREE` arasında `guilt_immunity` maliyeti, `caffeine_drip` (%3 vs %5) ve `cps_sync` oran metinleri uyumsuzdu.
+  - `ach_26` (%5 SP indirimi) ile alınan ikili seçim düğümleri (7 veya 9 SP) çöküşte indirimsiz iade edilerek +1 bedava SP üretiyordu.
+- **UI, Ses, Direktif ve Mimari (H7–H9, M1–M10, L1–L3):**
+  - `Header.vue` Space dinleyicisi ve `useModals.ts` kısayolları açık modalları deliyor ve odaklanmış butonları bozuyordu.
+  - `TelemetryChart.vue` `1.79e308 / sn` (`Infinity`) hızda çöküp grafiği gizliyordu ve doğrusal ölçek kullanıyordu.
+  - `DimensionsTab.vue` Boyut Kurbanı onayında D1-D7 sıfırlanır şeklinde yanıltıcı tehlike uyarısı veriyordu.
+  - `src/models/types.ts` tüm modelleri ikinci kez kopyalıyordu ve Vite tek parça 1.66 MB JS üretiyordu.
+
+### Çözüm:
+- **Save & Cloud (`actions-save.ts`, `save.ts`, `cloud-save-service.ts`, `models/save.ts`, `models/types.ts`):** `singularityPoints` ve `activeBuffs` çarpan/süre/isim geri yüklemesi eklendi; bozuk ana kayıtta versiyon kapısı `parsedMain !== null` ile sınırlandı; `switchSaveSlot` ve `deserialize` izole edildi; `hardReset` tüm mock bulut/revizyon anahtarlarını temizleyecek şekilde genişletildi; `types.ts` tekilleştirildi.
+- **Matematik & Prestij (`getters-dimensions.ts`, `getters-neural.ts`, `neural-data.ts`, `layers.ts`):** Çift softcap kaldırıldı, `getDimensionBreakdown` ve `swipeBreakdown` gerçek formüllerle birebir eşitlendi, `guilt_immunity` / `caffeine_drip` / `cps_sync` maliyet ve açıklamaları hizalandı, seçim düğümü SP iadesi gerçek ödenen indirimli maliyete (`getNeuralNodeCost`) bağlandı.
+- **UI, Ses & Bundle (`AdminPanel.vue`, `Header.vue`, `useModals.ts`, `TelemetryChart.vue`, `DimensionsTab.vue`, `LabTab.vue`, `FloatingThumbBar.vue`, `HeartBurstLayer.vue`, `AlgorithmicSwirl.vue`, `hold.ts`, `music/`, `vite.config.ts`):** Modal/buton klavye izolasyonu, logaritmik ve `Infinity` korumalı telemetri grafiği, doğru Boyut Kurbanı metni, `ConfirmModal` entegrasyonu, `MusicEngine` fade-out zamanlayıcı ve filtre koruması, `v-hold` sol tık ve `updated` kancası, `manualChunks` ile vendor ayrıştırması uygulandı.
+
+### Doğrulama:
+- `npm test`: **21 dosya, 283/283 test yeşil** (+20 yeni regresyon testi: `save.test.ts`, `save-roundtrip.test.ts`, `neural-data.test.ts`, `layers.test.ts`).
+- `npm run build`: **0 tip hatası, 0 derleme hatası, chunk boyutu uyarısı giderildi**.
+
 ## [2026-10-15] ✔ — Geç Oyun Tick Performansı: Reaktivite Muafiyeti, Memoizasyon ve Deterministik Perf Bench (ADR-0059, v0.38.1)
 
 ### Problem:

@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
-import { sounds } from '../core/audio'
 import { isMotionOff } from '../composables/useMotion'
 import { ArrowUp, Cpu, Layers, Flame, AlertTriangle } from 'lucide-vue-next'
 
@@ -76,7 +75,6 @@ function handleConsume(e: MouseEvent | TouchEvent) {
     })
   )
 
-  sounds.playClick()
   store.manualClick({ x, y })
 }
 

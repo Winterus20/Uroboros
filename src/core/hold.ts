@@ -5,6 +5,7 @@ import type { Directive } from 'vue'
 // Uzun basmada mobil tarayıcı bağlam menüsü de bastırılır.
 interface HoldEl extends HTMLElement {
   __holdCleanup?: () => void
+  __vHoldCallback?: (e?: PointerEvent) => void
 }
 
 const HOLD_DELAY_MS = 400
@@ -12,7 +13,7 @@ const HOLD_REPEAT_MS = 100
 
 export const vHold: Directive<HoldEl, (e?: PointerEvent) => void> = {
   mounted(el, binding) {
-    const handler = binding.value
+    el.__vHoldCallback = binding.value
     let delayTimer: number | undefined
     let repeatTimer: number | undefined
 
@@ -28,12 +29,13 @@ export const vHold: Directive<HoldEl, (e?: PointerEvent) => void> = {
     }
 
     const start = (e: PointerEvent) => {
+      if (e.button !== 0) return
       if (repeatTimer !== undefined || delayTimer !== undefined) return
       e.preventDefault()
       delayTimer = window.setTimeout(() => {
         delayTimer = undefined
-        handler(e)
-        repeatTimer = window.setInterval(() => handler(), HOLD_REPEAT_MS)
+        el.__vHoldCallback?.(e)
+        repeatTimer = window.setInterval(() => el.__vHoldCallback?.(), HOLD_REPEAT_MS)
       }, HOLD_DELAY_MS)
     }
 
@@ -56,8 +58,12 @@ export const vHold: Directive<HoldEl, (e?: PointerEvent) => void> = {
       el.removeEventListener('contextmenu', suppressMenu)
     }
   },
+  updated(el, binding) {
+    el.__vHoldCallback = binding.value
+  },
   unmounted(el) {
     el.__holdCleanup?.()
     el.__holdCleanup = undefined
+    el.__vHoldCallback = undefined
   }
 }

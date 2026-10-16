@@ -10,24 +10,33 @@ const SPARK_W = 100;
 const SPARK_H = 34;
 const hoverIndex = ref<number | null>(null);
 
+function safeVal(v: number): number {
+  if (v <= 0 || Number.isNaN(v)) return 0;
+  if (!Number.isFinite(v)) return Number.MAX_VALUE;
+  return v;
+}
+
 const sparkMax = computed(() => {
   const hist = store.dpsHistory;
   if (hist.length < 2) return 0;
-  let m = -Infinity;
+  let m = 0;
   for (let i = 0; i < hist.length; i++) {
-    const v = hist[i];
-    if (v > m) m = v;
+    const sv = safeVal(hist[i]);
+    if (sv > m) m = sv;
   }
-  return Number.isFinite(m) && m > 0 ? m : 0;
+  return m;
 });
 
 const sparkPoints = computed(() => {
   const hist = store.dpsHistory;
   if (hist.length < 2 || sparkMax.value <= 0) return "";
+  const maxLog = Math.log10(sparkMax.value + 1);
+  if (maxLog <= 0) return "";
   return hist
     .map((v, i) => {
       const x = (i / (hist.length - 1)) * SPARK_W;
-      const ratioVal = Math.min(1, Math.max(0, v / sparkMax.value));
+      const valLog = Math.log10(safeVal(v) + 1);
+      const ratioVal = Math.min(1, Math.max(0, valLog / maxLog));
       const y = SPARK_H - Math.max(0.5, ratioVal * (SPARK_H - 3));
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
@@ -56,8 +65,9 @@ function onChartMouseLeave(): void {
 
 const hoverDpsText = computed(() => {
   if (hoverIndex.value === null) return null;
-  const val = store.dpsHistory[hoverIndex.value];
-  if (val === undefined) return null;
+  const rawVal = store.dpsHistory[hoverIndex.value];
+  if (rawVal === undefined) return null;
+  const val = safeVal(rawVal);
   const secsAgo = store.dpsHistory.length - 1 - hoverIndex.value;
   return {
     valText: format(val, 2, store.settings.notation),

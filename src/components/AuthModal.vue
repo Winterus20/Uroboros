@@ -153,7 +153,7 @@ const { dialogRef } = useFocusTrap(
           </div>
           <div>
             <h3 :id="titleId" class="font-black text-slate-100 text-base tracking-wide flex items-center gap-2">
-              Doomscroll Bulut Bağlantısı
+              Uroboros Bulut Bağlantısı
               <span
                 v-if="authStore.isConfigured"
                 class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400"

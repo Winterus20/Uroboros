@@ -55,6 +55,9 @@ export function useModals(options: {
       godmodeBuffer = candidate;
     }
 
+    // Modal açıkken oyun kısayolları (sekme değişimi, Max All vb.) çalıştırılmaz
+    if (showSettings.value || showAdmin.value || document.querySelector('.layer-modal, [role="dialog"]')) return;
+
     // Kısayollar kullanıcı ayarlarında devre dışı bırakılmışsa dur
     if (store.settings.hotkeysEnabled === false) return;
 

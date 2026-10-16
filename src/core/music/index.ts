@@ -48,6 +48,7 @@ export class MusicEngine implements SynthContext {
   // Uyku zamanlayıcısı (Clouds Radio usulü: süre bitince yumuşak fade-out)
   public sleepMinutesRemaining = 0
   private sleepTickId: number | null = null
+  private fadeOutTimeoutId: number | null = null
 
   // Lookahead Scheduler ("A Tale of Two Clocks")
   private isPlaying = false
@@ -129,6 +130,11 @@ export class MusicEngine implements SynthContext {
   }
 
   public start(): void {
+    if (this.fadeOutTimeoutId !== null) {
+      window.clearTimeout(this.fadeOutTimeoutId)
+      this.fadeOutTimeoutId = null
+    }
+
     const ctx = this.initContext()
     if (!ctx) return
 
@@ -168,6 +174,10 @@ export class MusicEngine implements SynthContext {
   }
 
   public stop(): void {
+    if (this.fadeOutTimeoutId !== null) {
+      window.clearTimeout(this.fadeOutTimeoutId)
+      this.fadeOutTimeoutId = null
+    }
     this.isPlaying = false
     if (this.schedulerTimer !== null) {
       clearInterval(this.schedulerTimer)
@@ -405,9 +415,9 @@ export class MusicEngine implements SynthContext {
   }
 
   public nextTrack(): MusicTrackInfo {
-    const currentIndex = MUSIC_TRACKS.findIndex((t) => t.id === this.currentTrack)
-    const nextIndex = (currentIndex + 1) % (MUSIC_TRACKS.length - 1)
-    const next = MUSIC_TRACKS[nextIndex]
+    const procedural = MUSIC_TRACKS.filter((t) => t.id !== 'custom')
+    const idx = procedural.findIndex((t) => t.id === this.currentTrack)
+    const next = idx === -1 ? procedural[0] : procedural[(idx + 1) % procedural.length]
     this.setTrack(next.id)
     return next
   }
@@ -501,6 +511,10 @@ export class MusicEngine implements SynthContext {
   }
 
   private fadeOutAndStop(fadeSec = 3): void {
+    if (this.fadeOutTimeoutId !== null) {
+      window.clearTimeout(this.fadeOutTimeoutId)
+      this.fadeOutTimeoutId = null
+    }
     if (!this.graph.ctx || !this.graph.masterGain) {
       this.setEnabled(false)
       return
@@ -509,7 +523,8 @@ export class MusicEngine implements SynthContext {
     this.graph.masterGain.gain.cancelScheduledValues(t)
     this.graph.masterGain.gain.setValueAtTime(Math.max(0.0001, this.graph.masterGain.gain.value), t)
     this.graph.masterGain.gain.linearRampToValueAtTime(0.0001, t + fadeSec)
-    window.setTimeout(() => {
+    this.fadeOutTimeoutId = window.setTimeout(() => {
+      this.fadeOutTimeoutId = null
       this.setEnabled(false)
       if (this.graph.masterGain && this.graph.ctx) {
         this.graph.masterGain.gain.setTargetAtTime(this.volume, this.graph.ctx.currentTime, 0.1)

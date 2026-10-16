@@ -34,7 +34,7 @@ export const SINGULARITY_UPGRADES = [
     id: 'caffeine_drip',
     name: 'Taktil Çekim Katalizörü',
     icon: '🧪',
-    desc: 'Manuel Yutma gücüne saniyelik üretimin her seviye %5\'ini ekler!',
+    desc: 'Manuel Yutma gücüne saniyelik üretimin her seviye %3\'ünü ekler!',
     baseCost: 5,
     costMult: 3,
     maxLevel: 5
@@ -62,8 +62,8 @@ export const SINGULARITY_UPGRADES = [
     name: 'Parazit Kalkanı',
     icon: '🛡️',
     desc: 'Kozmik parazitlerin emdiği kütle %50 azalır, temizlendiklerinde %150 prim verir.',
-    baseCost: 3,
-    costMult: 4,
+    baseCost: 4,
+    costMult: 2,
     maxLevel: 3
   },
   {
@@ -240,7 +240,7 @@ export const NEURAL_TREE: NeuralNode[] = [
     id: 'cps_sync',
     name: 'Çekim Senkronu',
     icon: '🔄',
-    desc: 'Her seviye tıklamaya saniyelik üretimin +%1.5\'ini ekler (taban %2, tavan %8).',
+    desc: 'Her seviye tıklamaya saniyelik üretimin +%1\'ini ekler (taban %1, tavan %5).',
     branch: 'active',
     cost: 2,
     maxLevel: 4,
@@ -272,7 +272,7 @@ export const NEURAL_TREE: NeuralNode[] = [
     id: 'caffeine_drip',
     name: 'Taktil Çekim Katalizörü',
     icon: '🧪',
-    desc: 'Manuel Yutma gücüne saniyelik üretimin her seviye %5\'ini ekler!',
+    desc: 'Manuel Yutma gücüne saniyelik üretimin her seviye %3\'ünü ekler!',
     branch: 'active',
     cost: 5,
     maxLevel: 5,

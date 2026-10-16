@@ -88,6 +88,10 @@ export const SaveSystem = {
     }
   },
 
+  hasQuarantinedSave(slot?: number): boolean {
+    return hasQuarantinedSave(slot)
+  },
+
   /** Belirtilen slota veya aktif slota kayıt yazar */
   save(state: SerializedPlayerState, targetSlot?: number): boolean {
     // ADR-0029: bastırılmışken lastSaveOk DOKUNULMAZDI, bu yüzden telemetri
@@ -142,23 +146,25 @@ export const SaveSystem = {
     // 0) Gelecek sürüm ve asgari sürüm (Global Reset) kontrolü — EN ÖNCE.
     if (rawMain) {
       const parsedMain = tryParseRaw(rawMain)
-      const found = readSaveVersion(parsedMain)
-      if (found > SAVE_VERSION) {
-        console.error(`Slot ${slot} kaydı v${found}; bu build v${SAVE_VERSION}. Yükleme reddedildi.`)
-        return {
-          state: null,
-          fromBackup: false,
-          corrupted: false,
-          quarantined: quarantineRaw(slot, rawMain),
-          futureVersion: { found, supported: SAVE_VERSION }
+      if (parsedMain !== null) {
+        const found = readSaveVersion(parsedMain)
+        if (found > SAVE_VERSION) {
+          console.error(`Slot ${slot} kaydı v${found}; bu build v${SAVE_VERSION}. Yükleme reddedildi.`)
+          return {
+            state: null,
+            fromBackup: false,
+            corrupted: false,
+            quarantined: quarantineRaw(slot, rawMain),
+            futureVersion: { found, supported: SAVE_VERSION }
+          }
         }
-      }
-      // Global Wipe: Asgari sürümün altındaki eski kayıt yalnızca İLGİLİ slotta
-      // temizlenir (diğer slotlara dokunulmaz).
-      if (found < MIN_SUPPORTED_SAVE_VERSION) {
-        console.warn(`Slot ${slot} kaydı v${found} (asgari v${MIN_SUPPORTED_SAVE_VERSION} gerekli). İlerleme sıfırlandı.`)
-        clearSingleSlot(slot)
-        return { state: null, fromBackup: false, corrupted: false, quarantined: false, futureVersion: null }
+        // Global Wipe: Asgari sürümün altındaki eski kayıt yalnızca İLGİLİ slotta
+        // temizlenir (diğer slotlara dokunulmaz).
+        if (found < MIN_SUPPORTED_SAVE_VERSION) {
+          console.warn(`Slot ${slot} kaydı v${found} (asgari v${MIN_SUPPORTED_SAVE_VERSION} gerekli). İlerleme sıfırlandı.`)
+          clearSingleSlot(slot)
+          return { state: null, fromBackup: false, corrupted: false, quarantined: false, futureVersion: null }
+        }
       }
     }
 
@@ -431,6 +437,8 @@ export const SaveSystem = {
       localStorage.removeItem(LEGACY_MAIN_KEY)
       localStorage.removeItem(LEGACY_OLD_KEY)
       localStorage.removeItem(ACTIVE_SLOT_KEY)
+      localStorage.removeItem('uroboros-stance-seen')
+      localStorage.removeItem('DOOMSCROLL_MOCK_AUTH_USER')
       ;[1, 2, 3].forEach((slot) => {
         localStorage.removeItem(resolveSlotKey(slot))
         localStorage.removeItem(resolveBackupKey(slot))
@@ -438,6 +446,14 @@ export const SaveSystem = {
         localStorage.removeItem(`DOOMSCROLL_MOCK_CLOUD_SAVE_${slot}`)
         localStorage.removeItem(`DOOMSCROLL_CLOUD_REV_SLOT_${slot}`)
       })
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.startsWith('DOOMSCROLL_MOCK_CLOUD_SAVE_') || key.startsWith('DOOMSCROLL_CLOUD_REV_'))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key))
     } finally {
       saveSuppressed = prevSuppressed
     }
