@@ -29,6 +29,35 @@
 - `npm test`: **21 dosya, 283/283 test yeşil** (+20 yeni regresyon testi: `save.test.ts`, `save-roundtrip.test.ts`, `neural-data.test.ts`, `layers.test.ts`).
 - `npm run build`: **0 tip hatası, 0 derleme hatası, chunk boyutu uyarısı giderildi**.
 
+## [2026-10-16] ✔ — Görsel Dil Faz A: Sıcak Ink-Black Zemin + Statik CRT Katmanı (ADR-0061)
+
+### Problem:
+- Oyunun zemini soğuk "kuantum HUD" siyahıydı (`#08090d`) ve bu hex **5 ayrı yerde** çiftlenmişti (`index.html` ×2, `style.css` base, `App.vue` kökü, `AlgorithmicSwirl` fallback); `--ds-bg` tokeni tanımlıydı ama **hiç tüketilmiyordu**.
+- `crtEffect` ayarı uçtan uca kabloluydu (tip → state → kayıt migrasyonu → `GameplaySettings` toggle → `useNavigation.syncEffectClasses()` → kök `crt-off` sınıfı) **ama hedef görsel katman yoktu**: `.crt-overlay`/`.crt-vignette`/`.crt-scanlines` yalnızca iki "kapatma listesinde" no-op seçici; `body::before/after` ise `display:none !important` ile ölüydü. Kullanıcı "Kozmik CRT Scanline & Vinyet" ayarını açıp kapatıyor, görsel olarak hiçbir şey değişmiyordu.
+- Panel yüzeyleri iki aileye bölünmüştü: tokenli (`--ds-panel*`) + hardcoded (`.glass-panel-card`, `.panel-hero`); ayrıca 9 bileşende hardcoded zemin hex'i vardı.
+
+### Çözüm:
+- **Tek kaynak zemin:** `--ds-bg: #0a0608` (sıcak ink-black). `#08090d` çiftlenmesi kaldırıldı; base katman `background-color: var(--ds-bg)` kullanır; `index.html` theme-color ve `tailwind.config.js` `dark.950` hizalandı; `dark.900–700` ölçeği ısıtıldı.
+- **Panel token ailesi:** `--ds-card` / `--ds-card-hover` / `--ds-hero` eklendi; `.glass-panel-card` ve `.panel-hero` artık hardcoded değil.
+- **Yeni renkler:** `--feast-rgb`/`--feast` (#ff3355 — oburluk/olay enerjisi; metin olarak AA 5.62:1) ve `--bicycle` (#c40f2e — **yalnız yüzey**, metin olarak 3.31:1, kullanımı yasak). Sıcak vinyet tokenleri `--ds-vignette-core`/`--ds-vignette-warm`; ısı türevleri `--feast` kanal ayrışımından türetilir (tek kaynak).
+- **`src/components/CrtOverlay.vue` (YENİ):** statik, animasyonsuz CRT tüp dokusu — `.crt-scanlines` (4px periyot) + `.crt-vignette` + `.crt-glow`. **Hiç JS okumaz**; tüm kapılar CSS'te (`crt-off`, `battery-saver`, `prefers-reduced-motion`, `forced-colors`). Gerçek barrel distortion yapılmadı (köke `filter` = ADR-0044 ihlali + pahalı); eğrilik illüzyonu kenar vinyetiyle verilir.
+- **Katman:** yeni `.layer-crt { z-index: 40 }` — içerik (10) + kozmik vinyet (30) üstü; juice (60) / toast (70) / modaller (80) altı. `#game-main-content`'in **kardeşi** (screen-shake containment, ADR-0044).
+- **Islatma:** 9 bileşendeki hardcoded zemin hex'i sıcak karşılıklarıyla değişti; `cosmic-vignette` hem `style.css` hem `ScreenOverlay.vue` scoped kopyasında senkron güncellendi; scrollbar ailesi ısındı.
+- **Kalıcı denetim altyapısı:** `npm run harness:contrast` (`brain/scratchpad/harness/contrast.mjs`) — palet regresyonunu WCAG AA eşiğinde otomatik yakalar (Faz A/B/C/E boyunca).
+
+### Doğrulama:
+- `npm run typecheck`: **0 hata** · `npm test`: **18 dosya, 263/263 yeşil** · `npm run build`: **0 hata** (1785 modül, ~59 s).
+- `npm run harness:contrast`: **tüm metin/zemin çiftleri ≥ 4.5:1** (en düşük: `slate-700` panel üzerinde **4.52** — soğuk zeminde 4.48 ile AA altındaydı; ısınma düzeltti).
+- `npm run harness:perf`: churn 10.84 / 9.88 ms, wall 1.45 / 1.52 ms. `perf-tick.ts` hiç `.vue`/`.css` import etmediği için değişiklik tick'e etki **edemez** (koşular arası %9 varyans = ortam yükü).
+- Üretilen `dist` CSS'te CRT kuralları + `calc()` durakları bozulmadan mevcut; ölü `.crt-overlay` yok; `#08090d`/`#07090e` 0 eşleşme.
+- Bağımsız QA denetimi (salt-okunur subagent, 13 iddia): **PASS-with-notes**.
+
+### Açık notlar:
+- (K-2, düşük) `glass-panel` + Tailwind `bg-*` kombinasyonu kod tabanında **yaygın bir mevcut kalıp**; CSS kaynak sırası yüzünden `.glass-panel` kazanır ve `bg-*` ölü kalır → **Faz E** renk retrosunda gözden geçirilecek.
+- (M7) `m6x11` fontu bağlanmadı (lisans: "free to use with attribution", resmî lisans dosyası yok).
+- `git` bu ortamda kurulu olmadığı için conventional commit çalıştırılamadı.
+- Kaynaklar: ADR [`0061-phase-a-warm-ground-and-static-crt.md`](../decisions/0061-phase-a-warm-ground-and-static-crt.md) · Derin spec [`phase-a-ground-crt-deep-spec-2026-10.md`](../research/phase-a-ground-crt-deep-spec-2026-10.md) · Önceller ADR-0060 / 0058 / 0049 / 0044.
+
 ## [2026-10-15] ✔ — Geç Oyun Tick Performansı: Reaktivite Muafiyeti, Memoizasyon ve Deterministik Perf Bench (ADR-0059, v0.38.1)
 
 ### Problem:
@@ -1598,7 +1627,8 @@ Antimatter Dimensions (IvarK master), Cookie Clicker v2.058, Synergism, Progress
 ### Yapılan İşler:
 1. **`src/models/types.ts` + `src/stores/game.ts`:** yeni ayarlar `crtEffect: boolean` (varsayılan true) + `juiceMode: 'calm'|'balanced'|'tilt'` (varsayılan balanced). Eski kayıt uyumu: deserialize'da `undefined` ise varsayılan dolar; state/serialize dokunulmadı.
 2. **`src/style.css`:** CSS-only CRT (body::before vinyet + body::after scanline, animasyonsuz, `mix-blend-mode: overlay`); `.crt-off`/`.reduce-anim`'de katmanlar `display:none`. Yeni: `buy-bounce` (spring), `tilt-card` (hover -1px), `count-pop-combo` (kromatik text-shadow), `shake-soft`/`shake-hard` kademeleri. Hepsi `prefers-reduced-motion` + `.reduce-anim`'da kapalı.
-3. **`src/App.vue`:** `syncEffectClasses()` — reduce + crt tek elden (`reduce-anim` / `crt-off`).
+3. **`src/composables/useNavigation.ts`:** `syncEffectClasses()` — reduce + crt tek elden (`reduce-anim` / `crt-off`).
+   *(DÜZELTME 2026-10-16 — Faz A: bu kayıt yanlış dosyayı gösteriyordu; fonksiyon `App.vue`'da değil, `useNavigation.ts:321`'de yaşar.)*
 4. **`src/components/SettingsModal.vue`:** "Gece 3 CRT" toggle + "Juice Yoğunluğu" 3'lü seçici (Sade/Dengeli/Full Tilt).
 5. **`src/components/DimensionRow.vue`:** karta `tilt-card`, satın almada `buy-bounce` tetikleme (reduce açıkken atlanır).
 6. **`src/components/Header.vue`:** kombo aktifken sayaç `count-pop-combo` (kromatik) ile patlar; normalde eski `count-pop`.

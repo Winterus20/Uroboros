@@ -11,6 +11,7 @@ import HeartBurstLayer from "./components/HeartBurstLayer.vue";
 import CommentTicker from "./components/CommentTicker.vue";
 import FloatingThumbBar from "./components/FloatingThumbBar.vue";
 import ScreenOverlay from "./components/ScreenOverlay.vue";
+import CrtOverlay from "./components/CrtOverlay.vue";
 import Header from "./components/Header.vue";
 import DimensionsTab from "./components/DimensionsTab.vue";
 import LabTab from "./components/LabTab.vue";
@@ -161,7 +162,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#08090d] text-slate-100 flex flex-col items-center p-3 md:p-6 font-sans relative selection:bg-purple-500/20 selection:text-purple-300 overflow-x-hidden">
+  <div class="min-h-screen text-slate-100 flex flex-col items-center p-3 md:p-6 font-sans relative selection:bg-purple-500/20 selection:text-purple-300 overflow-x-hidden">
     <!-- Balatro Tarzı Canlı Algoritma Girdabı (GLSL Procedural Paint Swirl) -->
     <AlgorithmicSwirl />
 
@@ -179,6 +180,10 @@ onUnmounted(() => {
 
     <!-- Doomscroll Gece Ekran Dokuları (Parmak İzi & Kriz Çatlak Camı) -->
     <ScreenOverlay />
+
+    <!-- Faz A "Aç Kumarhane": Statik CRT tüp dokusu (scanline + vinyet + fosfor).
+         #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->
+    <CrtOverlay />
 
     <!-- Başarım Bildirimleri -->
     <AchievementToast />
@@ -198,7 +203,7 @@ onUnmounted(() => {
 
       <!-- Kozmik Merdiven & Olay Ufku İlerlemesi (0 → 1.79e308 g) -->
       <div
-        class="mb-4 rounded-xl border border-white/[0.08] bg-[#0c1017]/80 backdrop-blur-md px-3.5 py-2.5 shadow-xs"
+        class="mb-4 rounded-xl border border-white/[0.08] bg-[#130f14]/80 backdrop-blur-md px-3.5 py-2.5 shadow-xs"
         v-tip="'Kozmik Ölçek: 0 → 1.79e308 g. Her kademe bir Dekad Yükselişi çarpanı ve yeni bir kuantum/kozmik kilit açılışı getirir.'"
       >
         <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400 mb-1.5">

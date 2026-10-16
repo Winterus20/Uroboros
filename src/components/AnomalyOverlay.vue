@@ -206,7 +206,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
           <div v-if="anomaly.type === 'void'" class="anomaly-beam-border"></div>
 
           <!-- İç Kart İçeriği (solid zemin: mobil GPU dostu, blur yok) -->
-          <div class="relative rounded-2xl bg-[#0a0d14] px-3.5 py-2.5 flex items-center gap-3 border border-white/[0.08] overflow-hidden">
+          <div class="relative rounded-2xl bg-[#110d12] px-3.5 py-2.5 flex items-center gap-3 border border-white/[0.08] overflow-hidden">
             <!-- Holografik Sweep — ADR-0049 P1: yalnızca Void'de -->
             <div v-if="anomaly.type === 'void'" class="crisis-shimmer"></div>
 

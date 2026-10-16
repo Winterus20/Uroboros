@@ -115,9 +115,13 @@ onUnmounted(() => {
 
 <style scoped>
 .cosmic-vignette {
+  /* Faz A "Aç Kumarhane": soğuk köşe kararması → sıcak ink-black + feast halkası.
+     Soğuk cyan merkez ışıması korunur (derin uzay hissi). Değerler style.css
+     :root ile senkron tutulur (tek kaynak). */
   background:
     radial-gradient(ellipse 65% 55% at 50% 40%, rgba(0, 240, 255, 0.02) 0%, transparent 70%),
-    radial-gradient(ellipse 130% 110% at 50% 50%, transparent 60%, rgba(5, 7, 15, 0.8) 100%);
+    radial-gradient(ellipse 128% 108% at 50% 50%, transparent 55%,
+      var(--ds-vignette-warm) 80%, var(--ds-vignette-core) 100%);
 }
 
 .singularity-horizon {

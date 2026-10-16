@@ -512,7 +512,7 @@ onUnmounted(() => {
     <!-- Fallback / Statik Gece Zemin Gradyanı (Shader kapalıyken veya desteklenmediğinde) -->
     <div
       v-else
-      class="w-full h-full bg-radial-at-c from-purple-950/20 via-[#08090d] to-[#040507]"
+      class="w-full h-full bg-radial-at-c from-purple-950/20 via-[#0a0608] to-[#07030a]"
     />
   </div>
 </template>

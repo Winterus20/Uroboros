@@ -105,7 +105,7 @@ function punchTap(e: PointerEvent): void {
     class="md:hidden fixed bottom-[60px] left-0 right-0 z-30 px-3 py-1 pointer-events-none select-none"
   >
     <div
-      class="pointer-events-auto max-w-md mx-auto flex items-center justify-between gap-1.5 p-1.5 rounded-2xl bg-[#090d15]/90 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.85)]"
+      class="pointer-events-auto max-w-md mx-auto flex items-center justify-between gap-1.5 p-1.5 rounded-2xl bg-[#100c11]/90 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.85)]"
     >
       <!-- Sol 1: Çekim Hızı Hz Butonu -->
       <button
