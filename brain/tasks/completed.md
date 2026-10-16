@@ -1,5 +1,32 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-16] ✔ — Görsel Dil Faz D: VS Şöleni (Tek Canvas Partikül + Olay Sahneleri, ADR-0064)
+
+### Problem:
+- Büyük olay anı eski disiplindeydi: her tetikleyici kendi `maxRadius`/rengini doğaçlıyor, shockwave/spark dizilerinde cap yoktu, zemin knock-down ve suppression penceresi yoktu, YUT dokunuşunda kıvılcım yoktu.
+- İnternet araştırması gerekiyordu: VS overload dili, canvas bütçe disiplini, CC kombo kanonu, WCAG hareket kapısı.
+
+### Araştırma (birincil kaynaklar, `brain/research/phase-d-internet-research-2026-10.md`):
+- **MDN Optimizing canvas:** tek canvas + statik zemin CSS'te, cap + `shadowBlur` yok + metin tavanlı, DPR ≤2, idle-safe rAF, el fiziği → M4 + bütçe kararları.
+- **MDN rAF:** one-shot zincir + arka planda durma (gizli sekmede şölen birikmez).
+- **WCAG 2.3.3 + `prefers-reduced-motion`:** etkileşim animasyonu kapatılabilir olmalı → 3-state kapı (yeni kapı yok).
+- **CC Wiki Golden Cookie:** Frenzy ×7/77 sn ~%40 · Click Frenzy ×777/13 sn ~%3 · Lucky anında `min(%15 banka, 15 dk)` · kombo = çarpanların üst üste binmesi → sahne reçeteleri birebir eşleşir (`fyp`/`heart_frenzy`/`sponsor`/`void`/`isComboActive`).
+- **CC Wiki Wrinkler:** %5 emiş ×1.1 iade kanonu → wrinkler sahnesi kapsam dışı (bütçe büyük olaylara; mimari hazır).
+
+### Çözüm:
+- **`src/core/particles.ts` (YENİ) + `particles.test.ts` (13 test):** 7 sahne reçetesi (supernova/mass_burst/hawking/resonance/crunch/decade/yut) + bütçe (60/8/220/400 ms) + suppression/motion/kıskaç yardımcıları (saf modül, `any` yok).
+- **`JuiceLayer.vue`:** `doomscroll:feast-scene` dinleyicisi + `triggerFeastScene` (katmanlı halka/kıvılcım/metin) + shockwave/spark cap'leri + suppression (crunch deler) + `feast-knockdown` (140/200 ms, M3-safe) + YUT kıvılcımı (4 spark) + mevcut kapılar/anti-spam korunur.
+- **Tetikleyiciler:** `clickAnomaly` (sponsor→hawking gerçek miktarlı, kombo→resonance, fyp→supernova, diğer→mass_burst) + `singularityReset`/`break_singularity` (crunch, sessiz bot hariç) + 10'arlı dekad (decade). `AnomalyOverlay` değişmez (çift sahne yok). Dengeye dokunulmaz.
+- **`src/style.css`:** Faz D knock-down bloğu (yalnız arka plan katmanları; köke filter yok; reduced/forced-colors nötrler).
+
+### Doğrulama:
+- `npm run typecheck`: **0 hata** · `npm test`: **24 dosya, 314/314 yeşil** (+13 yeni).
+- `npm run build`: **0 hata**.
+- `npm run harness:smoke`: log10=90.72, 8 shift — baseline sabit (**denge regresyonu yok**).
+- `npm run harness:perf`: churn 6.69/p95 14.5 ms, wall 0.77 ms — baseline bandında.
+- `npm run harness:contrast`: tüm çiftler WCAG AA.
+- Kaynaklar: ADR [`0064-phase-d-feast-shower.md`](../decisions/0064-phase-d-feast-shower.md) · Derin spec [`phase-d-feast-shower-deep-spec-2026-10.md`](../research/phase-d-feast-shower-deep-spec-2026-10.md) · İnternet araştırması [`phase-d-internet-research-2026-10.md`](../research/phase-d-internet-research-2026-10.md).
+
 ## [2026-10-16] ✔ — Kapsamlı Proje Code Review ve Kritik/Yüksek/Orta Bulguların Çözümü (v0.38.2)
 
 ### Problem:

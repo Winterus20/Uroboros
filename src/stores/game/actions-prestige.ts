@@ -49,6 +49,21 @@ export const prestigeActions = {
         sounds.playSingularity()
         const fx = SCALE_LAYERS.singularity.fx.confetti
         safeConfetti({ ...fx, origin: { y: fx.originY } })
+        // Faz D — Big Crunch imza sahnesi (tek canvas, L4). Suppression'ı deler:
+        // çöküş anı her zaman tam oynar. Sessiz bot çöküşünde (playSound=false)
+        // sahne YOK (mevcut sessizlik disiplini korunur).
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: {
+                scene: 'crunch',
+                x: window.innerWidth / 2,
+                y: window.innerHeight * 0.4,
+                text: `+${gain.toString()} SP`
+              }
+            })
+          )
+        }
       }
       return true
     },
@@ -93,6 +108,17 @@ export const prestigeActions = {
           })
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('doomscroll:shake', { detail: { level: 'hard' } }))
+            // Faz D — Planck Duvarı yıkılışı imza sahnesi (tek canvas).
+            window.dispatchEvent(
+              new CustomEvent('doomscroll:feast-scene', {
+                detail: {
+                  scene: 'crunch',
+                  x: window.innerWidth / 2,
+                  y: window.innerHeight * 0.4,
+                  text: 'PLANCK DUVARI YIKILDI'
+                }
+              })
+            )
           }
         } else {
           sounds.playBuy(4)

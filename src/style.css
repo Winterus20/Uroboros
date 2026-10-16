@@ -457,8 +457,8 @@
 }
 
 /* Katman sıralaması — tek elden senkron:
-   Oyun (0) < İçerik (10) < Aura/vinyet (30) < CRT tüp (40) < Anomali (50)
-   < Juice parçacık (60) < Toast (70) < Modal (80) */
+   Oyun (0) < İçerik (10) < Aura/vinyet (30) < CRT tüp (40) < Yan eller (45)
+   < Anomali (50) < Juice parçacık (60) < Toast (70) < Modal (80) */
 /* Modal cam yüzeyi — tek meşru backdrop-filter (içerik üstünde katman) */
 .modal-glass {
   backdrop-filter: blur(18px);
@@ -760,6 +760,53 @@
   position: relative;
   border-color: rgba(244, 63, 94, 0.45) !important;
   box-shadow: 0 0 0 1px rgb(var(--feast-rgb) / 0.12), 0 0 24px rgb(var(--feast-rgb) / 0.08);
+}
+
+/* ==========================================================================
+   FAZ D — VS ŞÖLENİ ZEMİN KNOCK-DOWN (L4 sahne disiplini)
+   Sözleşme: visual-language.md §1/L4 + phase-d-feast-shower-deep-spec-2026-10.md §3.
+   - Büyük sahnede (supernova/mass_burst/resonance/crunch) zemin ~120–200 ms
+     bastırılır (~%40 desatürasyon hissi), sonra geri gelir. VS'deki "zemin
+     kararır, mermiler parlar" anının statik-CSS karşılığı.
+   - M3-SAFE: html/body/#game-main-content/kök kapsayıcıya filter/transform YOK
+     (ADR-0044 containing-block tuzağı). Yalnız ARKA PLAN katmanları hedeflenir
+     (AlgorithmicSwirl + kozmik vinyet + ufuk aurası — hepsi fixed KARDEŞ
+     katman; kendilerine uygulanan filter başka fixed elemanı hapsetmez).
+   - Kapsam: YALNIZ ambient katman. Sayı/etiket/ramp/tooltip seçicisi YOK.
+   - JS kapısı: knock sınıfı yalnız motion full + pil-kapalı iken eklenir
+     (JuiceLayer pulseFeastKnockdown); buradaki kurallar ek kemerdir.
+   ========================================================================== */
+.algorithmic-swirl-container,
+.cosmic-vignette,
+.singularity-horizon {
+  transition: opacity 0.14s ease, filter 0.14s ease;
+}
+.feast-knockdown .algorithmic-swirl-container {
+  opacity: 0.5;
+  filter: saturate(0.6) brightness(0.8);
+}
+.feast-knockdown .cosmic-vignette {
+  opacity: 0.6;
+}
+.feast-knockdown .singularity-horizon {
+  opacity: 0.35;
+}
+/* Kemer: azaltılmış hareket / zorunlu renklerde knock-down susar. */
+@media (prefers-reduced-motion: reduce) {
+  .feast-knockdown .algorithmic-swirl-container,
+  .feast-knockdown .cosmic-vignette,
+  .feast-knockdown .singularity-horizon {
+    opacity: 1;
+    filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .feast-knockdown .algorithmic-swirl-container,
+  .feast-knockdown .cosmic-vignette,
+  .feast-knockdown .singularity-horizon {
+    opacity: 1;
+    filter: none;
+  }
 }
 
 /* QoL: "Animasyonları Azalt" ayarı — nabız/parıltı/geçiş animasyonlarını söndürür

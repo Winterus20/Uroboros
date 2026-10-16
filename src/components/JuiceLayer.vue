@@ -2,6 +2,15 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { isMotionReduced, useMotionMode } from '../composables/useMotion'
+import {
+  FEAST_SCENES,
+  PARTICLE_BUDGET,
+  clampEmission,
+  isBigScene,
+  scaleCountForMode,
+  shouldSuppressFeast,
+  type FeastSceneId
+} from '../core/particles'
 
 export interface JuiceTriggerOptions {
   x: number
@@ -19,10 +28,26 @@ export interface ShockwaveTriggerOptions {
   maxRadius?: number
 }
 
+/**
+ * Faz D — VS şöleni sahne tetikleyici (tek canvas, L4).
+ * Sözleşme: phase-d-feast-shower-deep-spec-2026-10.md §3.1.
+ * Store action'ları (`clickAnomaly`, `singularityReset`, dekad) bu event'i
+ * yayınlar; sahne reçetesi `core/particles.ts` FEAST_SCENES'ten gelir.
+ * `x/y` yoksa ekran merkezi kullanılır; `text` yoksa sahne varsayılanı basılır.
+ */
+export interface FeastSceneTriggerOptions {
+  scene: FeastSceneId
+  x?: number
+  y?: number
+  text?: string
+  color?: string
+}
+
 declare global {
   interface Window {
     __triggerJuice?: (options: JuiceTriggerOptions) => void
     __triggerShockwave?: (options: ShockwaveTriggerOptions) => void
+    __triggerFeastScene?: (options: FeastSceneTriggerOptions) => void
     __setJuiceMode?: (mode: string) => void
   }
 }
@@ -76,6 +101,14 @@ let height = 0
 
 // Performans: juice modu sıcak döngüde diskten okunmaz; App.vue'daki watcher besler.
 let juiceModeCache = 'balanced'
+
+// --- Faz D: VS şöleni durumu --------------------------------------------------
+// Suppression: son büyük sahnenin zamanı (ms). Pencere içinde gelen büyük sahne
+// (crunch hariç) yarı emisyona iner — kare sessizleşir (R2 bütçe disiplini).
+let lastFeastBigAt = 0
+// Knock-down: zemin bastırma sınıfının zamanlayıcısı (M3-safe: köke filter yok,
+// yalnız arka plan katmanları hedeflenir — bkz. style.css Faz D bloğu).
+let knockTimeout: ReturnType<typeof setTimeout> | null = null
 
 function getJuiceMode(): string {
   return juiceModeCache
@@ -146,6 +179,8 @@ function suppressActiveEffects(): void {
   particles.length = 0
   shockwaves.length = 0
   sparks.length = 0
+  lastFeastBigAt = 0
+  clearFeastKnockdown()
   stopAnimation()
   clearBodyShake()
 }
@@ -235,8 +270,16 @@ function spawnShockwave(x: number, y: number, color = '#a855f7', maxRadius = 180
   // juiceMode 'calm' da aynı bastırmayı yapar.
   if (shouldReduceMotion() || mode === 'calm') return
 
+  // Faz D bütçe tavanı: halka dizisi artık cap'li (metin cap'i gibi en eski düşer).
+  function pushShockwave(sw: Shockwave) {
+    if (shockwaves.length >= PARTICLE_BUDGET.MAX_SHOCKWAVES) {
+      shockwaves.shift()
+    }
+    shockwaves.push(sw)
+  }
+
   // 1. Ana Dış Şok Dalgası
-  shockwaves.push({
+  pushShockwave({
     x,
     y,
     radius: 12,
@@ -247,7 +290,7 @@ function spawnShockwave(x: number, y: number, color = '#a855f7', maxRadius = 180
   })
 
   // 2. Takip Eden Beyaz/Gümüş İç Çekirdek Dalgası
-  shockwaves.push({
+  pushShockwave({
     x,
     y,
     radius: 4,
@@ -259,7 +302,8 @@ function spawnShockwave(x: number, y: number, color = '#a855f7', maxRadius = 180
 
   // 3. 360 Derece Dağılan Neon Kıvılcımlar (Sparks)
   const sparkCount = mode === 'tilt' ? 32 : 20
-  for (let i = 0; i < sparkCount; i++) {
+  const room = clampEmission(sparkCount, sparks.length, PARTICLE_BUDGET.MAX_SPARKS)
+  for (let i = 0; i < room; i++) {
     const angle = Math.random() * Math.PI * 2
     const speed = 2.2 + Math.random() * 5.8
     sparks.push({
@@ -283,6 +327,192 @@ function spawnShockwave(x: number, y: number, color = '#a855f7', maxRadius = 180
 function triggerShockwave(options: ShockwaveTriggerOptions) {
   const { x, y, color, maxRadius } = options
   spawnShockwave(x, y, color, maxRadius)
+}
+
+// --- Faz D: VS şöleni sahne motoru (tek canvas, L4) ---------------------------
+// Reçete `core/particles.ts` FEAST_SCENES'ten gelir; fizik mevcut halka/kıvılcım/
+// metin disipliniyle birebirdir (yuvarlak kıvılcım + ince halka + konturlu yazı).
+// Bütçe: halka ≤8, kıvılcım ≤220, metin ≤60 (en eski düşer, atma yok).
+// Suppression: büyük sahne sonrası 400 ms pencerede gelen büyük sahne (crunch
+// hariç) yarı emisyona iner. Knock-down: 120–200 ms zemin bastırma (M3-safe).
+
+function clearFeastKnockdown(): void {
+  if (knockTimeout) {
+    clearTimeout(knockTimeout)
+    knockTimeout = null
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove('feast-knockdown')
+  }
+}
+
+function pulseFeastKnockdown(ms: number): void {
+  if (ms <= 0 || typeof document === 'undefined') return
+  // reduced/off/pil: zemin bastırma yok (şölen zaten sadeleşmiş/gizli).
+  if (shouldReduceMotion()) return
+  document.documentElement.classList.add('feast-knockdown')
+  if (knockTimeout) clearTimeout(knockTimeout)
+  knockTimeout = setTimeout(() => {
+    document.documentElement.classList.remove('feast-knockdown')
+    knockTimeout = null
+  }, ms)
+}
+
+function defaultFeastText(scene: FeastSceneId): string {
+  if (scene === 'supernova') return '7× SÜPERNOVA'
+  if (scene === 'mass_burst') return '777× KÜTLE PATLAMASI'
+  if (scene === 'resonance') return 'SÜPER REZONANS'
+  if (scene === 'crunch') return 'KOZMİK ÇÖKÜŞ'
+  if (scene === 'decade') return 'DEKAD ATLAMA'
+  return ''
+}
+
+function defaultFeastColor(scene: FeastSceneId): string {
+  if (scene === 'supernova') return '#a855f7'
+  if (scene === 'mass_burst') return '#22d3ee'
+  if (scene === 'hawking') return '#67e8f9'
+  if (scene === 'crunch') return '#f59e0b'
+  if (scene === 'decade') return '#fbbf24'
+  return '#e2e8f0'
+}
+
+function spawnFeastSparks(x: number, y: number, color: string, count: number): void {
+  const room = clampEmission(count, sparks.length, PARTICLE_BUDGET.MAX_SPARKS)
+  for (let i = 0; i < room; i++) {
+    const angle = Math.random() * Math.PI * 2
+    const speed = 2.2 + Math.random() * 5.8
+    sparks.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      color,
+      size: 1.8 + Math.random() * 2.8,
+      alpha: 1,
+      life: 0,
+      maxLife: 24 + Math.floor(Math.random() * 18)
+    })
+  }
+}
+
+function triggerFeastScene(options: FeastSceneTriggerOptions): void {
+  const spec = FEAST_SCENES[options.scene]
+  if (!spec) return
+
+  // Sert kapı: OS reduce / motion off / pil tasarrufu → sıfır emisyon.
+  // (Mevcut shouldReduceMotion kapısıyla aynı — yeni kapı yok.)
+  if (shouldReduceMotion()) return
+  if (getJuiceMode() === 'calm' && options.scene !== 'hawking' && options.scene !== 'decade') return
+
+  const x = Number.isFinite(options.x ?? Number.NaN)
+    ? (options.x as number)
+    : window.innerWidth / 2
+  const y = Number.isFinite(options.y ?? Number.NaN)
+    ? (options.y as number)
+    : window.innerHeight * 0.4
+
+  // İnce kapı: motion reduced → %35 emisyon, halka ≤1, shake/knock yok.
+  const reduced = isMotionReduced() || motionMode.value === 'reduced'
+  const now = Date.now()
+  const big = isBigScene(spec.id)
+  const suppressed =
+    big && spec.id !== 'crunch' && shouldSuppressFeast(now, lastFeastBigAt)
+
+  let sparkWant = reduced ? scaleCountForMode(spec.sparks, 'reduced') : spec.sparks
+  let textWant = reduced ? scaleCountForMode(spec.texts, 'reduced') : spec.texts
+  let shockLayers = reduced ? spec.shocks.slice(0, 1) : spec.shocks
+  if (suppressed) {
+    sparkWant = Math.ceil(sparkWant / 2)
+    textWant = Math.ceil(textWant / 2)
+    shockLayers = shockLayers.slice(0, Math.max(1, Math.ceil(shockLayers.length / 2)))
+  }
+
+  const text = options.text || defaultFeastText(spec.id)
+  const color = options.color || defaultFeastColor(spec.id)
+
+  for (const layer of shockLayers) {
+    const n = reduced ? 1 : layer.count
+    for (let k = 0; k < n; k++) {
+      if (shockwaves.length >= PARTICLE_BUDGET.MAX_SHOCKWAVES) shockwaves.shift()
+      shockwaves.push({
+        x,
+        y,
+        radius: 12 - k * 4,
+        maxRadius: layer.maxRadius,
+        color: layer.color,
+        alpha: 0.95,
+        lineWidth: 4
+      })
+    }
+  }
+
+  // Rezonans/crunch katman rengi: ilk katman rengi kıvılcım tabanıdır;
+  // çok renkli sahnelerde kıvılcımlar katmanlar arasında paylaştırılır.
+  if (shockLayers.length > 1) {
+    const per = Math.ceil(sparkWant / shockLayers.length)
+    for (const layer of shockLayers) {
+      spawnFeastSparks(x, y, layer.color, per)
+    }
+  } else {
+    spawnFeastSparks(x, y, color, sparkWant)
+  }
+
+  if (text && floatingTextsEnabled() && textWant > 0) {
+    const mode = getJuiceMode()
+    for (let i = 0; i < textWant; i++) {
+      spawnSingle(
+        x,
+        y - i * 26,
+        text,
+        i === 0 ? color : '#ffffff',
+        spec.big,
+        mode,
+        i
+      )
+    }
+    // Metin cap'i spawnSingle içinde uygulanır (60/120/30); burada ek kıskaç yok.
+  }
+
+  if (spec.suppressionMs > 0 && !reduced) {
+    lastFeastBigAt = now
+  }
+
+  if (!reduced && !suppressed && spec.knockMs > 0) {
+    pulseFeastKnockdown(spec.knockMs)
+  }
+
+  if (!reduced && spec.shake) {
+    window.dispatchEvent(
+      new CustomEvent('doomscroll:shake', { detail: { level: spec.shake } })
+    )
+  }
+
+  if (animId === null) {
+    animId = requestAnimationFrame(loop)
+  }
+}
+
+function handleFeastSceneEvent(e: Event) {
+  const detail = (e as CustomEvent<FeastSceneTriggerOptions>).detail
+  if (!detail || !detail.scene) return
+  if (!FEAST_SCENES[detail.scene]) return
+  triggerFeastScene(detail)
+}
+
+/**
+ * Faz D — YUT kıvılcımı: her manuel dokunuşta 4 nötr kıvılcım (impulse).
+ * Metin mevcut `tap` yoluyla gelir; burada yalnız kıvılcım eklenir.
+ * Cap'li, calm'da yok, reduced'da 2, off/pilde yok.
+ */
+function spawnYutSparks(x: number, y: number, color = '#e2e8f0'): void {
+  if (shouldReduceMotion()) return
+  if (getJuiceMode() === 'calm') return
+  const reduced = isMotionReduced() || motionMode.value === 'reduced'
+  const want = reduced ? 2 : FEAST_SCENES.yut.sparks
+  spawnFeastSparks(x, y, color, want)
+  if (animId === null && sparks.length > 0) {
+    animId = requestAnimationFrame(loop)
+  }
 }
 
 function loop() {
@@ -400,6 +630,11 @@ function handleTapEvent(e: Event) {
   const customEvent = e as CustomEvent<JuiceTriggerOptions>
   if (customEvent.detail) {
     triggerJuice(customEvent.detail)
+    // Faz D — YUT kıvılcımı (metinden bağımsız, cap'li impulse).
+    const { x, y, color } = customEvent.detail
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      spawnYutSparks(x, y, color)
+    }
   }
 }
 
@@ -548,10 +783,12 @@ onMounted(() => {
   window.addEventListener('doomscroll:shake', handleShakeEvent)
   window.addEventListener('doomscroll:screen-shake', handleShakeEvent)
   window.addEventListener('doomscroll:shockwave', handleShockwaveEvent)
+  window.addEventListener('doomscroll:feast-scene', handleFeastSceneEvent)
   window.addEventListener('doomscroll:juice-mode', handleJuiceModeEvent as EventListener)
 
   window.__triggerJuice = triggerJuice
   window.__triggerShockwave = triggerShockwave
+  window.__triggerFeastScene = triggerFeastScene
   window.__setJuiceMode = (mode: string) => {
     if (mode === 'calm' || mode === 'balanced' || mode === 'tilt') {
       juiceModeCache = mode
@@ -565,6 +802,7 @@ onUnmounted(() => {
   window.removeEventListener('doomscroll:shake', handleShakeEvent)
   window.removeEventListener('doomscroll:screen-shake', handleShakeEvent)
   window.removeEventListener('doomscroll:shockwave', handleShockwaveEvent)
+  window.removeEventListener('doomscroll:feast-scene', handleFeastSceneEvent)
   window.removeEventListener('doomscroll:juice-mode', handleJuiceModeEvent as EventListener)
 
   if (window.__triggerJuice === triggerJuice) {
@@ -572,6 +810,9 @@ onUnmounted(() => {
   }
   if (window.__triggerShockwave === triggerShockwave) {
     delete window.__triggerShockwave
+  }
+  if (window.__triggerFeastScene === triggerFeastScene) {
+    delete window.__triggerFeastScene
   }
   if (window.__setJuiceMode) {
     delete window.__setJuiceMode
@@ -590,6 +831,7 @@ onUnmounted(() => {
   }
 
   clearBodyShake()
+  clearFeastKnockdown()
 
   particles.length = 0
   shockwaves.length = 0

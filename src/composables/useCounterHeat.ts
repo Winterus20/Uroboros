@@ -119,9 +119,15 @@ export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
             }
             const r = counterRef.value?.getBoundingClientRect();
             if (r) {
+              // Faz D — 10'arlı dekad imza fişeği tek kaynaktan (sahne reçetesi
+              // core/particles.ts; renk/merkez eski shockwave ile aynı).
               window.dispatchEvent(
-                new CustomEvent("doomscroll:shockwave", {
-                  detail: { x: r.left + r.width / 2, y: r.top + r.height / 2, color: "#fbbf24", maxRadius: 220 }
+                new CustomEvent("doomscroll:feast-scene", {
+                  detail: {
+                    scene: "decade",
+                    x: r.left + r.width / 2,
+                    y: r.top + r.height / 2
+                  }
                 })
               );
             }

@@ -2,6 +2,7 @@
 import { sounds } from '../../core/audio'
 import { safeConfetti } from '../../core/celebrate'
 import { Decimal } from '../../core/math'
+import { format } from '../../core/format'
 import { GUILT_NAMES } from '../../game/balance'
 import { tierAnomalyRateMult } from '../../game/dimension_identity'
 import { COMBO_DECAY_MS, NEURAL_LEGACY_UPGRADE_IDS, NEURAL_TREE } from '../../game/neural-data'
@@ -113,6 +114,17 @@ export const neuralActions = {
         })
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('doomscroll:shake', { detail: { level: 'hard' } }))
+          // Faz D — Planck Duvarı yıkılışı imza sahnesi (tek canvas).
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: {
+                scene: 'crunch',
+                x: window.innerWidth / 2,
+                y: window.innerHeight * 0.4,
+                text: 'PLANCK DUVARI YIKILDI'
+              }
+            })
+          )
         }
       } else {
         sounds.playBuy(4)
@@ -214,6 +226,8 @@ export const neuralActions = {
       const anomaly = this.floatingAnomalies[index]
       this.floatingAnomalies.splice(index, 1)
       this.stats.anomaliesClicked++
+      // Faz D: Hawking (sponsor) anında kazanılan miktar sahne yazısında taşınır.
+      let hawkingText: string | null = null
       if (anomaly.type === 'void') {
         this.stats.mythicsClicked = (this.stats.mythicsClicked || 0) + 1
       }
@@ -282,6 +296,7 @@ export const neuralActions = {
           : this.manualClickPower.times(300)
 
         this.addMatter(instantReward, true)
+        hawkingText = `+${format(instantReward)} g`
       }
 
       if (this.isComboActive) {
@@ -311,6 +326,45 @@ export const neuralActions = {
           origin: { x: anomaly.x / 100, y: anomaly.y / 100 },
           colors: ['#a855f7', '#ec4899']
         })
+      }
+
+      // Faz D — VS şöleni sahne çağrısı (tek canvas, L4).
+      // Reçete `core/particles.ts` FEAST_SCENES'ten gelir; mevcut ses/konfeti
+      // akışına EKLENİR, davranış değişmez (dengeye dokunulmaz).
+      // Kombo (7× + 777×) tür sahnesinin YERİNE rezonans oynar (katmanlı şölen).
+      if (typeof window !== 'undefined') {
+        const px = window.innerWidth * (anomaly.x / 100)
+        const py = window.innerHeight * (anomaly.y / 100)
+        if (anomaly.type === 'sponsor') {
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: {
+                scene: 'hawking',
+                x: px,
+                y: py,
+                text: hawkingText ?? undefined
+              }
+            })
+          )
+        } else if (this.isComboActive) {
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: { scene: 'resonance', x: px, y: py, text: 'SÜPER REZONANS!' }
+            })
+          )
+        } else if (anomaly.type === 'fyp') {
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: { scene: 'supernova', x: px, y: py, text: '7× SÜPERNOVA' }
+            })
+          )
+        } else {
+          window.dispatchEvent(
+            new CustomEvent('doomscroll:feast-scene', {
+              detail: { scene: 'mass_burst', x: px, y: py, text: '777× KÜTLE PATLAMASI' }
+            })
+          )
+        }
       }
     },
 

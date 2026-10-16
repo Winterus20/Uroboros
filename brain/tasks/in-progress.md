@@ -44,7 +44,16 @@
       Çıktı: 16 SVG + `motifs.ts`/`motifs.test.ts` (7 test) + `MotifBand.vue` (z=45) +
       substrat (ScreenOverlay) + Wrinkler/Planck/Kriz kaplamaları + kolaj CSS bloğu.
       Kanıt: test 301/301 · build 0 hata · `harness:smoke` log10=90.7/8 shift (baseline sabit).
-- [ ] **Faz D — VS şöleni** (tek canvas partikül + olay sahneleri)
+- [x] **Faz D — VS şöleni** — ✅ **TAMAMLANDI (2026-10-16)**. ADR:
+      [`0064-phase-d-feast-shower.md`](../decisions/0064-phase-d-feast-shower.md) ·
+      Derin spec: [`phase-d-feast-shower-deep-spec-2026-10.md`](../research/phase-d-feast-shower-deep-spec-2026-10.md) ·
+      İnternet araştırması: [`phase-d-internet-research-2026-10.md`](../research/phase-d-internet-research-2026-10.md).
+      Çıktı: `particles.ts` (7 sahne + bütçe 60/8/220 + suppression 400 ms) + 13 test +
+      `JuiceLayer` genişletmesi (tek canvas, `feast-scene` olayı, knock-down, YUT kıvılcımı) +
+      tetikleyici kablosu (anomali/çöküş/dekad) + Faz D CSS bloğu.
+      Kanıt: typecheck 0 · test 314/314 · build 0 hata · `harness:smoke` log10=90.72/8 shift
+      (baseline sabit) · `harness:perf` churn 6.69/wall 0.77 ms (bant içinde) ·
+      `harness:contrast` AA.
 - [ ] **Faz E — Retrofit & QA** (retrofit + WCAG AA + kapanış)
 
 **Sıradaki adım:** **Faz D — VS şöleni.** Tek canvas partikül (JuiceLayer genişletmesi) +
