@@ -90,6 +90,11 @@ function toggleScreenOverlay() {
   sounds.playClick();
 }
 
+function toggleSideHands() {
+  store.settings.sideHands = !(store.settings.sideHands ?? true);
+  sounds.playClick();
+}
+
 function toggleSequentialStrike() {
   store.settings.sequentialStrike = !(store.settings.sequentialStrike ?? true);
   sounds.playClick();
@@ -391,6 +396,21 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
         :class="(store.settings.screenOverlayEffects ?? true) ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.screenOverlayEffects ?? true) ? 'Açık' : 'Kapalı' }}
+      </button>
+    </div>
+
+    <!-- Yan Şıklatan Eller -->
+    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between">
+      <div>
+        <div class="text-xs font-mono font-semibold text-slate-200">Yan Şıklatan Eller</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">Ekranın iki yanında eli şıklatan 4 karelik döngü (tıklamada hızlanır)</div>
+      </div>
+      <button
+        @click="toggleSideHands"
+        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        :class="(store.settings.sideHands ?? true) ? 'bg-white/[0.10] text-white border-white/25' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
+      >
+        {{ (store.settings.sideHands ?? true) ? 'Açık' : 'Kapalı' }}
       </button>
     </div>
 

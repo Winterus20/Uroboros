@@ -222,6 +222,7 @@ export function buildInitialState() {
       crtEffect: true,
       juiceMode: 'balanced' as const,
       screenOverlayEffects: true,
+      sideHands: true,
       holoCardsEnabled: true,
       swirlShaderQuality: 'balanced' as const,
       sequentialStrike: true,

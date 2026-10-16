@@ -73,6 +73,7 @@ function makeMockState(overrides: Partial<SerializedPlayerState> = {}): Serializ
       crtEffect: false,
       juiceMode: 'balanced',
       screenOverlayEffects: false,
+      sideHands: false,
       holoCardsEnabled: false,
       swirlShaderQuality: 'balanced',
       sequentialStrike: false,

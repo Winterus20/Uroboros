@@ -26,6 +26,7 @@ export interface GameSettings {
   crtEffect: boolean // Gece 3 CRT: scanline + vinyet zemin efekti
   juiceMode: 'calm' | 'balanced' | 'tilt' // Balatro juice yoğunluğu
   screenOverlayEffects: boolean // Doomscroll ekran dokuları (parmak izi lekesi ve kriz çatlağı)
+  sideHands: boolean // Yan şıklatan eller: ekranın iki yanında 4 karelik el animasyonu
   holoCardsEnabled: boolean // Balatro tarzı 3D kart tilt ve holo kaplamalar
   swirlShaderQuality: 'off' | 'balanced' | 'high' // Balatro tarzı dinamik arka plan girdap shader'ı
   sequentialStrike: boolean // Balatro Sütun 2: Sıralı Reels Vuruşu (Pop-chain cascade)

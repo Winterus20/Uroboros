@@ -11,6 +11,7 @@ import HeartBurstLayer from "./components/HeartBurstLayer.vue";
 import CommentTicker from "./components/CommentTicker.vue";
 import FloatingThumbBar from "./components/FloatingThumbBar.vue";
 import ScreenOverlay from "./components/ScreenOverlay.vue";
+import SideSnapHands from "./components/SideSnapHands.vue";
 import MotifBand from "./components/MotifBand.vue";
 import CrtOverlay from "./components/CrtOverlay.vue";
 import Header from "./components/Header.vue";
@@ -182,6 +183,10 @@ onUnmounted(() => {
 
     <!-- Doomscroll Gece Ekran Dokuları (Parmak İzi & Kriz Çatlak Camı) -->
     <ScreenOverlay />
+
+    <!-- Yan Şıklatan Eller (z=45 kolaj): içerik + CRT ÜSTÜNE yapışık durur.
+         #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->
+    <SideSnapHands />
 
     <!-- Faz C "Aç Kumarhane": Boost anı yan motif bandı (L3, z=45 ailesi).
          #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->

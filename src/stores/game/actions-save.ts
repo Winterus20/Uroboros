@@ -795,6 +795,7 @@ export const saveActions = {
           if (this.settings.screenShake === undefined) this.settings.screenShake = true
           if (this.settings.juiceMode === undefined) this.settings.juiceMode = 'balanced'
           if (this.settings.screenOverlayEffects === undefined) this.settings.screenOverlayEffects = true
+          if (this.settings.sideHands === undefined) this.settings.sideHands = true
           if (this.settings.holoCardsEnabled === undefined) this.settings.holoCardsEnabled = true
           if (this.settings.swirlShaderQuality === undefined) this.settings.swirlShaderQuality = 'balanced'
           if (this.settings.decimalPlaces === undefined) this.settings.decimalPlaces = 2
