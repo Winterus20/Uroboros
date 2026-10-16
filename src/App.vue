@@ -34,6 +34,7 @@ import { useAuthStore } from "./stores/auth";
 import { Layers, BarChart3, Bot, FlaskConical, Zap, Sunrise, Trophy, Network, Swords, Lock } from "lucide-vue-next";
 import { useNavigation, NAV_BTN, navClass, navLabelClass } from "./composables/useNavigation";
 import { useModals } from "./composables/useModals";
+import { corruptionStamp } from "./game/corruption";
 
 export type { TabId } from "./composables/useNavigation";
 
@@ -162,7 +163,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen text-slate-100 flex flex-col items-center p-3 md:p-6 font-sans relative selection:bg-purple-500/20 selection:text-purple-300 overflow-x-hidden">
+  <div class="min-h-screen text-slate-100 flex flex-col items-center p-3 md:p-6 font-sans relative selection:bg-purple-500/20 selection:text-purple-300 overflow-x-hidden" :data-corruption="corruptionStamp(store.corruptionLevel)">
     <!-- Balatro Tarzı Canlı Algoritma Girdabı (GLSL Procedural Paint Swirl) -->
     <AlgorithmicSwirl />
 

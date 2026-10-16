@@ -76,6 +76,12 @@
   --crt-scanline-period: 4px;
   --crt-vignette-alpha: 0.30;
   --crt-glow-alpha: 0.015;
+  /* Faz B bozulma knob'ları (tek kaynak; seviyeyle [data-corruption] altında ezilir).
+     Okunabilirlik kanonu: yalnız ambient/dekoratif katman tüketir. */
+  --crt-intensity: 0.10;
+  --substrate-opacity: 0;
+  --motif-band-opacity: 0;
+  --glitch-intensity: 0;
 
   /* --- Rezerve durum renkleri (Görev A — "durum ≠ hue" sözleşmesi) ---
      hue = katman KİMLİĞİ; durum = .ds-ramp-* üçlüsüyle verilir. */
@@ -523,6 +529,72 @@
   .crt-layer {
     display: none !important;
   }
+}
+
+/* ==========================================================================
+   FAZ B — Bozulma şiddet eğrisi (K0..K5 → CSS token tahsisi)
+   Sözleşme: visual-language.md §4 + CORRUPTION_META (src/game/corruption.ts).
+   - Kök mühür: App.vue `:data-corruption="K0..K4"` (K5 tavanlı, Faz 3'te açılır).
+   - Kapsam: YALNIZ ambient tokenlar (--crt-*, --substrate-*, --motif-*, --glitch-*).
+     Sayı/etiket/ramp/tooltip seçicisi BURADA YOK (okunabilirlik kanonu).
+   - Değerler CORRUPTION_META ile birebir aynıdır (O3: K0 %10/K1 %35/K2 %45;
+     O5: K2 substrat %25, K4 %40). Tek taraflı değişim YASAK — iki dosya senkron tutulur.
+   - Faz C/D tüketicileri (--substrate-opacity vb.) bu fazda yalnız TANIMLANIR;
+     görsel katmanları Faz C'de gelir.
+   ========================================================================== */
+[data-corruption="K0"] {
+  --crt-intensity: 0.10;
+  --crt-scanline-alpha: 0.10;
+  --crt-vignette-alpha: 0.30;
+  --crt-glow-alpha: 0.015;
+  --substrate-opacity: 0;
+  --motif-band-opacity: 0;
+  --glitch-intensity: 0;
+}
+[data-corruption="K1"] {
+  --crt-intensity: 0.35;
+  --crt-scanline-alpha: 0.35;
+  --crt-vignette-alpha: 0.38;
+  --crt-glow-alpha: 0.02;
+  --substrate-opacity: 0.06;
+  --motif-band-opacity: 0.08;
+  --glitch-intensity: 0.05;
+}
+[data-corruption="K2"] {
+  --crt-intensity: 0.45;
+  --crt-scanline-alpha: 0.45;
+  --crt-vignette-alpha: 0.44;
+  --crt-glow-alpha: 0.025;
+  --substrate-opacity: 0.25;
+  --motif-band-opacity: 0.25;
+  --glitch-intensity: 0.12;
+}
+[data-corruption="K3"] {
+  --crt-intensity: 0.55;
+  --crt-scanline-alpha: 0.55;
+  --crt-vignette-alpha: 0.50;
+  --crt-glow-alpha: 0.03;
+  --substrate-opacity: 0.32;
+  --motif-band-opacity: 0.45;
+  --glitch-intensity: 0.30;
+}
+[data-corruption="K4"] {
+  --crt-intensity: 0.65;
+  --crt-scanline-alpha: 0.65;
+  --crt-vignette-alpha: 0.56;
+  --crt-glow-alpha: 0.035;
+  --substrate-opacity: 0.40;
+  --motif-band-opacity: 0.85;
+  --glitch-intensity: 0.45;
+}
+[data-corruption="K5"] {
+  --crt-intensity: 0.75;
+  --crt-scanline-alpha: 0.75;
+  --crt-vignette-alpha: 0.62;
+  --crt-glow-alpha: 0.04;
+  --substrate-opacity: 0.55;
+  --motif-band-opacity: 1;
+  --glitch-intensity: 0.60;
 }
 
 /* QoL: "Animasyonları Azalt" ayarı — nabız/parıltı/geçiş animasyonlarını söndürür

@@ -30,7 +30,15 @@
       Subagent A (9 hardcoded zemin hex'i) + bağımsız QA subagent (**PASS-with-notes**, 13/13 iddia doğrulandı).
       Kanıt: typecheck 0 hata · test 263/263 · build 0 hata · `harness:contrast` tüm çiftler ≥ AA · `harness:perf` CSS-bağımsız.
       Kalan iki not Faz E'ye işlendi (K-2 `glass-panel` + `bg-*` çakışması; `m6x11` kararı).
-- [ ] **Faz B — Bozulma altyapısı** (`corruption.ts` + `data-corruption` mührü + CSS token tahsisi; Faz A'nın `--crt-*` şiddet eğrisini besler)
+- [x] **Faz B — Bozulma altyapısı** — ✅ **TAMAMLANDI (2026-10-16)**. ADR:
+      [`0062-phase-b-corruption-infrastructure.md`](../decisions/0062-phase-b-corruption-infrastructure.md) ·
+      Derin spec: [`phase-b-corruption-deep-spec-2026-10.md`](../research/phase-b-corruption-deep-spec-2026-10.md).
+      Çıktı: `corruption.ts` (türetme + meta + stamp/parse) + 11 test +
+      store `corruptionLevel` getter (yeni state yok) + App kök mührü +
+      `[data-corruption]` şiddet eğrisi (meta ile birebir).
+      Kanıt: test 294/294 · build 0 hata · `harness:smoke` log10=90.72/8 shift (baseline sabit).
+      Kilitli kararlar: O1 (K4 gate'i) + O3 (CRT eğrisi K0 %10/K1 %35/K2 %45) kapandı.
+- [ ] **Faz C — GIC kimlik kütüphanesi** (motif slotları + bant + Wrinkler + kolaj vinyetleri)
 - [ ] **Faz C — GIC kimlik kütüphanesi** (motif slotları + bant + Wrinkler + kolaj vinyetleri)
 - [ ] **Faz D — VS şöleni** (tek canvas partikül + olay sahneleri)
 - [ ] **Faz E — Retrofit & QA** (retrofit + WCAG AA + kapanış)

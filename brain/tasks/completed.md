@@ -58,6 +58,25 @@
 - `git` bu ortamda kurulu olmadığı için conventional commit çalıştırılamadı.
 - Kaynaklar: ADR [`0061-phase-a-warm-ground-and-static-crt.md`](../decisions/0061-phase-a-warm-ground-and-static-crt.md) · Derin spec [`phase-a-ground-crt-deep-spec-2026-10.md`](../research/phase-a-ground-crt-deep-spec-2026-10.md) · Önceller ADR-0060 / 0058 / 0049 / 0044.
 
+## [2026-10-16] ✔ — Görsel Dil Faz B: Bozulma Altyapısı (K0–K4 Türetme + `data-corruption` Mührü + CRT Şiddet Eğrisi, ADR-0062)
+
+### Problem:
+- Faz A CRT makinesini K0 baseline'ında kurmuştu ama şiddeti ilerlemeye bağlayacak türetme modülü yoktu; `src/game/corruption.ts` ve `data-corruption` mührü eksikti.
+- Açık kararlar bekliyordu: O1 (K3/K4 tetik sırası — `NIGHT_WATCH_THRESHOLD` 1e308 şafaktan önce tetiklendiği için naive eşleme K4'ü K3'ten önce doğururdu) ve O3 (CRT şiddet eğrisi).
+
+### Çözüm:
+- **`src/game/corruption.ts` (YENİ):** saf modül (store/Vue/Decimal yok) — `deriveCorruptionLevel` (K0 `unlocked<5` → K1 `>=5` → K2 `>=6` → K3 `singularities>=1` → K4 `nightWatch && singularities>=1`; `min(level,4)` tavanı), `corruptionStamp`/`parseCorruptionStamp`, `CORRUPTION_META` (O3: scanline K0 %10/K1 %35/K2 %45; O5: substrat K2 %25/K4 %40; motif K4 %85; glitch K3 0.30).
+- **`src/game/corruption.test.ts` (YENİ, 11 test):** sınır geçişleri, O1 sıra kilidi (nightWatch tek başına K4 doğurmaz), K5 tavanı, monotonluk, bozuk girdi (NaN/negatif), stamp round-trip, meta monotonluğu, okunabilirlik kanonu.
+- **Store:** `getters-misc.ts` `corruptionLevel` getter (`resolvedUnlockedDimensionCount` + kalıcı sayaçlar; **yeni state yok**) + `store-api.ts` tip genişlemesi.
+- **`src/App.vue`:** kök `:data-corruption` mührü (`corruptionStamp(store.corruptionLevel)`).
+- **`src/style.css`:** `:root` 4 yeni knob (`--crt-intensity`, `--substrate-opacity`, `--motif-band-opacity`, `--glitch-intensity`) + `[data-corruption="K0".."K5"]` 6 blok (değerler meta ile birebir; yalnız ambient tokenlar).
+
+### Doğrulama:
+- `npm test`: **22 dosya, 294/294 yeşil** (+11 yeni).
+- `npm run build` (`vue-tsc && vite build`): **0 tip/derleme hatası**.
+- `npm run harness:smoke`: log10=90.72, 8 shift — baseline sabit (**denge regresyonu yok**).
+- Kaynaklar: ADR [`0062-phase-b-corruption-infrastructure.md`](../decisions/0062-phase-b-corruption-infrastructure.md) · Derin spec [`phase-b-corruption-deep-spec-2026-10.md`](../research/phase-b-corruption-deep-spec-2026-10.md).
+
 ## [2026-10-15] ✔ — Geç Oyun Tick Performansı: Reaktivite Muafiyeti, Memoizasyon ve Deterministik Perf Bench (ADR-0059, v0.38.1)
 
 ### Problem:
@@ -2549,3 +2568,21 @@ Oyun içi lo-fi radyosu (`src/core/music/tracks/lofi-chill.ts`) teknik altyapıs
 - Kapsam: 58 dosya değişti + 3 yeni (`useMotion.ts`, sözleşme, brief).
 
 **Kalanlar (kapsam dışı bırakılanlar):** F — Prestige ritüeli (iki ekran kuralı) ayrı iş; bloklamayan NIT'ler ADR-0058 §4'te listeli (`progress-track-lg` tanımsız sınıfı önceden beri var; kök-sınıf mührü setup okumaları savunma amaçlı).
+
+---
+## 2026-10-16 — Yan Şıklatan Eller (gerçek el asseti + 4 karelik şıklatma, iki yan şerit)
+
+**İstek:** İnternetten gerçek el asseti bul → eli şıklatıyormuş gibi 3-4 karelik animasyon → oyunun sağına/soluna tamamen saracak şekilde koy.
+
+**Asset (CC0):** Wikimedia Commons `File:Finger_snapping_impact_frame.gif` (Boing747Ha, Public Domain Dedication). 6 kareden anlamlı 4'ü seçildi (f0 hazır · f1 gerilim · f4 vuruş · f5 oturma; f2/f3 stilize flaş karesi, sprite dışı). Kroma-anahtar + flood fill + mesafe-alanı alfa + alan-normalizasyonlu hizalama + sepya grade ile `public/assets/hands/snap-hand-sheet.png` (1376×460 sprite) üretildi; atıf `ATTRIBUTION.md`'de. Orijinal GIF repoya girmedi.
+
+**Yapılanlar:**
+1. `src/components/SideSnapHands.vue` (yeni, z=5 ambient): her yanda 3 el (üst tavandan sarkık, kaskad gecikmeli), sol düz / sağ aynalı (parmaklar içeri). Idle 3.6s flipbook (`steps(1,end)` keskin kare atlaması, ghosting yok); `doomscroll:tap/production-bump/macro-surge/sequential-strike`'ta 900ms burst (0.9s + parlama).
+2. Kapılar: `sideHands` ayarı (varsayılan açık, legacy migrasyonlu) · `batterySaver` gizler · `motionMode` reduced=statik kare / off=gizli · OS `prefers-reduced-motion` · yalnız ≥1280px (mobilde DOM yok). ADR-0044: içerik kardeşi, transform yok.
+3. `App.vue` montaj (ScreenOverlay üstü / CRT altı), `style.css` katman yorumu, ayar kartı (`GameplaySettings.vue`), `save.test.ts` fikstürü.
+
+**Doğrulama:** `npm run build` 0 hata (1788 modül) · `npm test` 21 dosya 283/283 yeşil · sprite `dist/assets/hands/`'a düşüyor, CSS pakette. Yön/yerleşim Node mock-render ile piksel doğrulandı (`layout-review.png`); canlı tarayıcı yok (ortamda chromium/playwright mevcut değil).
+
+**Revizyon (2026-10-16):** Telefon kontrolü için ≥1280px kapısı kaldırıldı — tüm ekranlarda render; dar ekranda `clamp(64px,16vw,250px)` ince şerit + 0.4 opaklık (içerik z=10 üstte, okunabilirlik korunur), genişte tam boy + 0.55. `npm run build` 0 hata.
+
+**Revizyon 2 (2026-10-16):** Eller üst kata alındı (z=45: içerik+vinyet+CRT üstü, anomali/juice/toast/modal altı) — GIC kolajı gibi cama yapışık durur. Her ele birkaç derecelik yamukluk + üst kenara yapışkan bant şeridi + drop-shadow kalkıklık eklendi; opaklıklar üste uygun yükseltildi (mobil 0.55 / masaüstü 0.8). `npm run build` 0 hata.

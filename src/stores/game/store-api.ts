@@ -4,6 +4,7 @@
 import type { calculateCosmicPreyLadder, calculateEventHorizon, calculateWritingParadox } from '../../core/cosmic-scale'
 import type { Decimal } from '../../core/math'
 import type { ChallengeDef, ChallengeRewardEffects } from '../../game/challenges'
+import type { CorruptionLevel } from '../../game/corruption'
 import type { ScaleLayerId } from '../../game/layers'
 import type { UnlockContext } from '../../game/unlocks'
 import type { AutobuyerMode, CrisisInterventionType, CrisisSpellType, LabMode, LabSeedType, MusicTrackId, NeuralEffects, OfflineReport, ReactorPhase, ResolutionMilestone, SerializedPlayerState, StanceType, StrikeStage } from '../../models/types'
@@ -147,6 +148,7 @@ export interface StoreApi extends GameState {
   achievementProductionMult: number
   achievementDimCostMult: number
   achievementShiftPowerBase: number
+  corruptionLevel: CorruptionLevel
   registerChallengeBuy(units?: number): void;
   relieveChallengeOnPrestige(): void;
   setStance(stance: StanceType): void;

@@ -3,7 +3,9 @@ import { calculateCosmicPreyLadder, calculateEventHorizon, calculateWritingParad
 import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, calcAchievementMultiplier, hasAchievementReward } from '../../game/achievements'
 import { AUTOBUYER_BULK_COST, AUTOBUYER_BULK_SHIFT_REQ, AUTOBUYER_COSTS, AUTOBUYER_MAX_COST, AUTOBUYER_MAX_GALAXY_REQ, AUTOBUYER_PROGRESS_REQ } from '../../game/autobuyer-data'
-import { COLONY_BREED_RATE, COLONY_PASSIVE_LOG_FACTOR, SACRIFICE_SHIFT_REQ } from '../../game/balance'
+import { COLONY_BREED_RATE, COLONY_PASSIVE_LOG_FACTOR, SACRIFICE_SHIFT_REQ, resolvedUnlockedDimensionCount } from '../../game/balance'
+import { deriveCorruptionLevel } from '../../game/corruption'
+import type { CorruptionLevel } from '../../game/corruption'
 import { tierAnomalyRateMult, tierClickSyncCapBonus, tierOfflineSimMult, tierShiftReqMult, tierSlackerLeechMult } from '../../game/dimension_identity'
 import { buildUnlockContext, checkUnlock, getFeatureById, meetsDopamineGate } from '../../game/unlocks'
 import { getAchMultCache, memoChallengeEffects, memoNeuralEffects, setAchMultCache } from './cache'
@@ -444,5 +446,16 @@ export const miscGetters = {
 
     achievementShiftPowerBase(this: StoreApi, state: GameState): number {
       return hasAchievementReward(state.achievements, 'shift_power_boost') ? 1.9 : 1.66
+    },
+
+    // Faz B — Bozulma seviyesi (K0..K4, K5 tavanlı). Store'a YENİ STATE eklenmez;
+    // mevcut monotonik sinyallerden türetilir (sözleşme: visual-language.md §4).
+    // resolvedUnlockedDimensionCount lifetimePeakShifts tabanlıdır → reset sonrası düşmez.
+    corruptionLevel(this: StoreApi, state: GameState): CorruptionLevel {
+      return deriveCorruptionLevel({
+        unlockedDimensionsCount: resolvedUnlockedDimensionCount(state),
+        singularities: state.singularities,
+        nightWatchUnlocked: state.nightWatchUnlocked
+      })
     }
 }
