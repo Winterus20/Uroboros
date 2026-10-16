@@ -51,7 +51,7 @@ onUnmounted(() => {
     <div
       v-for="id in store.achievementToastQueue"
       :key="id"
-      class="glass-panel p-3 rounded-xl border border-amber-500/40 bg-[#0e121a]/95 flex items-start gap-2.5 cursor-pointer overflow-hidden relative"
+      class="glass-panel p-3 rounded-xl border border-amber-500/40 bg-[#141017]/95 flex items-start gap-2.5 cursor-pointer overflow-hidden relative"
       @click="store.dismissAchievementToast(id)"
     >
       <span class="toast-progress" aria-hidden="true"></span>

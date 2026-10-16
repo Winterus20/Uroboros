@@ -44,7 +44,7 @@ const { dialogRef } = useFocusTrap(true, {
       aria-modal="true"
       :aria-labelledby="titleId"
       tabindex="-1"
-      class="modal-glass w-full max-w-xs rounded-2xl border border-white/10 bg-[#0b0d14]/95 p-5 shadow-2xl outline-none"
+      class="modal-glass w-full max-w-xs rounded-2xl border border-white/10 bg-[#120e13]/95 p-5 shadow-2xl outline-none"
     >
       <div class="flex items-start gap-3 mb-4">
         <div

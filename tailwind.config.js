@@ -12,16 +12,17 @@ export default {
         // slate-600 (2.63:1) eşiklerin altındaydı. Yalnız metinde kullanıldıkları
         // için tone override'ı ile 55 kullanım tek seferde AA'ya çekildi.
         slate: {
-          500: '#74849b', // 5.23:1 on #08090d
-          600: '#6e7f96', // 4.87:1 on #08090d
-          700: '#6b7c94', // ~4.6:1 — kilitli/înactive etiket + dekoratif ayırıcı
+          500: '#74849b', // 5.29:1 on #0a0608 (Faz A zemin)
+          600: '#6e7f96', // 4.93:1 on #0a0608
+          700: '#6b7c94', // ~4.73:1 — kilitli/înactive etiket + dekoratif ayırıcı
         },
         dark: {
-          950: '#07090e',
-          900: '#0d1117',
-          850: '#131822',
-          800: '#1b2230',
-          700: '#283347',
+          // Faz A "Aç Kumarhane": soğuk gri-mavi ölçek → sıcak ink-black.
+          950: '#0a0608',
+          900: '#141016',
+          850: '#1b151b',
+          800: '#241b22',
+          700: '#33262e',
         },
         quantum: {
           blue: '#00f0ff',

@@ -363,7 +363,7 @@ onUnmounted(() => {
 <template>
   <div class="w-full max-w-5xl mx-auto py-0.5 select-none mb-3">
     <div
-      class="flex items-center gap-2 sm:gap-3 px-3 py-1.5 rounded-xl border border-white/[0.08] bg-[#0c1017]/85 backdrop-blur-md shadow-xs text-xs relative overflow-hidden transition-all hover:border-cyan-500/30 group"
+      class="flex items-center gap-2 sm:gap-3 px-3 py-1.5 rounded-xl border border-white/[0.08] bg-[#130f14]/85 backdrop-blur-md shadow-xs text-xs relative overflow-hidden transition-all hover:border-cyan-500/30 group"
       :class="{ 'disco-mode': isDiscoActive }"
     >
       <!-- Sol: İkon & Canlı Yayın LED Rozeti (Antimatter Dimensions tarzı) -->
@@ -390,8 +390,8 @@ onUnmounted(() => {
         v-tip="'Kozmik haberi okumak için üzerine gel (duraklar); kütle rezonansı veya gizli ödüller için tıkla'"
       >
         <!-- Sol & Sağ Kenar Yumuşak Gradyan Maskeleri -->
-        <div class="pointer-events-none absolute left-0 inset-y-0 w-6 bg-gradient-to-r from-[#0c1017] to-transparent z-10"></div>
-        <div class="pointer-events-none absolute right-0 inset-y-0 w-6 bg-gradient-to-l from-[#0c1017] to-transparent z-10"></div>
+        <div class="pointer-events-none absolute left-0 inset-y-0 w-6 bg-gradient-to-r from-[#130f14] to-transparent z-10"></div>
+        <div class="pointer-events-none absolute right-0 inset-y-0 w-6 bg-gradient-to-l from-[#130f14] to-transparent z-10"></div>
 
         <!-- Üzerine Gelindiğinde 'Duraklatıldı' İpucu Rozeti -->
         <transition name="fade">

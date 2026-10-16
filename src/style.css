@@ -6,7 +6,9 @@
 @layer base {
   html,
   body {
-    @apply bg-[#08090d] text-slate-100 selection:bg-purple-500/20 selection:text-purple-300;
+    @apply text-slate-100 selection:bg-purple-500/20 selection:text-purple-300;
+    /* Faz A "Aç Kumarhane": zemin tek kaynağa indirildi (--ds-bg). Isınma: #08090d → #0a0608. */
+    background-color: var(--ds-bg);
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     touch-action: manipulation;
@@ -39,12 +41,41 @@
    ========================================================================== */
 
 :root {
-  --ds-bg: #07090e;
-  --ds-panel: rgba(12, 16, 24, 0.78);
-  --ds-panel-strong: rgba(14, 19, 28, 0.90);
+  /* ==========================================================================
+     FAZ A "Aç Kumarhane" — ZEMİN & KATMAN TOKENLARI (tek kaynak)
+     Soğuk "kuantum HUD" zemininden sıcak ink-black kumarhane zeminine geçiş.
+     Kanıtlanmış kontrast: ısınma tüm metin/zemin oranlarını hafifçe İYİLEŞTİRİR
+     (ör. slate-700 panel üzerinde 4.48 → 4.52:1, AA sınırını geçer).
+     Ayrıntı: brain/research/phase-a-ground-crt-deep-spec-2026-10.md §2
+     ========================================================================== */
+  --ds-bg: #0a0608;
+  --ds-panel: rgba(19, 14, 19, 0.78);
+  --ds-panel-strong: rgba(20, 15, 20, 0.90);
+  --ds-card: rgba(19, 14, 18, 0.88);
+  --ds-card-hover: rgba(26, 20, 25, 0.94);
+  --ds-hero: rgba(19, 13, 17, 0.90);
   --ds-border: rgba(255, 255, 255, 0.08);
   --ds-border-strong: rgba(255, 255, 255, 0.14);
   --ds-track: rgba(0, 0, 0, 0.5);
+
+  /* --- "Aç Kumarhane" oburluk renkleri (rezerve durum renklerinden AYRI) ---
+     feast  : oburluk / olay enerjisi (metin olarak AA geçer: 5.62:1)
+     bicycle: yalnız yüzey/ağırlık verir — METİN OLARAK KULLANILAMAZ (3.31:1)
+     Tek kaynak: --feast-rgb kanal ayrışımı değişince hem --feast hem de tüm
+     yarı saydam türevleri (vinyet halkası, CRT vinyeti) senkron güncellenir. */
+  --feast-rgb: 255 51 85;
+  --feast: rgb(var(--feast-rgb));
+  --bicycle: #c40f2e;
+
+  /* --- Sıcak vinyet (cosmic-vignette ile paylaşılan tek kaynak) --- */
+  --ds-vignette-core: rgba(14, 5, 9, 0.86);
+  --ds-vignette-warm: rgb(var(--feast-rgb) / 0.05);
+
+  /* --- CRT tüp dokusu (Faz A baseline = K0; Faz B [data-corruption] yükseltir) --- */
+  --crt-scanline-alpha: 0.10;
+  --crt-scanline-period: 4px;
+  --crt-vignette-alpha: 0.30;
+  --crt-glow-alpha: 0.015;
 
   /* --- Rezerve durum renkleri (Görev A — "durum ≠ hue" sözleşmesi) ---
      hue = katman KİMLİĞİ; durum = .ds-ramp-* üçlüsüyle verilir. */
@@ -104,14 +135,15 @@
 
 /* Katman kartları */
 .glass-panel-card {
-  background: rgba(13, 17, 26, 0.88);
+  /* Faz A: hardcoded rgba → tek kaynak token (--ds-card), sıcak ink-black. */
+  background: var(--ds-card);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .glass-panel-card:hover {
-  background: rgba(18, 24, 36, 0.94);
+  background: var(--ds-card-hover);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
@@ -121,7 +153,7 @@
   overflow: hidden;
   border-radius: 1rem; /* A6 yarıçap hiyerarşisi: hero 16px > kart 12px > satır 10px */
   padding: 1rem 1.25rem;
-  background: rgba(13, 16, 23, 0.9);
+  background: var(--ds-hero);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
@@ -419,17 +451,79 @@
 }
 
 /* Katman sıralaması — tek elden senkron:
-   Oyun (0) < Aura (30) < Anomali (50) < Juice parçacık (60) < Toast (70) < Modal (80) */
+   Oyun (0) < İçerik (10) < Aura/vinyet (30) < CRT tüp (40) < Anomali (50)
+   < Juice parçacık (60) < Toast (70) < Modal (80) */
 /* Modal cam yüzeyi — tek meşru backdrop-filter (içerik üstünde katman) */
 .modal-glass {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
+.layer-crt { z-index: 40; }
 .layer-anomaly { z-index: 50; }
 .layer-juice { z-index: 60; }
 .layer-toast { z-index: 70; }
 .layer-modal { z-index: 80; }
+
+/* ==========================================================================
+   FAZ A "Aç Kumarhane" — CRT TÜP DOKUSU (statik, animasyonsuz)
+   Balatro yaklaşımı: "CRT bir filtre değil, dünyanın kendisi".
+   - Animasyon YOK → WCAG 2.3.1 (10°'de >3 flaş/s) ihlali olmaz; statik gradyan
+     bir kez boyanıp yalnızca composite edilir (ihmal edilebilir maliyet).
+   - Gerçek eğrilik (barrel distortion) yapılmaz: shader/SVG displacement köke
+     filter gerektirir → ADR-0044 ihlali + pahalı. Eğrilik illüzyonu = kenar vinyeti.
+   - Katman: z=40 → içerik (10) + vinyet (30) üstünde; juice (60) / toast (70) /
+     modal (80) ALTINDA kalır (okunabilirlik + VS parlaklığı önde).
+   Kapılar: .crt-off (ayar + motion reduced/off) · .battery-saver ·
+            OS prefers-reduced-motion · forced-colors
+   ========================================================================== */
+
+.crt-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) calc(var(--crt-scanline-period) / 2),
+    rgba(0, 0, 0, var(--crt-scanline-alpha)) calc(var(--crt-scanline-period) / 2),
+    rgba(0, 0, 0, var(--crt-scanline-alpha)) var(--crt-scanline-period)
+  );
+}
+
+.crt-vignette {
+  background: radial-gradient(
+    ellipse 120% 105% at 50% 50%,
+    transparent 52%,
+    rgb(var(--feast-rgb) / calc(var(--crt-vignette-alpha) * 0.18)) 78%,
+    rgba(0, 0, 0, var(--crt-vignette-alpha)) 100%
+  );
+}
+
+.crt-glow {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 42%,
+    rgba(255, 245, 235, var(--crt-glow-alpha)) 0%,
+    transparent 72%
+  );
+}
+
+/* --- CRT kapıları: ayar kapalı veya pil tasarrufu → doku susar --- */
+.crt-off .crt-layer,
+.battery-saver .crt-layer {
+  display: none !important;
+}
+
+/* OS azaltılmış hareket tercihi: statik doku da kapanır (muhafazakâr seçim). */
+@media (prefers-reduced-motion: reduce) {
+  .crt-layer {
+    display: none !important;
+  }
+}
+
+/* Yüksek karşılaştırma / zorunlu renk modu: dekoratif doku tamamen susar. */
+@media (forced-colors: active) {
+  .crt-layer {
+    display: none !important;
+  }
+}
 
 /* QoL: "Animasyonları Azalt" ayarı — nabız/parıltı/geçiş animasyonlarını söndürür
    (Canvas parçacıkları dışındaki tüm CSS animasyonları pratikte donar) */
@@ -472,8 +566,11 @@
    Hepsi .reduce-anim ve prefers-reduced-motion'da kapalı.
    ========================================================================== */
 
-/* CRT zemin — tüm oyunun üstünde ince tüp katmanı (Balatro gibi).
-/* CRT zemin — yazıları bozmamak için overlay devre dışı bırakıldı. */
+/* CRT zemin — TÜM oyunun üstünde ince tüp katmanı (Balatro gibi).
+   NOT (Faz A): Bu pseudo-element yaklaşımı TERK EDİLDİ; yerini
+   `src/components/CrtOverlay.vue` (ayrı DOM katmanı, .layer-crt z=40) aldı.
+   Güvenlik ağı olarak burada bırakılıyor: tema/dış CSS bu pseudo-elementleri
+   canlandırırsa iki katman üst üste binmesin. */
 body::before,
 body::after {
   display: none !important;
@@ -1111,14 +1208,14 @@ body::after {
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #08090d;
+  background: #0a0608;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1b202e;
+  background: #241b22;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2b334a;
+  background: #33262e;
 }
 
 /* Scrollbar Gizleme Yardımcısı */
@@ -1178,9 +1275,6 @@ body::after {
   .crisis-aura-combo,
   .dps-surge,
   .edition-poly,
-  .crt-overlay,
-  .crt-vignette,
-  .crt-scanlines,
   .rate-warm,
   .rate-hot,
   .rate-supernova,
@@ -1212,12 +1306,8 @@ body::after {
   .progress-fill {
     transition: none;
   }
-  /* OS tercihi CRT ekran dokusunu da kapatır (eskiden yalnızca oyun içi
-     ayardan kapanıyordu). */
-  .crt-scanlines,
-  .crt-vignette {
-    display: none !important;
-  }
+  /* OS tercihi CRT tüp dokusunu da kapatır — kural artık CRT CSS bloğunda
+     yaşar (tek kaynak; eski .crt-scanlines/.crt-vignette hedefleri .crt-layer'a taşındı). */
 }
 
 /* Pil & Düşük Donanım Tasarruf Modu (v22) */
@@ -1238,9 +1328,12 @@ body::after {
    Hepsi .reduce-anim / battery-saver / prefers-reduced-motion'da susar.
    ========================================================================== */
 .cosmic-vignette {
+  /* Faz A "Aç Kumarhane": soğuk köşe kararması → sıcak ink-black + feast halkası.
+     Soğuk cyan merkez ışıması korunur. ScreenOverlay.vue scoped kopyası ile SENKRON. */
   background:
     radial-gradient(ellipse 65% 55% at 50% 40%, rgba(0, 240, 255, 0.02) 0%, transparent 70%),
-    radial-gradient(ellipse 130% 110% at 50% 50%, transparent 60%, rgba(5, 7, 15, 0.8) 100%);
+    radial-gradient(ellipse 128% 108% at 50% 50%, transparent 55%,
+      var(--ds-vignette-warm) 80%, var(--ds-vignette-core) 100%);
 }
 .singularity-horizon {
   background: linear-gradient(

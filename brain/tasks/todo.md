@@ -1,18 +1,21 @@
 # Yapılacaklar Listesi (Backlog & Roadmap)
 
 ## 🎭 YENİ: Görsel Dil — "Aç Kumarhane" (Balatro zemin + VS şöleni + GIC kimlik) & Faz-temelli Bozulma
-*(2026-10-16 · tasarım kullanıcıyla uzlaşıldı, uygulama bekliyor · Sözleşme: [`brain/context/visual-language.md`](../context/visual-language.md) · ADR: [`0060-gic-phase-corruption-visual-pivot.md`](../decisions/0060-gic-phase-corruption-visual-pivot.md) · Öncüller: ADR-0049/0057/0058 geçerli)*
+*(2026-10-16 · tasarım kullanıcıyla uzlaşıldı · **Fazlı uygulama planı:** [`brain/research/visual-language-hungry-parlor-implementation-plan-2026-10.md`](../research/visual-language-hungry-parlor-implementation-plan-2026-10.md) · Sözleşme: [`brain/context/visual-language.md`](../context/visual-language.md) · ADR: [`0060-gic-phase-corruption-visual-pivot.md`](../decisions/0060-gic-phase-corruption-visual-pivot.md) · Öncüller: ADR-0049/0057/0058 geçerli)*
+
+> **Uygulama faz faz ilerler** — her fazın kapsamı, dosya sahipliği, adımları, kabul kriterleri
+> ve doğrulama yöntemi plan dokümanındadır. Faz başlamadan önce plan §11'deki açık kararlar kapatılır.
 
 **Uzlaşma özeti:** ink black + hot red + altın palet; CRT scanline hep hafif açık (frenli);
 wobble/roll-up/bounce etkileşimde; büyük olaylarda VS partikül şöleni; GIC kolaj substrat
 + boost anında yanlardan süzülen motif/glif bandı; creepy-cute Wrinkler. **Bozulma
 BOYUTA değil FAZA bağlı** (K0→K5); okunabilirlik kanonu (sayı/etiket/ramp asla bozulmaz) kırılmaz.
 
-- [ ] **Faz A — Zemin & CRT:** `--ds-bg` #0a0608 ısınması; YENİ tokenler `--feast` #ff3355 (oburluk/olay enerjisi) + `--bicycle` #c40f2e; sıcak vinyet; CRT scanline+curvature kaplaması (`useMotion` full/reduced/off kapısına tam bağlı); `AlgorithmicSwirl` korunur (ADR-0049 Kural 1); m6x11 font lisans kontrolü
-- [ ] **Faz B — Bozulma altyapısı:** `src/game/corruption.ts` — K0..K5 fazdan türetilir (D5/Planck eşiği, kozmik yutuş, prestij sayısı/Big Crunch, `nightWatchUnlocked`); App root `data-corruption` mührü; CSS token tüketimi; kayıt formatına yeni alan EKLENMEZ
-- [ ] **Faz C — GIC kimlik kütüphanesi:** `src/assets/motifs/` + `src/game/motifs.ts` (motif adı = dosya adı slot kontratı; agent-SVG'ler ileride elle çizimle birebir değiştirilebilir); boost duyuru kartı + yan motif bandı (rezonans kombosunda yoğunluk kabarır); Wrinkler creepy-cute kaplaması; Kriz/Planck kolaj vinyetleri
-- [ ] **Faz D — VS şöleni:** `core/particles.ts` tek canvas overlay (App.vue); yutma kıvılcımları, olay saldırıları, yüzen kütle sayıları; ADR-0044 shake containment korunur
-- [ ] **Faz E — Retrofit & QA:** Header/DimensionRow/DimensionsTab/CommentTicker/modal dili; WCAG AA kontrast turu (yeni sıcak paletle); `npm test` + `npm run build` + completed.md kaydı + conventional commit
+- [x] **Faz A — Zemin & CRT:** *(✅ tamamlandı 2026-10-16 — ADR-0061 · derin spec: [`research/phase-a-ground-crt-deep-spec-2026-10.md`](../research/phase-a-ground-crt-deep-spec-2026-10.md))* `--ds-bg` #0a0608 ısınması; YENİ tokenler `--feast` #ff3355 (oburluk/olay enerjisi) + `--bicycle` #c40f2e; sıcak vinyet; tek zemin kaynağı (`bg-[var(--ds-bg)]`); `CrtOverlay.vue` (**statik** scanline + curvature, `useMotion` full/reduced/off + `crt-off` + `battery-saver` kapısı, kök seviyede, modal altı z-index, ADR-0044 güvenli); ölü `crtEffect` ayarını canlandır; `AlgorithmicSwirl` korunur (ADR-0049 Kural 1); m6x11 font lisans kontrolü (ertelendi)
+- [ ] **Faz B — Bozulma altyapısı:** `src/game/corruption.ts` + `corruption.test.ts` — K0..K5 fazdan türetilir (`unlockedDimensionsCount` [monotonik, `lifetimePeakShifts`], `singularities`, `nightWatchUnlocked`); App root `data-corruption` mührü; CSS token tahsisi (`--crt-intensity` Faz A'nın CRT'sini besler); kayıt formatına yeni alan EKLENMEZ
+- [ ] **Faz C — GIC kimlik kütüphanesi:** `src/assets/motifs/` + `src/game/motifs.ts` (motif adı = dosya adı slot kontratı; agent-SVG'ler ileride elle çizimle birebir değiştirilebilir); `MotifBand.vue` boost duyuru kartı + yan motif bandı (rezonans kombosunda yoğunluk kabarır); substrat katmanı (damalı şerit/tape/yırtık kâğıt/el yazısı); Wrinkler creepy-cute kaplaması; Kriz/Planck kolaj vinyetleri
+- [ ] **Faz D — VS şöleni:** `core/particles.ts` (paylaşılan fizik) + `JuiceLayer` genişletmesi (**tek canvas**, ikinci overlay yok); yutma kıvılcımları, olay şölenleri (Süpernova/Kütle Patlaması/Hawking/rezonans/ilk Big Crunch), yüzen kütle sayıları, suppression + zemin knock-down; ADR-0044 shake containment korunur
+- [ ] **Faz E — Retrofit & QA:** Header/DimensionRow/DimensionsTab/CommentTicker/modal dili; WCAG AA kontrast turu (yeni sıcak paletle); motion kapısı denetimi; **`glass-panel` + Tailwind `bg-*` çakışma taraması** (K-2: CSS kaynak sırası `.glass-panel`'i kazandırıyor → `bg-*` ölü kalıyor; `AchievementToast.vue:54` doğrulanmış örnek); `bg-black/NN` (161 kullanım) ısıtma değerlendirmesi; kullanılmayan `public/fonts/m6x11.woff2` kararı; `npm test` + `npm run build` + `harness:smoke` (denge regresyonu yok) + completed.md kaydı + conventional commit
 
 ---
 

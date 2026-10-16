@@ -371,7 +371,7 @@ function hardReset() {
 
 <template>
   <div class="layer-modal fixed inset-0 flex items-start md:items-center justify-center p-3 bg-black/80 backdrop-blur-sm overflow-y-auto" @click.self="emit('close')">
-    <div class="w-full max-w-2xl rounded-2xl border border-rose-500/40 bg-[#0d0710] shadow-[0_0_40px_rgba(244,63,94,0.25)] overflow-hidden">
+    <div class="w-full max-w-2xl rounded-2xl border border-rose-500/40 bg-[#140c12] shadow-[0_0_40px_rgba(244,63,94,0.25)] overflow-hidden">
       <!-- Başlık -->
       <div class="flex items-center justify-between px-4 py-3 border-b border-rose-500/20 bg-rose-500/10">
         <div class="flex items-center gap-2">

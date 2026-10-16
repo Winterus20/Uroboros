@@ -16,9 +16,28 @@
 - [x] Dalga 3 — QA denetimi (bağımsız subagent) + fix dalgası → FINAL QA VERDICT: PASS
 - [x] Dalga 4 — `npm test` (263/263) + `npm run build` (0 hata) + `harness:smoke` (log10=90.72, 8 shift), ADR-0058, brain reconciliation, conventional commit
 
-**Şu an aktif geliştirme dalgası yok.** Sıradaki dalga: `todo.md` başındaki **"Aç
-Kumarhane" faz-temelli görsel bozulma** girişimi (sözleşme: `brain/context/visual-language.md`,
-ADR-0060) — kullanıcı "başla" dediğinde Faz A'dan başlar.
+**Aktif dalga: "Aç Kumarhane" faz-temelli görsel dil pivotu** (sözleşme:
+`brain/context/visual-language.md`, ADR-0060).
+
+- [x] **Planlama** — fazlı uygulama planı yazıldı ve onaylandı:
+      `brain/research/visual-language-hungry-parlor-implementation-plan-2026-10.md`
+      (kod denetimi, bozulma sinyalleri, K0–K5 merdiveni, faz-üstü mimari kararlar M1–M7,
+      Faz A–E adım+kabul kriterleri, doğrulama protokolü, riskler, açık kararlar O1–O6).
+- [x] **Faz A — Zemin & CRT** — ✅ **TAMAMLANDI (2026-10-16)**. ADR:
+      [`0061-phase-a-warm-ground-and-static-crt.md`](../decisions/0061-phase-a-warm-ground-and-static-crt.md) ·
+      Derin spec: [`phase-a-ground-crt-deep-spec-2026-10.md`](../research/phase-a-ground-crt-deep-spec-2026-10.md).
+      Dalga: orchestrator (`style.css` / `App.vue` / `index.html` / `tailwind.config.js` / `CrtOverlay.vue`) +
+      Subagent A (9 hardcoded zemin hex'i) + bağımsız QA subagent (**PASS-with-notes**, 13/13 iddia doğrulandı).
+      Kanıt: typecheck 0 hata · test 263/263 · build 0 hata · `harness:contrast` tüm çiftler ≥ AA · `harness:perf` CSS-bağımsız.
+      Kalan iki not Faz E'ye işlendi (K-2 `glass-panel` + `bg-*` çakışması; `m6x11` kararı).
+- [ ] **Faz B — Bozulma altyapısı** (`corruption.ts` + `data-corruption` mührü + CSS token tahsisi; Faz A'nın `--crt-*` şiddet eğrisini besler)
+- [ ] **Faz C — GIC kimlik kütüphanesi** (motif slotları + bant + Wrinkler + kolaj vinyetleri)
+- [ ] **Faz D — VS şöleni** (tek canvas partikül + olay sahneleri)
+- [ ] **Faz E — Retrofit & QA** (retrofit + WCAG AA + kapanış)
+
+**Sıradaki adım:** **Faz B — Bozulma altyapısı.** Kullanıcı "başla" dediğinde Faz B derin
+spesifikasyonu yazılır (K0–K5 türetimi + `data-corruption` mührü + CRT şiddet eğrisi).
+Faz A'nın `--crt-*` tokenları bu faz için hazır bekliyor.
 
 **Beklemede (kullanıcı onayı gerektiren adaylar):**
 - F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.
