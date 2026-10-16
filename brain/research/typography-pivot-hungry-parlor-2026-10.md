@@ -102,3 +102,30 @@ mono korunur. (ADR-0049 "Inter" kontratını güncelleme gerektirir.)
 - Atıf unutulursa lisans ihlali → ATTRIBUTION.md + ADR'de zorunlu madde.
 - Google Fonts'a eklenen Caveat payload'ı → latin-ext woff2 yalnız ihtiyar subseti çeker (~30 KB).
 - Kontrast: font değişimi WCAG oranını değiştirmez (renk bazlı harness korunur).
+
+---
+
+## 7. İKİNCİ DALGA — UI (menü/tüm yazılar) fontları (ADR-0067)
+
+**Tetik:** Kullanıcı ADR-0066 sonrası "sadece sayaç değişmiş, menüler ve yazılar aynı —
+onlar için de düzgün fontlar bul ve yap" dedi; yön sorulunca "en stilistik + görsel dile
+yakışır" dedi.
+
+**Yöntem:** aynı fonttools cmap hattı ile 13 adayın tamamı doğrulandı:
+
+| Aday | Rol | TR | Sonuç |
+| :--- | :--- | :--- | :--- |
+| Rubik · Figtree · DM Sans · Outfit · Chivo · Archivo · Sora | sans | ✅ hepsi | elendi (stil/görsel dil uyumu) |
+| **Space Grotesk** | sans | ✅ | **SEÇİLDİ** — retro-teknik, hafif tuhaf; Space Mono ailesi; CRT/dijital kimlik |
+| **Space Mono** | mono | ✅ | **SEÇİLDİ** — retro terminal/CRT; Balatro diline en yakın mono |
+| IBM Plex Mono · DM Mono · Azeret Mono · Martian Mono | mono | ✅ hepsi | elendi (karakter/aile uyumu) |
+
+**Uygulama:** token swap (`sans`/`display` fallback) + hardcoded yığın hizası
+(`style.css` body/section-label/hint → Space Grotesk; `.dim-glyph/.stat-box-*/.ds-badge/
+.btn-primary/.balatro-chip-*/sticker` + `tooltip.ts` + `JuiceLayer` fallback → `Space Mono`
+önüne). Ağırlık eşlemeleri bilinçli: Space Grotesk 700 maks (800/900→700), Space Mono
+400/700 (500→400, 600/800/900→700).
+
+**Doğrulama:** test exit 0 (314/314) · build exit 0 · contrast AA · smoke 90.7/8 shift ·
+dist: `.font-sans→Space Grotesk`, `.font-mono→Space Mono`, Inter/JetBrains referansı **0** ·
+Google Fonts yanıtında latin-ext blokları ✓.

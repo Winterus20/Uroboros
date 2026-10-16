@@ -33,12 +33,15 @@ export default {
         }
       },
       fontFamily: {
-        mono: ['JetBrains Mono', 'Fira Code', 'Roboto Mono', 'monospace'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // ADR-0067 (2. dalga — "Aç Kumarhane" UI fontları):
+        // mono = Space Mono (retro terminal/CRT telemetri), sans = Space Grotesk
+        // (ayla aile, retro-teknik kimlik). İkisi de TR-verified (fonttools cmap).
+        mono: ['Space Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
         // Display (ADR-0066 "Aç Kumarhane" pivotu): Balatro'nun piksel fontu
         // m6x11plus (Daniel Linssen, atıf zorunlu — public/fonts/ATTRIBUTION.md).
         // TR kapsaması doğrulanmış; ızgara boyutları 18'in katları (style.css @font-face notu).
-        display: ['m6x11plus', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['m6x11plus', 'Space Grotesk', 'system-ui', 'sans-serif'],
         // Hand (GIC kolaj katmanı): el yazısı annotasyonlar (K3+ substrat notları).
         hand: ['Caveat', 'Segoe Print', 'cursive'],
       },

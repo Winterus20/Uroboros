@@ -110,17 +110,23 @@ Checklist brain/tasks/todo.md içinde tutulur:
 - Faz E — Retrofit & QA: Header/DimensionRow/DimensionsTab/ticker/modal dili + WCAG AA
   kontrast turu (yeni sıcak paletle) + npm test + npm run build + kayıt/commit
 
-## 7. TİPOGRAFİ SİSTEMİ (ADR-0066 · 2026-10-16 — uygulandı)
+## 7. TİPOGRAFİ SİSTEMİ (ADR-0066 + ADR-0067 · 2026-10-16 — uygulandı)
 
 > Araştırma raporu: [`brain/research/typography-pivot-hungry-parlor-2026-10.md`](../research/typography-pivot-hungry-parlor-2026-10.md)
-> · ADR: [`0066-hungry-parlor-typography-pivot.md`](../decisions/0066-hungry-parlor-typography-pivot.md)
+> · ADR'ler: [`0066`](../decisions/0066-hungry-parlor-typography-pivot.md) (display/hand) +
+> [`0067`](../decisions/0067-ui-font-wave-space-grotesk-spacemono.md) (sans/mono — 2. dalga)
 
 | Rol (token) | Font | Kullanım | Kaynak |
 | :--- | :--- | :--- | :--- |
 | `font-display` | **m6x11plus** (Balatro piksel) | hero sayaç + yüzen olay sayıları (canvas) | self-host `public/fonts/` · **atıf zorunlu** (`ATTRIBUTION.md`) |
-| `font-sans` | Inter | tüm UI metni (ADR-0049 kontratı) | Google Fonts |
-| `font-mono` | JetBrains Mono | sayı / telemetri / rozet (`tabular-nums` kanonu) | Google Fonts |
-| `font-hand` (YENİ) | Caveat | GIC el yazısı annotasyonlar (K3+ `.collage-scrawl`) | Google Fonts |
+| `font-sans` | **Space Grotesk** (400–700) | tüm menü/gövde metni, nav, başlıklar | Google Fonts (latin-ext ✓) |
+| `font-mono` | **Space Mono** (400/700) | sayı / telemetri / rozet / buton (`tabular-nums` kanonu) | Google Fonts (latin-ext ✓) |
+| `font-hand` | Caveat | GIC el yazısı annotasyonlar (K3+ `.collage-scrawl`) | Google Fonts |
+
+2. dalga notu (ADR-0067): ağırlık eşlemeleri bilinçli — Space Grotesk maks 700
+(`font-extrabold/black` → 700), Space Mono yalnız 400/700 (500→400, 600→700);
+Inter/JetBrains hardcoded yığınları da aileyi taşır (`style.css`, `tooltip.ts`,
+`JuiceLayer` canvas fallback) — **eski font ailesi repoda sıfır referanstır**.
 
 **Kırılmaz kurallar:**
 1. m6x11plus **ızgara** = font-size 18'in katları (18/36/54/72); **sentetik bold yasak**

@@ -71,12 +71,23 @@
       sans/mono korunur; Chakra Petch sıfır referans.
       Kanıt: test 314/314 · build 0 · contrast AA · smoke log10=90.72/8 shift · dist artifact ✓
       (Playwright/Termux kurulamadı → ekran görüntülü görsel onay KULLANICIDA).
+- [x] **Tipografi 2. Dalga — UI fontları (Space Grotesk + Space Mono)** — ✅ **TAMAMLANDI (2026-10-16)**.
+      ADR: [`0067-ui-font-wave-space-grotesk-spacemono.md`](../decisions/0067-ui-font-wave-space-grotesk-spacemono.md).
+      Tetik: kullanıcı "menüler/tüm yazılar aynı" dedi; 13 aday fonttools TR-doğrulama,
+      yön "en stilistik + görsel dil" → sans Space Grotesk + mono Space Mono (ayna aile).
+      Çıktı: token swap (`tailwind.config` sans/mono/display-fallback) + `index.html`
+      Google Fonts linki + hardcoded yığın hizası (`style.css` body/section-label/hint
+      → Space Grotesk; dim-glyph/stat-box/ds-badge/btn-primary/balatro-chip/sticker +
+      `tooltip.ts` + `JuiceLayer` fallback → Space Mono).
+      Kanıt: test exit 0 (314/314) · build 0 · contrast AA · smoke 90.7/8 shift ·
+      dist `.font-sans/.font-mono` ✓ · Inter/JetBrains referansı 0 · latin-ext ✓.
 
 **"Aç Kumarhane" pivotu (Faz A–E + Tipografi) KAPANDI.** Sıradaki adaylar (ayrı işler):
 F — Prestige ritüeli · ADR-0033 §3 / ADR-0034 denge soruları.
 
-**Sıradaki adım:** Yok — aktif dalga kapalı. Kullanıcıdan beklenen: m6x11plus sayaç /
-Caveat K3 notlarının **görsel onayı** (bu ortamda tarayıcı doğrulaması yapılamadı).
+**Sıradaki adım:** Yok — aktif dalga kapalı (tipografi 1. + 2. dalga tamam). Kullanıcıdan
+beklenen: m6x11plus sayaç / Space Grotesk-Space Mono menü / Caveat K3 notlarının
+**görsel onayı** (bu ortamda tarayıcı doğrulaması yapılamadı).
 
 **Beklemede (kullanıcı onayı gerektiren adaylar):**
 - F — Prestige ritüeli (iki ekran kuralı, sıfırlama anı) — ayrı iş olarak bekliyor.

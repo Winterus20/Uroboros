@@ -26,8 +26,9 @@
     @apply text-slate-100 selection:bg-purple-500/20 selection:text-purple-300;
     /* Faz A "Aç Kumarhane": zemin tek kaynağa indirildi (--ds-bg). Isınma: #08090d → #0a0608. */
     background-color: var(--ds-bg);
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* ADR-0067: sans = Space Grotesk ("Aç Kumarhane" CRT/retro kimlik; Inter cv02-cv11
+       özellikleri bu aileye ait değildi, kaldırıldı). */
+    font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
     overscroll-behavior: none;
@@ -136,7 +137,7 @@
   display: inline-block;
   min-width: 1.2em;
   text-align: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
 }
 
@@ -214,12 +215,12 @@
 }
 .stat-box-label {
   font-size: 10px;
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   color: #94a3b8;
   line-height: 1.2;
 }
 .stat-box-value {
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   font-weight: 700;
   font-size: 0.8rem;
   line-height: 1.2;
@@ -230,7 +231,7 @@
    gövde yüzüne çevrildi; mono yalnız gerçek sayı verisinde kaldı. */
 .section-label {
   font-size: 12px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Space Grotesk", system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: 0;
   color: #cbd5e1;
@@ -240,7 +241,7 @@
 }
 .section-hint {
   font-size: 11px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Space Grotesk", system-ui, sans-serif;
   color: #7b8ba3; /* 5.75:1 — Faz 1 AA düzeltmesi */
 }
 
@@ -252,7 +253,7 @@
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
   font-size: 10px;
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
@@ -377,7 +378,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   font-weight: 700;
   border-radius: 0.65rem;
   border: 1px solid transparent;
@@ -1006,7 +1007,7 @@ body::after {
   gap: 0.3rem;
   padding: 0.3rem 0.7rem;
   border-radius: 0.6rem;
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
@@ -1494,7 +1495,7 @@ body::after {
   gap: 0.25rem;
   padding: 0.15rem 0.45rem;
   border-radius: 0.375rem;
-  font-family: ui-monospace, monospace;
+  font-family: "Space Mono", ui-monospace, monospace;
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.05em;

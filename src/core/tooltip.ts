@@ -79,7 +79,7 @@ function ensureLayer(): HTMLDivElement {
       'color: #f1f5f9',
       'font-size: 11px',
       'line-height: 1.45',
-      'font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+      'font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
       'pointer-events: none',
       'opacity: 0',
       'transform: scale(0.95) translateY(4px)',

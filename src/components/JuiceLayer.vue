@@ -604,7 +604,7 @@ function loop() {
     ctx.textBaseline = 'middle'
     // İmza tipografi (ADR-0066): display font m6x11plus — ızgara boyutları 18'in
     // katları; tek ağırlık Regular (sentetik bold piksel ızgarasını bozar).
-    ctx.font = `400 ${p.size}px "m6x11plus", "JetBrains Mono", monospace`
+    ctx.font = `400 ${p.size}px "m6x11plus", "Space Mono", monospace`
 
     // Koyu kontur: her zeminde okunabilirlik (karanlık panelde de açık alanda da).
     // Kalınlık boyutla ölçeklenir (18px'te 3.5 · 36px'te ~6.5 — eski 0.18 oranı).

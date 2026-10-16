@@ -1,5 +1,25 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-16] ✔ — Görsel Dil: Tipografi 2. Dalga — UI Fontları Space Grotesk + Space Mono (ADR-0067)
+
+### Problem:
+- ADR-0066 sonrası yalnız hero sayaç değişmişti; kullanıcı "diğer bütün menüler ve yazılar aynı — onlar için de düzgün fontlar bul ve yap" dedi. Yön: "en stilistik + görsel dile yakışır olsun".
+
+### Araştırma:
+- 13 aday fonttools cmap ile doğrulandı (**tamamı TR-OK**): Rubik/Figtree/DM Sans/Outfit/Chivo/Archivo/Sora (sans) + IBM Plex/DM/Azeret/Martian (mono) elendi; **Space Grotesk + Space Mono** seçildi (ayna aile, retro-teknik/CRT kimlik, Balatro diline yakınlık). Rapor §7.
+
+### Çözüm:
+- **`tailwind.config.js`:** `sans: Space Grotesk` · `mono: Space Mono` · `display` fallback Space Grotesk. **`index.html`:** Google Fonts linki (Inter/JetBrains çıktı; Caveat + Space Grotesk + Space Mono).
+- **`style.css`:** body + `.section-label/.section-hint` → Space Grotesk (Inter cv02-cv11 özellikleri kaldırıldı — bu aileye ait değildi); `.dim-glyph`, `.stat-box-*`, `.ds-badge`, `.btn-primary`, `.balatro-chip-*`, sticker-chip `ui-monospace` yığınlarının **önüne `Space Mono`**.
+- **`tooltip.ts`** font stack + **`JuiceLayer`** canvas fallback → Space Mono.
+- **Ağırlık eşlemeleri (bilinçli):** Space Grotesk maks 700 (font-extrabold/black → 700); Space Mono 400/700 (500→400, 600→700); `tabular-nums` monospace ile garantili.
+
+### Doğrulama:
+- `npm test` **exit 0 (314/314)** · `npm run build` **exit 0** · `harness:contrast` **AA exit 0** · `harness:smoke` **log10=90.7 / 8 shift exit 0**.
+- dist: `.font-sans{Space Grotesk}` + `.font-mono{Space Mono}` + `.font-display{m6x11plus, Space Grotesk}` · **Inter/JetBrains referansı 0** · Google Fonts yanıtında **latin-ext** blokları ✓.
+- **Kısıt:** Playwright/Chromium kurulamadı → ekran görüntülü görsel onay kullanıcıdadır.
+- Kaynaklar: ADR [`0067-ui-font-wave-space-grotesk-spacemono.md`](../decisions/0067-ui-font-wave-space-grotesk-spacemono.md) · Rapor §7 · Sözleşme `visual-language.md` §7.
+
 ## [2026-10-16] ✔ — Görsel Dil: Tipografi Pivotu — "Aç Kumarhane" Fontları (ADR-0066)
 
 ### Problem:
