@@ -1961,6 +1961,18 @@ body::after {
   letter-spacing: 0.04em;
 }
 
+/* --- Kenara yerleşirken beliren salgı çipleri ------------------------------
+   Sahne 0.68 sn boyunca süzülürken çipler peşinden sürüklenmesin: giriş
+   gecikmeli (kadran merkez okumasının `delay-[260ms]` ritmiyle aynı).
+   `both` → gecikme boyunca opaklık 0'da kalır, yazı okunmadan uçmaz. */
+@keyframes clock-dock-info-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.clock-dock-info {
+  animation: clock-dock-info-in 0.3s ease-out 0.32s both;
+}
+
 /* Ayarları/OS'u tek noktada okuyan bileşen mührü: hareket kapalıysa kadran
    tamamen statiktir (girdi ve okuma YİNE çalışır — yalnız süs susar). */
 .clock-static {
@@ -1975,12 +1987,15 @@ body::after {
 .reduce-anim .clock-materialize,
 .reduce-anim .clock-ring-pulse,
 .reduce-anim .clock-hand-release,
+.reduce-anim .clock-dock-info,
 .motion-off .clock-materialize,
 .motion-off .clock-ring-pulse,
 .motion-off .clock-hand-release,
+.motion-off .clock-dock-info,
 .battery-saver .clock-materialize,
 .battery-saver .clock-ring-pulse,
-.battery-saver .clock-hand-release {
+.battery-saver .clock-hand-release,
+.battery-saver .clock-dock-info {
   animation: none !important;
 }
 .reduce-anim .clock-dial,
@@ -1998,7 +2013,8 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .clock-materialize,
   .clock-ring-pulse,
-  .clock-hand-release {
+  .clock-hand-release,
+  .clock-dock-info {
     animation: none !important;
   }
   .clock-dial {

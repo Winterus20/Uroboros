@@ -338,7 +338,8 @@ function fireReleaseEffects(tensionAtRelease: number) {
   <div class="layer-clock pointer-events-none fixed inset-0 w-screen h-screen max-w-full max-h-full overflow-hidden">
     <!-- Sahne: sarma anında ekranın ortasında dev kadran; salgıya geçince
          sağ kenara süzülüp küçülür (`clock-stage--dock`) — merkez serbest kalır.
-         Kadran bu sahneden `w-full h-full` beslenir; boyut/konum tek yerde (CSS). -->
+         Kadran sahneyi tam doldurur (boyut `style.css` → `.clock-dial`
+         `width/height: 100%`); ölçü ve konum tek yerde, CSS değişkeninde. -->
     <div
       v-if="visible"
       class="clock-stage"
@@ -541,10 +542,11 @@ function fireReleaseEffects(tensionAtRelease: number) {
       </div>
 
       <!-- Salgı bilgisi: kenara yerleşmiş küçük kadranın ALTINDA, sağa yaslı
-           dar çipler (ekranın ortasını kapatmaz). -->
+           dar çipler. Girişi gecikmeli (`.clock-dock-info`): çipler sahneyle
+           birlikte uçarken 0.68 sn boyunca okunmasın, kadran oturunca gelsin. -->
       <div
         v-else-if="isReleasing"
-        class="pointer-events-none absolute right-0 top-full mt-1.5 flex flex-col items-end gap-1 whitespace-nowrap"
+        class="clock-dock-info pointer-events-none absolute right-0 top-full mt-1.5 flex flex-col items-end gap-1 whitespace-nowrap"
       >
         <span class="clock-chip clock-chip-profit">TEPE {{ releasePeakLabel }}×</span>
         <span class="clock-chip">{{ releaseCount }}. salgı</span>
