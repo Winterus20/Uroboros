@@ -31,6 +31,14 @@ const isWinding = computed(() => store.timeClockIsWinding)
 const isReleasing = computed(() => store.timeClockIsReleasing)
 const visible = computed(() => store.timeClock.phase !== 'idle')
 
+/**
+ * Salgı fazında kadran merkezi TERK EDER: sağ kenara süzülüp küçülür.
+ * Sarma fazında taşınamaz — parmak kadranın merkezine göre açı ölçüyor
+ * (`pointerSample` her örnekte `getBoundingClientRect`), kadran kaysa jest
+ * bozulurdu. Bu yüzden yerleşme YALNIZ salgıda olur (salgı zaten ≤75 sn).
+ */
+const docked = computed(() => isReleasing.value)
+
 // --- Okumalar (mekanik girdisi hareket kapısından ETKİLENMEZ) --------------
 const tension = computed(() => store.timeClockTension)
 const tensionPct = computed(() => Math.round(clamp01(tension.value) * 100))
@@ -327,13 +335,14 @@ function fireReleaseEffects(tensionAtRelease: number) {
 </script>
 
 <template>
-  <div class="layer-clock pointer-events-none fixed inset-0 w-screen h-screen max-w-full max-h-full overflow-hidden flex items-center justify-center">
-    <!-- Sahne: kadran. Bilgi paneli MUTLAK konumludur → panel içeriği değişince
-         (uyarı çipi, sarma satırı) kadran parmağın altında kaymaz. -->
+  <div class="layer-clock pointer-events-none fixed inset-0 w-screen h-screen max-w-full max-h-full overflow-hidden">
+    <!-- Sahne: sarma anında ekranın ortasında dev kadran; salgıya geçince
+         sağ kenara süzülüp küçülür (`clock-stage--dock`) — merkez serbest kalır.
+         Kadran bu sahneden `w-full h-full` beslenir; boyut/konum tek yerde (CSS). -->
     <div
       v-if="visible"
-      class="clock-stage relative"
-      :class="{ 'clock-materialize': !motionReduced }"
+      class="clock-stage"
+      :class="{ 'clock-materialize': !motionReduced, 'clock-stage--dock': docked }"
     >
       <!-- ================= SAAT GÖVDESİ (tek pointer-events-auto alan) ========= -->
       <div
@@ -464,26 +473,37 @@ function fireReleaseEffects(tensionAtRelease: number) {
           <circle cx="100" cy="100" r="4.5" fill="#00f0ff" opacity="0.85" />
         </svg>
 
-        <!-- Merkez okuma (dev sayaç) -->
-        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <template v-if="isWinding">
-            <span class="font-display text-4xl sm:text-6xl text-white counter-glow tabular-nums leading-none">
-              %{{ tensionPct }}
-            </span>
-            <span class="font-mono text-[10px] tracking-[0.32em] text-cyan-300/80 mt-1">GERGİNLİK</span>
-            <span class="font-mono text-[11px] sm:text-xs text-violet-200 tabular-nums mt-1.5">
-              −{{ rewoundLabel }} sn geri sarıldı
-            </span>
-          </template>
-          <template v-else-if="isReleasing">
-            <span class="font-display text-5xl sm:text-7xl text-quantum-blue counter-glow tabular-nums leading-none">
-              ×{{ speedLabel }}
-            </span>
-            <span class="font-mono text-[10px] tracking-[0.32em] text-cyan-300/80 mt-1">ZAMAN HIZI</span>
-            <span class="font-mono text-[11px] sm:text-xs text-slate-200 tabular-nums mt-1.5">
-              {{ speedRemainingLabel }} sn kaldı
-            </span>
-          </template>
+        <!-- Merkez okuma (dev sayaç): salgıya geçişte solar, yerini kompakt
+             okumaya bırakır. `v-show` DEĞİL → opacity geçişi kırpılmasın.
+             `aria-hidden` faz ile bağlı: solmuş okuma ekran okuyucuya düşmesin
+             (durumu zaten `aria-valuetext` anlatıyor). -->
+        <div
+          class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center transition-opacity duration-200"
+          :class="isWinding ? 'opacity-100' : 'opacity-0'"
+          :aria-hidden="!isWinding"
+        >
+          <span class="font-display text-4xl sm:text-6xl text-white counter-glow tabular-nums leading-none">
+            %{{ tensionPct }}
+          </span>
+          <span class="font-mono text-[10px] tracking-[0.32em] text-cyan-300/80 mt-1">GERGİNLİK</span>
+          <span class="font-mono text-[11px] sm:text-xs text-violet-200 tabular-nums mt-1.5">
+            −{{ rewoundLabel }} sn geri sarıldı
+          </span>
+        </div>
+
+        <!-- Kompakt okuma (sağ kenardaki küçük hâl): küçülme bitmeden yazı
+             sıçramasın diye gecikmeli belirir -->
+        <div
+          class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center transition-opacity duration-300 delay-[260ms]"
+          :class="isReleasing ? 'opacity-100' : 'opacity-0'"
+          :aria-hidden="!isReleasing"
+        >
+          <span class="font-display text-[13px] sm:text-[15px] text-quantum-blue counter-glow tabular-nums leading-none">
+            ×{{ speedLabel }}
+          </span>
+          <span class="font-mono text-[9px] text-cyan-200/85 tabular-nums mt-0.5">
+            {{ speedRemainingLabel }} sn
+          </span>
         </div>
       </div>
 
@@ -520,13 +540,14 @@ function fireReleaseEffects(tensionAtRelease: number) {
         </p>
       </div>
 
+      <!-- Salgı bilgisi: kenara yerleşmiş küçük kadranın ALTINDA, sağa yaslı
+           dar çipler (ekranın ortasını kapatmaz). -->
       <div
         v-else-if="isReleasing"
-        class="pointer-events-none absolute left-1/2 top-full mt-3 sm:mt-4 flex w-[min(92vw,520px)] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5"
+        class="pointer-events-none absolute right-0 top-full mt-1.5 flex flex-col items-end gap-1 whitespace-nowrap"
       >
         <span class="clock-chip clock-chip-profit">TEPE {{ releasePeakLabel }}×</span>
-        <span class="clock-chip">{{ speedRemainingLabel }} sn kaldı</span>
-        <span class="clock-chip">TOPLAM SALGI {{ releaseCount }}</span>
+        <span class="clock-chip">{{ releaseCount }}. salgı</span>
       </div>
     </div>
   </div>

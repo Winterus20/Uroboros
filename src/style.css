@@ -1823,26 +1823,59 @@ body::after {
      okuma ve girdi asla kilitlenmez.
    ========================================================================== */
 
+/* --- Sahne geometrisi: sarma anında MERKEZ, salgıda SAĞ KENAR -------------
+   Geçiş `left/top/width/height` üzerinden yapılır (transform DEĞİL):
+   `.clock-materialize` animasyonu `fill: both` ile transform'u kalıcı
+   sahiplenir; transform'la taşımak malzemeleşme eğrisiyle çakışırdı.
+   Boyut değişkeni TEK yerde (`--clock-size`): kadran `w-full h-full` beslenir,
+   medya sorguları da yalnız değişkeni ezer. */
+.clock-stage {
+  --clock-size: min(70vmin, 520px);
+  --clock-dock: 100px;
+  position: fixed;
+  width: var(--clock-size);
+  height: var(--clock-size);
+  left: calc(50% - var(--clock-size) / 2);
+  top: calc(50% - var(--clock-size) / 2);
+  transition:
+    left 0.68s cubic-bezier(0.3, 1.2, 0.4, 1),
+    top 0.68s cubic-bezier(0.3, 1.2, 0.4, 1),
+    width 0.68s cubic-bezier(0.3, 1.2, 0.4, 1),
+    height 0.68s cubic-bezier(0.3, 1.2, 0.4, 1);
+}
+/* Kenara yerleşmiş küçük hâl: sağ kenar, dikeyde %42. Masaüstünde başlığın
+   sağındaki boşluğa, mobilde içerik üstüne düşer — kadran zaten
+   `pointer-events-none`, oyunun geri kalanı tıklanabilir kalır. */
+.clock-stage--dock {
+  width: var(--clock-dock);
+  height: var(--clock-dock);
+  left: calc(100% - var(--clock-dock) - 12px);
+  top: calc(42% - var(--clock-dock) / 2);
+}
+.clock-stage--dock .clock-dial {
+  box-shadow: 0 0 30px -8px rgba(168, 85, 247, 0.65);
+}
+@media (max-height: 620px) {
+  .clock-stage {
+    --clock-size: min(56vmin, 380px);
+    --clock-dock: 88px;
+  }
+}
+@media (max-width: 380px) {
+  .clock-stage {
+    --clock-size: min(74vmin, 320px);
+    --clock-dock: 84px;
+  }
+}
+
 .clock-dial {
-  width: min(70vmin, 520px);
-  height: min(70vmin, 520px);
+  width: 100%;
+  height: 100%;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   border-radius: 50%;
   transition: box-shadow 180ms ease-out;
-}
-@media (max-height: 620px) {
-  .clock-dial {
-    width: min(56vmin, 380px);
-    height: min(56vmin, 380px);
-  }
-}
-@media (max-width: 380px) {
-  .clock-dial {
-    width: min(74vmin, 320px);
-    height: min(74vmin, 320px);
-  }
 }
 
 .clock-dial-warm {
@@ -1956,6 +1989,12 @@ body::after {
   box-shadow: none;
   transition: none;
 }
+/* Hareket kapalı: kenara yerleşme animasyonsuz, tek adımda olur (okuma aynı). */
+.reduce-anim .clock-stage,
+.motion-off .clock-stage,
+.battery-saver .clock-stage {
+  transition: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .clock-materialize,
   .clock-ring-pulse,
@@ -1966,9 +2005,13 @@ body::after {
     box-shadow: none;
     transition: none;
   }
+  .clock-stage {
+    transition: none;
+  }
 }
 @media (forced-colors: active) {
-  .clock-dial {
+  .clock-dial,
+  .clock-stage--dock .clock-dial {
     box-shadow: none;
   }
   .clock-chip {
