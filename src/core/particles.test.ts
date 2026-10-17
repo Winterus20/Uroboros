@@ -17,7 +17,8 @@ const SCENE_IDS: FeastSceneId[] = [
   'resonance',
   'crunch',
   'decade',
-  'yut'
+  'yut',
+  'time_warp'
 ]
 
 describe('particles — Faz D sahne tablosu', () => {
@@ -44,6 +45,7 @@ describe('particles — Faz D sahne tablosu', () => {
     expect(isBigScene('mass_burst')).toBe(true)
     expect(isBigScene('resonance')).toBe(true)
     expect(isBigScene('crunch')).toBe(true)
+    expect(isBigScene('time_warp')).toBe(true)
     expect(isBigScene('hawking')).toBe(false)
     expect(isBigScene('decade')).toBe(false)
     expect(isBigScene('yut')).toBe(false)
@@ -51,6 +53,18 @@ describe('particles — Faz D sahne tablosu', () => {
       if (isBigScene(id)) expect(FEAST_SCENES[id].suppressionMs).toBeGreaterThan(0)
       else if (id !== 'yut') expect(FEAST_SCENES[id].suppressionMs).toBe(0)
     }
+  })
+
+  it('time_warp (Zaman Yayı) sahnesi: supernova ile crunch arası, cyan-mor hard', () => {
+    const t = FEAST_SCENES.time_warp
+    expect(t.sparks).toBeGreaterThan(FEAST_SCENES.supernova.sparks)
+    expect(t.sparks).toBeLessThan(FEAST_SCENES.crunch.sparks)
+    expect(t.shake).toBe('hard')
+    expect(t.big).toBe(true)
+    expect(t.suppressionMs).toBeGreaterThan(0)
+    expect(t.shocks.length).toBeGreaterThanOrEqual(2)
+    expect(t.shocks[0].color).toBe('#22d3ee')
+    expect(t.shocks[1].color).toBe('#a855f7')
   })
 
   it('rezonans tekil sahnelerden yoğundur (katmanlı şölen)', () => {

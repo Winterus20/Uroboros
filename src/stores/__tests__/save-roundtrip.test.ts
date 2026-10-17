@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createFreshStore } from '../../test/helpers'
 import { Decimal } from '../../core/math'
 import { SaveSystem } from '../../core/save'
+import { TIME_CLOCK_MAX_DRAG, TIME_CLOCK_SPAWN_INTERVAL_MIN } from '../../game/clock-data'
 import type { SerializedPlayerState } from '../../models/types'
 
 class LocalStorageMock implements Storage {
@@ -219,6 +220,104 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
       expect(store.floatingAnomalies).toEqual([])
       expect(store.activeCrisisDilemma).toBeNull()
       expect(store.crisisBackfireDebuff).toBe(0)
+    })
+  })
+
+  describe('C4: timeClock (Zaman Yayı) Round-trip — v18', () => {
+    it('keeps live drag in timeClock and lifetime counters in stats', () => {
+      const store1 = createFreshStore()
+      store1.timeClock = {
+        phase: 'released',
+        active: false,
+        drag: 421.5,
+        remainingTime: 0,
+        speed: 9.25,
+        speedRemaining: 31,
+        peakSpeed: 9.25
+      }
+      store1.clockTimer = 88
+      store1.stats.clockRewinds = 17
+      store1.stats.clockRewoundSeconds = 1234.5
+      store1.stats.clockBestTension = 0.9123
+
+      const serialized = store1.serialize()
+      // timeClock yalnızca canlı yay durumunu taşır; canlı faz kayda girmez.
+      expect(serialized.version).toBe(18)
+      expect(serialized.timeClock).toEqual({ drag: 421.5 })
+      // Yaşam boyu istatistikler `stats` bloğunda yazılır (prestijden sağ çıkar).
+      expect(serialized.stats.clockRewinds).toBe(17)
+      expect(serialized.stats.clockRewoundSeconds).toBe(1234.5)
+      expect(serialized.stats.clockBestTension).toBeCloseTo(0.9123, 10)
+
+      const store2 = createFreshStore()
+      store2.deserialize(serialized)
+
+      expect(store2.timeClock.drag).toBe(421.5)
+      expect(store2.stats.clockRewinds).toBe(17)
+      expect(store2.stats.clockRewoundSeconds).toBe(1234.5)
+      expect(store2.stats.clockBestTension).toBeCloseTo(0.9123, 10)
+    })
+
+    it('always loads the live phase back as idle (volatile, like floatingAnomalies)', () => {
+      const store1 = createFreshStore()
+      store1.timeClock = {
+        phase: 'winding',
+        active: true,
+        drag: 300,
+        remainingTime: 12,
+        speed: 1,
+        speedRemaining: 0,
+        peakSpeed: 1
+      }
+      store1.clockTimer = 240
+
+      const store2 = createFreshStore()
+      store2.deserialize(store1.serialize())
+
+      expect(store2.timeClock.phase).toBe('idle')
+      expect(store2.timeClock.active).toBe(false)
+      expect(store2.timeClock.speed).toBe(1)
+      expect(store2.timeClock.remainingTime).toBe(0)
+      expect(store2.timeClock.speedRemaining).toBe(0)
+      // Zamanlayıcı da baştan kurulur: yükleme anında saat doğurmaz.
+      expect(store2.clockTimer).toBe(0)
+      expect(store2.nextClockInterval).toBe(TIME_CLOCK_SPAWN_INTERVAL_MIN)
+    })
+
+    it('falls back to neutral values on a v17 save with no timeClock field', () => {
+      const store1 = createFreshStore()
+      store1.timeClock.drag = 999
+      const serialized = store1.serialize()
+      const legacy = { ...serialized } as Record<string, unknown>
+      delete legacy.timeClock
+      legacy.version = 17
+
+      const store2 = createFreshStore()
+      store2.deserialize(legacy as unknown as SerializedPlayerState)
+
+      expect(store2.timeClock.phase).toBe('idle')
+      expect(store2.timeClock.drag).toBe(0)
+      expect(store2.clockTimer).toBe(0)
+      expect(store2.nextClockInterval).toBe(TIME_CLOCK_SPAWN_INTERVAL_MIN)
+    })
+
+    it('clamps corrupted saved values instead of leaking them into the run', () => {
+      const store1 = createFreshStore()
+      const serialized = store1.serialize()
+      const corrupted = {
+        ...serialized,
+        // drag tavanı TIME_CLOCK_MAX_DRAG; stats tarafında sayaçlar >= 0, gerginlik [0,1]
+        timeClock: { drag: 1e9 },
+        stats: { ...serialized.stats, clockRewinds: -3, clockRewoundSeconds: -50, clockBestTension: 5 }
+      } as unknown as SerializedPlayerState
+
+      const store2 = createFreshStore()
+      store2.deserialize(corrupted)
+
+      expect(store2.timeClock.drag).toBe(TIME_CLOCK_MAX_DRAG)
+      expect(store2.stats.clockRewinds).toBe(0)
+      expect(store2.stats.clockRewoundSeconds).toBe(0)
+      expect(store2.stats.clockBestTension).toBe(1)
     })
   })
 })

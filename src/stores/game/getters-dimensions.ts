@@ -688,6 +688,7 @@ export const dimensionGetters = {
 
       const stanceMult = this.stanceMultipliers.production
       const buffMult = this.productionBuffMultiplier
+      const clockMult = this.timeClockProductionMult
       const labMult = this.labPassiveMultiplier
       const reactorMult = this.reactorMassMult
       const debuffMult = state.crisisBackfireDebuff > 0 ? 0.5 : 1.0
@@ -696,6 +697,7 @@ export const dimensionGetters = {
       return baseProd
         .times(stanceMult)
         .times(buffMult)
+        .times(clockMult)
         .times(labMult)
         .times(this.achievementMultiplier)
         .times(this.achievementProductionMult)
@@ -724,6 +726,7 @@ export const dimensionGetters = {
         { source: 'nap', mult: new Decimal(this.napMultiplier) },
         { source: 'stance', mult: new Decimal(this.stanceMultipliers.production) },
         { source: 'buff', mult: new Decimal(this.productionBuffMultiplier) },
+        { source: 'time-clock', mult: new Decimal(this.timeClockProductionMult) },
         { source: 'lab', mult: new Decimal(this.labPassiveMultiplier) },
         { source: 'achievement', mult: new Decimal(this.achievementMultiplier) },
         { source: 'achievement-production', mult: new Decimal(this.achievementProductionMult) },

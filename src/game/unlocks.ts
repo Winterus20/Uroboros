@@ -308,6 +308,13 @@ export const FEATURE_UNLOCKS: FeatureUnlock[] = [
     order: 1000
   },
   {
+    id: 'time_clock',
+    name: 'Zaman Yayı (Time Clock)',
+    hint: '1e120 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(120) },
+    order: 1200
+  },
+  {
     id: 'seed_graviton',
     name: 'Graviton Tuzağı (🕳️)',
     hint: '1e125 g Kütle biriktir',

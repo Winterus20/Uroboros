@@ -34,6 +34,16 @@ function makeHost(): ScaleJumpHost {
     viralTimeRemaining: 11,
     viralViews: 3,
     decadeSurgeMult: 2.5,
+    timeClock: {
+      phase: 'released',
+      active: false,
+      drag: 321,
+      remainingTime: 0,
+      speed: 7.5,
+      speedRemaining: 12,
+      peakSpeed: 7.5
+    },
+    clockTimer: 42,
     neuralNodesBought: { choice_a: 2, plain_b: 1 },
     singularityPoints: new Decimal(5),
     singularityBotSamples: [1, 2],
@@ -90,6 +100,12 @@ describe('ADR-0052 applyResetScope', () => {
     expect(host.decadeSurgeMult).toBe(2.5)
     expect(host.neuralNodesBought).toEqual({ choice_a: 2, plain_b: 1 })
     expect(host.singularityPoints.eq(5)).toBe(true)
+    // Zaman Yayı koşu-içi canlı durumdur; shift sıfırlaması koşuyu bitirir ama
+    // clearRunFx false olduğu için saate dokunulmaz (bkz. kapsam bayrakları).
+    expect(SCALE_LAYERS.shift.scope.clearRunFx).toBe(false)
+    expect(host.timeClock.phase).toBe('released')
+    expect(host.timeClock.drag).toBe(321)
+    expect(host.clockTimer).toBe(42)
   })
 
   it('galaxy: shift sayacını sıfırlar, galaksiyi korur', () => {
@@ -100,6 +116,10 @@ describe('ADR-0052 applyResetScope', () => {
     expect(host.galaxies).toBe(2)
     expect(host.matter.eq(host.startingMatter)).toBe(true)
     expect(host.slackers.length).toBe(1)
+    // galaxy de clearRunFx: false → saat canlı kalır
+    expect(SCALE_LAYERS.galaxy.scope.clearRunFx).toBe(false)
+    expect(host.timeClock.phase).toBe('released')
+    expect(host.clockTimer).toBe(42)
   })
 
   it('singularity: tam sıfırlama + hariç-seçim SP iadesi', () => {
@@ -117,6 +137,22 @@ describe('ADR-0052 applyResetScope', () => {
     // choice_a (2 lvl × 7 maliyet) iade edilir: 5 + 14 = 19
     expect(host.neuralNodesBought).toEqual({ plain_b: 1 })
     expect(host.singularityPoints.eq(19)).toBe(true)
+  })
+
+  it('singularity: clearRunFx ile Zaman Yayı idle duruma döner ve zamanlayıcı sıfırlanır', () => {
+    const host = makeHost()
+    expect(host.timeClock.phase).toBe('released')
+
+    applyResetScope(host, SCALE_LAYERS.singularity.scope, FAKE_TREE)
+
+    expect(SCALE_LAYERS.singularity.scope.clearRunFx).toBe(true)
+    expect(host.timeClock.phase).toBe('idle')
+    expect(host.timeClock.active).toBe(false)
+    expect(host.timeClock.drag).toBe(0)
+    expect(host.timeClock.remainingTime).toBe(0)
+    expect(host.timeClock.speed).toBe(1)
+    expect(host.timeClock.speedRemaining).toBe(0)
+    expect(host.clockTimer).toBe(0)
   })
 
   it('singularity: ach_26 %5 indirim ile alınan seçim düğümlerinde tam harcanan SP iade edilir (exploit önleme)', () => {

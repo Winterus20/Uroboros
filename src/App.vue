@@ -28,6 +28,7 @@ import StatsTab from "./components/StatsTab.vue";
 import SettingsModal from "./components/SettingsModal.vue";
 import WelcomeBackModal from "./components/WelcomeBackModal.vue";
 import AnomalyOverlay from "./components/AnomalyOverlay.vue";
+import TimeClockOverlay from "./components/TimeClockOverlay.vue";
 import AdminPanel from "./components/AdminPanel.vue";
 import AuthModal from "./components/AuthModal.vue";
 import CloudConflictModal from "./components/CloudConflictModal.vue";
@@ -195,6 +196,11 @@ onUnmounted(() => {
     <!-- Faz A "Aç Kumarhane": Statik CRT tüp dokusu (scanline + vinyet + fosfor).
          #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->
     <CrtOverlay />
+
+    <!-- Zaman Yayı (Time Clock) — §8.3 katman sırası: CRT 40 → motif 45 →
+         anomali 50 → saat 55 → juice 60 → toast 70 → modal 80.
+         #game-main-content'in KARDEŞİ — shake transform'u içermez (ADR-0044). -->
+    <TimeClockOverlay />
 
     <!-- Başarım Bildirimleri -->
     <AchievementToast />

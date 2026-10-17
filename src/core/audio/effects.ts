@@ -5,6 +5,10 @@
 import { SoundManagerBase } from "./manager"
 
 export class SoundEffects extends SoundManagerBase {
+  // Zaman Yayı kurma tıkırtısı throttle'ı — 60Hz pointermove akışı osilatörü
+  // makineli tüfek gibi tetiklemesin (playTallyTick ile aynı desen).
+  private lastClockWindTime = 0
+
   // Hafif ve tatmin edici mekanik UI tıklama sesi (menü geçişleri ve küçük butonlar)
   playHapticTap() {
     const ctx = this.getContext()
@@ -1101,5 +1105,137 @@ export class SoundEffects extends SoundManagerBase {
     this.registerCleanup(osc, gain)
     osc.start()
     osc.stop(ctx.currentTime + 0.1)
+  }
+
+  // ==========================================================================
+  // Zaman Yayı (Time Clock) — §8.4. Store spawn/release anlarında çağırır;
+  // kurma tıkırtısını bileşen (TimeClockOverlay) sürükleme sırasında besler.
+  // ==========================================================================
+
+  // Saat kuruldu toll'u: düşük → yüksek süpürme + yüksek çan (ekranda beliriş).
+  playClockSpawn() {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(180, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.42)
+
+    gain.gain.setValueAtTime(0.001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(this.safeVolume() * 0.42, ctx.currentTime + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    this.registerCleanup(osc, gain)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.55)
+
+    const bell = ctx.createOscillator()
+    const bellGain = ctx.createGain()
+    bell.type = 'sine'
+    bell.frequency.setValueAtTime(1760, ctx.currentTime + 0.3)
+
+    bellGain.gain.setValueAtTime(0.001, ctx.currentTime + 0.3)
+    bellGain.gain.exponentialRampToValueAtTime(this.safeVolume() * 0.3, ctx.currentTime + 0.32)
+    bellGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.95)
+
+    bell.connect(bellGain)
+    bellGain.connect(ctx.destination)
+    this.registerCleanup(bell, bellGain)
+    bell.start(ctx.currentTime + 0.3)
+    bell.stop(ctx.currentTime + 0.95)
+  }
+
+  // Kurma tıkırtısı: intensity01 gerginliktir (0 → pes, 1 → tiz + yüksek).
+  // 90ms iç throttle — sürükleme akışı (60Hz) osilatör yağmuruna dönmez.
+  playClockWind(intensity01 = 0.5) {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    if (now - this.lastClockWindTime < 90) return
+    this.lastClockWindTime = now
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const i = Number.isFinite(intensity01) ? Math.min(1, Math.max(0, intensity01)) : 0.5
+
+    // 1. Ratchet (kurma dişlisi) tıkırtısı
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(260 + i * 520, ctx.currentTime)
+
+    gain.gain.setValueAtTime(this.safeVolume() * (0.1 + i * 0.12), ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    this.registerCleanup(osc, gain)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.03)
+
+    // 2. Yay gövdesi: kısa düşük vuruş (tıkırtıya ağırlık verir)
+    const thud = ctx.createOscillator()
+    const thudGain = ctx.createGain()
+    thud.type = 'sine'
+    thud.frequency.setValueAtTime(150 + i * 90, ctx.currentTime)
+    thud.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.04)
+
+    thudGain.gain.setValueAtTime(this.safeVolume() * (0.08 + i * 0.1), ctx.currentTime)
+    thudGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045)
+
+    thud.connect(thudGain)
+    thudGain.connect(ctx.destination)
+    this.registerCleanup(thud, thudGain)
+    thud.start()
+    thud.stop(ctx.currentTime + 0.045)
+  }
+
+  // Salgı: aşağıdan yukarı süpürme (yay boşalması) + gerginlikle yükselen çift çan.
+  playClockRelease(tension01 = 0.5) {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const t = Number.isFinite(tension01) ? Math.min(1, Math.max(0, tension01)) : 0.5
+
+    // 1. Süpürme (playUpgrade deseni: tek osilatör, exponential rampa)
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(140, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(620 + t * 1400, ctx.currentTime + 0.3)
+
+    gain.gain.setValueAtTime(this.safeVolume() * (0.12 + t * 0.24), ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.34)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    this.registerCleanup(osc, gain)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.34)
+
+    // 2. Çan armonikleri: tam gerginlikte daha tiz ve daha parlak
+    const notes = [659.25 * (1 + t * 0.5), 987.77 * (1 + t * 0.5)]
+    notes.forEach((freq, idx) => {
+      const bell = ctx.createOscillator()
+      const bellGain = ctx.createGain()
+      bell.type = 'sine'
+      const startTime = ctx.currentTime + 0.24 + idx * 0.06
+      bell.frequency.setValueAtTime(freq, startTime)
+
+      bellGain.gain.setValueAtTime(0.001, startTime)
+      bellGain.gain.exponentialRampToValueAtTime(
+        this.safeVolume() * (0.26 + t * 0.16),
+        startTime + 0.012
+      )
+      bellGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.42)
+
+      bell.connect(bellGain)
+      bellGain.connect(ctx.destination)
+      this.registerCleanup(bell, bellGain)
+      bell.start(startTime)
+      bell.stop(startTime + 0.42)
+    })
   }
 }

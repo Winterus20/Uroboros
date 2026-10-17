@@ -21,6 +21,7 @@ export type FeastSceneId =
   | 'crunch'
   | 'decade'
   | 'yut'
+  | 'time_warp'
 
 export type FeastShakeLevel = 'soft' | 'medium' | 'hard' | null
 
@@ -139,6 +140,22 @@ export const FEAST_SCENES: Record<FeastSceneId, FeastSceneSpec> = {
     knockMs: 0,
     suppressionMs: 0,
     big: false
+  },
+  // Zaman Yayı salgısı (§8.5): supernova ile crunch ARASI yoğunluk.
+  // Halkalar cyan→mor (zaman ekseni + yay enerjisi), imza sertliği 'hard'.
+  time_warp: {
+    id: 'time_warp',
+    sparks: 72,
+    shocks: [
+      { color: '#22d3ee', maxRadius: 240, count: 1 },
+      { color: '#a855f7', maxRadius: 250, count: 1 },
+      { color: '#ffffff', maxRadius: 175, count: 1 }
+    ],
+    texts: 2,
+    shake: 'hard',
+    knockMs: 140,
+    suppressionMs: 400,
+    big: true
   }
 }
 
@@ -156,7 +173,8 @@ const BIG_SCENES: ReadonlySet<FeastSceneId> = new Set([
   'supernova',
   'mass_burst',
   'resonance',
-  'crunch'
+  'crunch',
+  'time_warp'
 ])
 
 export function feastScene(id: FeastSceneId): FeastSceneSpec {

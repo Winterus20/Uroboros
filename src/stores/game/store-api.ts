@@ -130,6 +130,14 @@ export interface StoreApi extends GameState {
   matterProductionBreakdown: Array<{ source: string; mult: Decimal }>
   dopaminePerSecond: Decimal
   matterPerSecondGrowth: Decimal
+  timeClockTension: number
+  timeClockRewoundSeconds: number
+  timeClockProductionMult: Decimal
+  timeClockIsWinding: boolean
+  timeClockIsReleasing: boolean
+  timeClockHandAngleDeg: number
+  timeClockPreviewPeakSpeed: number
+  timeClockPreviewDuration: number
   achievementCount: number
   achievementFullRows: number
   achievementMultiplier: Decimal
@@ -208,6 +216,10 @@ export interface StoreApi extends GameState {
   dismissAchievementToast(id: string): void;
   setActiveGameTab(tab: string): void;
   syncUnlocks(): void;
+  spawnTimeClock(): boolean;
+  windTimeClock(dragDeltaRadians: number): void;
+  releaseTimeClock(): boolean;
+  resetTimeClock(): void;
   update(deltaSeconds: number): void;
   hatchCore(): boolean;
   powerNap(): boolean;

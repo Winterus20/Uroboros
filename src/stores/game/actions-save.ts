@@ -7,6 +7,7 @@ import { MIN_SUPPORTED_SAVE_VERSION, SAVE_VERSION, SaveVersionError } from '../.
 import { getAutobuyerInterval } from '../../game/autobuyer-data'
 import { BASE_UNLOCKED_DIMENSIONS, OFFLINE_CAP_SECONDS, SACRIFICE_SHIFT_REQ, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { getChallengeById } from '../../game/challenges'
+import { TIME_CLOCK_MAX_DRAG, TIME_CLOCK_SPAWN_INTERVAL_MIN, createIdleTimeClock } from '../../game/clock-data'
 import { tierOfflineSimMult } from '../../game/dimension_identity'
 import { LAB_SEEDS, VIRAL_DROP_COOLDOWN_SECONDS } from '../../game/lab-data'
 import { JUMP_LOG_CAP } from '../../game/layers'
@@ -289,6 +290,12 @@ export const saveActions = {
           singularities: j.singularities,
           spGained: j.spGained.toString()
         })),
+        // Zaman Yayı (v18): yalnızca canlı yay durumu. `phase`/`speed`/`remainingTime`
+        // uçucudur — kayıt yüklendiğinde saat nötr doğar (aşağıdaki deserialize).
+        // Yaşam boyu istatistikler `stats` bloğunda taşınır (clockRewinds vb.).
+        timeClock: {
+          drag: this.timeClock.drag
+        },
         stats: {
           manualClicks: this.stats.manualClicks,
           totalMatterProduced: this.stats.totalMatterProduced.toString(),
@@ -306,7 +313,10 @@ export const saveActions = {
           spellsCast: this.stats.spellsCast || 0,
           seedsPlanted: this.stats.seedsPlanted || 0,
           challengesCompleted: this.stats.challengesCompleted || 0,
-          reactorCollapses: this.stats.reactorCollapses || 0
+          reactorCollapses: this.stats.reactorCollapses || 0,
+          clockRewinds: this.stats.clockRewinds || 0,
+          clockRewoundSeconds: this.stats.clockRewoundSeconds || 0,
+          clockBestTension: this.stats.clockBestTension || 0
         }
       }
     },
@@ -877,7 +887,11 @@ export const saveActions = {
             spellsCast: Math.floor(clampSavedNumber(data.stats.spellsCast, 0, 0, 1e12)),
             seedsPlanted: Math.floor(clampSavedNumber(data.stats.seedsPlanted, 0, 0, 1e12)),
             challengesCompleted: Math.floor(clampSavedNumber(data.stats.challengesCompleted, 0, 0, 1e6)),
-            reactorCollapses: Math.floor(clampSavedNumber(data.stats.reactorCollapses, 0, 0, 1e6))
+            reactorCollapses: Math.floor(clampSavedNumber(data.stats.reactorCollapses, 0, 0, 1e6)),
+            // Zaman Yayı yaşam boyu istatistikleri (v18): `stats` alanları prestijden sağ çıkar.
+            clockRewinds: Math.floor(clampSavedNumber(data.stats.clockRewinds, 0, 0, 1e9)),
+            clockRewoundSeconds: clampSavedNumber(data.stats.clockRewoundSeconds, 0, 0, 1e15),
+            clockBestTension: clampSavedNumber(data.stats.clockBestTension, 0, 0, 1)
           }
           // Eski kayıt göçü (v9-): yukarıdaki version kancası atlandıysa (bozuk versiyon alanı) yine de güvence altına al
           if (typeof this.singularities !== 'number' || Number.isNaN(this.singularities)) {
@@ -923,6 +937,20 @@ export const saveActions = {
         if (diffSeconds > 3) {
           this.simulateOfflineProgress(diffSeconds)
         }
+
+        // Zaman Yayı (v18): kayıttan yalnızca birikmiş çevirme miktarı okunur — CANLI FAZ her
+        // zaman `idle`'a döner (createIdleTimeClock tabanı: active=false, speed=1,
+        // remainingTime=0, speedRemaining=0). `floatingAnomalies = []` ile aynı uçucu
+        // muamele: yarıda kalmış bir sarma/salgı oturuma taşınmaz. Yaşam boyu istatistikler
+        // `stats` bloğundan okunur (yukarıda). v17 ve öncesi kayıtlarda alan yok → nötr
+        // varsayılan, veri kaybı yok.
+        const savedClock = data.timeClock
+        this.timeClock = {
+          ...createIdleTimeClock(),
+          drag: clampSavedNumber(savedClock?.drag, 0, 0, TIME_CLOCK_MAX_DRAG)
+        }
+        this.clockTimer = 0
+        this.nextClockInterval = TIME_CLOCK_SPAWN_INTERVAL_MIN
 
         this.floatingAnomalies = []
         this.activeCrisisDilemma = null

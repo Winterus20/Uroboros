@@ -6,6 +6,7 @@ declare module '../../models/types' {
 
 import { Decimal } from '../../core/math'
 import { BASE_COSTS, BASE_UNLOCKED_DIMENSIONS, COST_MULTS } from '../../game/balance'
+import { TIME_CLOCK_SPAWN_INTERVAL_MIN, createIdleTimeClock } from '../../game/clock-data'
 import { VIRAL_DROP_COOLDOWN_SECONDS } from '../../game/lab-data'
 import type { ActiveBuff, AutobuyerConfig, CrisisDilemma, DimensionData, FloatingAnomaly, GameSettings, GuiltWrinkler, LabCell, LabMode, LabSeedType, MusicTrackId, OfflineReport, PastSingularityRecord, PlayerStats, ScaleJumpRecord, StanceType } from '../../models/types'
 
@@ -47,6 +48,12 @@ export function buildInitialState() {
     // Vicdan Azabı ve Göz Batması (Wrinklers)
     slackers: [] as GuiltWrinkler[],
     slackerTimer: 0,
+
+    // Zaman Yayı (Time Clock): ekranda beliren hızlandırma olayı.
+    // Faz uçucudur (kayıt edilmez, reload'da idle'a döner); sayaçlar kalıcıdır.
+    timeClock: createIdleTimeClock(),
+    clockTimer: 0, // Bir sonraki doğuşa kalan süre sayacı (sn)
+    nextClockInterval: TIME_CLOCK_SPAWN_INTERVAL_MIN, // Bu doğuşun hedef aralığı (sn)
 
     // Mini-Oyun 1: Algoritma Stüdyosu (Viral Matris & Trend Reaktörü)
     labCells: Array.from({ length: 9 }, (_, i): LabCell => ({
@@ -252,7 +259,12 @@ export function buildInitialState() {
       spellsCast: 0,
       seedsPlanted: 0,
       challengesCompleted: 0,
-      reactorCollapses: 0
+      reactorCollapses: 0,
+      // Zaman Yayı (Time Clock): yaşam boyu istatistikler — prestijden sağ çıkar,
+      // `applyResetScope` bu alanlara dokunmaz (koşuya özel olan yalnızca canlı faz).
+      clockRewinds: 0,
+      clockRewoundSeconds: 0,
+      clockBestTension: 0
     } as PlayerStats
   }
 }

@@ -1,4 +1,6 @@
 import { D_0, D_1, type Decimal } from '../core/math'
+import { createIdleTimeClock } from './clock-data'
+import type { TimeClockState } from '../models/clock'
 import type { NeuralNode, ScaleJumpRecord } from '../models/types'
 
 /**
@@ -57,6 +59,9 @@ export interface ScaleJumpHost {
   viralTimeRemaining: number
   viralViews: number
   decadeSurgeMult: number
+  /** Zaman Yayı (Time Clock) canlı durumu — koşu sıfırlamasında `idle`'a döner. */
+  timeClock: TimeClockState
+  clockTimer: number
   neuralNodesBought: Record<string, number>
   singularityPoints: Decimal
   singularityBotSamples: unknown[]
@@ -212,6 +217,12 @@ export function applyResetScope(
     host.viralViews = 0
     // ADR-0034: Dekad Yükselişi koşuya özeldir.
     host.decadeSurgeMult = 1
+    // Zaman Yayı koşuya özeldir: yarıda kalmış sarma/salgı yeni koşuya taşınmaz.
+    // Burada yalnızca CANLI FAZ ve zamanlayıcı temizlenir; yaşam boyu istatistikler
+    // (`stats.clockRewinds` / `clockRewoundSeconds` / `clockBestTension`) `stats`
+    // altında yaşadığı için bu bloktan etkilenmez ve prestijden sağ çıkar.
+    host.timeClock = createIdleTimeClock()
+    host.clockTimer = 0
   }
   if (scope.refundChoiceNodes) {
     const choiceIds = new Set(

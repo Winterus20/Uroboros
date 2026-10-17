@@ -485,7 +485,7 @@
 
 /* Katman sıralaması — tek elden senkron:
    Oyun (0) < İçerik (10) < Aura/vinyet (30) < CRT tüp (40) < Yan eller (45)
-   < Anomali (50) < Juice parçacık (60) < Toast (70) < Modal (80) */
+   < Anomali (50) < Zaman Yayı saati (55) < Juice parçacık (60) < Toast (70) < Modal (80) */
 /* Modal cam yüzeyi — tek meşru backdrop-filter (içerik üstünde katman) */
 .modal-glass {
   backdrop-filter: blur(18px);
@@ -495,6 +495,7 @@
 .layer-crt { z-index: 40; }
 .layer-motif { z-index: 45; }
 .layer-anomaly { z-index: 50; }
+.layer-clock { z-index: 55; }
 .layer-juice { z-index: 60; }
 .layer-toast { z-index: 70; }
 .layer-modal { z-index: 80; }
@@ -1807,5 +1808,173 @@ body::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.001s !important;
   transition-delay: 0s !important;
+}
+
+/* ==========================================================================
+   ZAMAN YAYI (TIME CLOCK) — §8.1/§8.2
+   Sözleşme: brain/scratchpad/time-clock-spec.md §8
+   - Katman: z=55 (.layer-clock) — anomali (50) üstü, juice (60) altı.
+   - Girdi (dairesel sürükleme) HER ZAMAN açık kalır: `touch-action: none` şart,
+     yoksa dokunmatikte sayfa kayar ve rotary jest çalınır.
+   - Boyut: min(70vmin, 520px) — monumental ama 360px telefon genişliğinde
+     ve kısa/engebe ekranlarda asla taşmaz (aşağıdaki iki medya sorgusu).
+   - Kapılar: .reduce-anim / .motion-off / .battery-saver / OS
+     prefers-reduced-motion → YALNIZ dekoratif animasyonlar susar;
+     okuma ve girdi asla kilitlenmez.
+   ========================================================================== */
+
+.clock-dial {
+  width: min(70vmin, 520px);
+  height: min(70vmin, 520px);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  border-radius: 50%;
+  transition: box-shadow 180ms ease-out;
+}
+@media (max-height: 620px) {
+  .clock-dial {
+    width: min(56vmin, 380px);
+    height: min(56vmin, 380px);
+  }
+}
+@media (max-width: 380px) {
+  .clock-dial {
+    width: min(74vmin, 320px);
+    height: min(74vmin, 320px);
+  }
+}
+
+.clock-dial-warm {
+  box-shadow: 0 0 60px -12px rgba(0, 240, 255, 0.35);
+}
+.clock-dial-hot {
+  box-shadow:
+    0 0 90px -6px rgba(168, 85, 247, 0.55),
+    0 0 40px -10px rgba(0, 240, 255, 0.45);
+}
+.clock-dial-grabbed {
+  filter: brightness(1.08);
+}
+
+.clock-tension-arc {
+  transition: stroke-dashoffset 90ms linear, stroke 150ms linear;
+}
+
+/* --- Kurulma anı --- */
+@keyframes clock-materialize-in {
+  0% { opacity: 0; transform: scale(0.72); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.clock-materialize {
+  animation: clock-materialize-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+}
+
+/* --- Dekoratif nabız halkası --- */
+@keyframes clock-ring-pulse-anim {
+  0%, 100% { opacity: 0.18; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.02); }
+}
+.clock-ring-pulse {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  animation: clock-ring-pulse-anim 1.8s ease-in-out infinite;
+}
+
+/* --- İbre: dış grup salgı dönüşü (CSS), iç grup sarma açısı (SVG attribute) ---
+   §8.1: `animation-duration` = `speedRemaining` (bileşen CSS custom property ile
+   verir) — salgı sönerken ibre de yavaşlar. Easing öne yüklenir: bırakış anında
+   "kamçı" hissi, ardından salgı çarpanıyla birlikte yavaş süpürme. */
+.clock-hand-layer {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+}
+.clock-hand-release {
+  animation: clock-spin-release var(--clock-release-duration, 75s) cubic-bezier(0.1, 0.85, 0.3, 1) 1 both;
+}
+@keyframes clock-spin-release {
+  from { transform: rotate(var(--clock-hand-from, 0deg)); }
+  to { transform: rotate(calc(var(--clock-hand-from, 0deg) + 900deg)); }
+}
+
+/* --- Bilgi paneli çipleri --- */
+.clock-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.62);
+  color: #cbd5e1;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.clock-chip-forecast {
+  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(3, 20, 30, 0.7);
+  color: #a5f3fc;
+}
+.clock-chip-profit {
+  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(24, 10, 38, 0.7);
+  color: #ddd6fe;
+}
+.clock-warn {
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.04em;
+}
+
+/* Ayarları/OS'u tek noktada okuyan bileşen mührü: hareket kapalıysa kadran
+   tamamen statiktir (girdi ve okuma YİNE çalışır — yalnız süs susar). */
+.clock-static {
+  box-shadow: none !important;
+  transition: none !important;
+}
+.clock-static .clock-tension-arc {
+  transition: none !important;
+}
+
+/* --- Kapılar: yalnız DEKORATİF katman susar (girdi/okuma dokunulmaz) --- */
+.reduce-anim .clock-materialize,
+.reduce-anim .clock-ring-pulse,
+.reduce-anim .clock-hand-release,
+.motion-off .clock-materialize,
+.motion-off .clock-ring-pulse,
+.motion-off .clock-hand-release,
+.battery-saver .clock-materialize,
+.battery-saver .clock-ring-pulse,
+.battery-saver .clock-hand-release {
+  animation: none !important;
+}
+.reduce-anim .clock-dial,
+.motion-off .clock-dial,
+.battery-saver .clock-dial {
+  box-shadow: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock-materialize,
+  .clock-ring-pulse,
+  .clock-hand-release {
+    animation: none !important;
+  }
+  .clock-dial {
+    box-shadow: none;
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .clock-dial {
+    box-shadow: none;
+  }
+  .clock-chip {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
 }
 

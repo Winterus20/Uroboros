@@ -1,5 +1,41 @@
 # Aktif Görev (In-Progress)
 
+## ✅ Zaman Yayı (Time Clock) (2026-10-17) — TAMAMLANDI
+
+**Sonuç kaydı:** [`brain/tasks/completed.md`](completed.md) (2026-10-17 girişi) · **ADR:** [`brain/decisions/0068-time-clock-rewind-spring.md`](../decisions/0068-time-clock-rewind-spring.md)
+**Doğrulama:** `vue-tsc` 0 hata · `vitest` 27 dosya / 380 test · `npm run build` 0 hata · `harness:smoke` baseline değişmedi (`log10=90.72 shifts=8`)
+
+**Kaynak:** kullanıcı talebi — *"oyunda arada çıkacak bir saat olsun ekranın ortasında kocaman
+şekilde biz o saatin okunu geriye doğru saralım, onu sararken de diğer her şey geriye doğru aksın,
+sonrasında iyice gerilsin; bu ok bıraktığımızda zaman çok daha hızlı akmaya başlasın, çok daha
+hızlı kazanalım yutulan kütleyi"* → *"gerçek fizik gibi bir şey yapacağız"*.
+
+**Sözleşme (donmuş, tek doğruluk kaynağı):** [`brain/scratchpad/time-clock-spec.md`](../scratchpad/time-clock-spec.md)
+
+### Tasarım çekirdeği
+- Kadran **120 sn'lik** bir oyun-zamanı penceresi. Geri sarılan saniye, kütleden **birebir** düşer
+  (gerçek zaman yolculuğu; taban `matter >= 1`).
+- Yay sertleşir: `tension = drag / (drag + K)` — hiperbolik doyum, son çeyrek çok daha fazla tur ister.
+- **Bedel doğrusal, ödül kuadratik** (yay enerjisi): `%25` sarma = **net zarar (0.78×)**,
+  `%100` sarma = **net kâr (3.60×, 16× tepe hız / 75 sn)**. Oyuncu "ya iyice ger, ya hiç dokunma"yı keşfeder.
+- Sönüm: yay kendiliğinden gevşer, gevşedikçe kütle geri gelir — yani durup beklemek istismar değil.
+- Salgı yalnız **üretimi** hızlandırır (buff süreleri / lab / bot saatleri normal akar) ki zaman
+  hızı mevcut buff'ları yakmasın.
+
+### Dalga (4 paralel subagent + orchestrator)
+- [x] Keşif dalgası — 3 paralel subagent: tick/üretim boru hattı, UI/kekatman/ses, kayıt+sıfırlama+kilit gelenekleri
+- [x] Sözleşme donduruldu + mekanik kararları kullanıcı onayıyla kapatıldı
+- [x] **Ajan A** — `models/clock.ts` + `game/clock-data.ts` + saf testler (`clock-data.test.ts` 26, `tests/time-clock.spec.ts` 15)
+- [x] **Ajan B** — store: state/getters/actions + `update()` tick bloğu + üretim faktörü (parite: `matterPerSecond` + breakdown) — 19 test
+- [x] **Ajan C** — kayıt v18 + uçucu faz yükleme + `applyResetScope` + `time_clock` kilit basamağı (1e120 / order 1200) — 18 test + regresyon 62/62
+- [x] **Ajan D** — `TimeClockOverlay.vue` (repoda ilk rotary/dairesel sürükleme girdisi) + `layer-clock` z-index 55 + 3 ses + `time_warp` sahnesi
+- [x] Orkestratör kararı: yaşam boyu istatistikler `TimeClockState` → `PlayerStats` (`clockRewinds`/`clockRewoundSeconds`/`clockBestTension`) — belge/kod çelişkisi kapandı
+- [x] Ölü sabit temizliği: `TIME_CLOCK_PITY_SECONDS` kaldırıldı (aralık tavanı 330 < 600 → hiç ateşlenemiyordu)
+- [x] Entegrasyon + `npm run build` + `npm test` + `harness:smoke` (baseline değişmedi)
+- [x] ADR-0068 + `completed.md` reconciliation + conventional commit
+
+---
+
 ## ✅ Geç Oyun Tick Performansı (2026-10-15) — TAMAMLANDI
 **Sonuç kaydı:** `brain/tasks/completed.md` (2026-10-15 girişi) · **ADR:** `brain/decisions/0059-late-game-tick-performance.md`
 - A/B kanıtı (git stash, 3 koşu): churn mean **~20.5 ms → ~5.9 ms (~3.5×)**, p95 62 → 13.8 ms; wall ~1.35 → ~0.79 ms. İki derlemede durum zinciri birebir (fingerprint + iş yükü sayaçları eşit).

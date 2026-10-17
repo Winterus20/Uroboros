@@ -4,6 +4,7 @@
  */
 export * from './auth-types'
 export * from './autobuyers'
+export type { TimeClockPhase, TimeClockState } from './clock'
 export * from './crisis'
 export * from './dimensions'
 export * from './lab'

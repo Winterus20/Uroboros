@@ -5,12 +5,14 @@ import { labGetters } from './game/getters-lab'
 import { crisisGetters } from './game/getters-crisis'
 import { neuralGetters } from './game/getters-neural'
 import { miscGetters } from './game/getters-misc'
+import { clockGetters } from './game/getters-clock'
 import { dimensionActions } from './game/actions-dimensions'
 import { prestigeActions } from './game/actions-prestige'
 import { labActions } from './game/actions-lab'
 import { crisisActions } from './game/actions-crisis'
 import { neuralActions } from './game/actions-neural'
 import { miscActions } from './game/actions-misc'
+import { clockActions } from './game/actions-clock'
 import { saveActions } from './game/actions-save'
 
 // Ince Pinia kabugu: tum mantik src/game/* (denge verisi) ve src/stores/game/*
@@ -22,7 +24,8 @@ export const useGameStore = defineStore('game', {
     ...labGetters,
     ...crisisGetters,
     ...neuralGetters,
-    ...miscGetters
+    ...miscGetters,
+    ...clockGetters
   },
   actions: {
     ...dimensionActions,
@@ -31,6 +34,7 @@ export const useGameStore = defineStore('game', {
     ...crisisActions,
     ...neuralActions,
     ...miscActions,
+    ...clockActions,
     ...saveActions
   }
 })

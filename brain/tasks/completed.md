@@ -1,5 +1,30 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-17] ✔ — Zaman Yayı (Time Clock): geri sarma / salgı mekaniği (ADR-0068)
+
+### Problem:
+- Kullanıcı ekranın ortasında **arada çıkacak kocaman bir saat** istedi: ibreyi dairesel çekerek **geriye** saracaksın, o sırada **yutulan kütle gerçekten geriye gidecek**, yay iyice gerilecek ve bırakınca **zaman çok daha hızlı akıp çok daha hızlı kazanacak**. Yön: *"biraz gerçek fizik gibi bir şey yapacağız."*
+- Mimari keşif iki kısıtı ortaya koydu: (1) `update()` içinde **global üretim çarpanı seam'i yok** — üretim satır içi çarpılıyor ve cache'lenen getter'lara konan her zaman-bağımlı faktör bayatlar (ADR-0029); (2) `lifetimePeakMatter`/`stats.highestMatter` **monotonik**, yani geri sarma içerik kilitleyemez.
+
+### Çözüm:
+- **Fizik modeli tek dosyada** (`src/game/clock-data.ts`, 14 sabit + 12 saf fonksiyon): gerginlik `tension = drag / (drag + K)` hiperbolik doyum (yay sertleşmesi); bedel **doğrusal** (geri sarılan saniye = kütleden düşen saniye, kadran 120 sn), ödül **kuadratik** (peak `1.5 + 14.5·t^1.5`, süre `16 + 59·t`, `(1−τ)^1.6` sönüm; enerji = alan integrali).
+- **Denge eğrisi:** `%25` sarma = **0.91× (net zarar)**, `%50` = 1.64×, `%80` = 2.75×, `%100` = **3.61× (16× tepe / 75 sn)**. **Başabaş ≈ 0.345** → oyuncu "ya iyice ger, ya hiç dokunma"yı keşfeder. Sönüm çift yönlü: yay gevşerse **kütle geri gelir** (durup beklemek istismar değil).
+- **Store:** faz makinesi `idle → winding → released`; `update()` bloğu sarma/sönüm/salgı sayacı; üretim faktörü **tek noktada** (D1→matter), D2→D1 zincirine kasten dokunulmadı; `matterPerSecond` + `matterProductionBreakdown` paritesi korundu; çevrimdışı simülasyonda saat hiç doğmaz.
+- **Yaşam boyu istatistikler `stats`'a taşındı** (`clockRewinds`, `clockRewoundSeconds`, `clockBestTension`) — `timeClock` koşu kapsamlıdır ve `applyResetScope(clearRunFx)` onu sıfırlar; belge/kod çelişkisi böylece kapandı.
+- **Kayıt v18:** canlı faz **uçucu** (yüklemede daima `idle`), yalnız `drag` + `stats` sayaçları saklanır; bozuk kayıt clamp'lenir.
+- **UI:** `TimeClockOverlay.vue` (`.layer-clock` z-index **55**, `#game-main-content` kardeşi — ADR-0044) + repoda **ilk dairesel sürükleme girdisi** (`setPointerCapture` → `atan2` → unwrap → yalnız CCW dilimi pozitif radyan) + 3 yeni ses (`playClockSpawn/Wind/Release`, 90 ms throttle) + `time_warp` şölen sahnesi. Uyarı eşiği sabit değil: `releaseProfitRatio < 1`.
+- **Kilit:** `time_clock` @ `decadeGate(120)`, `order: 1200` (komşular 1000/1250 — merdiven korunur).
+
+### Doğrulama:
+- `npx vue-tsc --noEmit` → **0 hata** · `npx vitest run` → **27 dosya / 380 test geçti** (saate özel ≈ 64 test) · `npm run build` → **0 hata** (1814 modül).
+- `npm run harness:smoke` → **baseline değişmedi** (`log10=90.72 shifts=8 gal=1 tickspeed=73 bots=11`; saat 1e120'de kilitli → inert, denge regresyonu yok).
+- Rotary matematiği bağımsız script'le kanıtlandı: CCW tam tur **+6.2832 rad**, CW tam tur **0**, ±π sınırında sıçrama yok.
+- Ölü sabit temizlendi: `TIME_CLOCK_PITY_SECONDS` (aralık tavanı 330 < 600 olduğu için hiç ateşlenemiyordu).
+
+### Değişen dosyalar:
+- **Yeni (8):** `src/models/clock.ts` · `src/game/clock-data.ts` · `src/game/clock-data.test.ts` · `tests/time-clock.spec.ts` · `src/stores/game/getters-clock.ts` · `src/stores/game/actions-clock.ts` · `src/stores/time-clock.test.ts` · `src/components/TimeClockOverlay.vue`
+- **Değişen (18):** `state.ts`, `store-api.ts`, `game.ts`, `actions-misc.ts`, `getters-dimensions.ts`, `actions-save.ts`, `models/save.ts`, `models/types.ts`, `save-version.ts`, `layers.ts`, `layers.test.ts`, `unlocks.ts`, `audio/effects.ts`, `particles.ts`, `particles.test.ts`, `App.vue`, `style.css`, `stores/__tests__/save-roundtrip.test.ts`
+
 ## [2026-10-16] ✔ — Görsel Dil: Tipografi 2. Dalga — UI Fontları Space Grotesk + Space Mono (ADR-0067)
 
 ### Problem:

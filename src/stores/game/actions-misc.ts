@@ -1,12 +1,13 @@
 // Durus, bot, haber, basarim, sekme, oyun dongusu ve muzik/ayar action parcalari. `this`, StoreApi ile tiplenmistir.
 import { sounds } from '../../core/audio'
 import { isPageVisible, safeConfetti } from '../../core/celebrate'
-import { D_0, D_INFINITY, Decimal } from '../../core/math'
+import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
 import { musicEngine } from '../../core/music-engine'
 import { ACHIEVEMENTS } from '../../game/achievements'
 import { AUTOBUYER_BULK_COST, AUTOBUYER_COSTS, AUTOBUYER_MAX_COST, getAutobuyerInterval } from '../../game/autobuyer-data'
 import { ACH_CHECK_INTERVAL, CHALLENGE_DOOM_GALAXY_ACCEL, CHALLENGE_DOOM_SHIFT_ACCEL, DIMENSION_CHAIN_RATE, NIGHT_WATCH_THRESHOLD, UNLOCK_CHECK_INTERVAL } from '../../game/balance'
 import { getChallengeById } from '../../game/challenges'
+import { applyTensionDecay, dragFromTension, durationFromPeakSpeed, releaseSpeedAt } from '../../game/clock-data'
 import { LAB_RECIPES, LAB_SEEDS } from '../../game/lab-data'
 import { COMBO_DECAY_MS } from '../../game/neural-data'
 import { log10Safe } from '../../game/pacing'
@@ -418,6 +419,46 @@ export const miscActions = {
         }
       }
 
+      // 2.5 Zaman Yayı (Time Clock): doğuş → geri sarma → salgı.
+      // Çevrimdışı simülasyonda saat HİÇ doğmaz ve HİÇ ilerlemez: oyuncu
+      // uyurken kaçırdığı bir olayı ne kazanır ne kaybeder (adil davranış).
+      if (!this.offlineSimActive && this.isFeatureUnlocked('time_clock')) {
+        if (this.timeClock.phase === 'idle') {
+          this.clockTimer += deltaSeconds
+          if (this.clockTimer >= this.nextClockInterval) this.spawnTimeClock()
+        } else if (this.timeClock.phase === 'winding') {
+          this.timeClock.remainingTime -= deltaSeconds
+          // Sönüm: yay kendiliğinden gevşer → zaman ileri akar → kütle geri gelir.
+          // deltaRewound negatiftir, bu yüzden minus() kütleyi GERİ VERİR.
+          const prevRewound = this.timeClockRewoundSeconds
+          this.timeClock.drag = dragFromTension(applyTensionDecay(this.timeClockTension, deltaSeconds))
+          const nextRewound = this.timeClockRewoundSeconds
+          const deltaRewound = nextRewound - prevRewound
+          if (deltaRewound !== 0) {
+            // Taban kuralı: kütle 1'in altına inmez (bkz. §6.3). `Decimal.max`
+            // static'i tip yüzeyinde olmadığı için karşılaştırma elle kurulur.
+            const remaining = this.matter.minus(this.matterPerSecond.times(deltaRewound))
+            this.matter = remaining.lt(1) ? D_1 : remaining
+          }
+          if (this.timeClock.remainingTime <= 0) this.releaseTimeClock()
+        } else if (this.timeClock.phase === 'released') {
+          this.timeClock.speedRemaining -= deltaSeconds
+          // Salgı süresi peak hızdan türetilir (state'te ayrı alan taşımıyoruz).
+          const releaseDurationForState = durationFromPeakSpeed(this.timeClock.peakSpeed)
+          const elapsed = releaseDurationForState - this.timeClock.speedRemaining
+          this.timeClock.speed = releaseSpeedAt(this.timeClock.peakSpeed, elapsed, releaseDurationForState)
+          if (this.timeClock.speedRemaining <= 0) {
+            this.timeClock.phase = 'idle'
+            this.timeClock.speed = 1
+            this.timeClock.speedRemaining = 0
+          }
+        }
+      } else if (this.timeClock.speed !== 1) {
+        // Özellik kilitli / offline simülasyon: hız çarpanı nötr'e çekilir
+        // (bayat hızla üretim çarpanı kilitli kalmasın).
+        this.timeClock.speed = 1
+      }
+
       // 3. Yüzen Anomali Sürelerini Azalt
       for (let a = this.floatingAnomalies.length - 1; a >= 0; a--) {
         this.floatingAnomalies[a].remainingTime -= deltaSeconds
@@ -784,6 +825,9 @@ export const miscActions = {
           .times(speed)
           .times(this.stanceMultipliers.production)
           .times(this.productionBuffMultiplier)
+          // Zaman Yayı salgısı YALNIZCA D1→Dopamin hattına uygulanır (D2→D1
+          // zincir beslemelerine kasten dokunulmaz — katlanarak patlardı).
+          .times(this.timeClockProductionMult)
           .times(this.labPassiveMultiplier)
           .times(achMultForChain)
           .times(this.achievementProductionMult)

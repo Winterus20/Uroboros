@@ -18,8 +18,13 @@
  * v17 — Ölçek Sıçrama Motoru (ADR-0052): shift/galaxy/singularity tek motor +
  * katman kayıt defteri; ölü `singularityHoldActive` kaldırıldı, `jumpLog` eklendi.
  * Geriye dönük uyumluluk YOK: v16 ve öncesi kayıtlar açılmaz, sıfırdan başlanır.
+ *
+ * v18 — Zaman Yayı (Time Clock): yalnızca KALICI sayaçlar kaydedilir
+ * (`timeClock.drag/totalRewoundSeconds/releases/bestTension`). Canlı faz uçucudur;
+ * yüklemede saat her zaman `idle`'a döner (floatingAnomalies muamelesi).
+ * v17 kayıtları aynen açılır (asgari sürüm 17'de kalır) — alan yoksa nötr varsayılan.
  */
-export const SAVE_VERSION = 17
+export const SAVE_VERSION = 18
 
 /**
  * Asgari desteklenen kayıt sürümü.

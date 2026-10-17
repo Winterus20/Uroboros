@@ -50,6 +50,9 @@ export interface PlayerStats {
   seedsPlanted: number // Ekilen Lab Trend/Ses Formatları
   challengesCompleted: number // Tamamlanan Gece Kriz Meydan Okumaları
   reactorCollapses?: number // Reaktör Kuantum Çöküş Sayısı (Kozmik Relik Seviyesi)
+  clockRewinds: number // Zaman Yayı salgı sayısı (Time Clock)
+  clockRewoundSeconds: number // Hayat boyu geri sarılan oyun-zamanı (sn)
+  clockBestTension: number // Ulaşılan en iyi yay gerginliği [0, 1]
 }
 
 export type AchievementCategoryId =
@@ -233,6 +236,9 @@ export interface SerializedPlayerState {
     seedsPlanted?: number
     challengesCompleted?: number
     reactorCollapses?: number
+    clockRewinds?: number
+    clockRewoundSeconds?: number
+    clockBestTension?: number
     highestDps?: string
     totalManualDopamine?: string
   }
@@ -257,6 +263,9 @@ export interface SerializedPlayerState {
     singularities: number
     spGained: string
   }>
+  /** Zaman Yayı (Time Clock) canlı yay durumu (v18). Faz/hız uçucudur; burada yalnızca
+   *  birikmiş çevirme miktarı yaşar. Yaşam boyu istatistikler `stats` bloğundadır. */
+  timeClock?: { drag?: number }
   achievements?: string[]
   achievementsSeenCount?: number
   seenNewsIds?: string[]
