@@ -5,6 +5,7 @@ import { Decimal } from '../core/math'
 import { SaveSystem } from '../core/save'
 import { useAuthStore } from '../stores/auth'
 import { CloudSaveService } from '../core/auth/cloud-save-service'
+import { TIME_CLOCK_MAX_DRAG } from '../game/clock-data'
 import { X, ShieldAlert } from 'lucide-vue-next'
 
 const emit = defineEmits<{
@@ -319,6 +320,39 @@ function timeWarp(seconds: number) {
   flash(`${seconds} sn ileri sarıldı`)
 }
 
+// ---- Zaman Yayı (Time Clock) ----
+/**
+ * Saat, tick döngüsünde yalnızca `time_clock` kilidi açıkken ilerler (kilitliyken
+ * hız nötre çekilir → donmuş bir saat kalırdı). Admin testinde kilidi de biz açarız.
+ */
+function ensureClockUnlocked() {
+  if (!store.unlockedFeatures.includes('time_clock')) {
+    store.unlockedFeatures.push('time_clock')
+  }
+}
+
+function spawnClock() {
+  ensureClockUnlocked()
+  if (store.timeClock.phase !== 'idle' || store.timeClock.active) store.resetTimeClock()
+  const ok = store.spawnTimeClock()
+  flash(ok ? '⏰ Zaman Yayı doğuruldu — ibreyi dairesel geri sar' : 'Saat doğurulamadı (faz meşgul)')
+}
+
+/** Ödül tarafını sarma zahmeti olmadan denemek için: tam gerginlik + bedelsiz salgı. */
+function forceClockRelease() {
+  ensureClockUnlocked()
+  store.resetTimeClock()
+  store.spawnTimeClock()
+  store.timeClock.drag = TIME_CLOCK_MAX_DRAG
+  const ok = store.releaseTimeClock()
+  flash(ok ? 'Yay tam gergin salındı (16×)' : 'Salgı başlatılamadı')
+}
+
+function clearClock() {
+  store.resetTimeClock()
+  flash('Zaman Yayı kapatıldı')
+}
+
 function forceShift() {
   store.dimensionShifts += 1
   store.matter = new Decimal(10)
@@ -505,6 +539,21 @@ function hardReset() {
             <button @click="forceSingularity" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-500/40 cursor-pointer">Tekillik Zorla</button>
             <button @click="hardReset" class="px-2 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/40 cursor-pointer">Hard Reset</button>
           </div>
+        </section>
+
+        <!-- Zaman Yayı -->
+        <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
+          <h4 class="font-bold text-cyan-300 tracking-wider">⏰ ZAMAN YAYI (TIME CLOCK)</h4>
+          <div class="flex flex-wrap gap-1.5">
+            <button @click="spawnClock" class="px-2 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-100 border border-cyan-500/40 cursor-pointer font-bold">Saati Doğur</button>
+            <button @click="forceClockRelease" class="px-2 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-500/30 cursor-pointer">Tam Gergin Salgı (16×)</button>
+            <button @click="clearClock" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Saati Kapat</button>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Saat yalnızca <span class="text-cyan-300">time_clock</span> kilidi açıkken ilerler; <span class="text-cyan-300">Saati Doğur</span> kilidi de açar.
+            İbre ekranda 26 sn kalır — dairesel çevirerek geri sar, bıraktığında zaman hızlanır.
+            <span class="text-cyan-300">Tam Gergin Salgı</span> sarma maliyetini atlar (yalnızca ödül tarafını hızlı denemek için).
+          </p>
         </section>
 
         <p class="text-[11px] text-slate-500 leading-relaxed">
