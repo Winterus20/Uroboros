@@ -1,5 +1,54 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-18] ✔ — Taktiksel Duruş Butonları Görsel Dil ve Netlik Yenilemesi (`Header.vue`)
+
+### Problem & Gerekçe:
+- `visual-language.md` ("Aç Kumarhane" & §9 "Görsel-Öncelikli Anlatım") doğrultusunda taktiksel duruş butonları (`Kuantum`, `Obur`, `Kalkan`) tek satır ve tanımsız çarpanlar (`2×`, `4×`, `−%15`) gösteriyordu. Hangi metriğin ne kadar etkilendiği, hangi duruşun aktif olduğu ve kilitli duruşların ne zaman açılacağı bir bakışta anlaşılamıyordu.
+- Eski "doomscroll / gizli mod" temasına ait `Moon` ve `EyeOff` ikonları, Uroboros kuantum tekilliğiyle uyumsuzdu.
+
+### Çözüm & Değişiklikler:
+1. `src/components/Header.vue`:
+   - **İkonlar:** `Moon` ve `EyeOff` yerine `Atom` (Kuantum) ve `Shield` (Kalkan) getirildi; `Flame` ve `Lock` korundu.
+   - **2-Satırlı Taktil Düzen:** Sağ taraftaki `YUT!`, `Hz`, `Tümü` mimarisiyle tam uyumlu 2-satırlı buton yapısına (`h-11`, `btn-tactile`, `@pointerdown="punchTap"`, `:aria-pressed`) geçirildi.
+   - **Metrik Netliği:**
+     - `Kuantum`: Başlık yanında aktiflik noktası + 2. satırda net metrik `Pasif ×2`.
+     - `Obur`: Başlık yanında aktiflik noktası (açıkken) veya ilerleme metni (kilitliyken) + 2. satırda `Yut ×4 · Dalga ×1.5` (açık) / `Yut ×4` + `progress-track-mini` ilerleme çubuğu (kilitli).
+     - `Kalkan`: Başlık yanında aktiflik noktası (açıkken) veya ilerleme metni (kilitliyken) + 2. satırda `Hz Fiyat −%15` (açık) / `Hz −%15` + `progress-track-mini` ilerleme çubuğu (kilitli).
+   - **Kilit İlerlemesi Kütle Birimi:** `stanceLockHint` fonksiyonundaki ilerleme dizesine ` g` (`${cur} / ${tgt} g`) kütle birimi eklendi.
+   - **Erişilebilirlik:** Stance buton grubuna `role="group"` ve `aria-label="Taktiksel duruş seçimi"` tanımlandı.
+2. **Doğrulama:**
+   - `npm run harness:contrast`: 243/243 metin ve UI çifti WCAG 2.2 AA (%100) onaylı.
+   - `npm test`: 27 test dosyası, 388 testin tamamı (%100) başarıyla geçti.
+   - `npm run build`: `vue-tsc` (0 TS hatası) ve Vite production bundle hatasız derlendi.
+
+## [2026-10-18] ✔ — Otomatik Bot Ses Sızıntılarının Kapatılması (Yalnızca Manuel Tıklamalarda Ses)
+
+### Problem:
+- Kullanıcı talebi: *"sadece bizim tıkladığımız şeylerde ses çıksın botların tıkladıklarında değil"*.
+- Yapılan mimari analizde botların `playSound = false` ile çalıştırıldığı durumlarda 3 kritik noktada ses sızıntısı tespit edildi:
+  1. `actions-dimensions.ts` içindeki `emitProductionSurge` fonksiyonu, `playSound = false` olsa bile `window.dispatchEvent('doomscroll:production-bump')` CustomEvent'ini fırlatıyordu. `CounterDisplay.vue` içindeki `onProductionBump` dinleyicisi ise bu olayı her yakaladığında `sounds.playTallyTick(1)` / `sounds.playTallyTick(0.55)` çalarak boyut ve tickspeed botlarının alımlarında sürekli ses çıkmasına neden oluyordu.
+  2. `actions-dimensions.ts` içindeki `performScaleJump` fonksiyonunda `layer === 'galaxy'` bloğunda `&& playSound` kontrolü unutulmuştu (`if (typeof window !== 'undefined')`). Bu nedenle Galaxy botu (`buyGalaxy(false)`) çalıştığında `doomscroll:macro-surge` fırlatılıyor ve `SequentialStrikeLayer.vue` 8 kez ardı ardına `sounds.playMacroSurge(i, total)` çalıyordu.
+  3. `actions-misc.ts` içinde Lab pasif otomatik filizlenme döngüsünde (Satır 560), kullanıcı hiçbir şey tıklamadığı halde arka planda `sounds.playPlant()` çalıyordu.
+
+### Çözüm & Değişiklikler:
+1. `src/stores/game/actions-dimensions.ts`:
+   - `emitProductionSurge`: Fonksiyonun başına `if (this.offlineSimActive || !playSound) return` koruması eklendi. Bot alımlarında (`playSound = false`) erken dönülerek hem pahalı `matterPerSecond` hesaplaması engellendi hem de `doomscroll:production-bump` CustomEvent'i fırlatılmayarak `CounterDisplay.vue` ses sızıntısı tamamen kesildi.
+   - `performScaleJump('galaxy')`: Satır 394'teki `if (typeof window !== 'undefined')` kontrolü `if (typeof window !== 'undefined' && playSound)` olarak güncellendi. Galaxy bot alımlarında `doomscroll:macro-surge` fırlatılması ve `SequentialStrikeLayer` arpej sesleri engellendi.
+2. `src/stores/game/actions-misc.ts`:
+   - Arka plan pasif Lab filizlenmesindeki `if (!this.offlineSimActive) sounds.playPlant()` çağrısı kaldırıldı.
+3. `src/stores/autobuyers-cockpit.test.ts`:
+   - `Sessizlik Garantisi: Bot alımlarında (playSound=false) ses veya surge olayları yayılmaz` başlıklı deterministik birim testi eklendi. Boyut botu (tekil, 10'lu, max), frekans botu ve galaksi botu alımlarında hiçbir surge/bump olayının yayılmadığı kanıtlandı.
+4. **Doğrulama:**
+   - `npx vue-tsc --noEmit`: 0 hata, tip güvenliği tam.
+   - `npx vitest run`: 27 test dosyası, 388 testin tamamı (%100) başarıyla geçti.
+
+## [2026-10-18] ✔ — Navigasyon Sekme Üst Çizgisi Genişletmesi (`useNavigation.ts`)
+
+### Değişiklik:
+- `src/composables/useNavigation.ts`: `ACTIVE_LINE` ve `IDLE_LINE` içindeki `before:left-3 before:w-3.5` (yalnızca 14px ikon üstü) tanımı `before:inset-x-2 before:rounded-full` ile değiştirildi.
+- Aktif sekme butonu üst gösterge çizgisi (`::before`), sekme açıldığında butonun tüm üst kenarını (hem ikonu hem yazıyı) `rounded-lg` köşe kavisini bozmadan boydan boya kapsar hale getirildi.
+- `vue-tsc --noEmit` ve `vitest run` (387 test) %100 başarıyla geçti.
+
 ## [2026-10-18] ✔ — Görsel Dil Uyum Turu: F0–F8 TAMAMLANDI (F0 + Dalga 1 + Dalga 2: F3, F6, F7, F8 + T10)
 
 ### Problem:

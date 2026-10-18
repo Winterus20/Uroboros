@@ -4,9 +4,9 @@ import { useGameStore, COMBO_THRESHOLDS, COMBO_DECAY_MS } from "../stores/game";
 import { format } from "../core/format";
 import type { StanceType } from "../models/types";
 import {
-  Moon,
+  Atom,
   Flame,
-  EyeOff,
+  Shield,
   Settings,
   ArrowUp,
   Cpu,
@@ -177,7 +177,7 @@ function stanceLockHint(featureId: string): { hint: string; progress: string; pe
   const tgt = format(new Decimal(p.target), 0, store.settings.notation);
   return {
     hint: f.hint,
-    progress: `${cur} / ${tgt}`,
+    progress: `${cur} / ${tgt} g`,
     percent: unlockProgressFraction(store.unlockContext, f)
   };
 }
@@ -470,69 +470,145 @@ onUnmounted(() => {
       <!-- Sol: Stance Modları (bir kez açılır, bir daha kapanmaz) -->
       <div
         v-if="isStanceUnlocked"
+        role="group"
+        aria-label="Taktiksel duruş seçimi"
         class="flex items-center p-1 rounded-xl bg-black/40 border border-white/[0.06] shrink-0 justify-center md:justify-start w-fit mx-auto md:mx-0 max-w-full overflow-x-auto no-scrollbar"
       >
         <button
           @click="setStance('trend')"
+          @pointerdown="punchTap"
           aria-label="Kuantum odak duruşuna geç"
-          class="btn-tactile hit-44 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+          :aria-pressed="store.currentStance === 'trend'"
+          class="btn-tactile h-11 px-2.5 sm:px-3 rounded-lg text-xs font-mono flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap"
           :class="store.currentStance === 'trend'
-            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-            : 'text-slate-400 hover:text-slate-200 border border-transparent'"
+            ? 'bg-purple-500/20 text-purple-200 border border-purple-500/45 shadow-sm'
+            : 'text-slate-300 hover:text-white border border-transparent'"
         >
-          <Moon class="w-3.5 h-3.5 text-purple-400" />
-          <span>Kuantum</span>
-          <span class="text-[10px] font-bold tabular-nums opacity-80">2×</span>
+          <Atom class="w-4 h-4 text-purple-400 shrink-0" />
+          <div class="flex flex-col items-start text-left leading-tight">
+            <div class="flex items-center gap-1.5">
+              <span class="font-sans font-bold text-xs tracking-wide">Kuantum</span>
+              <span
+                v-if="store.currentStance === 'trend'"
+                class="w-1.5 h-1.5 rounded-full bg-purple-300 shrink-0"
+                aria-hidden="true"
+              ></span>
+            </div>
+            <span
+              class="text-[10px] font-mono tabular-nums"
+              :class="store.currentStance === 'trend' ? 'text-purple-200 font-bold' : 'text-slate-400'"
+            >
+              Pasif ×2
+            </span>
+          </div>
         </button>
 
         <button
           @click="setStance('spam')"
+          @pointerdown="punchTap"
           :disabled="!!stanceSpamLock"
           aria-label="Obur çekim duruşuna geç"
-          class="btn-tactile hit-44 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition-all whitespace-nowrap"
+          :aria-pressed="store.currentStance === 'spam'"
+          class="btn-tactile h-11 px-2.5 sm:px-3 rounded-lg text-xs font-mono flex items-center gap-2 transition-all whitespace-nowrap"
           :class="stanceSpamLock
-            ? 'text-slate-600 border border-white/[0.03] bg-black/20 opacity-70 cursor-not-allowed'
+            ? 'ds-ramp-locked text-slate-400 border border-white/[0.04] bg-black/30 cursor-not-allowed'
             : store.currentStance === 'spam'
-              ? 'bg-rose-500/15 text-rose-200 border border-rose-500/40 shadow-sm cursor-pointer'
-              : 'text-slate-500 hover:text-slate-200 border border-transparent cursor-pointer opacity-90'"
+              ? 'bg-rose-500/20 text-rose-200 border border-rose-500/45 shadow-sm cursor-pointer'
+              : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
         >
-          <Lock v-if="stanceSpamLock" class="w-3.5 h-3.5 text-slate-600" />
-          <Flame v-else class="w-3.5 h-3.5 text-rose-400" />
-          <span>Obur</span>
-          <span class="text-[10px] font-bold tabular-nums opacity-80">4×</span>
-          <span v-if="stanceSpamLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
-            <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stanceSpamLock.progress }}</span>
-            <span class="inline-block w-16">
-              <span class="progress-track progress-track-mini block">
-                <span class="progress-fill progress-fill-slate block" :style="{ width: `${stanceSpamLock.percent * 100}%` }"></span>
+          <Lock v-if="stanceSpamLock" class="w-4 h-4 text-slate-400 shrink-0" />
+          <Flame v-else class="w-4 h-4 text-rose-400 shrink-0" />
+          <div class="flex flex-col items-start text-left leading-tight">
+            <div class="flex items-center gap-1.5">
+              <span class="font-sans font-bold text-xs tracking-wide">Obur</span>
+              <span
+                v-if="!stanceSpamLock && store.currentStance === 'spam'"
+                class="w-1.5 h-1.5 rounded-full bg-rose-300 shrink-0"
+                aria-hidden="true"
+              ></span>
+              <span
+                v-if="stanceSpamLock"
+                class="text-[9px] font-mono text-slate-400 tabular-nums"
+              >
+                {{ stanceSpamLock.progress }}
               </span>
+            </div>
+            <span
+              v-if="!stanceSpamLock"
+              class="text-[10px] font-mono tabular-nums"
+              :class="store.currentStance === 'spam' ? 'text-rose-200 font-bold' : 'text-slate-400'"
+            >
+              Yut ×4 · Dalga ×1.5
             </span>
-          </span>
+            <div
+              v-else
+              class="flex items-center gap-1.5"
+            >
+              <span class="text-[9px] font-mono text-slate-400 tabular-nums">Yut ×4</span>
+              <span class="inline-block w-14">
+                <span class="progress-track progress-track-mini block">
+                  <span
+                    class="progress-fill progress-fill-slate block"
+                    :style="{ width: `${stanceSpamLock.percent * 100}%` }"
+                  ></span>
+                </span>
+              </span>
+            </div>
+          </div>
         </button>
 
         <button
           @click="setStance('private_mode')"
+          @pointerdown="punchTap"
           :disabled="!!stancePrivateLock"
           aria-label="Vakum kalkanı duruşuna geç"
-          class="btn-tactile hit-44 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition-all whitespace-nowrap"
+          :aria-pressed="store.currentStance === 'private_mode'"
+          class="btn-tactile h-11 px-2.5 sm:px-3 rounded-lg text-xs font-mono flex items-center gap-2 transition-all whitespace-nowrap"
           :class="stancePrivateLock
-            ? 'text-slate-600 border border-white/[0.03] bg-black/20 opacity-70 cursor-not-allowed'
+            ? 'ds-ramp-locked text-slate-400 border border-white/[0.04] bg-black/30 cursor-not-allowed'
             : store.currentStance === 'private_mode'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm cursor-pointer'
-              : 'text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer'"
+              ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/45 shadow-sm cursor-pointer'
+              : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
         >
-          <Lock v-if="stancePrivateLock" class="w-3.5 h-3.5 text-slate-600" />
-          <EyeOff v-else class="w-3.5 h-3.5 text-cyan-400" />
-          <span>Kalkan</span>
-          <span class="text-[10px] font-bold tabular-nums opacity-80">−%15</span>
-          <span v-if="stancePrivateLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
-            <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stancePrivateLock.progress }}</span>
-            <span class="inline-block w-16">
-              <span class="progress-track progress-track-mini block">
-                <span class="progress-fill progress-fill-slate block" :style="{ width: `${stancePrivateLock.percent * 100}%` }"></span>
+          <Lock v-if="stancePrivateLock" class="w-4 h-4 text-slate-400 shrink-0" />
+          <Shield v-else class="w-4 h-4 text-cyan-400 shrink-0" />
+          <div class="flex flex-col items-start text-left leading-tight">
+            <div class="flex items-center gap-1.5">
+              <span class="font-sans font-bold text-xs tracking-wide">Kalkan</span>
+              <span
+                v-if="!stancePrivateLock && store.currentStance === 'private_mode'"
+                class="w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0"
+                aria-hidden="true"
+              ></span>
+              <span
+                v-if="stancePrivateLock"
+                class="text-[9px] font-mono text-slate-400 tabular-nums"
+              >
+                {{ stancePrivateLock.progress }}
               </span>
+            </div>
+            <span
+              v-if="!stancePrivateLock"
+              class="text-[10px] font-mono tabular-nums"
+              :class="store.currentStance === 'private_mode' ? 'text-cyan-200 font-bold' : 'text-slate-400'"
+            >
+              Hz Fiyat −%15
             </span>
-          </span>
+            <div
+              v-else
+              class="flex items-center gap-1.5"
+            >
+              <span class="text-[9px] font-mono text-slate-400 tabular-nums">Hz −%15</span>
+              <span class="inline-block w-14">
+                <span class="progress-track progress-track-mini block">
+                  <span
+                    class="progress-fill progress-fill-slate block"
+                    :style="{ width: `${stancePrivateLock.percent * 100}%` }"
+                  ></span>
+                </span>
+              </span>
+            </div>
+          </div>
         </button>
       </div>
 
