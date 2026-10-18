@@ -1783,20 +1783,23 @@ body::after {
 }
 .clock-dial-strain {
   animation: clock-dial-strain-anim 0.12s linear infinite;
+  /* Sözleşme §2: altın tek ton #f59e0b (rgb 245,158,11); rose tehlike ikinci hale. */
   box-shadow:
-    0 0 110px -6px rgba(251, 191, 36, 0.4),
+    0 0 110px -6px rgba(245, 158, 11, 0.4),
     0 0 50px -10px rgba(244, 63, 94, 0.35);
 }
 
-/* --- v2: KUSURSUZ bölge + rozet paleti (altın) --- */
+/* --- v2: KUSURSUZ bölge + rozet paleti (altın) ---
+   Sözleşme §2: altın tek ton #f59e0b; metin tonu #fde68a yalnız aydınlatma
+   (repo emsali .btn-primary-amber). Altın+ring = milestone (§9.4). */
 .clock-perfect-zone {
-  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.55));
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.55));
 }
 .clock-chip-perfect {
-  border-color: rgba(251, 191, 36, 0.55);
+  border-color: rgba(245, 158, 11, 0.55);
   background: rgba(69, 48, 3, 0.72);
   color: #fde68a;
-  text-shadow: 0 0 8px rgba(251, 191, 36, 0.45);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.45);
 }
 
 .clock-tension-arc {

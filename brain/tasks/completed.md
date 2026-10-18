@@ -18,6 +18,11 @@
 ### Doğrulama:
 - `npm test`: **393/393 yeşil** (27 dosya; v2 için 5 yeni test dahil).
 - `npm run build` (vue-tsc + vite): **exit 0**, dist artefaktı üretildi.
+- **v2.1 UI hizalaması (görsel dil sözleşmesi):** altın `#fbbf24` → sözleşme tonu
+  `#f59e0b` (konfeti/şok dalgası/kuşak yayı/CSS glow'lar); hero sayaç `font-mono` →
+  `font-display` (m6x11plus, 36/54 ızgara); sarma paneline faz kapılı GIC tape köşeleri +
+  `collage-scrawl` el yazısı notu eklendi (K0'da görünmez). Doğrulama: npm test exit 0 +
+  npm run build exit 0.
 
 
 ## [2026-10-18] ✔ — Taktiksel Duruş Butonları Görsel Dil ve Netlik Yenilemesi (`Header.vue`)

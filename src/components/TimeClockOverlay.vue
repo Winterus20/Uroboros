@@ -339,7 +339,9 @@ function fireReleaseEffects(tensionAtRelease: number) {
   // Azaltılmış hareket: konfeti/şok dalgası/shake yok. Okuma ve girdi etkilenmez.
   if (motionReduced.value) return
   // v2: kusursuz salgı ALTIN paletle kutlanır.
-  const palette = perfect ? ['#fbbf24', '#f59e0b', '#ffffff'] : ['#22d3ee', '#a855f7', '#ffffff']
+  // Görsel dil sözleşmesi §2: amber/altın TEK TON #f59e0b (prestij/milestone).
+  // Kusursuz salgı = saatin milestone anı → altın+ring (§9.4 bir semantik = bir görsel).
+  const palette = perfect ? ['#f59e0b', '#ffffff'] : ['#22d3ee', '#a855f7', '#ffffff']
   safeConfetti({
     particleCount: (perfect ? 70 : 40) + Math.round(t * 80),
     spread: 90,
@@ -354,7 +356,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
   // salgı hissi kaybolmasın.
   window.dispatchEvent(
     new CustomEvent('doomscroll:feast-scene', {
-      detail: { scene: 'time_warp', text, color: perfect ? '#fbbf24' : '#22d3ee' }
+      detail: { scene: 'time_warp', text, color: perfect ? '#f59e0b' : '#22d3ee' }
     })
   )
   window.dispatchEvent(
@@ -362,7 +364,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
   )
   window.dispatchEvent(
     new CustomEvent('doomscroll:shockwave', {
-      detail: { x, y, color: perfect ? '#fbbf24' : '#22d3ee', maxRadius: 200 + Math.round(t * 120) }
+      detail: { x, y, color: perfect ? '#f59e0b' : '#22d3ee', maxRadius: 200 + Math.round(t * 120) }
     })
   )
   window.dispatchEvent(
@@ -497,7 +499,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
                 cx="100"
                 cy="100"
                 :r="TENSION_R"
-                stroke="#fbbf24"
+                stroke="#f59e0b"
                 stroke-width="7"
                 stroke-linecap="round"
                 :stroke-dasharray="perfectDash"
@@ -543,7 +545,9 @@ function fireReleaseEffects(tensionAtRelease: number) {
           :class="isWinding ? 'opacity-100' : 'opacity-0'"
           :aria-hidden="!isWinding"
         >
-          <span class="font-mono text-[36px] sm:text-[54px] text-white counter-glow tabular-nums leading-none">
+          <!-- Tipografi sözleşmesi §7: hero sayaç = font-display (m6x11plus),
+               18-px ızgarası (36/54), sentetik bold YOK, tracking ELLE DÜZELTMEZ. -->
+          <span class="font-display text-[36px] sm:text-[54px] text-white counter-glow tabular-nums leading-none">
             %{{ tensionPct }}
           </span>
           <span class="font-mono text-[10px] tracking-[0.32em] text-cyan-300/80 mt-1">GERGİNLİK</span>
@@ -573,6 +577,18 @@ function fireReleaseEffects(tensionAtRelease: number) {
         v-if="isWinding"
         class="pointer-events-none absolute left-1/2 top-full mt-3 sm:mt-4 flex w-[min(92vw,520px)] -translate-x-1/2 flex-col items-center gap-2"
       >
+        <!-- GIC L2 kolaj dokunuşu (görsel dil sözleşmesi §4): tape köşeleri +
+             el yazısı notu. FAZ KAPISI: --substrate-opacity (K0'da 0 → görünmez,
+             K1+ aşınır) — K0 steril kumarhane kuralı burada da geçerli.
+             Yalnız AMBIENT katman: sayı/etiket/ramp bu sınıflara GİRMEZ
+             (okunabilirlik kanonu). -->
+        <div class="collage-tape" style="top: -7px; left: 9%; transform: rotate(-8deg)" aria-hidden="true"></div>
+        <div class="collage-tape" style="top: -7px; right: 9%; transform: rotate(7deg)" aria-hidden="true"></div>
+        <span
+          class="collage-scrawl font-hand"
+          style="bottom: -20px; left: 7%; transform: rotate(-4deg)"
+          aria-hidden="true"
+        >daha çok çevir!</span>
         <div class="progress-track progress-track-md progress-track-bordered w-full">
           <div
             class="progress-fill duration-75"

@@ -74,6 +74,12 @@ Tablo formüllerden yeniden türetildi (Ajan A doğrulaması: `src/game/clock-da
 3. **UI v2:** kadran üzerinde altın KUSURSUZ bölge yayı (son %10 dilim), SERİ / KUSURSUZ /
    SONUM çipleri, ≥ %97 gerginlikte kozmetik tremble (`.clock-dial-strain`, motion gate'li),
    klavye ile sarma (Sol/Aşağı ok = 0.35 rad).
+4. **UI v2.1 — görsel dil hizalaması (sözleşme: brain/context/visual-language.md):**
+   altın TEK TON `#f59e0b`e normalleştirildi (`#fbbf24` ihlali düzeltildi; konfeti, şok
+   dalgası, bölge yayı ve CSS glow'lar dahil); hero gerginlik sayacı `font-display`
+   (m6x11plus, 36/54 ızgara, sentetik bold yok) oldu; sarma bilgi paneline FAZ KAPILI GIC
+   kolaj dokunuşları eklendi (tape köşeleri + `collage-scrawl` el yazısı notu —
+   `--substrate-opacity` K0'da 0, okunabilirlik kanonu korunur).
 
 ## 3. Fazlar
 
