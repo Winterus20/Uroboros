@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Trash2,
   ChevronDown,
-  Lock
+  Lock,
+  MousePointerClick
 } from 'lucide-vue-next'
 
 const store = useGameStore()
@@ -339,8 +340,9 @@ function handleTouchEnd(e: TouchEvent) {
       >
         <div class="flex items-center gap-1.5 text-rose-200 font-bold">
           <AlertCircle class="w-3.5 h-3.5 text-rose-300" />
-          <span>Kozmik Parazit (-{{ (store.slackerLeechPercent * 100).toFixed(0) }}%)</span>
-          <span class="text-[10px] font-normal text-slate-500">({{ store.slackers.length }})</span>
+          <span class="font-sans">Kozmik Parazit</span>
+          <span class="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/25 shrink-0 select-none">-{{ (store.slackerLeechPercent * 100).toFixed(0) }}%</span>
+          <span class="text-[10px] font-mono tabular-nums text-slate-500 shrink-0">×{{ store.slackers.length }}</span>
           <span
             v-if="d3Passive"
             class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 select-none"
@@ -350,7 +352,7 @@ function handleTouchEnd(e: TouchEvent) {
           </span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <span class="text-[11px] font-bold text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded">3 tıkla → %120 kütle iade</span>
+          <span class="text-[10px] font-mono font-bold tabular-nums text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded inline-flex items-center gap-1 shrink-0 select-none" aria-label="3 tıkla devre dışı bırak, yüzde 120 kütle iadesi"><MousePointerClick class="w-3 h-3" />3 tık → +%120</span>
           <ChevronDown class="w-3.5 h-3.5 text-slate-500 transition-transform" :class="{ 'rotate-180': !slackersOpen }" />
         </div>
       </button>
@@ -366,10 +368,8 @@ function handleTouchEnd(e: TouchEvent) {
         >
           <EyeOff class="w-3 h-3 text-rose-400" />
           <span>{{ slacker.name }}</span>
-          <span class="text-rose-400 tabular-nums">({{ format(slacker.leechedDopamine, 1, store.settings.notation) }})</span>
-          <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px]">
-            {{ slacker.clicksRemaining }}
-          </span>
+          <span class="text-rose-400 tabular-nums font-bold">{{ format(slacker.leechedDopamine, 1, store.settings.notation) }}</span>
+          <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] tabular-nums" aria-label="Kalan tık">×{{ slacker.clicksRemaining }}</span>
         </button>
       </div>
     </div>
