@@ -5,8 +5,12 @@ import { useMotionReduced } from '../composables/useMotion'
 import { safeConfetti } from '../core/celebrate'
 import { sounds } from '../core/audio'
 import {
+  TIME_CLOCK_DECAY_BASE_PER_SEC,
   TIME_CLOCK_LIFETIME_SECONDS,
-  releaseProfitRatio
+  TIME_CLOCK_PERFECT_DURATION_MULT,
+  TIME_CLOCK_PERFECT_TENSION,
+  releaseProfitRatio,
+  streakPeakBonus
 } from '../game/clock-data'
 
 /**
@@ -57,6 +61,16 @@ const profitRatio = computed(() => releaseProfitRatio(tension.value))
  * uyariyi yanlis yere koyardi — `profitRatio` zaten hesaplaniyor.
  */
 const weakRelease = computed(() => profitRatio.value < 1)
+// v2: Kusursuz önizleme + seri + görünür sonum.
+const isPerfectPreview = computed(() => tension.value >= TIME_CLOCK_PERFECT_TENSION)
+const perfectBonusPct = Math.round((TIME_CLOCK_PERFECT_DURATION_MULT - 1) * 100)
+const decayLabel = computed(() =>
+  (TIME_CLOCK_DECAY_BASE_PER_SEC * (0.5 + 0.5 * tension.value) * 100).toFixed(1)
+)
+const clockStreak = computed(() => store.stats.clockStreak)
+const streakBonusPct = computed(() =>
+  Math.round((streakPeakBonus(clockStreak.value + 1) - 1) * 100)
+)
 const profitLabel = computed(() => profitRatio.value.toFixed(2))
 const rewoundLabel = computed(() => Math.max(0, Math.round(rewoundSeconds.value)))
 const previewPeakLabel = computed(() => Math.max(0, previewPeak.value).toFixed(1))
@@ -79,12 +93,20 @@ const releaseDurationS = ref(TIME_CLOCK_LIFETIME_SECONDS)
 const peakSpeed = ref(1)
 const releaseTension = ref(0)
 const releaseCount = ref(0)
+/** v2: salgi aninda kusursuz esik asildi mi (altin efekt/rozet). */
+const wasPerfect = ref(false)
 
 // --- Kadran geometrisi (viewBox 0 0 200 200, merkez 100,100) ---------------
 const LIFE_R = 88
 const TENSION_R = 76
 const LIFE_CIRC = 2 * Math.PI * LIFE_R
 const TENSION_CIRC = 2 * Math.PI * TENSION_R
+
+// v2: KUSURSUZ bölge işareti — gerginlik yayının son dilimi (altın).
+const PERFECT_FRACTION = 1 - TIME_CLOCK_PERFECT_TENSION
+const perfectDash =
+  (TENSION_CIRC * PERFECT_FRACTION).toFixed(1) + ' ' + (TENSION_CIRC * (1 - PERFECT_FRACTION)).toFixed(1)
+const perfectDashOffset = (-TENSION_CIRC * (1 - PERFECT_FRACTION)).toFixed(1)
 
 const lifePct = computed(() => {
   // Sarma fazında: saatin ekranda kalan ömrü (`remainingTime`).
@@ -118,6 +140,11 @@ const heatClass = computed(() => {
   return ''
 })
 
+/** v2: Aşırı gerilme (≥ %97) — yay çatlıyor; kozmetik tremble (motion gate'li). */
+const strainClass = computed(() =>
+  isWinding.value && !motionReduced.value && tension.value >= 0.97 ? 'clock-dial-strain' : ''
+)
+
 // --- Salgı anı yakalama: store `drag`'i sıfırlar, ibre nereden devam edecek --
 watch(
   () => ({
@@ -143,6 +170,7 @@ watch(
     releaseDurationS.value = Math.max(1, store.timeClock.speedRemaining)
     peakSpeed.value = store.timeClock.peakSpeed
     releaseCount.value = store.stats.clockRewinds
+    wasPerfect.value = releaseTension.value >= TIME_CLOCK_PERFECT_TENSION
     fireReleaseEffects(releaseTension.value)
   }
 )
@@ -269,6 +297,17 @@ function onEnterKey() {
   store.releaseTimeClock()
 }
 
+/**
+ * v2: Klavye ile sarma — Sol/Aşağı ok tuşu başına sabit radyan besler
+ * (işaretçi erişilemezken klavye yoluyla tam sarma mümkün olur).
+ */
+const KEY_WIND_RADIANS = 0.35
+function onKeyWind() {
+  if (!isWinding.value) return
+  store.windTimeClock(KEY_WIND_RADIANS)
+  sounds.playClockWind(Math.min(1, Math.max(0.15, tension.value)))
+}
+
 function onPointerUp() {
   endDrag()
 }
@@ -293,14 +332,19 @@ onBeforeUnmount(() => {
 // --- Salgı efektleri (YALNIZ dekoratif — motion gate'li) -------------------
 function fireReleaseEffects(tensionAtRelease: number) {
   const t = clamp01(tensionAtRelease)
-  const text = `ZAMAN YAYI ×${Math.max(1, peakSpeed.value).toFixed(1)}`
+  const perfect = wasPerfect.value
+  const text = perfect
+    ? `KUSURSUZ SALGI ×${Math.max(1, peakSpeed.value).toFixed(1)}`
+    : `ZAMAN YAYI ×${Math.max(1, peakSpeed.value).toFixed(1)}`
   // Azaltılmış hareket: konfeti/şok dalgası/shake yok. Okuma ve girdi etkilenmez.
   if (motionReduced.value) return
+  // v2: kusursuz salgı ALTIN paletle kutlanır.
+  const palette = perfect ? ['#fbbf24', '#f59e0b', '#ffffff'] : ['#22d3ee', '#a855f7', '#ffffff']
   safeConfetti({
-    particleCount: 40 + Math.round(t * 80),
+    particleCount: (perfect ? 70 : 40) + Math.round(t * 80),
     spread: 90,
     origin: { x: 0.5, y: 0.45 },
-    colors: ['#22d3ee', '#a855f7', '#ffffff'],
+    colors: palette,
     disableForReducedMotion: true
   })
   const x = typeof window !== 'undefined' ? window.innerWidth / 2 : 0
@@ -310,7 +354,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
   // salgı hissi kaybolmasın.
   window.dispatchEvent(
     new CustomEvent('doomscroll:feast-scene', {
-      detail: { scene: 'time_warp', text, color: '#22d3ee' }
+      detail: { scene: 'time_warp', text, color: perfect ? '#fbbf24' : '#22d3ee' }
     })
   )
   window.dispatchEvent(
@@ -318,7 +362,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
   )
   window.dispatchEvent(
     new CustomEvent('doomscroll:shockwave', {
-      detail: { x, y, color: '#22d3ee', maxRadius: 200 + Math.round(t * 120) }
+      detail: { x, y, color: perfect ? '#fbbf24' : '#22d3ee', maxRadius: 200 + Math.round(t * 120) }
     })
   )
   window.dispatchEvent(
@@ -351,6 +395,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
         class="clock-dial relative select-none"
         :class="[
           heatClass,
+          strainClass,
           motionReduced ? 'clock-static' : '',
           isWinding ? 'pointer-events-auto cursor-grab' : 'pointer-events-none cursor-default',
           dragging ? 'cursor-grabbing clock-dial-grabbed' : ''
@@ -368,6 +413,8 @@ function fireReleaseEffects(tensionAtRelease: number) {
         @pointercancel="onPointerUp"
         @lostpointercapture="onLostPointerCapture"
         @keydown.enter.prevent="onEnterKey"
+        @keydown.left.prevent="onKeyWind"
+        @keydown.down.prevent="onKeyWind"
         @contextmenu.prevent
       >
         <svg
@@ -443,6 +490,19 @@ function fireReleaseEffects(tensionAtRelease: number) {
                 :stroke-dasharray="tensionDashArray"
                 :stroke-dashoffset="tensionDashOffset"
                 class="clock-tension-arc"
+              />
+              <!-- v2: KUSURSUZ bölge — yayın son dilimi (altın); oyuncu hedefi
+                   kadran ÜZERİNDE görür, ayrı hesap yapması gerekmez. -->
+              <circle
+                cx="100"
+                cy="100"
+                :r="TENSION_R"
+                stroke="#fbbf24"
+                stroke-width="7"
+                stroke-linecap="round"
+                :stroke-dasharray="perfectDash"
+                :stroke-dashoffset="perfectDashOffset"
+                class="clock-perfect-zone"
               />
             </g>
           </g>
@@ -527,6 +587,9 @@ function fireReleaseEffects(tensionAtRelease: number) {
           <span class="clock-chip clock-chip-forecast">TAHMİN {{ previewPeakLabel }}× / {{ previewDurationLabel }} sn</span>
           <span v-if="!weakRelease" class="clock-chip clock-chip-profit">KÂR {{ profitLabel }}×</span>
           <span class="clock-chip">KALAN {{ remainingLabel }} sn</span>
+          <span v-if="clockStreak >= 1" class="clock-chip clock-chip-profit">SERİ ×{{ clockStreak }} (+%{{ streakBonusPct }})</span>
+          <span v-if="isPerfectPreview" class="clock-chip clock-chip-perfect">KUSURSUZ! SÜRE +%{{ perfectBonusPct }}</span>
+          <span class="clock-chip">SONUM −%{{ decayLabel }}/sn</span>
         </div>
 
         <div
@@ -548,6 +611,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
         v-else-if="isReleasing"
         class="clock-dock-info pointer-events-none absolute right-0 top-full mt-1.5 flex flex-col items-end gap-1 whitespace-nowrap"
       >
+        <span v-if="wasPerfect" class="clock-chip clock-chip-perfect">KUSURSUZ</span>
         <span class="clock-chip clock-chip-profit">TEPE {{ releasePeakLabel }}×</span>
         <span class="clock-chip">{{ releaseCount }}. salgı</span>
       </div>

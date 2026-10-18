@@ -443,8 +443,11 @@ export const miscActions = {
           if (this.timeClock.remainingTime <= 0) this.releaseTimeClock()
         } else if (this.timeClock.phase === 'released') {
           this.timeClock.speedRemaining -= deltaSeconds
-          // Salgı süresi peak hızdan türetilir (state'te ayrı alan taşımıyoruz).
-          const releaseDurationForState = durationFromPeakSpeed(this.timeClock.peakSpeed)
+          // v2: salgı süresi açıkça taşınır (kusursuz bonusu); alan sıfırsa
+          // (eski kayıt / güvenlik) peak hızdan ters çözüm yedeği kullanılır.
+          const releaseDurationForState = this.timeClock.speedDuration > 0
+            ? this.timeClock.speedDuration
+            : durationFromPeakSpeed(this.timeClock.peakSpeed)
           const elapsed = releaseDurationForState - this.timeClock.speedRemaining
           this.timeClock.speed = releaseSpeedAt(this.timeClock.peakSpeed, elapsed, releaseDurationForState)
           if (this.timeClock.speedRemaining <= 0) {
@@ -556,8 +559,6 @@ export const miscActions = {
                         colors: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899']
                       })
                     }
-                  } else {
-                    if (!this.offlineSimActive) sounds.playPlant()
                   }
                   break
                 }

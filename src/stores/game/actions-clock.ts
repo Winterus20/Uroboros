@@ -10,10 +10,14 @@ import { D_1 } from '../../core/math'
 import {
   TIME_CLOCK_LIFETIME_SECONDS,
   TIME_CLOCK_MAX_DRAG,
+  TIME_CLOCK_PERFECT_DURATION_MULT,
   createIdleTimeClock,
+  isPerfectRelease,
+  isProfitableRelease,
   nextClockInterval,
   releaseDuration,
-  releasePeakSpeed
+  releasePeakSpeed,
+  streakPeakBonus
 } from '../../game/clock-data'
 import type { StoreApi } from './store-api'
 
@@ -31,6 +35,7 @@ export const clockActions = {
       this.timeClock.drag = 0
       this.timeClock.speed = 1
       this.timeClock.speedRemaining = 0
+      this.timeClock.speedDuration = 0
       this.clockTimer = 0
       this.nextClockInterval = nextClockInterval()
       sounds.playClockSpawn()
@@ -74,8 +79,16 @@ export const clockActions = {
       const tension = this.timeClockTension
       const prevRewound = this.timeClockRewoundSeconds
 
-      this.timeClock.peakSpeed = releasePeakSpeed(tension)
-      this.timeClock.speedRemaining = releaseDuration(tension)
+      // v2 Seri: kârlı salgı seriyi büyütür, zayıf salgı (net zarar) sıfırlar.
+      // Seri bonusu tepe hıza çarpan olarak eklenir (tavan +%50).
+      const nextStreak = isProfitableRelease(tension) ? this.stats.clockStreak + 1 : 0
+      const perfect = isPerfectRelease(tension)
+
+      this.timeClock.peakSpeed = releasePeakSpeed(tension) * streakPeakBonus(nextStreak)
+      // v2: salgı süresi ARTIK açıkça taşınır — kusursuz bonusu peak'ten ters
+      // çözümle geri getirilemez (durationFromPeakSpeed yalnızca yedek).
+      this.timeClock.speedDuration = releaseDuration(tension) * (perfect ? TIME_CLOCK_PERFECT_DURATION_MULT : 1)
+      this.timeClock.speedRemaining = this.timeClock.speedDuration
       this.timeClock.phase = 'released'
       this.timeClock.active = false
       this.timeClock.drag = 0
@@ -83,8 +96,12 @@ export const clockActions = {
       this.stats.clockRewinds += 1
       this.stats.clockRewoundSeconds += prevRewound
       if (tension > this.stats.clockBestTension) this.stats.clockBestTension = tension
+      this.stats.clockStreak = nextStreak
+      if (nextStreak > this.stats.clockBestStreak) this.stats.clockBestStreak = nextStreak
+      if (perfect) this.stats.clockPerfectReleases += 1
 
       sounds.playClockRelease(tension)
+      if (perfect) sounds.playClockPerfect()
       return true
     },
 

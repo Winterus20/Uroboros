@@ -263,7 +263,10 @@ export function buildInitialState() {
       // `applyResetScope` bu alanlara dokunmaz (koşuya özel olan yalnızca canlı faz).
       clockRewinds: 0,
       clockRewoundSeconds: 0,
-      clockBestTension: 0
+      clockBestTension: 0,
+      clockPerfectReleases: 0,
+      clockStreak: 0,
+      clockBestStreak: 0
     } as PlayerStats
   }
 }

@@ -233,12 +233,16 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
         remainingTime: 0,
         speed: 9.25,
         speedRemaining: 31,
+        speedDuration: 31,
         peakSpeed: 9.25
       }
       store1.clockTimer = 88
       store1.stats.clockRewinds = 17
       store1.stats.clockRewoundSeconds = 1234.5
       store1.stats.clockBestTension = 0.9123
+      store1.stats.clockPerfectReleases = 4
+      store1.stats.clockStreak = 3
+      store1.stats.clockBestStreak = 7
 
       const serialized = store1.serialize()
       // timeClock yalnızca canlı yay durumunu taşır; canlı faz kayda girmez.
@@ -248,6 +252,9 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
       expect(serialized.stats.clockRewinds).toBe(17)
       expect(serialized.stats.clockRewoundSeconds).toBe(1234.5)
       expect(serialized.stats.clockBestTension).toBeCloseTo(0.9123, 10)
+      expect(serialized.stats.clockPerfectReleases).toBe(4)
+      expect(serialized.stats.clockStreak).toBe(3)
+      expect(serialized.stats.clockBestStreak).toBe(7)
 
       const store2 = createFreshStore()
       store2.deserialize(serialized)
@@ -256,6 +263,9 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
       expect(store2.stats.clockRewinds).toBe(17)
       expect(store2.stats.clockRewoundSeconds).toBe(1234.5)
       expect(store2.stats.clockBestTension).toBeCloseTo(0.9123, 10)
+      expect(store2.stats.clockPerfectReleases).toBe(4)
+      expect(store2.stats.clockStreak).toBe(3)
+      expect(store2.stats.clockBestStreak).toBe(7)
     })
 
     it('always loads the live phase back as idle (volatile, like floatingAnomalies)', () => {
@@ -267,6 +277,7 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
         remainingTime: 12,
         speed: 1,
         speedRemaining: 0,
+        speedDuration: 0,
         peakSpeed: 1
       }
       store1.clockTimer = 240

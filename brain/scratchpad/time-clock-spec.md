@@ -32,9 +32,13 @@ Oyuncu "ya iyice ger, ya hiç dokunma" dersini kendi keşfeder.
 | `TIME_CLOCK_RELEASE_SECONDS_MIN` | `16` | sn |
 | `TIME_CLOCK_RELEASE_SECONDS_MAX` | `75` | sn |
 | `TIME_CLOCK_RELEASE_DECAY_EXP` | `1.6` | Üstel sönüm şekli |
-| `TIME_CLOCK_SPAWN_INTERVAL_MIN` | `240` | sn |
-| `TIME_CLOCK_SPAWN_JITTER` | `90` | sn |
+| `TIME_CLOCK_SPAWN_INTERVAL_MIN` | `180` | sn — **v2 (2026-10-18): 240→180**, mekanik çok nadir görünüyordu |
+| `TIME_CLOCK_SPAWN_JITTER` | `60` | sn — **v2: 90→60** |
 | `TIME_CLOCK_MIN_TENSION` | `0.05` | Altında salmak anlamsız (net zarar) — UI eşiği sabit değil, `releaseProfitRatio < 1`'den türetilir |
+| `TIME_CLOCK_PERFECT_TENSION` | `0.9` | **v2** — bu gerginlikten yukarı salgı KUSURSUZ |
+| `TIME_CLOCK_PERFECT_DURATION_MULT` | `1.35` | **v2** — kusursuz salgı süresi çarpanı |
+| `TIME_CLOCK_STREAK_BONUS_PER_STEP` | `0.10` | **v2** — kârlı seri adımı başına tepe hız oranı |
+| `TIME_CLOCK_STREAK_MAX_STEPS` | `5` | **v2** — seri bonus tavanı (maks +%50) |
 
 > **Uygulama notu (2026-10-17):** Sözleşmedeki `TIME_CLOCK_PITY_SECONDS` (600 sn) **kaldırıldı**.
 > Doğuş aralığı tavanı 330 sn < 600 sn olduğu için sabit hiçbir zaman ateşlenemiyordu (ölü kod) ve
@@ -55,6 +59,21 @@ Tablo formüllerden yeniden türetildi (Ajan A doğrulaması: `src/game/clock-da
 **Başabaş noktası ≈ `tension 0.345`.** Altı net zarar, üstü net kâr; oran monoton artar
 (küçük gerginlikte 0'a iner, patlama/istismar yok). UI'daki "ZAYIF SALGI — NET ZARAR" uyarısı
 `releaseProfitRatio(tension) < 1` koşuluna bağlanmalıdır (sabit eşik yazma).
+
+### 2.1 v2 uzantısı (2026-10-18 — kullanıcı isteğiyle iyileştirme turu)
+
+1. **Kusursuz Salgı:** `tension >= 0.9` salgılar `speedDuration = releaseDuration(t) × 1.35`
+   alır; altın konfeti/şok dalgası + `playClockPerfect()` fanfarı + `stats.clockPerfectReleases`.
+   `TimeClockState`'e YENİ alan: `speedDuration` (salgının GERÇEK süresi). Kusursuz bonusu
+   `durationFromPeakSpeed` ters çözümüyle geri getirilemez; §6.4 tick artık `speedDuration`
+   okur (alan 0 ise eski ters çözüm yedeği). Önizleme getter'ı da bonusu gösterir.
+2. **Seri (Streak):** `isProfitableRelease(t) (oran ≥ 1)` salgılar seriyi +1 büyütür,
+   zayıf salgı 0'a indirir. Tepe hız `streakPeakBonus(streak)` ile çarpılır:
+   `1 + min(streak−1, 5) × 0.10` (ilk kârlı salgı nötr, tavan +%50).
+   İstatistikler: `stats.clockStreak` (güncel) + `stats.clockBestStreak` (rekor).
+3. **UI v2:** kadran üzerinde altın KUSURSUZ bölge yayı (son %10 dilim), SERİ / KUSURSUZ /
+   SONUM çipleri, ≥ %97 gerginlikte kozmetik tremble (`.clock-dial-strain`, motion gate'li),
+   klavye ile sarma (Sol/Aşağı ok = 0.35 rad).
 
 ## 3. Fazlar
 

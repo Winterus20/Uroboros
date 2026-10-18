@@ -18,6 +18,9 @@ export interface TimeClockState {
   speed: number
   /** sn — `released` fazinda kalan salgi suresi. */
   speedRemaining: number
+  /** sn — salginin GERCEK toplam suresi. v2: kusursuz bonusu sureyi
+      degistirdigi icin peak hizdan ters cozum yerine burada tasinir. */
+  speedDuration: number
   /** `released` baslangic hizi (UI/ozet icin). */
   peakSpeed: number
 }

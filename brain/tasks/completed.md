@@ -1,5 +1,25 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-18] ✔ — Zaman Yayı v2: Kusursuz Salgı, Seri Sistemi ve UI/eErişilebilirlik Turu
+
+### Gerekçe:
+- Kullanıcı isteği: mevcut saat mekanigi (Zaman Yayı) cok daha iyi hale getirilsin. Tek ödül kanalı (düz hız çarpanı), 4–5.5 dk olan seyrek doğuş ve tek beceri ekseninden (sadece "iyice ger") oluşan yüzeysel ödül döngüsü zayıftı.
+
+### Çözüm & Değişiklikler:
+1. `src/game/clock-data.ts`: YENİ saf fonksiyonlar `isPerfectRelease` / `isProfitableRelease` / `streakPeakBonus` + v2 sabitleri (PERFECT_TENSION 0.9, PERFECT_DURATION_MULT 1.35, STREAK_BONUS_PER_STEP 0.10, STREAK_MAX_STEPS 5). Doğuş temposu 240+90 → 180+60 sn.
+2. `src/models/clock.ts`: `TimeClockState.speedDuration` (salgının GERÇEK süresi) — kusursuz bonusu peak ters çözümüyle geri getirilemez.
+3. `src/stores/game/actions-clock.ts`: release kusursuz/seri mantığı; `getters-clock.ts` önizleme gerçek sonuç gösterir; `actions-misc.ts` tick `speedDuration` okur.
+4. Kayıt: `stats.clockPerfectReleases/clockStreak/clockBestStreak` (model + state + serialize/deserialize).
+5. `TimeClockOverlay.vue`: kadran üstünde altın KUSURSUZ bölge yayı, SERİ/KUSURSUZ/SONUM çipleri, ≥%97 tremble (`.clock-dial-strain`), Sol/Aşağı ok ile klavye sarma, altın kusursuz konfeti/şok dalgası.
+6. `effects.ts`: `playClockPerfect()` altın arpej + parıltı.
+7. Testler: `time-clock.test.ts` v2 sözleşme güncellemesi + 5 yeni test; `save-roundtrip.test.ts` ve `layers.test.ts` yeni alana uyumlu.
+8. Spec: `brain/scratchpad/time-clock-spec.md` §2 tablo + §2.1 v2 uzantısı.
+
+### Doğrulama:
+- `npm test`: **393/393 yeşil** (27 dosya; v2 için 5 yeni test dahil).
+- `npm run build` (vue-tsc + vite): **exit 0**, dist artefaktı üretildi.
+
+
 ## [2026-10-18] ✔ — Taktiksel Duruş Butonları Görsel Dil ve Netlik Yenilemesi (`Header.vue`)
 
 ### Problem & Gerekçe:

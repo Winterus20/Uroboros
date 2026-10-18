@@ -53,6 +53,9 @@ export interface PlayerStats {
   clockRewinds: number // Zaman Yayı salgı sayısı (Time Clock)
   clockRewoundSeconds: number // Hayat boyu geri sarılan oyun-zamanı (sn)
   clockBestTension: number // Ulaşılan en iyi yay gerginliği [0, 1]
+  clockPerfectReleases: number // v2: %90+ gerginlikte salınan kusursuz salgılar
+  clockStreak: number // v2: güncel kârlı salgı serisi (zayıf salgı sıfırlar)
+  clockBestStreak: number // v2: ulaşılan en uzun kârlı salgı serisi
 }
 
 export type AchievementCategoryId =
@@ -239,6 +242,9 @@ export interface SerializedPlayerState {
     clockRewinds?: number
     clockRewoundSeconds?: number
     clockBestTension?: number
+    clockPerfectReleases?: number
+    clockStreak?: number
+    clockBestStreak?: number
     highestDps?: string
     totalManualDopamine?: string
   }

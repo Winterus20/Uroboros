@@ -23,10 +23,18 @@ export const TIME_CLOCK_RELEASE_SECONDS_MIN = 16
 export const TIME_CLOCK_RELEASE_SECONDS_MAX = 75
 /** Ustel sonum sekli; buyudukce hiz daha hizli 1×'e coker. */
 export const TIME_CLOCK_RELEASE_DECAY_EXP = 1.6
-/** sn — saat dogus araligi tabani. */
-export const TIME_CLOCK_SPAWN_INTERVAL_MIN = 240
-/** sn — dogus araligina eklenen rastgele sapma. */
-export const TIME_CLOCK_SPAWN_JITTER = 90
+/** sn — saat dogus araligi tabani. v2: 240→180 (mekanik cok nadir gorunuyordu). */
+export const TIME_CLOCK_SPAWN_INTERVAL_MIN = 180
+/** sn — dogus araligina eklenen rastgele sapma. v2: 90→60. */
+export const TIME_CLOCK_SPAWN_JITTER = 60
+/** × — bu gerginlikten yukari salgi KUSURSUZ sayilir (sure bonusu + altin efekt). */
+export const TIME_CLOCK_PERFECT_TENSION = 0.9
+/** × — kusursuz salgi suresi carpani (odul dogrudan sureye yansir). */
+export const TIME_CLOCK_PERFECT_DURATION_MULT = 1.35
+/** Kârlı salgı serisinin her adımında tepe hıza eklenen oran. */
+export const TIME_CLOCK_STREAK_BONUS_PER_STEP = 0.10
+/** Seri bonusunun tavan adım sayısı (tavan = 1 + 5 × 0.10 = 1.5×). */
+export const TIME_CLOCK_STREAK_MAX_STEPS = 5
 /**
  * Altinda salmak anlamsizdir (net zarar). Yalnizca tasarim tabanini belgeler;
  * UI esigi SABIT degil, `releaseProfitRatio(tension) < 1` ile turetilir
@@ -157,6 +165,37 @@ export function releaseProfitRatio(tension: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// v2: Kusursuz salgi + seri (streak) sistemi
+// ---------------------------------------------------------------------------
+
+/**
+ * Kusursuz salgi esigi: gerginlik PERFECT_TENSION esigine ulasti mi?
+ * Kusursuz salgi suresi PERFECT_DURATION_MULT ile carpilir, altin efekt/ses alir.
+ */
+export function isPerfectRelease(tension: number): boolean {
+  return Number.isFinite(tension) && tension >= TIME_CLOCK_PERFECT_TENSION
+}
+
+/**
+ * Bu salgi kârlı mi? Enerji, geri sarilan sureyi karsiliyor mu (oran >= 1).
+ * Seri sistemi yalnizca kârlı salgilarla beslenir.
+ */
+export function isProfitableRelease(tension: number): boolean {
+  return releaseProfitRatio(tension) >= 1
+}
+
+/**
+ * Seri bonusu: k adimlik seri tepe hizi 1 + min(k - 1, MAX_STEPS) * PER_STEP
+ * ile carpilir (k < 1 → notr 1). Ilk kârlı salgi bonus vermez; sonrakiler her
+ * adımda +%10, tavan +%50. Zayif salgi seriyi sifirlar (store tarafı).
+ */
+export function streakPeakBonus(streak: number): number {
+  if (!Number.isFinite(streak) || streak <= 1) return 1
+  const steps = Math.min(Math.floor(streak) - 1, TIME_CLOCK_STREAK_MAX_STEPS)
+  return 1 + steps * TIME_CLOCK_STREAK_BONUS_PER_STEP
+}
+
+// ---------------------------------------------------------------------------
 // Durum yardimcilari
 // ---------------------------------------------------------------------------
 
@@ -173,6 +212,9 @@ export function createIdleTimeClock(): TimeClockState {
     remainingTime: 0,
     speed: 1,
     speedRemaining: 0,
+    /** sn — salgının GERÇEK süresi. v2: kusursuz bonusu süreyi değiştirir;
+        peak hızdan ters çözüm artık yeterli değil, süre açıkça taşınır. */
+    speedDuration: 0,
     peakSpeed: 1
   }
 }

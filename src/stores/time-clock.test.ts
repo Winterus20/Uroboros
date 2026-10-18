@@ -4,11 +4,14 @@ import { Decimal } from '../core/math'
 import { DIMENSION_CHAIN_RATE } from '../game/balance'
 import {
   TIME_CLOCK_MAX_TENSION,
+  TIME_CLOCK_PERFECT_DURATION_MULT,
   TIME_CLOCK_SPAN_SECONDS,
   dragFromTension,
+  isPerfectRelease,
   releaseDuration,
   releaseEnergySeconds,
-  releasePeakSpeed
+  releasePeakSpeed,
+  streakPeakBonus
 } from '../game/clock-data'
 
 /**
@@ -56,7 +59,7 @@ describe('Zaman Yayı — faz makinesi', () => {
     expect(store.timeClock.speed).toBe(1)
     expect(store.timeClock.speedRemaining).toBe(0)
     expect(store.clockTimer).toBe(0)
-    expect(store.nextClockInterval).toBeGreaterThanOrEqual(240)
+    expect(store.nextClockInterval).toBeGreaterThanOrEqual(180)
     expect(store.timeClockIsWinding).toBe(true)
     expect(store.timeClockIsReleasing).toBe(false)
 
@@ -151,14 +154,20 @@ describe('Zaman Yayı — salgı (ödül)', () => {
     expect(store.timeClock.phase).toBe('released')
     expect(store.timeClock.active).toBe(false)
     expect(store.timeClock.drag).toBe(0)
+    // v2: 0.9 gerginlik KUSURSUZ esik (>= 0.9) — süre bonusu carpanıyla.
+    expect(isPerfectRelease(0.9)).toBe(true)
     expect(store.timeClock.speed).toBe(releasePeakSpeed(0.9))
     expect(store.timeClock.speed).toBeGreaterThan(1)
-    expect(store.timeClock.speedRemaining).toBe(releaseDuration(0.9))
+    expect(store.timeClock.speedRemaining).toBeCloseTo(releaseDuration(0.9) * TIME_CLOCK_PERFECT_DURATION_MULT, 9)
     expect(store.timeClockProductionMult.gt(1)).toBe(true)
     // Yaşam boyu istatistikler `stats` altında tutulur (prestijden sağ çıkar).
     expect(store.stats.clockRewinds).toBe(1)
     expect(store.stats.clockBestTension).toBeCloseTo(0.9, 9)
     expect(store.stats.clockRewoundSeconds).toBeCloseTo(108, 6)
+    // v2: kusursuz salgı + kârlı seri sayacı
+    expect(store.stats.clockPerfectReleases).toBe(1)
+    expect(store.stats.clockStreak).toBe(1)
+    expect(store.stats.clockBestStreak).toBe(1)
 
     // Salma ikinci kez çağrılamaz (faz artık winding değil)
     expect(store.releaseTimeClock()).toBe(false)
@@ -368,5 +377,81 @@ describe('Zaman Yayı — üretim çarpanı paritesi', () => {
 
     expect(store.dimensions[1].amount.eq(d2Before)).toBe(true)
     expect(store.dimensions[0].amount.minus(d1Before).div(feed).toNumber()).toBeCloseTo(1, 9)
+  })
+})
+
+describe('Zaman Yayı v2 — kusursuz salgı ve seri', () => {
+  it('isPerfectRelease yalnızca %90+ gerginlikte ateşlenir', () => {
+    expect(isPerfectRelease(0)).toBe(false)
+    expect(isPerfectRelease(0.5)).toBe(false)
+    expect(isPerfectRelease(0.89)).toBe(false)
+    expect(isPerfectRelease(0.9)).toBe(true)
+    expect(isPerfectRelease(TIME_CLOCK_MAX_TENSION)).toBe(true)
+    expect(isPerfectRelease(Number.NaN)).toBe(false)
+  })
+
+  it('streakPeakBonus: ilk salgı nötr, her adım +%10, tavan +%50', () => {
+    expect(streakPeakBonus(0)).toBe(1)
+    expect(streakPeakBonus(1)).toBe(1)
+    expect(streakPeakBonus(2)).toBeCloseTo(1.1, 9)
+    expect(streakPeakBonus(3)).toBeCloseTo(1.2, 9)
+    expect(streakPeakBonus(6)).toBeCloseTo(1.5, 9)
+    expect(streakPeakBonus(50)).toBeCloseTo(1.5, 9) // tavan adımda sabitlenir
+    expect(streakPeakBonus(Number.NaN)).toBe(1)
+  })
+
+  it('kusursuz salgı süresi uzatır ve istatistiği işler', () => {
+    const store = clockStore()
+    store.spawnTimeClock()
+    store.windTimeClock(dragFromTension(0.95))
+    store.releaseTimeClock()
+
+    expect(store.stats.clockPerfectReleases).toBe(1)
+    // Süre: taban × 1.35 (kusursuz bonusu açıkça taşınır alanada yaşar)
+    expect(store.timeClock.speedDuration).toBeCloseTo(releaseDuration(0.95) * TIME_CLOCK_PERFECT_DURATION_MULT, 9)
+    expect(store.timeClock.speedRemaining).toBe(store.timeClock.speedDuration)
+  })
+
+  it('seri: kârlı salgılar birikir, zayıf salgı seriyi sıfırlar', () => {
+    const store = clockStore()
+
+    // 1. kârlı salgı (0.5 > başabası ≈ 0.345): seri 1, bonus yok
+    store.spawnTimeClock()
+    store.windTimeClock(dragFromTension(0.5))
+    store.releaseTimeClock()
+    expect(store.stats.clockStreak).toBe(1)
+    expect(store.timeClock.peakSpeed).toBeCloseTo(releasePeakSpeed(0.5), 9)
+
+    // 2. kârlı salgı: seri 2 → tepe hız +%10
+    store.resetTimeClock()
+    store.spawnTimeClock()
+    store.windTimeClock(dragFromTension(0.6))
+    store.releaseTimeClock()
+    expect(store.stats.clockStreak).toBe(2)
+    expect(store.stats.clockBestStreak).toBe(2)
+    expect(store.timeClock.peakSpeed).toBeCloseTo(releasePeakSpeed(0.6) * streakPeakBonus(2), 9)
+
+    // 3. ZAYIF salgı (0.1 < başabası): seri sıfırlanır, bonus tepe hıza yansımaz
+    store.resetTimeClock()
+    store.spawnTimeClock()
+    store.windTimeClock(dragFromTension(0.1))
+    store.releaseTimeClock()
+    expect(store.stats.clockStreak).toBe(0)
+    expect(store.stats.clockBestStreak).toBe(2) // rekor yaşar
+    expect(store.timeClock.peakSpeed).toBeCloseTo(releasePeakSpeed(0.1), 9)
+  })
+
+  it('salcı süresi taşınan alandan okunur: kusursuz bonusu peak ters çözümüne SİĞMAZ', () => {
+    const store = clockStore()
+    store.spawnTimeClock()
+    store.windTimeClock(dragFromTension(0.95))
+    store.releaseTimeClock()
+
+    // v2'nin kuruluş nedeni: durationFromPeakSpeed(peak) bonusu GERİ getiremez;
+    // bu yüzden süre açıkça taşınır. Salgı yine tam süresi boyunca yaşar.
+    expect(store.timeClock.speedDuration).toBeGreaterThan(releaseDuration(0.95))
+    store.update(store.timeClock.speedDuration)
+    expect(store.timeClock.phase).toBe('idle')
+    expect(store.timeClock.speed).toBe(1)
   })
 })

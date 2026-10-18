@@ -58,8 +58,8 @@ describe('§2 denge sabitleri', () => {
     expect(TIME_CLOCK_RELEASE_SECONDS_MIN).toBe(16)
     expect(TIME_CLOCK_RELEASE_SECONDS_MAX).toBe(75)
     expect(TIME_CLOCK_RELEASE_DECAY_EXP).toBe(1.6)
-    expect(TIME_CLOCK_SPAWN_INTERVAL_MIN).toBe(240)
-    expect(TIME_CLOCK_SPAWN_JITTER).toBe(90)
+    expect(TIME_CLOCK_SPAWN_INTERVAL_MIN).toBe(180)
+    expect(TIME_CLOCK_SPAWN_JITTER).toBe(60)
     expect(TIME_CLOCK_MIN_TENSION).toBe(0.05)
   })
 
@@ -316,7 +316,7 @@ describe('createIdleTimeClock / nextClockInterval', () => {
     expect(idle.peakSpeed).toBe(1)
     // Yasam boyu istatistikler PlayerStats'tadir, TimeClockState'te DEGIL.
     expect(Object.keys(idle).sort()).toEqual(
-      ['active', 'drag', 'peakSpeed', 'phase', 'remainingTime', 'speed', 'speedRemaining']
+      ['active', 'drag', 'peakSpeed', 'phase', 'remainingTime', 'speed', 'speedDuration', 'speedRemaining']
     )
   })
 

@@ -6,7 +6,9 @@
 // surece bayat carpan dondururdu. Burada yalnizca `timeClock.speed` okunur.
 import { Decimal } from '../../core/math'
 import {
+  TIME_CLOCK_PERFECT_DURATION_MULT,
   TIME_CLOCK_SPAN_SECONDS,
+  isPerfectRelease,
   releaseDuration,
   releasePeakSpeed,
   rewoundSecondsForTension,
@@ -45,11 +47,13 @@ export const clockGetters = {
     },
 
     // Sarma sirasinda tahmin: "su an birakirsan" peak hiz ve salgi suresi.
+    // v2: önizleme GERÇEK sonucu gösterir — kusursuz eşikte süre bonusu dahil.
     timeClockPreviewPeakSpeed(this: StoreApi): number {
       return releasePeakSpeed(this.timeClockTension)
     },
 
     timeClockPreviewDuration(this: StoreApi): number {
-      return releaseDuration(this.timeClockTension)
+      const base = releaseDuration(this.timeClockTension)
+      return isPerfectRelease(this.timeClockTension) ? base * TIME_CLOCK_PERFECT_DURATION_MULT : base
     }
 }

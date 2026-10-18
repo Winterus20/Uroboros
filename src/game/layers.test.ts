@@ -41,6 +41,7 @@ function makeHost(): ScaleJumpHost {
       remainingTime: 0,
       speed: 7.5,
       speedRemaining: 12,
+      speedDuration: 12,
       peakSpeed: 7.5
     },
     clockTimer: 42,

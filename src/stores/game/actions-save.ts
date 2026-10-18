@@ -316,7 +316,10 @@ export const saveActions = {
           reactorCollapses: this.stats.reactorCollapses || 0,
           clockRewinds: this.stats.clockRewinds || 0,
           clockRewoundSeconds: this.stats.clockRewoundSeconds || 0,
-          clockBestTension: this.stats.clockBestTension || 0
+          clockBestTension: this.stats.clockBestTension || 0,
+          clockPerfectReleases: this.stats.clockPerfectReleases || 0,
+          clockStreak: this.stats.clockStreak || 0,
+          clockBestStreak: this.stats.clockBestStreak || 0
         }
       }
     },
@@ -891,7 +894,10 @@ export const saveActions = {
             // Zaman Yayı yaşam boyu istatistikleri (v18): `stats` alanları prestijden sağ çıkar.
             clockRewinds: Math.floor(clampSavedNumber(data.stats.clockRewinds, 0, 0, 1e9)),
             clockRewoundSeconds: clampSavedNumber(data.stats.clockRewoundSeconds, 0, 0, 1e15),
-            clockBestTension: clampSavedNumber(data.stats.clockBestTension, 0, 0, 1)
+            clockBestTension: clampSavedNumber(data.stats.clockBestTension, 0, 0, 1),
+            clockPerfectReleases: Math.floor(clampSavedNumber(data.stats.clockPerfectReleases, 0, 0, 1e9)),
+            clockStreak: Math.floor(clampSavedNumber(data.stats.clockStreak, 0, 0, 1e9)),
+            clockBestStreak: Math.floor(clampSavedNumber(data.stats.clockBestStreak, 0, 0, 1e9))
           }
           // Eski kayıt göçü (v9-): yukarıdaki version kancası atlandıysa (bozuk versiyon alanı) yine de güvence altına al
           if (typeof this.singularities !== 'number' || Number.isNaN(this.singularities)) {

@@ -1238,4 +1238,48 @@ export class SoundEffects extends SoundManagerBase {
       bell.stop(startTime + 0.42)
     })
   }
+
+  // Kusursuz salgi fanfarisi (v2): %90+ gerginlikte yükselen altın arpej +
+  // parıltı. playClockRelease SONRASI çağrılır (ikisi üst üste biner).
+  playClockPerfect() {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    // 1. Altın arpej: E5 → G#5 → B5 → E6 (majör triad + oktav, kısa adımlar)
+    const notes = [659.25, 830.61, 987.77, 1318.51]
+    notes.forEach((freq, idx) => {
+      const bell = ctx.createOscillator()
+      const bellGain = ctx.createGain()
+      bell.type = 'sine'
+      const startTime = ctx.currentTime + idx * 0.07
+      bell.frequency.setValueAtTime(freq, startTime)
+
+      bellGain.gain.setValueAtTime(0.001, startTime)
+      bellGain.gain.exponentialRampToValueAtTime(this.safeVolume() * 0.3, startTime + 0.015)
+      bellGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5)
+
+      bell.connect(bellGain)
+      bellGain.connect(ctx.destination)
+      this.registerCleanup(bell, bellGain)
+      bell.start(startTime)
+      bell.stop(startTime + 0.5)
+    })
+
+    // 2. Parıltı: tiz üçgen osilatör, yavaş fade (altın parlaklık hissi)
+    const shimmer = ctx.createOscillator()
+    const shimmerGain = ctx.createGain()
+    shimmer.type = 'triangle'
+    shimmer.frequency.setValueAtTime(2637, ctx.currentTime)
+    shimmer.frequency.exponentialRampToValueAtTime(3520, ctx.currentTime + 0.6)
+
+    shimmerGain.gain.setValueAtTime(0.001, ctx.currentTime + 0.28)
+    shimmerGain.gain.exponentialRampToValueAtTime(this.safeVolume() * 0.14, ctx.currentTime + 0.34)
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.95)
+
+    shimmer.connect(shimmerGain)
+    shimmerGain.connect(ctx.destination)
+    this.registerCleanup(shimmer, shimmerGain)
+    shimmer.start(ctx.currentTime + 0.28)
+    shimmer.stop(ctx.currentTime + 0.95)
+  }
 }

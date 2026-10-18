@@ -58,9 +58,9 @@ describe('Zaman Yayi: denge sayilari sozlesmesi (§2)', () => {
     expect(TIME_CLOCK_MIN_TENSION).toBe(0.05)
   })
 
-  it('dogus ritmi sabittir (240 sn taban + 0..90 sn sapma)', () => {
-    expect(TIME_CLOCK_SPAWN_INTERVAL_MIN).toBe(240)
-    expect(TIME_CLOCK_SPAWN_JITTER).toBe(90)
+  it('dogus ritmi sabittir (180 sn taban + 0..60 sn sapma — v2)', () => {
+    expect(TIME_CLOCK_SPAWN_INTERVAL_MIN).toBe(180)
+    expect(TIME_CLOCK_SPAWN_JITTER).toBe(60)
   })
 
   it('turetilen tavan gerginlik 1in altinda kalir (yay asla tam gerilmez)', () => {
@@ -144,6 +144,7 @@ describe('Zaman Yayi: durum sozlesmesi (store entegrasyonu icin)', () => {
         'phase',
         'remainingTime',
         'speed',
+        'speedDuration',
         'speedRemaining'
       ].sort()
     )
@@ -161,7 +162,7 @@ describe('Zaman Yayi: durum sozlesmesi (store entegrasyonu icin)', () => {
     expect(b.drag).toBe(0)
   })
 
-  it('dogus araligi [240, 330] sn bandinda kalir', () => {
+  it('dogus araligi [180, 240] sn bandinda kalir (v2)', () => {
     for (let i = 0; i < 16; i++) {
       const interval = nextClockInterval()
       expect(interval).toBeGreaterThanOrEqual(TIME_CLOCK_SPAWN_INTERVAL_MIN)
