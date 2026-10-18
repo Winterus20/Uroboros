@@ -100,4 +100,55 @@ describe('Autobuyers Hybrid Lifecycle & Cosmic Cockpit', () => {
     expect(store.autobuyers.dim8.unlocked).toBe(true)
     expect(store.autobuyerMaxUnlocked).toBe(true)
   })
+
+  it('Sessizlik Garantisi: Bot alımlarında (playSound=false) ses veya surge olayları yayılmaz', () => {
+    const store = useGameStore()
+    store.matter = new Decimal(1e12)
+    store.dimensionShifts = 4
+
+    const eventsDispatched: string[] = []
+    const dispatchMock = (e: { type: string }) => {
+      eventsDispatched.push(e.type)
+      return true
+    }
+
+    const g = globalThis as Record<string, unknown>
+    const originalWindow = g.window
+    const originalCustomEvent = g.CustomEvent
+    g.window = {
+      innerWidth: 1000,
+      innerHeight: 800,
+      dispatchEvent: dispatchMock
+    }
+    g.CustomEvent = class<T = unknown> {
+      type: string
+      detail: T | undefined
+      constructor(type: string, params?: { detail?: T }) {
+        this.type = type
+        this.detail = params?.detail
+      }
+    }
+
+    try {
+      // 1. Boyut bot alımları (playSound=false)
+      store.buyDimension(1, false)
+      store.buyOneUnit(1, false)
+      store.buyMaxDimension(1, false, false)
+      expect(eventsDispatched).not.toContain('doomscroll:production-bump')
+
+      // 2. Tickspeed bot alımları (playSound=false)
+      store.buyTickspeed(false)
+      store.buyMaxTickspeed(false, false)
+      expect(eventsDispatched).not.toContain('doomscroll:production-bump')
+
+      // 3. Galaxy bot alımı (playSound=false)
+      store.galaxies = 0
+      store.dimensions[3].amount = new Decimal(100)
+      store.buyGalaxy(false)
+      expect(eventsDispatched).not.toContain('doomscroll:macro-surge')
+    } finally {
+      g.window = originalWindow
+      g.CustomEvent = originalCustomEvent
+    }
+  })
 })

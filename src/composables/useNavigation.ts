@@ -49,13 +49,13 @@ const TAB_ACCENT: Record<TabId, string> = {
   stats: "border-l-2 border-l-slate-400 before:bg-slate-400"
 };
 
-// 2px ince aktif çizgi geometrisi — ikonun hemen üstünde (left-3 / w-3.5 = ikonla hizalı).
+// 2px ince aktif çizgi geometrisi — butonun tüm üst kenarını (ikon + yazı) boydan boya kaplar (inset-x-2, rounded-lg köşe kavisiyle uyumlu).
 // .hit-44 dokunma alanını ::after'da kullandığı için pseudo tercihi ::before'dir;
 // opaklık geçişiyle yumuşak söner/çıkar (layout kayması olmaz, border genişliği sabit).
 const ACTIVE_LINE =
-  "before:content-[''] before:absolute before:top-[-1px] before:left-3 before:w-3.5 before:h-[2px] before:opacity-100 before:transition-opacity before:duration-200 before:ease-out";
+  "before:content-[''] before:absolute before:top-[-1px] before:inset-x-2 before:rounded-full before:h-[2px] before:opacity-100 before:transition-opacity before:duration-200 before:ease-out";
 const IDLE_LINE =
-  "before:content-[''] before:absolute before:top-[-1px] before:left-3 before:w-3.5 before:h-[2px] before:opacity-0 before:transition-opacity before:duration-200 before:ease-out";
+  "before:content-[''] before:absolute before:top-[-1px] before:inset-x-2 before:rounded-full before:h-[2px] before:opacity-0 before:transition-opacity before:duration-200 before:ease-out";
 
 // Birleşik nav stilleri — tüm sekmelerde aynı dil
 // border-l-2 her iki durumda da vardır: yalnız renk/arka plan geçişir, ölçü sabit kalır.

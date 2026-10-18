@@ -26,7 +26,7 @@ export const dimensionActions = {
     },
 
     emitProductionSurge(this: StoreApi, beforeMatterPerSec: Decimal, playSound = true): void {
-      if (this.offlineSimActive) return
+      if (this.offlineSimActive || !playSound) return
       const after = this.matterPerSecond
       if (!after.gt(beforeMatterPerSec.times(1.001))) return
       const delta = after.minus(beforeMatterPerSec)
@@ -38,9 +38,7 @@ export const dimensionActions = {
           })
         )
       }
-      if (playSound) {
-        sounds.playProductionSurge()
-      }
+      sounds.playProductionSurge()
     },
 
     /** Satın alım sonrası zinciri birkaç saniye “hemen” akıtır; D2→D1 Dopamin/s’yi ve sayacı yükseltir. */
@@ -393,7 +391,7 @@ export const dimensionActions = {
           safeConfetti({ ...spec.fx.confetti, origin: { y: spec.fx.confetti.originY } })
         }
 
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && playSound) {
           window.dispatchEvent(
             new CustomEvent('doomscroll:macro-surge', {
               detail: {

@@ -76,16 +76,6 @@ const cosmicProgress = computed(() => {
     return 0;
   }
 });
-const cosmicTelemetry = computed(() => {
-  try {
-    const m = store.matter;
-    if (m.isNan() || Number.isNaN(m.mag) || m.lt(10)) return "1e0 g";
-    const logVal = Math.floor(m.log10().toNumber());
-    return `1e${logVal} g`;
-  } catch {
-    return "1e0 g";
-  }
-});
 const nightPhase = computed(() => {
   const p = cosmicProgress.value;
   if (p >= 1) return { label: "Kozmik Tekillik", dot: "bg-amber-300", text: "text-amber-200" };
@@ -380,18 +370,7 @@ onUnmounted(() => {
         class="flex items-center gap-2 min-w-0"
       >
         <span class="inline-block w-2 h-2 rounded-full shrink-0" :class="[nightPhase.dot, 'shadow-xs animate-pulse']"></span>
-        <span class="font-bold tracking-wider tabular-nums text-slate-200">{{ cosmicTelemetry }}</span>
         <span class="text-[10px] text-slate-400 font-semibold truncate hidden sm:inline">{{ nightPhase.label }}</span>
-        <!-- Kozmik İlerleme İnce Şeridi -->
-        <span class="hidden md:inline-block progress-track progress-track-mini w-16 shrink-0" aria-hidden="true">
-          <span
-            class="block progress-fill progress-fill-dawn duration-500"
-            :style="{
-              width: `${Math.round(cosmicProgress * 100)}%`
-            }"
-          ></span>
-        </span>
-        <span class="hidden md:inline text-[10px] text-slate-500 font-normal tabular-nums shrink-0">Hedef: 1.79e308 g</span>
       </div>
 
       <!-- Orta: Kuantum Sinyal Alıcısı (U1: mobilde gizli — sayaç odaklı) -->

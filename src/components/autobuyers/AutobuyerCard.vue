@@ -220,7 +220,7 @@ function onMinGainInput(event: Event, key: string): void {
           </div>
         </div>
         <div v-else class="text-[11px] text-slate-500 font-mono">
-          3 Tekillik Çöküşü tamamlandığında otomatik rampa çöküşü açılır. (Şu an: {{ store.singularities }}/{{ SINGULARITY_BOT_REQUIRED }})
+          3 Tekillik Çöküşü tamamlandığında otomatik rampa çöküşü açılır.
           <div class="progress-track progress-track-mini mt-1.5">
             <div class="progress-fill progress-fill-amber" :style="{ width: `${singularityReqPercent}%` }"></div>
           </div>
