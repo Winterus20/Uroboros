@@ -377,23 +377,6 @@ function handleTouchEnd(e: TouchEvent) {
     <!-- 4. Format Listesi (D1-D8 Kompakt Satırlar) — mobilde 44px hitbox çakışmasını önlemek için space-y-2 -->
     <div class="space-y-2 sm:space-y-1.5">
       <template v-for="dim in visibleDimensions" :key="dim.tier">
-        <!-- Planck Yırtılması Bariyeri (D4 Kuark ↔ D5 Şehir) — K1+ GIC kolaj bandı.
-             Denetim R2: bu blok tooltip sökümü uçuşunda kazara silinmişti; .planck-collage
-             (ADR-0063 C5) tüketicisiz kalmıştı. Sıcak aileyle geri getirildi; neon cyan
-             yerine feast/bone (rezerve hue dekorasyona girmez). -->
-        <div
-          v-if="dim.tier === 5"
-          class="relative my-2.5 py-2 px-3 rounded-xl border border-white/[0.08] bg-[var(--ds-card)] flex items-center justify-between text-[11px] overflow-hidden select-none"
-          :class="{ 'planck-collage': store.corruptionLevel >= 1 }"
-        >
-          <div class="flex items-center gap-2 font-mono font-semibold text-[var(--feast)]">
-            <span class="text-sm">💥</span>
-            <span class="tracking-wide">PLANCK YIRTILMASI / MİKRO KARADELİK</span>
-          </div>
-          <span class="text-[10px] font-mono text-slate-300/90 uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded-full border border-white/[0.08] hidden sm:inline">
-            Atomaltı ➔ Kozmik Yutuş
-          </span>
-        </div>
         <DimensionRow :dimension="dim" />
       </template>
     </div>

@@ -95,7 +95,6 @@ function bounceCard() {
 interface FormatMeta {
   tier: number
   shortName: string
-  subtitle: string
   scale: string
   metric: string
   symbol: string
@@ -105,7 +104,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   1: {
     tier: 1,
     shortName: 'Moleküler Bağlar',
-    subtitle: 'Su damlasındaki kovalent bağları ayrıştırma',
     scale: '10⁻⁹ m',
     metric: 'Nanometre',
     symbol: 'nm'
@@ -113,7 +111,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   2: {
     tier: 2,
     shortName: 'Elektron Orbitalleri',
-    subtitle: 'Elektron bulutlarını ve spinleri vakumlama',
     scale: '10⁻¹² m',
     metric: 'Pikometre',
     symbol: 'pm'
@@ -121,7 +118,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   3: {
     tier: 3,
     shortName: 'Nükleer Çekirdek',
-    subtitle: 'Proton ve nötronları birbirine bağlayan güçlü nükleer kuvvet',
     scale: '10⁻¹⁵ m',
     metric: 'Femtometre',
     symbol: 'fm'
@@ -129,7 +125,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   4: {
     tier: 4,
     shortName: 'Kuark Çorbası',
-    subtitle: 'Renk yükleri, gluonlar ve kuantum dalgalanması',
     scale: '10⁻¹⁸ m',
     metric: 'Attometre',
     symbol: 'am'
@@ -137,7 +132,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   5: {
     tier: 5,
     shortName: 'Laboratuvar & Şehir',
-    subtitle: 'Planck Yırtılması: Binalar ve nesneler olay ufkuna çekiliyor',
     scale: '10⁰ m',
     metric: 'Metre',
     symbol: 'm'
@@ -145,7 +139,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   6: {
     tier: 6,
     shortName: 'Gezegenler & Dünya',
-    subtitle: 'Ay ve Dünya\'nın kütleçekimsel olay ufkuna kapılışı',
     scale: '10⁷ m',
     metric: 'Megametre',
     symbol: 'Mm'
@@ -153,7 +146,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   7: {
     tier: 7,
     shortName: 'Yıldızlar & Güneş',
-    subtitle: 'Güneş sistemleri ve plazma kürelerinin yutuluşu',
     scale: '10⁹ m',
     metric: 'Gigametre',
     symbol: 'Gm'
@@ -161,7 +153,6 @@ const formatConfigs: Record<number, FormatMeta> = {
   8: {
     tier: 8,
     shortName: 'Samanyolu & Karadelik',
-    subtitle: 'Süper kütleli galaktik merkez tekillik tabağında',
     scale: '10²¹ m',
     metric: 'Kiloparsek',
     symbol: 'kpc'
@@ -173,7 +164,6 @@ const tierConfig = computed<FormatMeta>(() => {
     formatConfigs[props.dimension.tier] || {
       tier: props.dimension.tier,
       shortName: `D${props.dimension.tier} Boyutu`,
-      subtitle: 'Kozmik Katman',
       scale: '10ⁿ m',
       metric: 'Bilinmeyen',
       symbol: '?'
@@ -396,13 +386,6 @@ function buy(e?: MouseEvent) {
           >
             {{ tierConfig.shortName }}
           </span>
-          <span
-            v-if="tierConfig.subtitle"
-            class="hidden md:inline text-[10px] font-normal text-slate-400/90 truncate max-w-[200px]"
-          >
-            · {{ tierConfig.subtitle }}
-          </span>
-
           <!-- Mobilde Sahip Olunan Adet Rozeti -->
           <span class="sm:hidden text-[10px] font-mono tabular-nums text-slate-400 shrink-0">
             ×{{ props.dimension.bought }}
