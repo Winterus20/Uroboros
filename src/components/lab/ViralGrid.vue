@@ -165,7 +165,6 @@ function isColResonant(colIndex: number): boolean {
       <button
         @click="handleBulkHarvest"
         :disabled="matureCellCount === 0"
-        v-tip="'Tüm olgun hücreleri tek tıkla hasat et'"
         class="px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
         :class="[
           matureCellCount > 0
@@ -179,7 +178,6 @@ function isColResonant(colIndex: number): boolean {
       <button
         @click="handleBulkPlant"
         :disabled="bulkPlantRampClass === 'ds-ramp-locked'"
-        v-tip="'Seçili tohumu tüm boş hücrelere ek'"
         class="px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
         :class="[
           bulkPlantRampClass === ''
@@ -240,7 +238,6 @@ function isColResonant(colIndex: number): boolean {
         <div
           v-if="cell.id === 4"
           class="absolute top-1 left-1 z-10 text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-          v-tip="'Kuantum Odak Çekirdeği (Merkez): Kendi çarpanı ×1.5 katlanır ve 4 komşusuna +%20 plazma yayar!'"
         >
           Odak Çekirdeği
         </div>
@@ -267,7 +264,7 @@ function isColResonant(colIndex: number): boolean {
             <button
               @click.stop="store.clearCell(cell.id)"
               class="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-all cursor-pointer"
-              v-tip="'Parçacığı yuvadan çıkar'"
+              aria-label="Parçacığı yuvadan çıkar"
             >
               <Scissors class="w-3 h-3" />
             </button>

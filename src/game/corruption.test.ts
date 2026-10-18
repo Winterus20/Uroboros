@@ -69,20 +69,19 @@ describe('corruption — faz-temelli bozulma merdiveni (Faz B)', () => {
     expect(parseCorruptionStamp(undefined)).toBe(0)
   })
 
-  it('CORRUPTION_META şiddet eğrisi monoton artar (O3/O5: K0→K1→K2 CRT, K2→K4 substrat)', () => {
-    // CRT eğrisi: K0 %5 → K1 %9 → K2 %13 (kullanıcı geri bildirimiyle yumuşatıldı)
-    expect(CORRUPTION_META[0].scanlineAlpha).toBeCloseTo(0.05, 6)
-    expect(CORRUPTION_META[1].scanlineAlpha).toBeCloseTo(0.09, 6)
-    expect(CORRUPTION_META[2].scanlineAlpha).toBeCloseTo(0.13, 6)
+  it('CORRUPTION_META şiddet eğrisi monoton artar (O5: K2→K4 substrat; glitch K0→K5)', () => {
     // Substrat tavanı: K2 %25, K4 %40
     expect(CORRUPTION_META[2].substrateOpacity).toBeCloseTo(0.25, 6)
     expect(CORRUPTION_META[4].substrateOpacity).toBeCloseTo(0.4, 6)
+    // ADR-0069: CRT ayağı kaldırıldı — CRT alanları meta'da YOKTUR (regresyon kilidi)
+    expect(CORRUPTION_META[0]).not.toHaveProperty('crtIntensity')
+    expect(CORRUPTION_META[0]).not.toHaveProperty('scanlineAlpha')
+    expect(CORRUPTION_META[0]).not.toHaveProperty('vignetteAlpha')
+    expect(CORRUPTION_META[0]).not.toHaveProperty('glowAlpha')
     // Genel monotonluk (K0..K5)
     for (let l = 1; l <= 5; l++) {
       const prev = CORRUPTION_META[(l - 1) as 0 | 1 | 2 | 3 | 4 | 5]
       const cur = CORRUPTION_META[l as 0 | 1 | 2 | 3 | 4 | 5]
-      expect(cur.crtIntensity).toBeGreaterThanOrEqual(prev.crtIntensity)
-      expect(cur.scanlineAlpha).toBeGreaterThanOrEqual(prev.scanlineAlpha)
       expect(cur.substrateOpacity).toBeGreaterThanOrEqual(prev.substrateOpacity)
       expect(cur.motifBandOpacity).toBeGreaterThanOrEqual(prev.motifBandOpacity)
       expect(cur.glitchIntensity).toBeGreaterThanOrEqual(prev.glitchIntensity)
@@ -93,8 +92,6 @@ describe('corruption — faz-temelli bozulma merdiveni (Faz B)', () => {
     for (const meta of Object.values(CORRUPTION_META)) {
       expect(meta).not.toHaveProperty('textColor')
       expect(meta).not.toHaveProperty('ramp')
-      expect(meta.scanlineAlpha).toBeLessThanOrEqual(0.75)
-      expect(meta.glowAlpha).toBeLessThanOrEqual(0.04)
     }
   })
 })

@@ -176,7 +176,6 @@ function executeHardReset() {
             @click="manualSave"
             aria-label="Oyunu hemen kaydet"
             class="btn-tactile px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-            v-tip="'Anında kaydet'"
           >
             <Save class="w-3.5 h-3.5" />
             <span class="hidden sm:inline">{{ saveFeedback ? 'Kaydedildi!' : 'Kaydet' }}</span>

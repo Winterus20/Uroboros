@@ -142,11 +142,11 @@ const { dialogRef } = useFocusTrap(
       aria-modal="true"
       :aria-labelledby="titleId"
       tabindex="-1"
-      class="relative w-full max-w-lg bg-dark-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] outline-none"
+      class="relative w-full max-w-lg bg-[var(--ds-panel-strong)] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] outline-none"
       @click.stop
     >
       <!-- Modal Üst Çubuk -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-dark-800 bg-dark-950/60">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--ds-border)] bg-[var(--ds-panel)]">
         <div class="flex items-center gap-2.5">
           <div class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
             <Cloud class="w-5 h-5" />
@@ -163,7 +163,6 @@ const { dialogRef } = useFocusTrap(
               <span
                 v-else
                 class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300"
-                v-tip="'Firebase .env tanımlanmadığında yerel simülatör modu devrededir'"
               >
                 Simülasyon Modu
               </span>
@@ -174,7 +173,7 @@ const { dialogRef } = useFocusTrap(
         <button
           @click="emit('close')"
           aria-label="Kapat"
-          class="p-2 text-slate-400 hover:text-slate-200 hover:bg-dark-800 rounded-lg transition-colors"
+          class="p-2 text-slate-400 hover:text-slate-200 hover:bg-[var(--ds-card)] rounded-lg transition-colors"
         >
           <X class="w-5 h-5" />
         </button>
@@ -187,11 +186,11 @@ const { dialogRef } = useFocusTrap(
         <div v-if="authStore.isAuthenticated" class="space-y-5">
           
           <!-- Kullanıcı Bilgi Kartı -->
-          <div class="p-4 rounded-xl bg-dark-950/80 border border-slate-700/60 flex items-center justify-between">
+          <div class="p-4 rounded-xl bg-[var(--ds-panel)] border border-slate-700/60 flex items-center justify-between">
             <div class="flex items-center gap-3.5">
               <div v-if="authStore.userAvatar" class="relative">
                 <img :src="authStore.userAvatar" alt="Avatar" class="w-12 h-12 rounded-full border border-cyan-500/40 object-cover" />
-                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-cyan-500 border-2 border-dark-900"></span>
+                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-cyan-500 border-2 border-[var(--ds-panel-strong)]"></span>
               </div>
               <div v-else class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg border border-cyan-400/40 shadow-inner">
                 {{ authStore.userDisplayName.charAt(0).toUpperCase() }}
@@ -199,7 +198,7 @@ const { dialogRef } = useFocusTrap(
               <div>
                 <div class="font-bold text-slate-100 text-sm flex items-center gap-1.5">
                   {{ authStore.userDisplayName }}
-                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-dark-800 text-slate-300 font-mono border border-slate-700">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--ds-card)] text-slate-300 font-mono border border-slate-700">
                     {{ authStore.isGoogleUser ? 'Google Hesabı' : 'E-posta Hesabı' }}
                   </span>
                 </div>
@@ -220,7 +219,7 @@ const { dialogRef } = useFocusTrap(
           </div>
 
           <!-- Bulut Senkronizasyon Durumu Kartı -->
-          <div class="p-4 rounded-xl bg-dark-950/60 border border-cyan-500/30 space-y-4">
+          <div class="p-4 rounded-xl bg-[var(--ds-panel)] border border-cyan-500/30 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
               <div class="flex items-center gap-2">
                 <ShieldCheck class="w-4 h-4 text-cyan-400" />
@@ -232,13 +231,13 @@ const { dialogRef } = useFocusTrap(
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-xs">
-              <div class="p-2.5 rounded-lg bg-dark-900 border border-slate-800">
+              <div class="p-2.5 rounded-lg bg-[var(--ds-panel-strong)] border border-slate-800">
                 <span class="text-slate-500 text-[10px] block">BULUTTAKİ KÜTLE</span>
                 <span class="font-mono font-bold text-slate-200 text-sm">
                   {{ formattedCloudMatter }}
                 </span>
               </div>
-              <div class="p-2.5 rounded-lg bg-dark-900 border border-slate-800">
+              <div class="p-2.5 rounded-lg bg-[var(--ds-panel-strong)] border border-slate-800">
                 <span class="text-slate-500 text-[10px] block">KOZMİK ÇÖKÜŞ</span>
                 <span class="font-mono font-bold text-amber-300 text-sm">
                   {{ authStore.cloudMeta ? authStore.cloudMeta.singularities + ' kez' : '-' }}
@@ -283,7 +282,7 @@ const { dialogRef } = useFocusTrap(
             <button
               @click="handleLoadFromCloud"
               :disabled="authStore.isSyncing"
-              class="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-dark-950 hover:bg-dark-800 text-slate-200 border border-slate-700 hover:border-slate-500 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+              class="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-[var(--ds-panel)] hover:bg-[var(--ds-card)] text-slate-200 border border-slate-700 hover:border-slate-500 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <DownloadCloud class="w-4 h-4 text-cyan-400" />
               <span>Buluttan Yükle</span>
@@ -333,22 +332,22 @@ const { dialogRef } = useFocusTrap(
           <!-- Ayraç -->
           <div class="relative flex items-center justify-center my-3">
             <div class="border-t border-slate-800 w-full"></div>
-            <span class="bg-dark-900 px-3 text-[10px] text-slate-500 uppercase tracking-widest font-mono">veya e-posta</span>
+            <span class="bg-[var(--ds-panel-strong)] px-3 text-[10px] text-slate-500 uppercase tracking-widest font-mono">veya e-posta</span>
           </div>
 
           <!-- Sekmeler (Giriş Yap / Kayıt Ol) -->
-          <div v-if="mode !== 'forgot'" class="grid grid-cols-2 p-1 bg-dark-950 rounded-xl border border-slate-800">
+          <div v-if="mode !== 'forgot'" class="grid grid-cols-2 p-1 bg-[var(--ds-panel)] rounded-xl border border-slate-800">
             <button
               @click="setMode('login')"
               class="py-2 text-xs font-bold rounded-lg transition-all"
-              :class="mode === 'login' ? 'bg-dark-800 text-cyan-400 shadow' : 'text-slate-400 hover:text-slate-200'"
+              :class="mode === 'login' ? 'bg-[var(--ds-card)] text-cyan-400 shadow' : 'text-slate-400 hover:text-slate-200'"
             >
               Giriş Yap
             </button>
             <button
               @click="setMode('register')"
               class="py-2 text-xs font-bold rounded-lg transition-all"
-              :class="mode === 'register' ? 'bg-dark-800 text-cyan-400 shadow' : 'text-slate-400 hover:text-slate-200'"
+              :class="mode === 'register' ? 'bg-[var(--ds-card)] text-cyan-400 shadow' : 'text-slate-400 hover:text-slate-200'"
             >
               Kayıt Ol
             </button>
@@ -366,7 +365,7 @@ const { dialogRef } = useFocusTrap(
                   type="email"
                   required
                   placeholder="ornek@mail.com"
-                  class="w-full bg-dark-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors pl-9"
+                  class="w-full bg-[var(--ds-panel)] border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors pl-9"
                 />
                 <Mail class="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
               </div>
@@ -393,7 +392,7 @@ const { dialogRef } = useFocusTrap(
                   required
                   minlength="6"
                   placeholder="••••••••"
-                  class="w-full bg-dark-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors pl-9 pr-10"
+                  class="w-full bg-[var(--ds-panel)] border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors pl-9 pr-10"
                 />
                 <Lock class="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
                 <button
@@ -458,7 +457,7 @@ const { dialogRef } = useFocusTrap(
       </div>
 
       <!-- Alt Bilgi Notu -->
-      <div class="px-6 py-3 border-t border-dark-800 bg-dark-950/80 text-[11px] text-slate-500 flex items-center justify-between">
+      <div class="px-6 py-3 border-t border-[var(--ds-border)] bg-[var(--ds-panel)] text-[11px] text-slate-500 flex items-center justify-between">
         <span class="flex items-center gap-1">
           <Sparkles class="w-3 h-3 text-cyan-400" />
           Mevcut yerel ilerlemeniz kaybolmaz.

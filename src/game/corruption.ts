@@ -37,12 +37,6 @@ export type CorruptionStamp = (typeof CORRUPTION_STAMPS)[number]
 export interface CorruptionMeta {
   /** Türkçe görünen ad (debug/log/gelecekteki tooltip için; oyuncuya rozet olarak basılmaz). */
   label: string
-  /** Genel şiddet (0..1) — Faz C/D tüketicileri için tek knob. */
-  crtIntensity: number
-  /** CRT tüp dokusu — Faz A tokenlarını besler (O3 eğrisi: K0 %10, K1 %35, K2 %45). */
-  scanlineAlpha: number
-  vignetteAlpha: number
-  glowAlpha: number
   /** Substrat (L2) — Faz C tüketir (O5 tavanı: K2 %25, K4 %40). */
   substrateOpacity: number
   /** Motif bandı (L3) — Faz C tüketir (K4'te sürekli akış). */
@@ -55,8 +49,8 @@ export interface CorruptionMeta {
  * Seviye → görsel şiddet tablosu.
  *
  * Tasarım notları (dış araştırma sentezi):
- * - Balatro: scanline dünyanın parçasıdır, hep hafif açık; şiddet sıçraması
- *   seviyeyle kademeli artar, asla flaş/flicker üretmez (statik gradyan).
+ * - ADR-0069: CRT (scanline/curvature/fosfor) katmanı kaldırıldı; bu tablo artık
+ *   yalnız substrat + motif bandı + bölgesel glitch şiddetini taşır (statik, flaşsız).
  * - GIC: her cadının tek teması vardır; burada her FAZ tek motif grubudur.
  *   Substrat K2'de %25 ile başlar, K4'te %40 tavan yapar (okunabilirlik tavanı).
  * - VS: şölen ayrı katmandır (Faz D); buradaki değerler yalnız ambient tabandır.
@@ -64,60 +58,36 @@ export interface CorruptionMeta {
 export const CORRUPTION_META: Record<CorruptionLevel, CorruptionMeta> = {
   0: {
     label: 'Steril Kumarhane',
-    crtIntensity: 0.05,
-    scanlineAlpha: 0.05,
-    vignetteAlpha: 0.3,
-    glowAlpha: 0.015,
     substrateOpacity: 0,
     motifBandOpacity: 0,
     glitchIntensity: 0
   },
   1: {
     label: 'Planck Aşınması',
-    crtIntensity: 0.09,
-    scanlineAlpha: 0.09,
-    vignetteAlpha: 0.38,
-    glowAlpha: 0.02,
     substrateOpacity: 0.06,
     motifBandOpacity: 0.08,
     glitchIntensity: 0.05
   },
   2: {
     label: 'Kozmik Yutuş',
-    crtIntensity: 0.13,
-    scanlineAlpha: 0.13,
-    vignetteAlpha: 0.44,
-    glowAlpha: 0.025,
     substrateOpacity: 0.25,
     motifBandOpacity: 0.25,
     glitchIntensity: 0.12
   },
   3: {
     label: 'Çöküş Sonrası',
-    crtIntensity: 0.17,
-    scanlineAlpha: 0.17,
-    vignetteAlpha: 0.5,
-    glowAlpha: 0.03,
     substrateOpacity: 0.32,
     motifBandOpacity: 0.45,
     glitchIntensity: 0.3
   },
   4: {
     label: 'Gece Nöbeti Substratı',
-    crtIntensity: 0.21,
-    scanlineAlpha: 0.21,
-    vignetteAlpha: 0.56,
-    glowAlpha: 0.035,
     substrateOpacity: 0.4,
     motifBandOpacity: 0.85,
     glitchIntensity: 0.45
   },
   5: {
     label: 'Kadim Oburluk',
-    crtIntensity: 0.26,
-    scanlineAlpha: 0.26,
-    vignetteAlpha: 0.62,
-    glowAlpha: 0.04,
     substrateOpacity: 0.55,
     motifBandOpacity: 1,
     glitchIntensity: 0.6

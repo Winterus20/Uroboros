@@ -105,7 +105,7 @@ function punchTap(e: PointerEvent): void {
     class="md:hidden fixed bottom-[60px] left-0 right-0 z-30 px-3 py-1 pointer-events-none select-none"
   >
     <div
-      class="pointer-events-auto max-w-md mx-auto flex items-center justify-between gap-1.5 p-1.5 rounded-2xl bg-[#100c11]/90 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.85)]"
+      class="pointer-events-auto max-w-md mx-auto flex items-center justify-between gap-1.5 p-1.5 rounded-2xl bg-[var(--ds-hero)] backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.85)]"
     >
       <!-- Sol 1: Çekim Hızı Hz Butonu -->
       <button
@@ -119,7 +119,6 @@ function punchTap(e: PointerEvent): void {
           ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border-cyan-500/35 cursor-pointer shadow-xs affordance-pulse'
           : `bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed ${tickspeedRampClass}`"
         :style="canAffordTickspeed ? { '--pulse-c1': 'rgba(0, 240, 255, 0.3)', '--pulse-c2': 'rgba(0, 240, 255, 0.7)' } : undefined"
-        v-tip="'Çekim Hızı (Hz)'"
       >
         <div class="flex items-center gap-1 leading-none">
           <Cpu class="w-3 h-3 text-cyan-400" />
@@ -144,7 +143,6 @@ function punchTap(e: PointerEvent): void {
           ? 'bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20 cursor-pointer shadow-xs affordance-pulse'
           : `bg-black/40 text-slate-600 border-white/[0.04] cursor-not-allowed ${maxAllRampClass}`"
         :style="canAffordFullPack ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
-        v-tip="'Tümünü Maks Al'"
       >
         <div class="flex items-center gap-1 leading-none">
           <Layers class="w-3 h-3 text-slate-300" />
@@ -160,7 +158,6 @@ function punchTap(e: PointerEvent): void {
         @pointerdown="punchTap"
         class="btn-tactile flex-1 h-11 px-3.5 rounded-xl bg-purple-600/35 hover:bg-purple-600/45 text-white font-bold text-xs font-mono flex items-center justify-between gap-1.5 shadow-[0_0_20px_rgba(168,85,247,0.25)] active:scale-95 transition-all border border-purple-400/50 cursor-pointer"
         :class="{ 'cta-beacon': store.dimensions[0]?.bought === 0 }"
-        v-tip="'Kütleçekim Vakumu / Taktil Yutuş'"
       >
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0">

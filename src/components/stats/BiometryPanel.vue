@@ -37,7 +37,7 @@ async function copyReport(): Promise<void> {
     "🌌 UROBOROS: THE COSMIC FEAST — KOZMİK ÇÖKÜŞ RAPORU",
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     `⏱️ Toplam Çekim Süresi: ${formatTime(store.stats.totalPlaytime)}`,
-    `🌌 Manuel Yutma: ${store.stats.manualClicks.toLocaleString("tr-TR")} kez`,
+    `🌌 Manuel Yutma: ${format(store.stats.manualClicks, 2, store.settings.notation)} kez`,
     `⚡ Zirve Çekim Hızı: ${format(store.stats.highestDps, 2, store.settings.notation)} / sn`,
     `🌀 Kozmik Çöküş: ${store.stats.singularityCount} kez (Rekor: ${fastestStr})`,
     `🪐 Kütle Eşdeğeri: ${b.cosmicPrey?.multiplierText || "—"}`,
@@ -155,15 +155,15 @@ async function copyReport(): Promise<void> {
           </span>
         </div>
 
-        <div class="w-full h-3 rounded-full bg-black/50 overflow-hidden border border-white/[0.06]">
+        <div class="progress-track progress-track-lg progress-track-bordered">
           <div
-            class="h-full transition-all duration-300"
+            class="progress-fill"
             :class="
               bio.mentalBatteryPct > 50
-                ? 'bg-cyan-500'
+                ? 'progress-fill-cyan'
                 : bio.mentalBatteryPct > 20
-                ? 'bg-slate-500'
-                : 'bg-rose-500 animate-pulse'
+                ? 'progress-fill-slate'
+                : 'progress-fill-rose animate-pulse'
             "
             :style="{ width: `${bio.mentalBatteryPct}%` }"
           ></div>

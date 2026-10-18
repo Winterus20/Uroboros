@@ -104,7 +104,6 @@ defineExpose({ refreshSlots });
             @click="copyCurrentSlotTo(s)"
             :aria-label="`Mevcut slotu Slot ${s}'e kopyala`"
             class="btn-tactile px-2 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] text-[10px] font-mono transition-all cursor-pointer flex items-center gap-1"
-            v-tip="`Mevcut slotu Slot ${s}'e kopyala`"
           >
             <Copy class="w-3 h-3" />
           </button>

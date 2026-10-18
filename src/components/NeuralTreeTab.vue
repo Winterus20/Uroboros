@@ -99,9 +99,6 @@ const BRANCH_ICON_CLASS: Record<NeuralBranch, string> = {
   hybrid: 'text-sky-300'
 }
 
-const CHOICE_LOCK_TIP =
-  'SEÇİM: Kardeş düğüm alınmış. Bu düğüm bir sonraki Şafak Çöküşü (Güneşi Karşıla) sonrasında yeniden seçilebilir hale gelir.'
-
 function buy(node: NeuralNode): void {
   if (uiState(node) !== 'available' && uiState(node) !== 'insufficient') return
   store.buyNeuralNode(node.id)
@@ -152,7 +149,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
             :class="uiState(getNode('insomnia_heart')) === 'available'
               ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
               : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
-            v-tip="'Ağacın tüm dallarını açar ve her çöküşte 10.000 g kütle kazandırır'"
           >
             <span>Al ({{ nodeCost(getNode('insomnia_heart')) }} SP)</span>
           </button>
@@ -197,7 +193,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                             <span v-if="getNode(id).choiceGroup" class="flex items-center gap-1 shrink-0">
                               <span
                                 class="ds-badge ds-badge-violet text-[9px] px-1 py-0"
-                                v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
                               >SEÇİM</span>
                               <span class="text-[9px] font-mono text-slate-500">Kardeşini kilitler</span>
                             </span>
@@ -223,7 +218,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         :class="uiState(getNode(id)) === 'available'
                           ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
                           : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
-                        v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                       >
                         <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                       </button>
@@ -234,7 +228,7 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         <Check class="w-3 h-3" />
                         <span>MAKS</span>
                       </div>
-                      <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500" v-tip="CHOICE_LOCK_TIP">
+                      <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500">
                         Hariç Kilitli 🔒
                       </div>
                     </div>
@@ -243,7 +237,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                   <div
                     v-else
                     class="flex-1 min-w-0 rounded-xl border border-dashed border-white/[0.08] bg-black/30 p-3 flex items-center gap-2.5 opacity-70"
-                    v-tip="'Sinyal zayıf: tüm öncül düğümleri bağla, kararlı yapı burada açılır.'"
                   >
                     <span class="p-1.5 rounded-lg bg-black/40 border border-white/[0.08] shrink-0">
                       <Lock class="w-4 h-4 text-slate-500" />
@@ -286,7 +279,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                             <span v-if="getNode(id).choiceGroup" class="flex items-center gap-1 shrink-0">
                               <span
                                 class="ds-badge ds-badge-violet text-[9px] px-1 py-0"
-                                v-tip="'SEÇİM düğümü: kardeşiyle ayrılamaz — birini alırsın, diğeri bir sonraki Şafak\'a kilitlenir.'"
                               >SEÇİM</span>
                               <span class="text-[9px] font-mono text-slate-500">Kardeşini kilitler</span>
                             </span>
@@ -312,7 +304,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         :class="uiState(getNode(id)) === 'available'
                           ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
                           : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
-                        v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                       >
                         <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                       </button>
@@ -323,7 +314,7 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                         <Check class="w-3 h-3" />
                         <span>MAKS</span>
                       </div>
-                      <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500" v-tip="CHOICE_LOCK_TIP">
+                      <div v-else class="text-center py-1 text-[10px] font-mono text-slate-500">
                         Hariç Kilitli 🔒
                       </div>
                     </div>
@@ -331,7 +322,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                   <div
                     v-else
                     class="flex-1 min-w-0 rounded-xl border border-dashed border-white/[0.08] bg-black/30 p-3 flex items-center gap-2.5 opacity-70"
-                    v-tip="'Sinyal zayıf: tüm öncül düğümleri bağla, kararlı yapı burada açılır.'"
                   >
                     <span class="p-1.5 rounded-lg bg-black/40 border border-white/[0.08] shrink-0">
                       <Lock class="w-4 h-4 text-slate-500" />
@@ -382,7 +372,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
                   :class="uiState(getNode(id)) === 'available'
                     ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 affordance-pulse'
                     : 'ds-ramp-partial text-slate-300 cursor-not-allowed'"
-                  v-tip="`${getNode(id).name} — ${nodeCost(getNode(id))} SP`"
                 >
                   <span>Al ({{ nodeCost(getNode(id)) }} SP)</span>
                 </button>
@@ -395,7 +384,6 @@ const spBalance = computed(() => formatNumber(store.singularityPoints, store.set
             <div
               v-else
               class="rounded-xl border border-dashed border-white/[0.08] bg-black/30 p-3 flex items-center gap-2.5 opacity-70"
-              v-tip="'Sinyal zayıf: iki daldaki öncül düğümleri bağla.'"
             >
               <span class="p-1.5 rounded-lg bg-black/40 border border-white/[0.08] shrink-0">
                 <Lock class="w-4 h-4 text-slate-500" />

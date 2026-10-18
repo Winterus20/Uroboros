@@ -73,4 +73,65 @@ describe('motifs — GIC slot kontratı (Faz C)', () => {
     const ids = buildMotifStrip(1, 5).map((m) => m.id)
     expect(ids.filter((id) => id === 'delik').length).toBe(2)
   })
+
+  it('her motif gövdesi yasaklı token taşımaz (brief §1 kapısı — A5-02)', () => {
+    // Gerekçe: aynı glif DOM'da 16–28 kez tekrarlanır → `id=` çakışır,
+    // `url(#...)`/`<defs>`/gradient referansı sızar; renk yalnız currentColor'dan
+    // gelir (var() arka plan hilesi ve gömülü stil yasak). Kontrat brief §1/§5.
+    const FORBIDDEN = [
+      'id=', 'url(', 'defs', 'style', 'filter', 'gradient',
+      'mask', 'clippath', 'text', 'image', 'script', 'var('
+    ]
+    for (const m of MOTIFS) {
+      // Gövde küçük harfe indirilir: 'clipPath' → 'clippath' (SVG'de büyük/küçük harf kaçağı kapatılır).
+      const svg = m.svg.toLowerCase()
+      for (const token of FORBIDDEN) {
+        expect(svg, m.id + '.svg yasaklı token taşıyor: ' + token).not.toContain(token)
+      }
+    }
+  })
+
+  it('kök şablon kilitli: viewBox 0 0 32 32 + fill="none" + currentColor (brief §1)', () => {
+    for (const m of MOTIFS) {
+      expect(m.svg.startsWith('<svg '), m.id + '.svg <svg ile başlamalı').toBe(true)
+      expect(m.svg, m.id + '.svg viewBox').toContain('viewBox="0 0 32 32"')
+      expect(m.svg, m.id + '.svg fill=none').toContain('fill="none"')
+      expect(m.svg, m.id + '.svg stroke=currentColor').toContain('stroke="currentColor"')
+      expect(m.svg, m.id + '.svg aria-hidden').toContain('aria-hidden="true"')
+      expect(m.svg.trimEnd().endsWith('</svg>'), m.id + '.svg kapanış').toBe(true)
+    }
+  })
+
+  it('pencere kaydırması: her cycle farklı bir pencere açar (A5-05)', () => {
+    const pool = motifsForCorruption(4)
+    // Ağırlıklı havuz uzunluğu = pencere periyodu (motifs.ts kontratı).
+    const period = pool.reduce((sum, m) => sum + Math.max(1, Math.floor(m.weight)), 0)
+    const windows = new Set<string>()
+    for (let cycle = 0; cycle < period; cycle++) {
+      const ids = buildMotifStrip(4, 4, cycle).map((m) => m.id)
+      expect(ids.length).toBe(4)
+      windows.add(ids.join('|'))
+    }
+    expect(windows.size).toBe(period)
+  })
+
+  it('ardışık pencereler sonlu döngüde tüm havuzu kapsar (A5-05)', () => {
+    const pool = motifsForCorruption(4)
+    const period = pool.reduce((sum, m) => sum + Math.max(1, Math.floor(m.weight)), 0)
+    const seen = new Set<string>()
+    for (let cycle = 0; cycle < period; cycle++) {
+      for (const m of buildMotifStrip(4, 4, cycle)) seen.add(m.id)
+    }
+    expect([...seen].sort()).toEqual(pool.map((m) => m.id).sort())
+  })
+
+  it('kaydırma geriye uyumlu ve güvenli: cycle yok = 0. indeks, negatif/NaN sarmalanır', () => {
+    const legacy = buildMotifStrip(3, 6)
+    expect(legacy.map((m) => m.id)).toEqual(buildMotifStrip(3, 6, 0).map((m) => m.id))
+    const period = motifsForCorruption(3).reduce((sum, m) => sum + Math.max(1, Math.floor(m.weight)), 0)
+    expect(buildMotifStrip(3, 6, -1).map((m) => m.id)).toEqual(
+      buildMotifStrip(3, 6, period - 1).map((m) => m.id)
+    )
+    expect(buildMotifStrip(3, 6, Number.NaN).map((m) => m.id)).toEqual(legacy.map((m) => m.id))
+  })
 })

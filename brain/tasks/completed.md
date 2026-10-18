@@ -1,5 +1,29 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-18] ✔ — Görsel Dil Uyum Turu: F0 (CRT kaldırma kararı) + Dalga 1 (token/motif/semantik)
+
+### Problem:
+- Kullanıcı: *"oyunu visual-language.md'ye göre her tarafını düzeltmek istiyorum; önce araştırma yap subagentlarla, sonra uygulayacağız."*
+- 6 paralel denetim ajanı **138 bulgu** çıkardı (KRİTİK 4 · YÜKSEK 23 · ORTA 65 · DÜŞÜK 43); **23/52 bileşen** hiç retrofit görmemiş. İki sessiz regresyon: CRT katmanı öldürülmüş ama sözleşme "HEP AÇIK" diyor (brain'de karar kaydı yok); `.planck-collage` tüketicisi tooltip süpürmesinde kazara silinmiş.
+
+### Çözüm (bu tur):
+1. **F0 — Karar & sözleşme senkronu:** kullanıcı **Yol B**'yi seçti → [ADR-0069](../decisions/0069-crt-layer-removal.md) yazıldı; `visual-language.md` §1 (kaynak tablosu + kaos bütçesi), §2 (amber düzeltmesi), §3 (L1 = İPTAL), §4 (K0–K5 tablosu CRT'siz + ADR-0063 sıra senkronu), §6 (Faz A notu), §8 (2026-10-18 notu 2) güncellendi.
+2. **CRT kod temizliği:** `style.css` `.crt-*`/`--crt-*` bloğu + `[data-corruption]` CRT satırları silindi; `useNavigation` koşulsuz `crt-off` kaldırıldı; `crtEffect` (`models/settings.ts` · `state.ts` · `actions-save.ts` · `save.test.ts`) söküldü; `CORRUPTION_META` CRT alanları düştü (test regresyon kilidi eklendi).
+3. **K1 ritüeli geri:** `.planck-collage` `DimensionsTab`'a sıcak aileyle geri getirildi (neon cyan yerine feast/bone).
+4. **K3/K4 eksik ayakları uygulandı:** yeni `.glitch-edge` (K3+, `--glitch-intensity` tüketicisi) + `.chromatic-edge` (K4+) ambient kenarları `ScreenOverlay`'e bağlandı (statik, forced-colors/motion kapılı).
+5. **Token tek kaynağı:** `--bicycle-rgb`/`--ds-*-rgb` kanal tokenları + `--ds-abyss`; `ds-ramp-*` literalleri token türevine çevrildi; `dark-*` paralel ölçeği **tamamen kaldırıldı** (0 kullanım); 11 `bg-[#hex]` kaçağı token'a bağlandı; `bg-[#hex]/from-[/via-[` ve `dark-*` repoda **0**; `animate-fade-in` (tanımsız) temizlendi.
+6. **Rezerve renk semantiği:** CrisisTab bonus fazları cyan, RecordsPanel rezonans cyan + 7 `toLocaleString`→`format()`, SingularityButton kilitli/partial ayrımı, AchievementsTab odak amber→cyan, AutobuyerCard blue durum→cyan/slate, PastRunsPanel rozeti cyan.
+7. **GIC motif kütüphanesi 16/16:** kalan **12 motif yeniden çizildi** (delik/goz/dis/zincir · bant/karalama/vida/catlak · ay/yildiz/saat/perde) — brief kolaj reçetesi (kütle+oyuk+kayma+dikiş+serpinti), `evenodd` gerçek oyuk, gömülü renk/`var()` 0; `goz.svg` yasak `var(--ds-bg)` hilesi kapandı. `motifs.test.ts` **12 yasaklı-token kapısı + kök şablon kilidi** kazandı; `buildMotifStrip(level,count,cycle)` deterministik pencere kaydırması → K2/K3 bantları ayrıştı, 16 motifin tamamı dolaşımda; `MotifBand` 7 sn ömür + 0,9 sn sönme + 500 ms suppression + DOM **16/28** glif (brief bütçesi).
+8. **Görünürlük/okunabilirlik düzeltmeleri:** `.collage-torn` K1 efektif alfa 0.0042 → görünür taban (calc 0.35 + α·0.6); motif bandı rampası `max(...,0.25)`; `motif-tone-ember` tam alfa; band/glitch/chromatic forced-colors + motion kapılı; `singularity-horizon` amber+purple → feast+bone.
+
+### Doğrulama:
+- `npm run typecheck` → **0 hata** · `npx vitest run` → **27 dosya / 385 test** (380 → +5 motif kapısı) · `npx vite build` → **0 hata** (1811 modül).
+  - *Ortam notu:* `npm run build` Windows'ta esbuild geçici dosya silme kilitlenmesi (Access is denied) veriyor; `TEMP`/`TMP` çalışma alanına alınınca build temiz geçiyor (kod hatası değil).
+- `npm run harness:smoke` → **baseline değişmedi** (`log10=90.72 shifts=8 gal=1 tickspeed=73 bots=11`).
+- Görsel kanıt: 16 motif `magick`/RSVG ile 24px + 96px kontak sayfası (`.tmp-motif-check/sheet-all-24.png`, `sheet-all-96.png`); delik/çatlak/yıldız/vida dönüşümü net, ember tonunun koyu kaldığı görülüp alfa 1.0'a çekildi.
+- **Kalan (sıradaki dalgalar):** F3 (modal z-index + OS reduced-motion kök mührü + JuiceLayer delta + partikül cap/confetti), F6 (9 bespoke çubuk, DimensionRow 9 tier lore, MultipliersPanel glif, 23 bileşen retrofit turu), F7 (TimeClockOverlay font-display rolü + 18px ızgara), F8 (contrast kapsamı + AA turu + perf).
+
+
 ## [2026-10-17] ✔ — Zaman Yayı (Time Clock): geri sarma / salgı mekaniği (ADR-0068)
 
 ### Problem:
@@ -2728,3 +2752,16 @@ Oyun içi lo-fi radyosu (`src/core/music/tracks/lofi-chill.ts`) teknik altyapıs
 **Revizyon (2026-10-16):** Telefon kontrolü için ≥1280px kapısı kaldırıldı — tüm ekranlarda render; dar ekranda `clamp(64px,16vw,250px)` ince şerit + 0.4 opaklık (içerik z=10 üstte, okunabilirlik korunur), genişte tam boy + 0.55. `npm run build` 0 hata.
 
 **Revizyon 2 (2026-10-16):** Eller üst kata alındı (z=45: içerik+vinyet+CRT üstü, anomali/juice/toast/modal altı) — GIC kolajı gibi cama yapışık durur. Her ele birkaç derecelik yamukluk + üst kenara yapışkan bant şeridi + drop-shadow kalkıklık eklendi; opaklıklar üste uygun yükseltildi (mobil 0.55 / masaüstü 0.8). `npm run build` 0 hata.
+
+---
+## 2026-10-18 — Tooltip'lerin tamamen kaldırılması (v-tip sistemi sökümü)
+
+**İstek:** (1) Duruş çubuğundaki (Kuantum / Obur / Kalkan) çift yazılar tek rozete indirilsin (görsel dil sözleşmesi: kural karar anında/tooltip'te konuşulur); (2) ardından tüm tooltip'ler tamamen kaldırılsın.
+
+**Yapılanlar:**
+1. `src/components/Header.vue` duruş butonları: `Kuantum (2×)` + `Pasif 2×` → `Kuantum` + `2×`; `Obur (4×)` + `Manuel 4× · %50 anomali` → `Obur` + `4×`; `Kalkan` + `Hz −%15` → `Kalkan` + `−%15` (sayılar `font-mono tabular-nums` rozette görünür; renk/ikon/ramp/kilit çubukları korunur).
+2. Tooltip sökümü: 23 `.vue` dosyasında 84 `v-tip` attribute'u silindi (kalan: 0); `src/main.ts` direktif kaydı (`app.directive('tip', vTip)` + import) kaldırıldı; ölü motor `src/core/tooltip.ts` silindi (dış referans yoktu, test referansı yoktu).
+3. Tek native tooltip (`AutobuyerCard` güç düğmesindeki `:title`) `:aria-label`'a çevrildi; ikon-tek 3 butona `aria-label` eklendi (AdminPanel kapat, Ticker rezonans, ViralGrid makas) — görsel balon sıfır, ekran okuyucu adı korunur.
+4. Sözleşme notu: `brain/context/visual-language.md` §8'e kaldırma kararı işlendi (tooltip'e atıf yapan kanon maddeleri tarihsel notla).
+
+**Doğrulama:** `npx vue-tsc --noEmit` exit 0 · `npm run build` exit 0 (aşağıda).

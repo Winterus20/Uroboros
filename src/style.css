@@ -80,23 +80,20 @@
      feast  : oburluk / olay enerjisi (metin olarak AA geçer: 5.62:1)
      bicycle: yalnız yüzey/ağırlık verir — METİN OLARAK KULLANILAMAZ (3.31:1)
      Tek kaynak: --feast-rgb kanal ayrışımı değişince hem --feast hem de tüm
-     yarı saydam türevleri (vinyet halkası, CRT vinyeti) senkron güncellenir. */
+     yarı saydam türevleri (vinyet halkası, feast tonlu kenarlar) senkron güncellenir. */
   --feast-rgb: 255 51 85;
   --feast: rgb(var(--feast-rgb));
   --bicycle: #c40f2e;
+  --bicycle-rgb: 196 15 46; /* kanal ayrışımı — motif-tone-ember ve ağır yüzeyler tek kaynaktan türesin */
+  --ds-abyss: #07030a; /* girdap fallback gradyanının en derin durağı (--ds-bg'den bir ton koyu) */
 
   /* --- Sıcak vinyet (cosmic-vignette ile paylaşılan tek kaynak) --- */
   --ds-vignette-core: rgba(14, 5, 9, 0.86);
   --ds-vignette-warm: rgb(var(--feast-rgb) / 0.05);
 
-  /* --- CRT tüp dokusu (Faz A baseline = K0; Faz B [data-corruption] yükseltir) --- */
-  --crt-scanline-alpha: 0.05;
-  --crt-scanline-period: 4px;
-  --crt-vignette-alpha: 0.30;
-  --crt-glow-alpha: 0.015;
-  /* Faz B bozulma knob'ları (tek kaynak; seviyeyle [data-corruption] altında ezilir).
+  /* --- Bozulma knob'ları (tek kaynak; seviyeyle [data-corruption] altında ezilir).
+     ADR-0069: CRT ayağı KALDIRILDI — derinleşme yalnız substrat + bant + glitch ile yaşar.
      Okunabilirlik kanonu: yalnız ambient/dekoratif katman tüketir. */
-  --crt-intensity: 0.10;
   --substrate-opacity: 0;
   --motif-band-opacity: 0;
   --glitch-intensity: 0;
@@ -107,6 +104,11 @@
   --ds-locked: #64748b;   /* gri    — kilitli (soluk slate) */
   --ds-bonus: #06b6d2;    /* cyan   — bonus / telemetri primi */
   --ds-danger: #f43f5e;   /* rose   — kriz / risk / parazit */
+  /* Kanal ayrışımları: ramp/türev yüzeyler tokenı literal kopyalamaz (denetim O-1). */
+  --ds-prestige-rgb: 245 158 11;
+  --ds-locked-rgb: 100 116 139;
+  --ds-bonus-rgb: 6 182 210;
+  --ds-danger-rgb: 244 63 94;
 }
 
 /* --- Üç durumlu uygunluk rampası (kilitli → ara → hazır) ---
@@ -118,13 +120,13 @@
 }
 .ds-ramp-locked {
   opacity: 0.5;
-  border-color: rgba(100, 116, 139, 0.32); /* #64748b — soluk gri */
-  background-color: rgba(100, 116, 139, 0.06);
+  border-color: rgb(var(--ds-locked-rgb) / 0.32); /* soluk gri — tek kaynak */
+  background-color: rgb(var(--ds-locked-rgb) / 0.06);
 }
 .ds-ramp-partial {
   opacity: 0.86;
-  border-color: rgba(245, 158, 11, 0.45); /* #f59e0b — sarı/amber ara durum */
-  background-color: rgba(245, 158, 11, 0.08);
+  border-color: rgb(var(--ds-prestige-rgb) / 0.45); /* sarı/amber ara durum — tek kaynak */
+  background-color: rgb(var(--ds-prestige-rgb) / 0.08);
 }
 .ds-ramp-ready {
   opacity: 1;
@@ -492,7 +494,6 @@
   -webkit-backdrop-filter: blur(18px);
 }
 
-.layer-crt { z-index: 40; }
 .layer-motif { z-index: 45; }
 .layer-anomaly { z-index: 50; }
 .layer-clock { z-index: 55; }
@@ -501,126 +502,51 @@
 .layer-modal { z-index: 80; }
 
 /* ==========================================================================
-   FAZ A "Aç Kumarhane" — CRT TÜP DOKUSU (statik, animasyonsuz)
-   Balatro yaklaşımı: "CRT bir filtre değil, dünyanın kendisi".
-   - Animasyon YOK → WCAG 2.3.1 (10°'de >3 flaş/s) ihlali olmaz; statik gradyan
-     bir kez boyanıp yalnızca composite edilir (ihmal edilebilir maliyet).
-   - Gerçek eğrilik (barrel distortion) yapılmaz: shader/SVG displacement köke
-     filter gerektirir → ADR-0044 ihlali + pahalı. Eğrilik illüzyonu = kenar vinyeti.
-   - Katman: z=40 → içerik (10) + vinyet (30) üstünde; juice (60) / toast (70) /
-     modal (80) ALTINDA kalır (okunabilirlik + VS parlaklığı önde).
-   Kapılar: .crt-off (ayar + motion reduced/off) · .battery-saver ·
-            OS prefers-reduced-motion · forced-colors
+   ADR-0069 (2026-10-18) — CRT KATMANI KALDIRILDI
+   Fullscreen scanline/curvature/fosfor kaplaması yoktur; sözleşme §3 L1 iptal edildi.
+   Derinleşme yalnız substrat (L2) + motif bandı (L3) + bölgesel glitch ile yaşar.
+   Eski .crt-* / --crt-* tanımları ve crtEffect ayarı kaldırıldı.
+   Kayıt: brain/decisions/0069-crt-layer-removal.md
    ========================================================================== */
-
-.crt-scanlines {
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0px,
-    rgba(0, 0, 0, 0) calc(var(--crt-scanline-period) / 2),
-    rgba(0, 0, 0, var(--crt-scanline-alpha)) calc(var(--crt-scanline-period) / 2),
-    rgba(0, 0, 0, var(--crt-scanline-alpha)) var(--crt-scanline-period)
-  );
-}
-
-.crt-vignette {
-  background: radial-gradient(
-    ellipse 120% 105% at 50% 50%,
-    transparent 52%,
-    rgb(var(--feast-rgb) / calc(var(--crt-vignette-alpha) * 0.18)) 78%,
-    rgba(0, 0, 0, var(--crt-vignette-alpha)) 100%
-  );
-}
-
-.crt-glow {
-  background: radial-gradient(
-    ellipse 70% 60% at 50% 42%,
-    rgba(255, 245, 235, var(--crt-glow-alpha)) 0%,
-    transparent 72%
-  );
-}
-
-/* --- CRT kapıları: ayar kapalı veya pil tasarrufu → doku susar --- */
-.crt-off .crt-layer,
-.battery-saver .crt-layer {
-  display: none !important;
-}
-
-/* OS azaltılmış hareket tercihi: statik doku da kapanır (muhafazakâr seçim). */
-@media (prefers-reduced-motion: reduce) {
-  .crt-layer {
-    display: none !important;
-  }
-}
-
-/* Yüksek karşılaştırma / zorunlu renk modu: dekoratif doku tamamen susar. */
-@media (forced-colors: active) {
-  .crt-layer {
-    display: none !important;
-  }
-}
 
 /* ==========================================================================
    FAZ B — Bozulma şiddet eğrisi (K0..K5 → CSS token tahsisi)
    Sözleşme: visual-language.md §4 + CORRUPTION_META (src/game/corruption.ts).
    - Kök mühür: App.vue `:data-corruption="K0..K4"` (K5 tavanlı, Faz 3'te açılır).
-   - Kapsam: YALNIZ ambient tokenlar (--crt-*, --substrate-*, --motif-*, --glitch-*).
-     Sayı/etiket/ramp/tooltip seçicisi BURADA YOK (okunabilirlik kanonu).
-   - Değerler CORRUPTION_META ile birebir aynıdır (O3: K0 %10/K1 %35/K2 %45;
-     O5: K2 substrat %25, K4 %40). Tek taraflı değişim YASAK — iki dosya senkron tutulur.
+   - Kapsam: YALNIZ ambient tokenlar (--substrate-*, --motif-*, --glitch-*).
+     Sayı/etiket/ramp seçicisi BURADA YOK (okunabilirlik kanonu).
+   - Değerler CORRUPTION_META ile birebir aynıdır (O5 substrat: K2 %25, K4 %40).
+     Tek taraflı değişim YASAK — iki dosya senkron tutulur.
+   - ADR-0069: CRT satırları kaldırıldı; glitch K3+ ve chromatic K4+ tüketici kazandı.
    - Faz C/D tüketicileri (--substrate-opacity vb.) bu fazda yalnız TANIMLANIR;
      görsel katmanları Faz C'de gelir.
    ========================================================================== */
 [data-corruption="K0"] {
-  --crt-intensity: 0.05;
-  --crt-scanline-alpha: 0.05;
-  --crt-vignette-alpha: 0.30;
-  --crt-glow-alpha: 0.015;
   --substrate-opacity: 0;
   --motif-band-opacity: 0;
   --glitch-intensity: 0;
 }
 [data-corruption="K1"] {
-  --crt-intensity: 0.09;
-  --crt-scanline-alpha: 0.09;
-  --crt-vignette-alpha: 0.38;
-  --crt-glow-alpha: 0.02;
   --substrate-opacity: 0.06;
   --motif-band-opacity: 0.08;
   --glitch-intensity: 0.05;
 }
 [data-corruption="K2"] {
-  --crt-intensity: 0.13;
-  --crt-scanline-alpha: 0.13;
-  --crt-vignette-alpha: 0.44;
-  --crt-glow-alpha: 0.025;
   --substrate-opacity: 0.25;
   --motif-band-opacity: 0.25;
   --glitch-intensity: 0.12;
 }
 [data-corruption="K3"] {
-  --crt-intensity: 0.17;
-  --crt-scanline-alpha: 0.17;
-  --crt-vignette-alpha: 0.50;
-  --crt-glow-alpha: 0.03;
   --substrate-opacity: 0.32;
   --motif-band-opacity: 0.45;
   --glitch-intensity: 0.30;
 }
 [data-corruption="K4"] {
-  --crt-intensity: 0.21;
-  --crt-scanline-alpha: 0.21;
-  --crt-vignette-alpha: 0.56;
-  --crt-glow-alpha: 0.035;
   --substrate-opacity: 0.40;
   --motif-band-opacity: 0.85;
   --glitch-intensity: 0.45;
 }
 [data-corruption="K5"] {
-  --crt-intensity: 0.26;
-  --crt-scanline-alpha: 0.26;
-  --crt-vignette-alpha: 0.62;
-  --crt-glow-alpha: 0.04;
   --substrate-opacity: 0.55;
   --motif-band-opacity: 1;
   --glitch-intensity: 0.60;
@@ -638,7 +564,9 @@
 
 /* --- L3: boost motif bandı (yanlardan süzülen glif şeridi) --- */
 .motif-band {
-  opacity: max(var(--motif-band-opacity), 0.45);
+  /* Denetim A5-09: 0.45 tabanı K1/K2/K3'ü (0.08/0.25/0.45) düzleştiriyordu.
+     Taban 0.25 — K3+ rampası (0.45→0.85) ve ember glif okunurluğu birlikte korunur. */
+  opacity: max(var(--motif-band-opacity), 0.25);
 }
 .motif-band-dense {
   opacity: max(var(--motif-band-opacity), 0.8);
@@ -693,7 +621,7 @@
 }
 .motif-tone-feast { color: rgb(var(--feast-rgb) / 0.8); }
 .motif-tone-bone { color: rgba(255, 240, 230, 0.55); }
-.motif-tone-ember { color: rgba(196, 15, 46, 0.85); }
+.motif-tone-ember { color: rgb(var(--bicycle-rgb)); } /* tam alfa: koyu kor tonu siyah zeminde okunur kalsin (A5-08) */
 
 /* Bant kapıları */
 .motion-off .motif-band,
@@ -728,8 +656,10 @@
   position: absolute;
   width: 120px;
   height: 90px;
-  background: linear-gradient(135deg, rgba(255, 240, 230, 0.07), rgba(255, 240, 230, 0.02));
-  opacity: var(--substrate-opacity);
+  background: linear-gradient(135deg, rgba(255, 240, 230, 0.18), rgba(255, 240, 230, 0.06));
+  /* Denetim A5-07: düz var(--substrate-opacity) K1'de 0.06 x 0.07 = 0.004 veriyordu
+     (siyah zeminde ~1.07:1 → pratikte yok). Görünür taban + K ile monoton artış. */
+  opacity: calc(0.35 + var(--substrate-opacity) * 0.6);
 }
 .collage-torn-tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 62% 22%, 78% 48%, 40% 66%, 55% 100%, 0 100%); }
 .collage-torn-tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 45% 100%, 60% 66%, 22% 48%, 38% 22%); }
@@ -796,6 +726,52 @@
 }
 .planck-collage::before { left: 14px; transform: rotate(-8deg); }
 .planck-collage::after { right: 14px; transform: rotate(8deg); }
+
+/* --- C6: K3 bölgesel glitch + K4 chromatic aberration (ADR-0069: CRT yerine) ---
+   Sözleşme §4: K3 "glitch bölgesel ateşler", K4 "chromatic aberration artışı".
+   Bu iki ayak denetimde TÜKETİCİSİZDİ (--glitch-intensity 7 tanım / 0 tüketici).
+   Kapsam: YALNIZ ambient/dekoratif kenar; sayı/etiket/ramp seçicisi YOK.
+   Hareket YOK (statik gradyan) — WCAG 2.3.1 ve performans güvenli. */
+.glitch-edge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--glitch-intensity);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 7px,
+    rgb(var(--feast-rgb) / 0.55) 7px 8px,
+    transparent 8px 15px
+  );
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 16%, transparent 84%, black 100%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 16%, transparent 84%, black 100%);
+}
+.chromatic-edge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc(var(--substrate-opacity) * 1.1);
+  background:
+    linear-gradient(to right, rgb(var(--feast-rgb) / 0.5), transparent 2.5%),
+    linear-gradient(to left, rgba(255, 240, 230, 0.38), transparent 2.5%),
+    linear-gradient(to right, transparent 97.5%, rgb(var(--feast-rgb) / 0.35)),
+    linear-gradient(to left, transparent 97.5%, rgba(255, 240, 230, 0.28));
+  transform: translateX(calc(var(--glitch-intensity) * 1.5px));
+}
+@media (forced-colors: active) {
+  .glitch-edge,
+  .chromatic-edge { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glitch-edge,
+  .chromatic-edge { opacity: calc(var(--glitch-intensity) * 0.5); }
+}
+.motion-off .glitch-edge,
+.battery-saver .glitch-edge,
+.motion-off .chromatic-edge,
+.battery-saver .chromatic-edge {
+  display: none !important;
+}
 
 /* --- C5: kriz kolaj çerçevesi (rose risk anlamı korunur — çerçeve dekoratiftir) --- */
 .crisis-collage-frame {
@@ -1534,7 +1510,7 @@ body::after {
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0608;
+  background: var(--ds-bg);
 }
 ::-webkit-scrollbar-thumb {
   background: #241b22;
@@ -1632,8 +1608,8 @@ body::after {
   .progress-fill {
     transition: none;
   }
-  /* OS tercihi CRT tüp dokusunu da kapatır — kural artık CRT CSS bloğunda
-     yaşar (tek kaynak; eski .crt-scanlines/.crt-vignette hedefleri .crt-layer'a taşındı). */
+  /* ADR-0069: CRT katmanı kaldırıldı — burada kapatılacak tüp dokusu kalmadı.
+     Glitch/chromatic kenarları forced-colors ve motion kapılarıyla susturulur. */
 }
 
 /* Pil & Düşük Donanım Tasarruf Modu (v22) */

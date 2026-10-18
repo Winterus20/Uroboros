@@ -56,7 +56,7 @@ const { dialogRef } = useFocusTrap(() => report.value !== null, {
       aria-modal="true"
       :aria-labelledby="titleId"
       tabindex="-1"
-      class="modal-glass w-full max-w-sm rounded-2xl border border-white/10 bg-[#120e13]/95 p-5 shadow-2xl outline-none"
+      class="modal-glass w-full max-w-sm rounded-2xl border border-white/10 bg-[var(--ds-panel-strong)] p-5 shadow-2xl outline-none"
     >
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center shrink-0">

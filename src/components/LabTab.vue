@@ -364,7 +364,6 @@ function handleCollapseReactor() {
           <div
             v-else-if="seed.isMutationOnly && !isSeedDiscovered(seed.type)"
             class="p-3 rounded-xl border border-dashed border-white/10 bg-black/30 flex flex-col justify-between opacity-60"
-            v-tip="'Henüz keşfedilmedi! Komşu ebeveyn parçacıkları yan yana yerleştirerek bu gizli formülü sentezle.'"
           >
             <div>
               <div class="flex items-center justify-between mb-1">

@@ -1,5 +1,34 @@
 # Aktif Görev (In-Progress)
 
+## 🔄 Görsel Dil Uyum Turu — "Her Tarafı" (2026-10-18) — ARAŞTIRMA TAMAMLANDI, UYGULAMA ONAY BEKLİYOR
+
+**Kaynak:** kullanıcı talebi — *"oyunu `brain/context/visual-language.md`'ye göre her tarafını düzeltmek istiyorum; önce araştırma yap subagentlarla, sonra uygulayacağız"*.
+**Master rapor:** [`brain/research/visual-language-compliance-audit-2026-10-18.md`](../research/visual-language-compliance-audit-2026-10-18.md)
+**Kanıt deposu (6 alt rapor):** [`brain/research/visual-audit-2026-10-18/`](../research/visual-audit-2026-10-18/)(a1 renk/token · a2 tipografi · a3 bozulma · a4 katman/hareket · a5 GIC · a6 okunabilirlik)
+
+### Dalga (6 paralel bağımsız denetim ajanı + orchestrator mekanik matrisi) — SALT OKUNUR
+- [x] A1 renk/token (26 bulgu) · A2 tipografi (11) · A3 bozulma merdiveni (16) · A4 katman/hareket (19) · A5 GIC kimlik (20) · A6 okunabilirlik/kapsama (46) → **138 ham bulgu (≈110 tekilleştirilmiş)**
+- [x] Mekanik kapsam matrisi: 52 `.vue` × token/ramp/çubuk/tabular/motion/glif/hex → **23 bileşen hiç retrofit görmemiş**
+- [x] Baseline doğrulama (sessiz regresyon tabanı): `vue-tsc` **0 hata** · `vitest` **27 dosya / 380 test** yeşil
+
+### En kritik keşifler
+1. **CRT katmanı öldürüldü, sözleşme hâlâ "HEP AÇIK" diyor** (`style.css:516-524` beş sınıfı `display:none !important` + `useNavigation.ts:325-326` koşulsuz `crt-off` + `.crt-layer` taşıyan 0 `.vue`) → `brain/` içinde karar kaydı **yok** (§8 ihlali). İki yol: **(A)** geri getir · **(B)** ADR + sözleşme güncelle, `--crt-*`/`crtEffect` temizle.
+2. **`.planck-collage` tüketicisi silindi** (uçuşta `DimensionsTab`'tan Planck bariyeri bloğu çıkarıldı) → K1 ritüel vinyeti kayıp, 5 kural 0 tüketici.
+3. **Ölü bozulma ayakları:** `--crt-intensity` (7 tanım/0 tüketici), `--glitch-intensity` (7/0), K4 chromatic aberration (0 referans), motif bandı `max(...,0.45)` rampası düzleştiriyor, K1 substratı efektif α 0.0042 (≈1.07:1) → görünmez.
+4. **12/16 motif hâlâ eski çizgi ikon seti** (brief kolaj reçetesini tam sağlayan yalnız `dama`+`yirtik`); `goz.svg` yasak `var(--ds-bg)` hilesi içeriyor ve `motifs.test.ts` bunu yakalamıyor; bant dizilimi 9/16 motifini hiç göstermiyor.
+5. **Okunabilirlik:** tooltip sökümünden sonra `DimensionRow` 9 tier lore'u hiç render edilmiyor; 9 bespoke çubuk; 23 retrofitsiz bileşen.
+
+### Uygulama kaydı
+- [x] **Kullanıcı kararları (2026-10-18):** K1 = **CRT Yol B** (resmen kaldır) · K2 = **16/16 motif** · K3 = tek paylaşılan bant dizisi (28) · K4 = glitch+chromatic gerçekten uygulanır · K5 = feast tonu sabit, ayrım disiplinle · K6 = amber tek ton, sözleşme düzeltildi · K7 = **tam kapsam F0→F8**.
+- [x] **F0 — Karar & sözleşme senkronu:** ADR-0069 + `visual-language.md` §1/§2/§3/§4/§6/§8 güncellendi.
+- [x] **Dalga 1 (7 paralel ajan + orchestrator):** motif redraw ×3 grup (12 SVG) · motif kod katmanı (test kilidi + pencere dizilimi + bant ömrü) · yüzey token hijyeni (9 dosya) · rezerve renk semantiği (6 dosya) · ayarlar/istatistik hijyeni (3 dosya) · orchestrator: CRT sökümü, glitch/chromatic, planck geri, token tek kaynağı, `dark-*` ölçeği kaldırıldı.
+- [x] **Doğrulama:** typecheck 0 · 27 dosya / **385 test** · build 0 · `harness:smoke` baseline sabit. Rapor: [completed.md](completed.md) (2026-10-18 girişi).
+- [ ] **Dalga 2:** F3 (katman/motion/juice) + F6 (okunabilirlik & 23 bileşen retrofit) + F7 (tipografi rötuşu) + F8 (QA/kapanış).
+
+### Sıradaki adım
+Dalga 2 planlanacak: **F3** (modal `z-50`→`layer-modal`, OS reduced-motion kök mührü + 8 kapsanmayan animasyon, `JuiceLayer` timestamp/delta, partikül cap tek kaynağı, confetti cap, boş interval), **F6** (LabSeedCard ramp, DimensionRow 9 tier lore, MultipliersPanel glif, 9 bespoke çubuk, bar'sız oranlar), **F7** (`TimeClockOverlay` display rolü + 18px ızgara, canvas fallback hizası), **F8** (contrast kapsamı + AA + perf).
+
+---
 ## ✅ Zaman Yayı (Time Clock) (2026-10-17) — TAMAMLANDI
 
 **Sonuç kaydı:** [`brain/tasks/completed.md`](completed.md) (2026-10-17 girişi) · **ADR:** [`brain/decisions/0068-time-clock-rewind-spring.md`](../decisions/0068-time-clock-rewind-spring.md)

@@ -73,7 +73,7 @@ const pastAverages = computed(() => store.pastSingularitiesAverage);
                   </span>
                   <span
                     v-if="run.challengeId"
-                    class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                   >
                     Meydan Okuma: {{ run.challengeId.toUpperCase() }}
                   </span>
@@ -98,7 +98,6 @@ const pastAverages = computed(() => store.pastSingularitiesAverage);
                 <div
                   v-if="!run.challengeId"
                   class="text-[10px] font-mono font-bold text-amber-400 tabular-nums"
-                  v-tip="'Optimizasyon için en kritik metrik: dakikada kazanılan net SP'"
                 >
                   {{ format(run.spPerMinute, 2, store.settings.notation) }} SP/dk
                 </div>

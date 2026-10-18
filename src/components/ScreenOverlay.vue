@@ -143,6 +143,12 @@ onUnmounted(() => {
       class="collage-floor absolute inset-x-0 bottom-0"
       aria-hidden="true"
     ></div>
+
+    <!-- 5. K3 bölgesel glitch ateşleri + K4 chromatic aberration (ADR-0069: CRT yerine).
+         Sözleşme §4 iki ayağı da denetimde tüketicisizdi (--glitch-intensity 7 tanım / 0
+         tüketici). Yalnız dekoratif kenar; sayı/etiket katmanına dokunmaz, hareket yok. -->
+    <div v-if="corruptionLevel >= 3" class="glitch-edge" aria-hidden="true"></div>
+    <div v-if="corruptionLevel >= 4" class="chromatic-edge" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -158,10 +164,12 @@ onUnmounted(() => {
 }
 
 .singularity-horizon {
+  /* Denetim A5-13: dekoratif ambient katmanda rezerve hue kaçağı vardı
+     (amber = prestij, purple = kütle katmanı). Sıcak aileye çekildi: feast + bone. */
   background: linear-gradient(
     to top,
-    rgba(245, 158, 11, 0.16) 0%,
-    rgba(168, 85, 247, 0.08) 40%,
+    rgb(var(--feast-rgb) / 0.16) 0%,
+    rgba(255, 240, 230, 0.07) 40%,
     transparent 100%
   );
 }

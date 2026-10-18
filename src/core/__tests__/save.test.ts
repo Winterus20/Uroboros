@@ -70,7 +70,6 @@ function makeMockState(overrides: Partial<SerializedPlayerState> = {}): Serializ
       sleepTimerMinutes: 0,
       confirmDialogs: true,
       reduceAnimations: false,
-      crtEffect: false,
       juiceMode: 'balanced',
       screenOverlayEffects: false,
       sideHands: false,

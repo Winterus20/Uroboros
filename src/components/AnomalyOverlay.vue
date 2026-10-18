@@ -206,7 +206,7 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
           <div v-if="anomaly.type === 'void'" class="anomaly-beam-border"></div>
 
           <!-- İç Kart İçeriği (solid zemin: mobil GPU dostu, blur yok) -->
-          <div class="relative rounded-2xl bg-[#110d12] px-3.5 py-2.5 flex items-center gap-3 border border-white/[0.08] overflow-hidden">
+          <div class="relative rounded-2xl bg-[var(--ds-hero)] px-3.5 py-2.5 flex items-center gap-3 border border-white/[0.08] overflow-hidden">
             <!-- Holografik Sweep — ADR-0049 P1: yalnızca Void'de -->
             <div v-if="anomaly.type === 'void'" class="crisis-shimmer"></div>
 
@@ -316,13 +316,13 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
                     <ellipse cx="18" cy="18" rx="15" ry="6.5" stroke="#c084fc" stroke-width="0.8" stroke-dasharray="2 3" transform="rotate(22 18 18)" />
                   </g>
                   <circle cx="18" cy="18" r="8.5" :fill="`url(#void-${safeId(anomaly.id)})`" stroke="#a5f3fc" stroke-width="1.2" />
-                  <circle cx="18" cy="18" r="3.4" fill="#020617" />
+                  <circle cx="18" cy="18" r="3.4" fill="#0e0509" />
                   <circle cx="18" cy="18" r="3.4" fill="url(#voidhot)" opacity="0.9" class="animate-pulse" />
                   <circle cx="21.5" cy="11" r="1" fill="#ffffff" class="animate-pulse" />
                   <circle cx="12" cy="24.5" r="0.8" fill="#a5f3fc" opacity="0.9" />
                   <defs>
                     <radialGradient :id="`void-${safeId(anomaly.id)}`" cx="0.5" cy="0.5" r="0.5">
-                      <stop offset="0%" stop-color="#020617" />
+                      <stop offset="0%" stop-color="#0e0509" />
                       <stop offset="55%" stop-color="#7c3aed" />
                       <stop offset="82%" stop-color="#22d3ee" />
                       <stop offset="100%" stop-color="#f0abfc" />

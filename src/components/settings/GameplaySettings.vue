@@ -75,11 +75,6 @@ function setJuiceMode(mode: "calm" | "balanced" | "tilt") {
   sounds.playClick();
 }
 
-function toggleCrt() {
-  store.settings.crtEffect = !(store.settings.crtEffect ?? true);
-  sounds.playClick();
-}
-
 function toggleHoloCards() {
   store.settings.holoCardsEnabled = !(store.settings.holoCardsEnabled ?? true);
   sounds.playClick();
@@ -352,21 +347,6 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           Kapalı (Statik)
         </button>
       </div>
-    </div>
-
-    <!-- Kozmik CRT Scanline -->
-    <div class="glass-panel-card p-3.5 rounded-xl flex items-center justify-between">
-      <div>
-        <div class="text-xs font-mono font-semibold text-slate-200">Kozmik CRT Scanline &amp; Vinyet</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">Eski tüplü televizyon ve retro cyberpunk dokusu</div>
-      </div>
-      <button
-        @click="toggleCrt"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
-        :class="(store.settings.crtEffect ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
-      >
-        {{ (store.settings.crtEffect ?? true) ? 'Açık' : 'Kapalı' }}
-      </button>
     </div>
 
     <!-- 3D Kart & Holo Kaplamaları -->

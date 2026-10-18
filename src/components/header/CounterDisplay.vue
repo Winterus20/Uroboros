@@ -252,7 +252,6 @@ onUnmounted(() => {
       <span
         v-if="store.formatUnlockBuffActive"
         class="text-[10px] font-mono text-cyan-200 bg-cyan-500/15 px-1.5 py-0.5 rounded border border-cyan-400/30 tabular-nums shrink-0 inline-flex items-center gap-1"
-        v-tip="'Yeni format keşfi: bu tier üretimine kısa süre ×1.25'"
       >
         <span class="dim-glyph" :class="getTierAccent(store.formatUnlockBuffTier)">{{ getTierGlyph(store.formatUnlockBuffTier) }}</span>
         <span>D{{ store.formatUnlockBuffTier }} · {{ store.formatUnlockBuffSecondsRemaining }}s</span>

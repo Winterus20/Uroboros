@@ -72,7 +72,7 @@ onUnmounted(() => {
 
 <template>
   <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/60 border border-cyan-500/25 text-[11px] shadow-sm">
-    <div class="flex items-end gap-0.5 h-3 px-0.5" v-tip="'Kuantum Sinyal Modülatörü'">
+    <div class="flex items-end gap-0.5 h-3 px-0.5">
       <span
         v-for="(lvl, idx) in visualizerBars"
         :key="idx"
@@ -85,7 +85,6 @@ onUnmounted(() => {
       @click="emit('open-settings')"
       aria-label="Frekans ayarlarını aç"
       class="font-mono font-medium text-slate-300 hover:text-cyan-300 flex items-center gap-1.5 transition-colors cursor-pointer truncate max-w-[110px] sm:max-w-[160px]"
-      v-tip="`${currentTrackInfo.name} (${currentTrackInfo.subtitle}) — Frekans Ayarları`"
     >
       <span class="text-xs">{{ currentTrackInfo.icon }}</span>
       <span class="truncate font-semibold">{{ currentTrackInfo.name }}</span>
@@ -97,7 +96,6 @@ onUnmounted(() => {
       @click="toggleMusic"
       aria-label="Kuantum sinyalini başlat veya duraklat"
       class="hit-44 p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-      v-tip="store.settings.musicEnabled ? 'Sinyali Duraklat' : 'Sinyali Başlat'"
     >
       <component :is="store.settings.musicEnabled ? Pause : Play" class="w-3 h-3 text-cyan-400" />
     </button>
@@ -106,7 +104,6 @@ onUnmounted(() => {
       @click="nextTrack"
       aria-label="Sonraki kuantum kanalı"
       class="hit-44 p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-      v-tip="'Sonraki Kuantum Kanalı'"
     >
       <SkipForward class="w-3 h-3 text-purple-400" />
     </button>

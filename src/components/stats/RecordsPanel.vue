@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useGameStore } from "../../stores/game";
-import { formatTime } from "../../core/format";
+import { format, formatTime } from "../../core/format";
 import { CHALLENGES } from "../../game/challenges";
 import {
   Swords,
@@ -84,17 +84,17 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Tıklanan Kozmik Dalgalanmalar</span>
         </div>
         <span class="text-sm font-mono font-bold text-white tabular-nums">
-          {{ store.stats.anomaliesClicked.toLocaleString("tr-TR") }}
+          {{ format(store.stats.anomaliesClicked, 2, store.settings.notation) }}
         </span>
       </div>
 
       <div class="glass-panel-card p-3 rounded-xl border border-white/[0.06] flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <Flame class="w-4 h-4 text-rose-400" />
+          <Flame class="w-4 h-4 text-cyan-400" />
           <span class="text-xs text-slate-300 font-medium">Rezonans Hipnozları</span>
         </div>
-        <span class="text-sm font-mono font-bold text-rose-300 tabular-nums">
-          {{ store.stats.combosTriggered.toLocaleString("tr-TR") }}
+        <span class="text-sm font-mono font-bold text-cyan-300 tabular-nums">
+          {{ format(store.stats.combosTriggered, 2, store.settings.notation) }}
         </span>
       </div>
 
@@ -104,7 +104,7 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Kozmik Tekillik Yakalamaları</span>
         </div>
         <span class="text-sm font-mono font-bold text-cyan-200 tabular-nums">
-          {{ (store.stats.mythicsClicked || 0).toLocaleString("tr-TR") }}
+          {{ format(store.stats.mythicsClicked || 0, 2, store.settings.notation) }}
         </span>
       </div>
 
@@ -114,7 +114,7 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Etkisizleştirilen Kozmik Parazitler</span>
         </div>
         <span class="text-sm font-mono font-bold text-rose-300 tabular-nums">
-          {{ store.stats.slackersFired.toLocaleString("tr-TR") }}
+          {{ format(store.stats.slackersFired, 2, store.settings.notation) }}
         </span>
       </div>
 
@@ -124,7 +124,7 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Kuantum Lab Hasatları</span>
         </div>
         <span class="text-sm font-mono font-bold text-emerald-300 tabular-nums">
-          {{ (store.stats.labHarvests || 0).toLocaleString("tr-TR") }}
+          {{ format(store.stats.labHarvests || 0, 2, store.settings.notation) }}
         </span>
       </div>
 
@@ -134,7 +134,7 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Kozmik Müdahale Kararları</span>
         </div>
         <span class="text-sm font-mono font-bold text-cyan-300 tabular-nums">
-          {{ (store.stats.spellsCast || 0).toLocaleString("tr-TR") }}
+          {{ format(store.stats.spellsCast || 0, 2, store.settings.notation) }}
         </span>
       </div>
 
@@ -144,7 +144,7 @@ const challengeList = computed(() => {
           <span class="text-xs text-slate-300 font-medium">Ekilen Lab Trendleri</span>
         </div>
         <span class="text-sm font-mono font-bold text-purple-300 tabular-nums">
-          {{ (store.stats.seedsPlanted || 0).toLocaleString("tr-TR") }}
+          {{ format(store.stats.seedsPlanted || 0, 2, store.settings.notation) }}
         </span>
       </div>
     </div>

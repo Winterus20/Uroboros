@@ -51,7 +51,7 @@ const authStore = useAuthStore();
       <button
         @click="authStore.openAuthModal()"
         class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 shrink-0"
-        :class="authStore.isAuthenticated ? 'bg-dark-900 border-cyan-500/40 text-cyan-300 hover:bg-dark-800' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/20'"
+        :class="authStore.isAuthenticated ? 'bg-[var(--ds-panel)] border-cyan-500/40 text-cyan-300 hover:bg-[var(--ds-panel-strong)]' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/20'"
       >
         <LogIn v-if="!authStore.isAuthenticated" class="w-3.5 h-3.5" />
         <span>{{ authStore.isAuthenticated ? 'Bulut Paneli / Çıkış' : 'Giriş Yap / Kaydol' }}</span>
@@ -79,7 +79,7 @@ const authStore = useAuthStore();
         <button
           @click="authStore.loadFromCloud()"
           :disabled="authStore.isSyncing"
-          class="px-2.5 py-1 rounded-lg bg-dark-900 hover:bg-dark-800 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+          class="px-2.5 py-1 rounded-lg bg-[var(--ds-panel)] hover:bg-[var(--ds-panel-strong)] text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
         >
           <DownloadCloud class="w-3 h-3 text-cyan-400" />
           <span>Buluttan Çek</span>
@@ -88,11 +88,11 @@ const authStore = useAuthStore();
     </div>
 
     <!-- Geri Bildirim Satırı (Hata veya Başarı) -->
-    <div v-if="authStore.error" class="mt-2.5 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-medium flex items-center gap-1.5 animate-fade-in">
+    <div v-if="authStore.error" class="mt-2.5 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-medium flex items-center gap-1.5">
       <AlertTriangle class="w-3.5 h-3.5 shrink-0 text-rose-400" />
       <span>{{ authStore.error }}</span>
     </div>
-    <div v-else-if="authStore.syncStatus === 'success'" class="mt-2.5 p-2 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-medium flex items-center gap-1.5 animate-fade-in">
+    <div v-else-if="authStore.syncStatus === 'success'" class="mt-2.5 p-2 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-medium flex items-center gap-1.5">
       <CheckCircle2 class="w-3.5 h-3.5 shrink-0 text-cyan-400" />
       <span>İlerlemeniz buluta başarıyla yedeklendi!</span>
     </div>

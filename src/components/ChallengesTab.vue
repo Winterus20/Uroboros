@@ -215,7 +215,6 @@ function confirmExit() {
             :class="store.activeChallenge
               ? 'bg-black/30 text-slate-600 border-white/[0.05] cursor-not-allowed opacity-50'
               : 'bg-rose-500/90 hover:bg-rose-500 text-white border-rose-400 cursor-pointer'"
-            v-tip="store.activeChallenge ? 'Önce aktif meydan okumadan vazgeç' : 'Mevcut koşu sıfırlanacak'"
           >
             BAŞLAT
           </button>

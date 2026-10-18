@@ -31,5 +31,12 @@ brain/scratchpad/harness/*.json
 brain/scratchpad/clickaudit/out/
 brain/scratchpad/clickaudit/*.json
 
+# Motif önizleme render artifact'ları (kaynak değil, üretilmiş görsel — dist/ mantığı)
+brain/scratchpad/motif-preview/
+
 # Agent runtime state
 .agents/.state/
+
+# Geçici çalışma dizinleri (esbuild TEMP yönlendirmesi + motif render kontrolü)
+.tmp-*/
+**/.tmp-*/

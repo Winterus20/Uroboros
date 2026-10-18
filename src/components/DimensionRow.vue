@@ -383,7 +383,6 @@ function buy(e?: MouseEvent) {
       <div
         class="w-10 h-10 rounded-lg border flex flex-col items-center justify-center shrink-0 select-none font-mono"
         :class="tierStyle.badge"
-        v-tip="`${tierConfig.metric} ölçeği: ${tierConfig.scale}`"
       >
         <span class="dim-glyph text-sm leading-none" :class="tierAccentClass">{{ tierGlyph }}</span>
         <span class="text-[10px] font-bold opacity-90 leading-tight mt-0.5 whitespace-nowrap">{{ tierConfig.symbol }}</span>
@@ -393,8 +392,7 @@ function buy(e?: MouseEvent) {
       <div class="flex flex-col min-w-0 flex-1">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span
-            class="text-xs font-bold text-slate-100 truncate max-w-[130px] sm:max-w-[200px] md:max-w-none cursor-help"
-            v-tip="tierConfig.subtitle"
+            class="text-xs font-bold text-slate-100 truncate max-w-[130px] sm:max-w-[200px] md:max-w-none"
           >
             {{ tierConfig.shortName }}
           </span>
@@ -407,17 +405,15 @@ function buy(e?: MouseEvent) {
           <!-- Milestone / Rozet (Varsa) -->
           <span
             v-if="milestoneInfo.current"
-            class="edition-tag shrink-0 cursor-help select-none"
+            class="edition-tag shrink-0 select-none"
             :class="[milestoneEdition || milestoneInfo.current.colorClass]"
-            v-tip="`${milestoneInfo.current.name}: ${milestoneInfo.current.desc}${milestoneInfo.next ? ` (Sıradaki: ${milestoneInfo.next.name} — ${milestoneInfo.next.count} adette)` : ''}`"
           >
             {{ milestoneInfo.current.shortName }}
           </span>
 
           <!-- Toplam Çarpan (ikincil bilgi — rozet hiyerarşisinde silik) -->
           <span
-            class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.03] text-slate-500 border border-white/[0.06] tabular-nums shrink-0 cursor-help select-none"
-            v-tip="`D${props.dimension.tier} Çarpanı: Toplam ×${displayMultText} kat çekim gücü`"
+            class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.03] text-slate-500 border border-white/[0.06] tabular-nums shrink-0 select-none"
           >
             ×{{ displayMultText }}
           </span>
@@ -425,8 +421,7 @@ function buy(e?: MouseEvent) {
           <!-- Sinerji Bağlantısı -->
           <span
             v-if="partnerInfo.partnerBought > 0 && partnerInfo.mult > 1"
-            class="hidden lg:inline-flex items-center gap-1 text-[10px] font-sans px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 tabular-nums shrink-0 cursor-help select-none"
-            v-tip="`Kuantum Rezonans Bağı: ${partnerInfo.label} (${partnerInfo.partnerBought} adet) bu boyuta ×${partnerInfo.mult.toFixed(2)} çarpan sağlıyor`"
+            class="hidden lg:inline-flex items-center gap-1 text-[10px] font-sans px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 tabular-nums shrink-0 select-none"
           >
             <Link class="w-2.5 h-2.5 text-cyan-400" />
             <span><span class="dim-glyph" :class="getTierAccent(partnerInfo.partnerTier)">{{ getTierGlyph(partnerInfo.partnerTier) }}</span> D{{ partnerInfo.partnerTier }}: ×{{ partnerInfo.mult.toFixed(2) }}</span>
@@ -445,7 +440,6 @@ function buy(e?: MouseEvent) {
       <span
         v-if="showFlowRate"
         class="text-[10px] font-medium text-cyan-400/90 inline-flex items-center gap-0.5"
-        v-tip="flowRate.hint"
       >
         <span class="text-cyan-300">↑</span>
         +{{ displayFlowText }}{{ flowRate.suffix }}
@@ -470,7 +464,6 @@ function buy(e?: MouseEvent) {
             : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${affordRampClass}`,
           completesPack && canAfford ? 'ring-1 ring-cyan-400/40' : ''
         ]"
-        v-tip="canAfford ? `+${affordableUnits} adet için ${displayCostText} (bu alımla ${packProgress + affordableUnits} adet olur)` : 'Yetersiz Kütle'"
       >
         <div class="flex items-center gap-1 leading-none z-10">
           <span class="tabular-nums font-bold text-xs">{{ displayCostText }}</span>

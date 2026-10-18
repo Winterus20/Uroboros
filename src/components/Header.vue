@@ -98,14 +98,6 @@ const nightPhase = computed(() => {
 // 0-state onboarding: ilk format hiç alınmamışsa oyuncuya tek bir eylem çizilir
 const showFirstSwipeHint = computed(() => store.dimensions[0]?.bought === 0);
 
-// Yut tooltip'i: temel durum (Space kbd, +güç) butonun kendi görselinde —
-// tooltip yalnız nüans taşır; D1 pasifi ek nüans olarak bağlanır
-const swipeTip = computed(() =>
-  store.passiveBadges.d1Sync
-    ? "D1 pasifi: Çekim senkron tavanı +0.5%"
-    : "Ardışık yutmalar kombo serisi biriktirir — 1.5 sn ara verme"
-);
-
 // Tümünü Al rampası — iki ayrı uygunluk kaynağı:
 // tam paket (pack) → ready; yalnız birim fiyatı (pack/10) → partial; hiçbiri → locked.
 const canAffordFullPack = computed(() => {
@@ -386,7 +378,6 @@ onUnmounted(() => {
       <!-- Sol: Kozmik Telemetri & Çöküş Fazı -->
       <div
         class="flex items-center gap-2 min-w-0"
-        v-tip="`Kozmik Telemetri: ${cosmicTelemetry} / 1.79e308 g — Faz: ${nightPhase.label}. 1.79e308 g kütlede Kozmik Çöküş tetiklenir.`"
       >
         <span class="inline-block w-2 h-2 rounded-full shrink-0" :class="[nightPhase.dot, 'shadow-xs animate-pulse']"></span>
         <span class="font-bold tracking-wider tabular-nums text-slate-200">{{ cosmicTelemetry }}</span>
@@ -414,7 +405,6 @@ onUnmounted(() => {
           aria-label="Bulut hesabını aç veya giriş yap"
           class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all text-xs cursor-pointer active:scale-95"
           :class="authStore.isAuthenticated ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20' : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white'"
-          v-tip="authStore.isAuthenticated ? `${authStore.userDisplayName} (Bulut Hesabı)` : 'Giriş Yap / Kaydol'"
         >
           <Cloud class="w-3.5 h-3.5" :class="authStore.isAuthenticated ? 'text-cyan-400' : 'text-slate-400'" />
           <span class="text-[11px] font-semibold">{{ authStore.isAuthenticated ? authStore.userDisplayName : "Giriş Yap" }}</span>
@@ -427,7 +417,6 @@ onUnmounted(() => {
           :class="store.crisisBackfireDebuff > 0
             ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
             : 'bg-white/[0.06] text-slate-300 border-white/10'"
-          v-tip="store.crisisBackfireDebuff > 0 ? 'Gravitasyonel Kararsızlık: Kriz ters tepmesi aktif' : 'Olay Ufku Kararlı: Çekim alanı dengede'"
         >
           <Activity class="w-3.5 h-3.5" :class="store.crisisBackfireDebuff > 0 ? 'text-rose-400 animate-pulse' : 'text-slate-400'" />
           <span class="uppercase tracking-wider text-[10px]">{{ store.crisisBackfireDebuff > 0 ? "KARARSIZ" : "KARARLI" }}</span>
@@ -438,7 +427,6 @@ onUnmounted(() => {
           @click="emit('open-settings')"
           aria-label="Ayarlar"
           class="md:hidden flex items-center justify-center h-7 w-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] transition-all cursor-pointer shrink-0"
-          v-tip="'Ayarlar'"
         >
           <Settings class="w-3.5 h-3.5" />
         </button>
@@ -457,7 +445,6 @@ onUnmounted(() => {
           ? 'bg-white/[0.08] border-white/20 text-slate-100 shadow-sm affordance-pulse'
           : 'bg-white/[0.03] border-white/[0.07] text-slate-400'"
         :style="nextGoal.ready ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
-        v-tip="nextGoal.ready ? 'Hemen satın alabileceğin bir şey var — fırsatı kaçırma!' : 'Bu hedefe yaklaştıkça yüzde doluyor.'"
       >
         <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="nextGoal.ready ? 'bg-white animate-pulse' : 'bg-slate-500'"></span>
         <span class="text-slate-500 font-normal">Sıradaki hamle:</span>
@@ -493,11 +480,10 @@ onUnmounted(() => {
           :class="store.currentStance === 'trend'
             ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
             : 'text-slate-400 hover:text-slate-200 border border-transparent'"
-          v-tip="'Kuantum Odak: Pasif çekim akışına 2× odak'"
         >
           <Moon class="w-3.5 h-3.5 text-purple-400" />
-          <span>Kuantum (2×)</span>
-          <span class="text-[9px] font-sans font-normal text-slate-500">Pasif 2×</span>
+          <span>Kuantum</span>
+          <span class="text-[10px] font-bold tabular-nums opacity-80">2×</span>
         </button>
 
         <button
@@ -510,12 +496,11 @@ onUnmounted(() => {
             : store.currentStance === 'spam'
               ? 'bg-rose-500/15 text-rose-200 border border-rose-500/40 shadow-sm cursor-pointer'
               : 'text-slate-500 hover:text-slate-200 border border-transparent cursor-pointer opacity-90'"
-          v-tip="stanceSpamLock ? `Kilitli — ${stanceSpamLock.hint} (${stanceSpamLock.progress})` : 'Obur Çekim: Manuel çekime 4× güç ve %50 daha sık kozmik dalgalanma'"
         >
           <Lock v-if="stanceSpamLock" class="w-3.5 h-3.5 text-slate-600" />
           <Flame v-else class="w-3.5 h-3.5 text-rose-400" />
-          <span>Obur (4×)</span>
-          <span class="text-[9px] font-sans font-normal text-slate-500">Manuel 4× · %50 anomali</span>
+          <span>Obur</span>
+          <span class="text-[10px] font-bold tabular-nums opacity-80">4×</span>
           <span v-if="stanceSpamLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
             <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stanceSpamLock.progress }}</span>
             <span class="inline-block w-16">
@@ -536,12 +521,11 @@ onUnmounted(() => {
             : store.currentStance === 'private_mode'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm cursor-pointer'
               : 'text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer'"
-          v-tip="stancePrivateLock ? `Kilitli — ${stancePrivateLock.hint} (${stancePrivateLock.progress})` : 'Vakum Kalkanı: Çekim Hızı yükseltmelerinde %15 indirim'"
         >
           <Lock v-if="stancePrivateLock" class="w-3.5 h-3.5 text-slate-600" />
           <EyeOff v-else class="w-3.5 h-3.5 text-cyan-400" />
           <span>Kalkan</span>
-          <span class="text-[9px] font-sans font-normal text-slate-500">Hz −%15</span>
+          <span class="text-[10px] font-bold tabular-nums opacity-80">−%15</span>
           <span v-if="stancePrivateLock" class="inline-flex flex-col items-end gap-0.5 shrink-0">
             <span class="text-[9px] text-slate-500 tabular-nums leading-none whitespace-nowrap max-w-[84px] truncate">{{ stancePrivateLock.progress }}</span>
             <span class="inline-block w-16">
@@ -566,7 +550,6 @@ onUnmounted(() => {
           v-if="comboActive"
           class="hidden md:flex h-11 px-2 rounded-xl border flex-col items-center justify-center gap-1 min-w-[54px] shrink-0 transition-colors duration-200"
           :class="comboRamp.box"
-          v-tip="`Hipnotik Çekim Serisi: ${comboCount} üst üste yutma — seri 1.5 sn içinde söner, devam et!`"
         >
           <span class="text-xs font-mono font-black tabular-nums leading-none" :class="comboRamp.text">{{ comboBadgeText }}</span>
           <div class="w-full h-1 rounded-full bg-black/50 overflow-hidden">
@@ -586,7 +569,6 @@ onUnmounted(() => {
           class="hidden md:flex btn-tactile h-11 px-3.5 sm:px-4 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 text-white border border-purple-400/50 text-xs font-bold font-sans items-center gap-2 cursor-pointer shadow-md active:scale-95 shrink-0 min-w-[115px] sm:min-w-[140px]"
           :class="{ 'cta-beacon': showFirstSwipeHint }"
           aria-label="Manuel kütle yut"
-          v-tip="swipeTip"
         >
           <ArrowUp class="w-4 h-4 text-purple-300 shrink-0" />
           <div class="flex flex-col items-start text-left leading-tight">
@@ -612,7 +594,6 @@ onUnmounted(() => {
             ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border-cyan-500/35 cursor-pointer affordance-pulse'
             : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${tickspeedRampClass}`"
           :style="canAffordTickspeed ? { '--pulse-c1': 'rgba(0, 240, 255, 0.3)', '--pulse-c2': 'rgba(0, 240, 255, 0.7)' } : undefined"
-          v-tip="'Çekim Hızını (Hz) yükseltir'"
         >
           <Cpu class="w-4 h-4 text-cyan-400 shrink-0" />
           <div class="flex flex-col items-start text-left leading-tight">
@@ -637,7 +618,6 @@ onUnmounted(() => {
             ? 'bg-white/[0.08] hover:bg-white/[0.14] text-white border-white/20 cursor-pointer affordance-pulse'
             : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${maxAllRampClass}`"
           :style="canAffordFullPack ? { '--pulse-c1': 'rgba(255, 255, 255, 0.35)', '--pulse-c2': 'rgba(255, 255, 255, 0.75)' } : undefined"
-          v-tip="'Tüm açık boyut ve frekans yükseltmelerini alır'"
         >
           <Layers class="w-4 h-4 text-slate-300 shrink-0" />
           <div class="flex flex-col items-start text-left leading-tight">
@@ -655,7 +635,6 @@ onUnmounted(() => {
         @click="emit('open-settings')"
         aria-label="Ayarlar"
         class="hidden md:flex btn-tactile h-11 w-10 sm:w-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] transition-all cursor-pointer items-center justify-center shrink-0"
-        v-tip="'Ayarlar'"
       >
         <Settings class="w-4 h-4" />
       </button>
@@ -684,7 +663,6 @@ onUnmounted(() => {
         @click="requestChallengeExit"
         aria-label="Meydan okumadan vazgeç"
         class="btn-tactile px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 cursor-pointer shrink-0"
-        v-tip="'Meydan okumadan cezasız vazgeç (koşu sıfırlanır)'"
       >
         Vazgeç
       </button>

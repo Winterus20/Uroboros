@@ -55,7 +55,7 @@ const kpiOverview = computed(() => [
   },
   {
     label: "Manuel Yutma (Çekim)",
-    value: store.stats.manualClicks.toLocaleString("tr-TR"),
+    value: format(store.stats.manualClicks, 2, store.settings.notation),
     icon: MousePointerClick,
     color: "text-blue-400",
     subtext: `${format(store.stats.totalManualDopamine, 2, store.settings.notation)} Kütle manuel çekimden`
@@ -105,20 +105,18 @@ const ratio = computed(() => store.activeVsPassiveRatio);
         </span>
       </div>
 
-      <div class="w-full h-3 rounded-full bg-black/50 overflow-hidden flex border border-white/[0.06]">
+      <div class="progress-track progress-track-lg progress-track-bordered flex">
         <div
-          class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300"
+          class="progress-fill progress-fill-blue"
           :style="{ width: `${ratio.manualPct}%` }"
-          v-tip="`Manuel Yutma: %${ratio.manualPct}`"
         ></div>
         <div
-          class="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-300"
+          class="progress-fill progress-fill-cyan"
           :style="{ width: `${ratio.passivePct}%` }"
-          v-tip="`Otonom Çekim Akışı: %${ratio.passivePct}`"
         ></div>
       </div>
 
-      <div class="flex items-center justify-between text-[11px] font-mono mt-2">
+      <div class="flex items-center justify-between text-[11px] font-mono tabular-nums mt-2">
         <span class="text-blue-300 flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>
           🌌 Manuel Yutma: %{{ ratio.manualPct }}

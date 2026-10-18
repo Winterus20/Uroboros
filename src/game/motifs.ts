@@ -99,8 +99,18 @@ export function motifsForCorruption(level: CorruptionLevel): MotifSlot[] {
 /**
  * Bant dizilimi: ağırlıklı deterministik döngü (RNG yok — test edilebilir,
  * tekrarsız his için ağırlık kadar tekrarla genişletilir).
+ *
+ * Pencere kaydırması (A5-05): dizi her zaman 0. indeksten başlarsa K1..K4
+ * bantları havuzun aynı ön ekini gösterir ve 16 motifin 9'u hiç görünmez.
+ * cycle her yeni tetiklemede 1 artar; başlangıç indeksi ağırlıklı havuz
+ * uzunluğu (periyot) üzerinden kaydırılır → sonlu döngüde tüm havuz görünür.
+ * İmza geriye uyumludur: cycle verilmezse eski davranış (0. indeks) korunur.
+ *
+ * @param level Bozulma seviyesi (K0 → boş dizi).
+ * @param count Pencere uzunluğu (glif sayısı).
+ * @param cycle Deterministik kaydırma adımı (negatif/NaN → 0'a indirgenir).
  */
-export function buildMotifStrip(level: CorruptionLevel, count: number): MotifSlot[] {
+export function buildMotifStrip(level: CorruptionLevel, count: number, cycle = 0): MotifSlot[] {
   const pool = motifsForCorruption(level)
   if (pool.length === 0 || count <= 0) return []
   const weighted: MotifSlot[] = []
@@ -108,7 +118,10 @@ export function buildMotifStrip(level: CorruptionLevel, count: number): MotifSlo
     const w = Math.max(1, Math.floor(m.weight))
     for (let i = 0; i < w; i++) weighted.push(m)
   }
+  const period = weighted.length
+  const shift = Number.isFinite(cycle) ? Math.floor(cycle) : 0
+  const start = ((shift % period) + period) % period
   const strip: MotifSlot[] = []
-  for (let i = 0; i < count; i++) strip.push(weighted[i % weighted.length])
+  for (let i = 0; i < count; i++) strip.push(weighted[(start + i) % period])
   return strip
 }

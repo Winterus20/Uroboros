@@ -322,12 +322,11 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     const mode = effectiveMotionMode();
     document.documentElement.classList.toggle("reduce-anim", mode === 'reduced');
     document.documentElement.classList.toggle("motion-off", mode === 'off');
-    const crtOn = store.settings.crtEffect !== false && mode !== 'reduced' && mode !== 'off';
-    document.documentElement.classList.toggle("crt-off", !crtOn);
+    // ADR-0069: CRT katmanı kaldırıldı — crt-off kök sınıfı da söküldü.
     document.documentElement.classList.toggle("battery-saver", !!store.settings.batterySaver);
   }
   watch(
-    () => [store.settings.reduceAnimations, store.settings.motionMode, store.settings.crtEffect, store.settings.batterySaver],
+    () => [store.settings.reduceAnimations, store.settings.motionMode, store.settings.batterySaver],
     () => syncEffectClasses(),
     { immediate: true }
   );

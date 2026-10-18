@@ -336,7 +336,6 @@ function handleTouchEnd(e: TouchEvent) {
         :aria-expanded="slackersOpen"
         aria-label="Kozmik parazit listesini aç veya kapat"
         class="w-full flex items-center justify-between text-xs font-mono py-0.5 cursor-pointer"
-        v-tip="slackersOpen ? 'Vicdan chiplerini gizle' : 'Vicdan chiplerini göster'"
       >
         <div class="flex items-center gap-1.5 text-rose-200 font-bold">
           <AlertCircle class="w-3.5 h-3.5 text-rose-300" />
@@ -344,8 +343,7 @@ function handleTouchEnd(e: TouchEvent) {
           <span class="text-[10px] font-normal text-slate-500">({{ store.slackers.length }})</span>
           <span
             v-if="d3Passive"
-            class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 cursor-help select-none"
-            v-tip="`D3 Nükleer Çekirdek Pasifi: ${d3Passive.desc}`"
+            class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 select-none"
           >
             <span class="dim-glyph" :class="getTierAccent(3)">{{ getTierGlyph(3) }}</span>
             {{ d3Passive.label }}
@@ -365,7 +363,6 @@ function handleTouchEnd(e: TouchEvent) {
           @pointerdown="punchTap"
           :aria-label="`${slacker.name} parazitini etkisizleştir`"
           class="wrinkler-chip btn-tactile px-3 py-1.5 rounded-lg border border-rose-800/40 bg-rose-950/20 hover:border-rose-500/60 cursor-pointer flex items-center gap-2 text-xs font-mono text-slate-200"
-          v-tip="'Tıklayarak yok et'"
         >
           <EyeOff class="w-3 h-3 text-rose-400" />
           <span>{{ slacker.name }}</span>
@@ -380,18 +377,20 @@ function handleTouchEnd(e: TouchEvent) {
     <!-- 4. Format Listesi (D1-D8 Kompakt Satırlar) — mobilde 44px hitbox çakışmasını önlemek için space-y-2 -->
     <div class="space-y-2 sm:space-y-1.5">
       <template v-for="dim in visibleDimensions" :key="dim.tier">
-        <!-- Planck Yırtılması Neon Bariyeri (D4 Kuark ile D5 Şehir arasında) -->
+        <!-- Planck Yırtılması Bariyeri (D4 Kuark ↔ D5 Şehir) — K1+ GIC kolaj bandı.
+             Denetim R2: bu blok tooltip sökümü uçuşunda kazara silinmişti; .planck-collage
+             (ADR-0063 C5) tüketicisiz kalmıştı. Sıcak aileyle geri getirildi; neon cyan
+             yerine feast/bone (rezerve hue dekorasyona girmez). -->
         <div
           v-if="dim.tier === 5"
-          class="relative my-2.5 py-2 px-3 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/50 flex items-center justify-between text-[11px] overflow-hidden shadow-lg shadow-cyan-950/30 select-none"
+          class="relative my-2.5 py-2 px-3 rounded-xl border border-white/[0.08] bg-[var(--ds-card)] flex items-center justify-between text-[11px] overflow-hidden select-none"
           :class="{ 'planck-collage': store.corruptionLevel >= 1 }"
         >
-          <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
-          <div class="flex items-center gap-2 text-cyan-300 font-mono font-semibold">
+          <div class="flex items-center gap-2 font-mono font-semibold text-[var(--feast)]">
             <span class="text-sm">💥</span>
             <span class="tracking-wide">PLANCK YIRTILMASI / MİKRO KARADELİK</span>
           </div>
-          <span class="text-[10px] font-mono text-cyan-300/90 uppercase tracking-wider bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/25 hidden sm:inline">
+          <span class="text-[10px] font-mono text-slate-300/90 uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded-full border border-white/[0.08] hidden sm:inline">
             Atomaltı ➔ Kozmik Yutuş
           </span>
         </div>
@@ -403,7 +402,6 @@ function handleTouchEnd(e: TouchEvent) {
     <div
       v-if="nextLockedTier"
       class="text-[11px] font-mono text-slate-500 px-1 flex items-start gap-1.5"
-      v-tip="'Ölçek Sıçraması yaptıkça yeni kütle boyutları açılır'"
     >
       <Lock class="w-3 h-3 text-slate-600 shrink-0 mt-0.5" />
       <div class="min-w-0 flex-1">
@@ -428,7 +426,6 @@ function handleTouchEnd(e: TouchEvent) {
         v-tilt="{ max: 6, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface glass-panel-card p-3 rounded-xl flex items-center justify-between gap-3 border border-white/[0.06] transition-all"
         :class="store.canShift && (store.settings.holoCardsEnabled ?? true) ? 'edition-foil' : ''"
-        v-tip="isShiftUnlock ? 'Yeni kütle boyutu açar' : `Tüm çekimi kalıcı ×${format(store.shiftPowerMultiplier, 2, store.settings.notation)} katlar`"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] text-purple-400 flex items-center justify-center shrink-0">
@@ -440,8 +437,7 @@ function handleTouchEnd(e: TouchEvent) {
               <span class="text-[10px] font-mono text-purple-400">Sv: {{ store.dimensionShifts }}</span>
               <span
                 v-if="d5Passive"
-                class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 cursor-help select-none"
-                v-tip="`D5 Laboratuvar & Şehir Pasifi: ${d5Passive.desc}`"
+                class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 shrink-0 select-none"
               >
                 <span class="dim-glyph" :class="getTierAccent(5)">{{ getTierGlyph(5) }}</span>
                 {{ d5Passive.label }}
@@ -475,7 +471,6 @@ function handleTouchEnd(e: TouchEvent) {
         v-tilt="{ max: 6, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface glass-panel-card p-3 rounded-xl flex items-center justify-between gap-3 border border-white/[0.06] transition-all"
         :class="store.canBuyGalaxy && (store.settings.holoCardsEnabled ?? true) ? 'edition-poly' : ''"
-        v-tip="'Tüm boyutları sıfırlar; Çekim Hızı (Hz) çarpan gücünü kalıcı katlar'"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] text-amber-400 flex items-center justify-center shrink-0">
@@ -520,7 +515,6 @@ function handleTouchEnd(e: TouchEvent) {
         v-tilt="{ max: 6, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface glass-panel-card p-3 rounded-xl flex items-center justify-between gap-3 border border-rose-500/20 bg-rose-950/10 transition-all"
         :class="store.canSacrifice && (store.settings.holoCardsEnabled ?? true) ? 'edition-negative' : ''"
-        v-tip="'D1-D7 katmanların korunur; biriken D1 miktarına göre D8 Samanyolu & Karadelik katmanına kalıcı çarpan kazandırır!'"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">

@@ -88,7 +88,8 @@ const phaseConfig = computed(() => {
         label: 'TATLI NOKTA (SWEET SPOT)',
         badgeClass: 'ds-badge-cyan shadow-[0_0_12px_rgba(6,182,212,0.5)]',
         desc: '8× Kütle Akışı, +100% Anomali Hızı, %200 Parazit Primi devrede!',
-        color: '#a855f7',
+        // Bonus semantiği = cyan ailesi (rozetle tek hue, S9.2 "bonus = cyan")
+        color: '#06b6d4',
         barColor: 'progress-fill-cyan'
       }
     case 'resonance':
@@ -96,7 +97,8 @@ const phaseConfig = computed(() => {
         label: 'REZONANS FAZI',
         badgeClass: 'ds-badge-cyan animate-pulse',
         desc: '+50% Frekans (Hz), +30% Anomali Sıklığı aktif.',
-        color: '#f59e0b',
+        // Bonus semantiği = cyan ailesi (badge ds-badge-cyan ile aynı hue)
+        color: '#06b6d4',
         barColor: 'progress-fill-cyan'
       }
     case 'dormant':
@@ -178,8 +180,7 @@ function handleIntervention(type: CrisisInterventionType) {
 
         <!-- Kriyojenik Rezerv (Kartuşlar) -->
         <div
-          class="stat-box flex items-center gap-2 select-none cursor-help"
-          v-tip="'Kriyojenik Soğutucu Rezervi: Manyetik Tahliye her kullanımda 1 kartuş harcar. 35 saniyede 1 kartuş otomatik şarj olur.'"
+          class="stat-box flex items-center gap-2 select-none"
         >
           <Snowflake class="w-4 h-4 text-cyan-400 shrink-0" />
           <div class="flex items-center gap-1">
@@ -211,8 +212,7 @@ function handleIntervention(type: CrisisInterventionType) {
         <!-- Rezonans Momenti Rozeti (Tatlı Nokta Dinamiği) -->
         <div
           v-if="(store.reactorMomentum && store.reactorMomentum > 1.0) || store.reactorPhase === 'sweet_spot'"
-          class="stat-box flex items-center gap-1.5 border-purple-500/40 bg-purple-950/30 select-none cursor-help shadow-[0_0_10px_rgba(168,85,247,0.2)]"
-          v-tip="'Tatlı Nokta Rezonans Momenti: Reaktör %61-90 arasında kaldığı her saniye küresel kütle akışına +%2 momentum biriktirir (Max 5.0×). Meltdown anında sıfırlanır!'"
+          class="stat-box flex items-center gap-1.5 border-purple-500/40 bg-purple-950/30 select-none shadow-[0_0_10px_rgba(168,85,247,0.2)]"
         >
           <TrendingUp class="w-4 h-4 text-purple-400 shrink-0" />
           <span class="text-xs font-mono font-bold text-purple-300 tabular-nums">
@@ -223,8 +223,7 @@ function handleIntervention(type: CrisisInterventionType) {
         <!-- D4 Pasif Rozeti (katman glifi + kimlik aksanı) -->
         <span
           v-if="d4Passive"
-          class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-violet-500/15 border border-violet-500/25 shrink-0 cursor-help select-none flex items-center gap-1"
-          v-tip="`D4 Bölünmüş Dikkat Pasifi: ${d4Passive.desc}`"
+          class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-violet-500/15 border border-violet-500/25 shrink-0 select-none flex items-center gap-1"
         >
           <span class="dim-glyph" :class="getTierAccent(4)">{{ getTierGlyph(4) }}</span>
           <span class="tabular-nums" :class="getTierAccent(4)">{{ d4Passive.label }}</span>
@@ -304,7 +303,7 @@ function handleIntervention(type: CrisisInterventionType) {
     >
       <div
         v-if="store.activeCrisisDilemma"
-        class="glass-panel-card p-4 rounded-xl border-purple-500/50 bg-gradient-to-r from-purple-950/40 via-dark-900/60 to-purple-950/40 shadow-[0_0_20px_rgba(168,85,247,0.25)] relative overflow-hidden"
+        class="glass-panel-card p-4 rounded-xl border-purple-500/50 bg-gradient-to-r from-purple-950/40 via-[var(--ds-panel)] to-purple-950/40 shadow-[0_0_20px_rgba(168,85,247,0.25)] relative overflow-hidden"
       >
         <!-- Kalan Süre Çubuğu -->
         <div class="absolute top-0 left-0 right-0 h-1 bg-black/40">

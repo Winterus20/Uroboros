@@ -85,7 +85,7 @@ function requirementMet(key: string): boolean {
   return store.isAutobuyerRequirementMet(String(key));
 }
 
-// Rampa: ready'de blue kimlik + pulse; şartlardan (ilerleme/kütle) tam biri karşılanmışsa partial.
+// Rampa: ready'de cyan kimlik + pulse; şartlardan (ilerleme/kütle) tam biri karşılanmışsa partial.
 const unlockAffordable = computed(() => {
   const cost = AUTOBUYER_COSTS[props.botKey];
   return !!cost && store.matter.gte(cost);
@@ -129,13 +129,13 @@ function onMinGainInput(event: Event, key: string): void {
     v-if="variant === 'dim' && bot"
     class="glass-panel-card p-3.5 rounded-xl border flex flex-col justify-between transition-all"
     :class="bot.enabled
-      ? 'border-blue-500/40 bg-blue-950/20 shadow-sm'
+      ? 'border-cyan-500/40 bg-cyan-950/20 shadow-sm'
       : 'border-white/[0.08] bg-black/40 opacity-70'"
   >
     <div>
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5">
-          <Bot class="w-3.5 h-3.5" :class="bot.enabled ? 'text-blue-400' : 'text-slate-600'" />
+          <Bot class="w-3.5 h-3.5" :class="bot.enabled ? 'text-cyan-400' : 'text-slate-600'" />
           <span v-if="dimTier !== null" class="dim-glyph text-xs" :class="tierAccent">{{ tierGlyph }}</span>
           <span class="text-xs font-mono font-bold text-slate-200">{{ bot.name }}</span>
         </div>
@@ -172,7 +172,7 @@ function onMinGainInput(event: Event, key: string): void {
         @click="store.toggleAutobuyer(botKey)"
         class="p-1.5 rounded-lg border cursor-pointer transition-all shrink-0 active:scale-95"
         :class="bot.enabled ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 hover:bg-cyan-500/30' : 'bg-slate-500/20 text-slate-300 border-slate-500/40 hover:bg-slate-500/30'"
-        :title="bot.enabled ? 'Botu Durdur' : 'Botu Başlat'"
+        :aria-label="bot.enabled ? 'Botu Durdur' : 'Botu Başlat'"
       >
         <Power class="w-3.5 h-3.5" />
       </button>
@@ -284,14 +284,14 @@ function onMinGainInput(event: Event, key: string): void {
     class="glass-panel-card p-4 rounded-xl flex flex-col justify-between"
     :class="[
       bot.unlocked
-        ? bot.enabled ? 'border-blue-500/40 bg-blue-950/20' : ''
+        ? bot.enabled ? 'border-cyan-500/40 bg-cyan-950/20' : ''
         : 'ds-ramp-locked'
     ]"
   >
     <div>
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <Bot class="w-4 h-4" :class="bot.enabled && bot.unlocked ? 'text-blue-400' : 'text-slate-600'" />
+          <Bot class="w-4 h-4" :class="bot.enabled && bot.unlocked ? 'text-cyan-400' : 'text-slate-600'" />
           <span v-if="dimTier !== null" class="dim-glyph text-sm" :class="tierAccent">{{ tierGlyph }}</span>
           <h3 class="text-xs font-bold font-mono text-slate-200">{{ bot.name }}</h3>
         </div>
@@ -310,7 +310,7 @@ function onMinGainInput(event: Event, key: string): void {
           Tetiklenme: <span class="text-slate-300 font-bold tabular-nums">{{ (bot.interval / speedMultiplierRaw).toFixed(2) }} sn</span>
         </span>
         <span v-else>
-          Açılış Maliyeti: <span class="text-blue-300 font-bold tabular-nums">{{ formatNumber(AUTOBUYER_COSTS[botKey], store.settings.notation) }} g Kütle</span>
+          Açılış Maliyeti: <span class="font-bold tabular-nums" :class="unlockAffordable ? 'text-cyan-300' : 'text-slate-500'">{{ formatNumber(AUTOBUYER_COSTS[botKey], store.settings.notation) }} g Kütle</span>
           <span v-if="requirementText(botKey)" class="block text-[10px] mt-0.5" :class="requirementMet(botKey) ? 'text-slate-200' : 'text-slate-500'">İster: {{ requirementText(botKey) }}</span>
           <span class="block text-[10px] text-slate-500 mt-0.5">×1 modda başlar (8-20sn'de 1 adet)</span>
         </span>
@@ -330,7 +330,6 @@ function onMinGainInput(event: Event, key: string): void {
           :value="bot.minGainSp || 1"
           @change="onMinGainInput($event, botKey)"
           class="w-full bg-black/40 border border-white/[0.1] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-200 tabular-nums focus:outline-none focus:border-cyan-500/50"
-          v-tip="'Bu kadar SP garantilenecek kadar bekler; eğim düşüşü ile birlikte çöker.'"
         />
         <span class="text-[10px] text-slate-400 font-mono shrink-0">SP</span>
       </div>
@@ -348,7 +347,6 @@ function onMinGainInput(event: Event, key: string): void {
       <button
         @click="setMode(botKey, 'bulk')"
         :disabled="!store.autobuyerBulkUnlocked"
-        v-tip="!store.autobuyerBulkUnlocked ? 'Önce ×10 Alım kademesini aç' : 'her basışta 1 paket (10 adet)'"
         class="py-1 rounded-md text-[10px] font-mono font-bold border transition-all cursor-pointer"
         :class="bot.mode === 'bulk' ? 'bg-white/[0.10] text-white border-white/25' : store.autobuyerBulkUnlocked ? 'bg-black/40 text-slate-400 border-white/10 hover:text-slate-200' : 'bg-black/30 text-slate-600 border-white/[0.06] cursor-not-allowed'"
       >
@@ -357,7 +355,6 @@ function onMinGainInput(event: Event, key: string): void {
       <button
         @click="setMode(botKey, 'max')"
         :disabled="!store.autobuyerMaxUnlocked"
-        v-tip="!store.autobuyerMaxUnlocked ? 'Önce Maks Alım kademesini aç' : 'her basışta paran yettiği kadar'"
         class="py-1 rounded-md text-[10px] font-mono font-bold border transition-all cursor-pointer"
         :class="bot.mode === 'max' ? 'bg-white/[0.10] text-white border-white/25' : store.autobuyerMaxUnlocked ? 'bg-black/40 text-slate-400 border-white/10 hover:text-slate-200' : 'bg-black/30 text-slate-600 border-white/[0.06] cursor-not-allowed'"
       >
@@ -386,7 +383,7 @@ function onMinGainInput(event: Event, key: string): void {
         :disabled="!canUnlock(botKey)"
         class="btn-tactile w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border"
         :class="canUnlock(botKey)
-          ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-500/50 affordance-pulse'
+          ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-500/50 affordance-pulse'
           : `bg-black/30 text-slate-500 border-white/[0.05] ${unlockRampClass}`"
       >
         <Unlock class="w-3.5 h-3.5" />

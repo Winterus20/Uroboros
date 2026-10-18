@@ -16,14 +16,9 @@ export default {
           600: '#6e7f96', // 4.93:1 on #0a0608
           700: '#6b7c94', // ~4.73:1 — kilitli/înactive etiket + dekoratif ayırıcı
         },
-        dark: {
-          // Faz A "Aç Kumarhane": soğuk gri-mavi ölçek → sıcak ink-black.
-          950: '#0a0608',
-          900: '#141016',
-          850: '#1b151b',
-          800: '#241b22',
-          700: '#33262e',
-        },
+        // ADR-0069 + denetim Y-3: paralel "dark-*" ölçeği KALDIRILDI.
+        // Yüzeyler tek kaynaktan gelir: --ds-bg / --ds-panel / --ds-card / --ds-hero
+        // (style.css :root). bg-dark-* kullanımı repoda 0'dır.
         quantum: {
           blue: '#00f0ff',
           violet: '#a855f7',

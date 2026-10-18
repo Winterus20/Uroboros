@@ -414,7 +414,7 @@ function hardReset() {
 
 <template>
   <div class="layer-modal fixed inset-0 flex items-start md:items-center justify-center p-3 bg-black/80 backdrop-blur-sm overflow-y-auto" @click.self="emit('close')">
-    <div class="w-full max-w-2xl rounded-2xl border border-rose-500/40 bg-[#140c12] shadow-[0_0_40px_rgba(244,63,94,0.25)] overflow-hidden">
+    <div class="w-full max-w-2xl rounded-2xl border border-rose-500/40 bg-[var(--ds-panel-strong)] shadow-[0_0_40px_rgba(244,63,94,0.25)] overflow-hidden">
       <!-- Başlık -->
       <div class="flex items-center justify-between px-4 py-3 border-b border-rose-500/20 bg-rose-500/10">
         <div class="flex items-center gap-2">
@@ -427,7 +427,7 @@ function hardReset() {
         <button
           @click="emit('close')"
           class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-          v-tip="'Kapat'"
+          aria-label="Kapat"
         >
           <X class="w-5 h-5" />
         </button>
@@ -518,7 +518,7 @@ function hardReset() {
             <button @click="resetNeuralTree" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Ağaç Sıfırla</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button v-for="n in NEURAL_TREE" :key="n.id" @click="grantNeuralNode(n.id)" v-tip="n.name" class="px-2 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-200 border border-teal-500/30 cursor-pointer">
+            <button v-for="n in NEURAL_TREE" :key="n.id" @click="grantNeuralNode(n.id)" class="px-2 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-200 border border-teal-500/30 cursor-pointer">
               {{ n.icon }} {{ n.id }}
             </button>
           </div>

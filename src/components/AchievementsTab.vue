@@ -143,7 +143,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
             type="search"
             placeholder="Plaket ara..."
             aria-label="Plaket ara"
-            class="no-swipe w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-2 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/50"
+            class="no-swipe w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-2 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-cyan-400/50"
           />
         </label>
         <div class="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Plaket filtresi">

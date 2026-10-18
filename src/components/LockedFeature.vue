@@ -37,7 +37,6 @@ const formattedTarget = computed(() =>
   <div
     v-if="feature"
     class="ds-ramp-locked p-3 rounded-xl border border-dashed border-white/[0.08] bg-black/20 flex flex-col gap-2"
-    v-tip="feature.hint"
   >
     <div class="flex items-center gap-2">
       <span class="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] text-slate-500 flex items-center justify-center shrink-0">

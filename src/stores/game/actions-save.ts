@@ -801,7 +801,7 @@ export const saveActions = {
           musicEngine.rainLevel = this.settings.rainLevel ?? 0.5
           musicEngine.intensity = this.settings.musicIntensity ?? 0.5
           // P0 Balatro: eski kayıtlarda eksik alanlar varsayılanla dolar
-          if (this.settings.crtEffect === undefined) this.settings.crtEffect = true
+          // (ADR-0069: crtEffect alanı kaldırıldı — eski kayıtlardaki değer yok sayılır)
           if (this.settings.screenShake === undefined) this.settings.screenShake = true
           if (this.settings.juiceMode === undefined) this.settings.juiceMode = 'balanced'
           if (this.settings.screenOverlayEffects === undefined) this.settings.screenOverlayEffects = true

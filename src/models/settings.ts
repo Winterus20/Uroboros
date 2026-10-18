@@ -23,7 +23,6 @@ export interface GameSettings {
   reduceAnimations: boolean // Animasyonları ve parçacıkları azalt
   motionMode?: 'full' | 'reduced' | 'off' // 3 durumlu hareket kontrolü (reduceAnimations ile senkron; yoksa ondan türetilir)
   screenShake?: boolean // Taktil ekran sarsıntısı / titremesi açık/kapalı
-  crtEffect: boolean // Gece 3 CRT: scanline + vinyet zemin efekti
   juiceMode: 'calm' | 'balanced' | 'tilt' // Balatro juice yoğunluğu
   screenOverlayEffects: boolean // Doomscroll ekran dokuları (parmak izi lekesi ve kriz çatlağı)
   sideHands: boolean // Yan şıklatan eller: ekranın iki yanında 4 karelik el animasyonu
