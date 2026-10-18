@@ -95,7 +95,7 @@ function saveCustomUrl() {
         </div>
         <button
           @click="toggleMusic"
-          class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border"
+          class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border"
           :class="store.settings.musicEnabled ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
         >
           {{ store.settings.musicEnabled ? 'Açık' : 'Kapalı' }}
@@ -156,7 +156,7 @@ function saveCustomUrl() {
           />
           <button
             @click="saveCustomUrl"
-            class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-all cursor-pointer"
+            class="btn-tactile px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-all cursor-pointer"
           >
             Kaydet
           </button>
@@ -196,7 +196,7 @@ function saveCustomUrl() {
             v-for="m in [0, 15, 30, 60]"
             :key="m"
             @click="setSleepTimer(m)"
-            class="px-2 py-1 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer border"
+            class="btn-tactile tabular-nums px-2 py-1 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer border"
             :class="store.settings.sleepTimerMinutes === m ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
           >
             {{ m === 0 ? 'Kapalı' : m + 'dk' }}
@@ -214,7 +214,7 @@ function saveCustomUrl() {
         </label>
         <button
           @click="toggleSound"
-          class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border"
+          class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border"
           :class="store.settings.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
         >
           {{ store.settings.soundEnabled ? 'Açık' : 'Kapalı' }}
@@ -253,7 +253,7 @@ function saveCustomUrl() {
           </div>
           <button
             @click="toggleRain"
-            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+            class="btn-tactile px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
             :class="store.settings.rainEnabled ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
           >
             {{ store.settings.rainEnabled ? 'Açık' : 'Kapalı' }}
@@ -285,7 +285,7 @@ function saveCustomUrl() {
         </div>
         <button
           @click="toggleVinyl"
-          class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+          class="btn-tactile px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
           :class="store.settings.vinylCrackle ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
         >
           {{ store.settings.vinylCrackle ? 'Açık' : 'Kapalı' }}

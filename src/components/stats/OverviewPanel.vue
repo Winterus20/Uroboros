@@ -101,7 +101,7 @@ const ratio = computed(() => store.activeVsPassiveRatio);
           <span class="text-xs font-bold text-slate-200">Kütle Çekim Kaynağı Dağılımı</span>
         </div>
         <span class="text-[11px] font-mono text-slate-400">
-          Toplam: {{ format(store.stats.totalMatterProduced, 2, store.settings.notation) }}
+          Toplam: <span class="tabular-nums font-bold text-slate-300">{{ format(store.stats.totalMatterProduced, 2, store.settings.notation) }}</span>
         </span>
       </div>
 

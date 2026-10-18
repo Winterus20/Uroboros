@@ -97,8 +97,8 @@ onUnmounted(() => {
   user-select: none;
 }
 
-/* Dar ekranda (telefon) ince ve silik şerit: içeriğin arkasından sızar.
-   İçerik kolonu (z=10) üstte olduğu için okunabilirlik kanonu korunur. */
+/* .snap-wrap z-index: 45, #game-main-content z-index: 10 üzerinde pointer-events: none
+   ambient bir çerçeve olarak durur; saat/modal katmanlarının altındadır. */
 .snap-rail {
   position: absolute;
   top: 0;
@@ -182,7 +182,7 @@ onUnmounted(() => {
   width: 46%;
   height: 18px;
   transform: translateX(-50%) rotate(-4deg);
-  background: linear-gradient(rgba(255, 190, 69, 0.26), rgba(255, 190, 69, 0.14));
+  background: linear-gradient(rgba(235, 224, 210, 0.22), rgba(235, 224, 210, 0.12));
   border-left: 1px dashed rgba(255, 255, 255, 0.22);
   border-right: 1px dashed rgba(255, 255, 255, 0.22);
   pointer-events: none;

@@ -401,9 +401,9 @@ function handleAnomalyKey(anomaly: FloatingAnomaly, event: KeyboardEvent) {
             </div>
 
             <!-- İnce Kalan Süre Çizgisi (Alt Taban) -->
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+            <div class="progress-track progress-track-mini absolute bottom-0 left-0 right-0 rounded-none">
               <div
-                class="h-full transition-all duration-150 shadow-sm"
+                class="progress-fill duration-150 shadow-sm"
                 :class="[
                   getProgressColor(anomaly.type),
                   anomaly.remainingTime <= 3.5 ? 'bg-rose-500 animate-pulse' : ''

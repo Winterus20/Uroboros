@@ -135,7 +135,7 @@ const { dialogRef } = useFocusTrap(
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+  <div class="layer-modal fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
     <div
       ref="dialogRef"
       role="dialog"
@@ -173,7 +173,7 @@ const { dialogRef } = useFocusTrap(
         <button
           @click="emit('close')"
           aria-label="Kapat"
-          class="p-2 text-slate-400 hover:text-slate-200 hover:bg-[var(--ds-card)] rounded-lg transition-colors"
+          class="btn-tactile p-2 text-slate-400 hover:text-slate-200 hover:bg-[var(--ds-card)] rounded-lg transition-colors cursor-pointer"
         >
           <X class="w-5 h-5" />
         </button>
@@ -211,7 +211,7 @@ const { dialogRef } = useFocusTrap(
             <button
               @click="authStore.signOut()"
               :disabled="authStore.authActionLoading"
-              class="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all flex items-center gap-1.5"
+              class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <LogOut class="w-3.5 h-3.5" />
               <span>Çıkış Yap</span>
@@ -225,7 +225,7 @@ const { dialogRef } = useFocusTrap(
                 <ShieldCheck class="w-4 h-4 text-cyan-400" />
                 <span class="text-xs font-bold text-slate-200">Bulut Depolama Durumu</span>
               </div>
-              <span class="text-[11px] font-mono text-cyan-300">
+              <span class="text-[11px] font-mono tabular-nums text-cyan-300">
                 Son: {{ lastSyncedText }}
               </span>
             </div>
@@ -233,13 +233,13 @@ const { dialogRef } = useFocusTrap(
             <div class="grid grid-cols-2 gap-3 text-xs">
               <div class="p-2.5 rounded-lg bg-[var(--ds-panel-strong)] border border-slate-800">
                 <span class="text-slate-500 text-[10px] block">BULUTTAKİ KÜTLE</span>
-                <span class="font-mono font-bold text-slate-200 text-sm">
+                <span class="font-mono font-bold tabular-nums text-slate-200 text-sm">
                   {{ formattedCloudMatter }}
                 </span>
               </div>
               <div class="p-2.5 rounded-lg bg-[var(--ds-panel-strong)] border border-slate-800">
                 <span class="text-slate-500 text-[10px] block">KOZMİK ÇÖKÜŞ</span>
-                <span class="font-mono font-bold text-amber-300 text-sm">
+                <span class="font-mono font-bold tabular-nums text-amber-300 text-sm">
                   {{ authStore.cloudMeta ? authStore.cloudMeta.singularities + ' kez' : '-' }}
                 </span>
               </div>
@@ -256,7 +256,7 @@ const { dialogRef } = useFocusTrap(
                 role="switch"
                 aria-label="Otomatik Bulut Yedekleme"
                 :aria-checked="authStore.autoSyncEnabled"
-                class="w-11 h-6 rounded-full transition-colors relative focus:outline-none"
+                class="w-11 h-6 rounded-full transition-colors relative focus:outline-none cursor-pointer"
                 :class="authStore.autoSyncEnabled ? 'bg-cyan-500' : 'bg-slate-700'"
               >
                 <span
@@ -272,7 +272,7 @@ const { dialogRef } = useFocusTrap(
             <button
               @click="handleSaveToCloud"
               :disabled="authStore.isSyncing"
-              class="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              class="btn-tactile py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Loader2 v-if="authStore.syncStatus === 'syncing'" class="w-4 h-4 animate-spin" />
               <UploadCloud v-else class="w-4 h-4" />
@@ -282,7 +282,7 @@ const { dialogRef } = useFocusTrap(
             <button
               @click="handleLoadFromCloud"
               :disabled="authStore.isSyncing"
-              class="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-[var(--ds-panel)] hover:bg-[var(--ds-card)] text-slate-200 border border-slate-700 hover:border-slate-500 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+              class="btn-tactile py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-[var(--ds-panel)] hover:bg-[var(--ds-card)] text-slate-200 border border-slate-700 hover:border-slate-500 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <DownloadCloud class="w-4 h-4 text-cyan-400" />
               <span>Buluttan Yükle</span>
@@ -293,7 +293,7 @@ const { dialogRef } = useFocusTrap(
           <div
             v-if="authStore.error"
             role="alert"
-            class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2 animate-fade-in"
+            class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2"
           >
             <AlertCircle class="w-4 h-4 shrink-0 text-rose-400" />
             <span>{{ authStore.error }}</span>
@@ -302,7 +302,7 @@ const { dialogRef } = useFocusTrap(
           <div
             v-if="localActionSuccess"
             role="alert"
-            class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in"
+            class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2"
           >
             <CheckCircle2 class="w-4 h-4 shrink-0 text-cyan-400" />
             <span>{{ localActionSuccess }}</span>
@@ -409,12 +409,12 @@ const { dialogRef } = useFocusTrap(
             </div>
 
             <!-- Hata & Bildirim Kutuları -->
-            <div v-if="authStore.error" role="alert" class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2 animate-fade-in">
+            <div v-if="authStore.error" role="alert" class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle class="w-4 h-4 shrink-0 text-rose-400" />
               <span>{{ authStore.error }}</span>
             </div>
 
-            <div v-if="localActionSuccess" role="alert" class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in">
+            <div v-if="localActionSuccess" role="alert" class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2">
               <CheckCircle2 class="w-4 h-4 shrink-0 text-cyan-400" />
               <span>{{ localActionSuccess }}</span>
             </div>
@@ -423,7 +423,7 @@ const { dialogRef } = useFocusTrap(
             <button
               type="submit"
               :disabled="authStore.authActionLoading"
-              class="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              class="btn-tactile w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Loader2 v-if="authStore.authActionLoading" class="w-4 h-4 animate-spin" />
               <span v-else>{{ mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur ve Bağla' : 'Sıfırlama Bağlantısı Gönder' }}</span>

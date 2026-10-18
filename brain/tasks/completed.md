@@ -1,12 +1,12 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
-## [2026-10-18] ✔ — Görsel Dil Uyum Turu: F0 (CRT kaldırma kararı) + Dalga 1 (token/motif/semantik)
+## [2026-10-18] ✔ — Görsel Dil Uyum Turu: F0–F8 TAMAMLANDI (F0 + Dalga 1 + Dalga 2: F3, F6, F7, F8 + T10)
 
 ### Problem:
 - Kullanıcı: *"oyunu visual-language.md'ye göre her tarafını düzeltmek istiyorum; önce araştırma yap subagentlarla, sonra uygulayacağız."*
 - 6 paralel denetim ajanı **138 bulgu** çıkardı (KRİTİK 4 · YÜKSEK 23 · ORTA 65 · DÜŞÜK 43); **23/52 bileşen** hiç retrofit görmemiş. İki sessiz regresyon: CRT katmanı öldürülmüş ama sözleşme "HEP AÇIK" diyor (brain'de karar kaydı yok); `.planck-collage` tüketicisi tooltip süpürmesinde kazara silinmiş.
 
-### Çözüm (bu tur):
+### Çözüm:
 1. **F0 — Karar & sözleşme senkronu:** kullanıcı **Yol B**'yi seçti → [ADR-0069](../decisions/0069-crt-layer-removal.md) yazıldı; `visual-language.md` §1 (kaynak tablosu + kaos bütçesi), §2 (amber düzeltmesi), §3 (L1 = İPTAL), §4 (K0–K5 tablosu CRT'siz + ADR-0063 sıra senkronu), §6 (Faz A notu), §8 (2026-10-18 notu 2) güncellendi.
 2. **CRT kod temizliği:** `style.css` `.crt-*`/`--crt-*` bloğu + `[data-corruption]` CRT satırları silindi; `useNavigation` koşulsuz `crt-off` kaldırıldı; `crtEffect` (`models/settings.ts` · `state.ts` · `actions-save.ts` · `save.test.ts`) söküldü; `CORRUPTION_META` CRT alanları düştü (test regresyon kilidi eklendi).
 3. **K1 ritüeli geri:** `.planck-collage` `DimensionsTab`'a sıcak aileyle geri getirildi (neon cyan yerine feast/bone).
@@ -15,13 +15,38 @@
 6. **Rezerve renk semantiği:** CrisisTab bonus fazları cyan, RecordsPanel rezonans cyan + 7 `toLocaleString`→`format()`, SingularityButton kilitli/partial ayrımı, AchievementsTab odak amber→cyan, AutobuyerCard blue durum→cyan/slate, PastRunsPanel rozeti cyan.
 7. **GIC motif kütüphanesi 16/16:** kalan **12 motif yeniden çizildi** (delik/goz/dis/zincir · bant/karalama/vida/catlak · ay/yildiz/saat/perde) — brief kolaj reçetesi (kütle+oyuk+kayma+dikiş+serpinti), `evenodd` gerçek oyuk, gömülü renk/`var()` 0; `goz.svg` yasak `var(--ds-bg)` hilesi kapandı. `motifs.test.ts` **12 yasaklı-token kapısı + kök şablon kilidi** kazandı; `buildMotifStrip(level,count,cycle)` deterministik pencere kaydırması → K2/K3 bantları ayrıştı, 16 motifin tamamı dolaşımda; `MotifBand` 7 sn ömür + 0,9 sn sönme + 500 ms suppression + DOM **16/28** glif (brief bütçesi).
 8. **Görünürlük/okunabilirlik düzeltmeleri:** `.collage-torn` K1 efektif alfa 0.0042 → görünür taban (calc 0.35 + α·0.6); motif bandı rampası `max(...,0.25)`; `motif-tone-ember` tam alfa; band/glitch/chromatic forced-colors + motion kapılı; `singularity-horizon` amber+purple → feast+bone.
+9. **F3 (Katman & Hareket Kapıları):**
+   - Modal `z-50` yerine `.layer-modal` (z-index: 50) ile semantic katman mimarisi sağlandı (`ConfirmModal`, `AuthModal`, `CloudConflictModal`, `SettingsModal`, `WelcomeBackModal`).
+   - OS `prefers-reduced-motion` root `.reduce-anim` mühürleme (`useNavigation.ts`) eklendi; CSS `@media (prefers-reduced-motion: reduce)` içine 8 sonsuz animasyon eklendi.
+   - `JuiceLayer.vue` delta-time ve monotonic timestamp `loop(ts)` ile yenilendi; FPS bağımlı hız kayması önlendi.
+   - `PARTICLE_BUDGET.MAX_PARTICLES` (140) ve suppression parametreleri tek kaynak kılındı.
+   - `src/core/screen-shake.ts` bağımsız modül olarak ayrıştırıldı ve 6 birim testi eklendi.
+   - `celebrate.ts` confetti cap bütçesi (60) sınırlandı.
+   - `useCounterHeat.ts` içinde ölü 100ms interval temizlendi.
+10. **F6 (Okunabilirlik & 23 Bileşen Retrofit):**
+    - `LabSeedCard.vue` 3-state ramp (`ready/partial/locked`) eklendi.
+    - `DimensionRow.vue` 9-tier subtitle lore rendering eklendi.
+    - `MultipliersPanel.vue` `.dim-glyph` + `dimension_identity.ts` tekilleştirmesi yapıldı.
+    - 9 bespoke progress bar `.progress-track` ve `.progress-fill` bileşenlerine dönüştürüldü; bar'sız oranlara `.progress-track-mini` verildi.
+    - `ChallengesTab.vue` tamamlanan aşamalar holo/cyan yerine `✔ ALTIN MÜHÜR` (gold + ring) kılındı.
+    - `Header.vue` nightPhase amber ile hizalandı; `CrisisTab.vue` `.crisis-dama-strip` taban görünürlük kazandı.
+    - 23 retrofit görmemiş bileşen (`SettingsModal`, `AudioSettings`, `GameplaySettings`, `CloudSaveSection`, `SaveSlots`, `ImportExport`, `StatsTab`, `OverviewPanel`, `PastRunsPanel`, `BiometryPanel`, `RecordsPanel`, `TelemetryChart`, `LabRecipeList`, `TrendReactor`, `ViralGrid`, `TabHero`, `AutobuyersTab`, `AdminPanel`, `ConfirmModal`, `AuthModal`, `CloudConflictModal`, `SideSnapHands`, `AchievementToast`) tam görsel dil retrofitinden geçirildi.
+11. **F7 (Tipografi Rötuşu):**
+    - `TimeClockOverlay.vue` `font-display` rolünden çıkarılıp `font-mono` 36px/54px/18px katı 18px grid'e oturtuldu. `font-display` yalnız hero `CounterDisplay.vue` ve `JuiceLayer.vue` canvas'a sınırlandı.
+    - `WelcomeBackModal.vue` `tabular-nums` ile hizalandı.
+    - Font yığın fallback'leri (`style.css`, `tailwind.config.js`, `JuiceLayer.vue`) eşitlendi.
+12. **F8 & T10 (QA & Temizlik):**
+    - `brain/scratchpad/harness/contrast.mjs` 243 WCAG 2.2 AA kontrast çiftine genişletildi (tüm 243 çift %100 geçti).
+    - Ölü CSS sınıfları (`.decay-*`, `.rate-*`, `.juice-bloom`, `.rise-float`) ve tanımsız sınıflar (`w-4.5`, `py-0.2`, `animate-fade-in`) temizlendi.
 
-### Doğrulama:
-- `npm run typecheck` → **0 hata** · `npx vitest run` → **27 dosya / 385 test** (380 → +5 motif kapısı) · `npx vite build` → **0 hata** (1811 modül).
-  - *Ortam notu:* `npm run build` Windows'ta esbuild geçici dosya silme kilitlenmesi (Access is denied) veriyor; `TEMP`/`TMP` çalışma alanına alınınca build temiz geçiyor (kod hatası değil).
-- `npm run harness:smoke` → **baseline değişmedi** (`log10=90.72 shifts=8 gal=1 tickspeed=73 bots=11`).
-- Görsel kanıt: 16 motif `magick`/RSVG ile 24px + 96px kontak sayfası (`.tmp-motif-check/sheet-all-24.png`, `sheet-all-96.png`); delik/çatlak/yıldız/vida dönüşümü net, ember tonunun koyu kaldığı görülüp alfa 1.0'a çekildi.
-- **Kalan (sıradaki dalgalar):** F3 (modal z-index + OS reduced-motion kök mührü + JuiceLayer delta + partikül cap/confetti), F6 (9 bespoke çubuk, DimensionRow 9 tier lore, MultipliersPanel glif, 23 bileşen retrofit turu), F7 (TimeClockOverlay font-display rolü + 18px ızgara), F8 (contrast kapsamı + AA turu + perf).
+### Doğrulama (Tüm 6 Kapı):
+1. `npm run typecheck` → **0 hata** (Exit 0).
+2. `npx vitest run` → **27 test dosyası / 387 test geçti** (Exit 0).
+3. `npm run build` → **0 hata** (Exit 0, 1813 modül derlendi).
+4. `npm run harness:smoke` → **baseline sabit**: `log10=90.72 shifts=8 gal=1 tickspeed=73 bots=11` (Exit 0).
+5. `npm run harness:perf` → **churn stabil**: churn mean 5.06ms, wall mean 0.30ms (Exit 0).
+6. `npm run harness:contrast` → **243/243 çift WCAG 2.2 AA uyumlu** (%100 başarı, Exit 0).
+- Mekanik grep denetimleri: `v-tip` 0, `font-display` yalnız CounterDisplay/canvas, tanımsız sınıflar 0, `dark-9/8/7` 0, `bg-[#` 0, `toLocaleString` components içi 0, ölü sınıflar 0.
 
 
 ## [2026-10-17] ✔ — Zaman Yayı (Time Clock): geri sarma / salgı mekaniği (ADR-0068)

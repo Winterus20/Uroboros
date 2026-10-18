@@ -103,7 +103,7 @@ async function copyReport(): Promise<void> {
           <div>
             <span>
               Saniyede 3 basamak hızla aralıksız yazsaydınız, bu kütleyi yazmak
-              <strong class="text-slate-300 font-mono font-bold">{{ bio.writingParadox.writingTimeFormatted }}</strong>
+              <strong class="text-slate-300 font-mono font-bold tabular-nums">{{ bio.writingParadox.writingTimeFormatted }}</strong>
               sürerdi.
             </span>
             <span class="text-[10px] text-slate-500 block mt-0.5 font-mono">
@@ -118,7 +118,7 @@ async function copyReport(): Promise<void> {
           <div>
             <span>
               Bu yutulan kütleyle tam
-              <strong class="text-purple-300 font-mono font-bold">{{ bio.cosmicPrey.multiplierText }}</strong>
+              <strong class="text-purple-300 font-mono font-bold tabular-nums">{{ bio.cosmicPrey.multiplierText }}</strong>
               oluşturulabilir.
             </span>
             <span class="text-[11px] text-slate-400 block mt-0.5">
@@ -155,9 +155,14 @@ async function copyReport(): Promise<void> {
           </span>
         </div>
 
-        <div class="progress-track progress-track-lg progress-track-bordered">
+        <div class="progress-track progress-track-lg progress-track-bordered relative overflow-hidden">
+          <!-- Eşik işaretçileri: %20 kritik eşik (rose) ve %50 uyarı eşiği (amber) -->
+          <div class="absolute inset-0 flex pointer-events-none z-10" aria-hidden="true">
+            <div class="w-[20%] border-r border-rose-500/40"></div>
+            <div class="w-[30%] border-r border-amber-500/40"></div>
+          </div>
           <div
-            class="progress-fill"
+            class="progress-fill relative"
             :class="
               bio.mentalBatteryPct > 50
                 ? 'progress-fill-cyan'

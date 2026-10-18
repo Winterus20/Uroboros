@@ -153,14 +153,14 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       <div class="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/[0.06]">
         <button
           @click="setDecimalPlaces(2)"
-          class="px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-all cursor-pointer"
+          class="btn-tactile tabular-nums px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.decimalPlaces ?? 2) === 2 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'"
         >
           2 Basamak (1.23)
         </button>
         <button
           @click="setDecimalPlaces(3)"
-          class="px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-all cursor-pointer"
+          class="btn-tactile tabular-nums px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-all cursor-pointer"
           :class="(store.settings.decimalPlaces ?? 2) === 3 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'"
         >
           3 Basamak (1.234)
@@ -176,7 +176,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       </div>
       <button
         @click="toggleConfirmDialogs"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
         :class="store.settings.confirmDialogs ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ store.settings.confirmDialogs ? 'Açık' : 'Kapalı' }}
@@ -191,7 +191,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       </div>
       <button
         @click="toggleOfflineProgressModal"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
         :class="(store.settings.offlineProgressModal !== false) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.offlineProgressModal !== false) ? 'Açık' : 'Kapalı' }}
@@ -206,7 +206,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       </div>
       <button
         @click="toggleHotkeys"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
         :class="(store.settings.hotkeysEnabled !== false) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.hotkeysEnabled !== false) ? 'Açık' : 'Kapalı' }}
@@ -229,7 +229,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       </div>
       <button
         @click="toggleBatterySaver"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
         :class="store.settings.batterySaver ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ store.settings.batterySaver ? 'Aktif' : 'Kapalı' }}
@@ -248,7 +248,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
           v-for="opt in motionOptions"
           :key="opt.value"
           @click="setMotionMode(opt.value)"
-          class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border"
+          class="btn-tactile px-2.5 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border"
           :class="(store.settings.motionMode ?? (store.settings.reduceAnimations ? 'reduced' : 'full')) === opt.value
             ? 'bg-white/[0.10] text-white border-white/25'
             : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'"
@@ -266,7 +266,7 @@ function setSwipeSensitivity(val: "balanced" | "low" | "off") {
       </div>
       <button
         @click="toggleScreenShake"
-        class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
+        class="btn-tactile px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shrink-0 border"
         :class="(store.settings.screenShake ?? true) ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-black/40 text-slate-500 border-white/[0.06]'"
       >
         {{ (store.settings.screenShake ?? true) ? 'Açık' : 'Kapalı' }}

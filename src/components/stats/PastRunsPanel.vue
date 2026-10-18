@@ -65,10 +65,10 @@ const pastAverages = computed(() => store.pastSingularitiesAverage);
             class="p-3 flex flex-col md:flex-row md:items-center justify-between gap-2 hover:bg-white/[0.02] transition-colors"
           >
             <div class="flex items-center gap-3">
-              <span class="text-xs font-mono font-bold text-slate-500 w-6">#{{ pastRuns.length - idx }}</span>
+              <span class="text-xs font-mono font-bold text-slate-500 tabular-nums w-6">#{{ pastRuns.length - idx }}</span>
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-mono font-bold text-slate-100">
+                  <span class="text-xs font-mono font-bold text-slate-100 tabular-nums">
                     {{ formatTime(run.duration) }}
                   </span>
                   <span
@@ -85,7 +85,7 @@ const pastAverages = computed(() => store.pastSingularitiesAverage);
                   </span>
                 </div>
                 <div class="text-[10px] text-slate-500 font-mono">
-                  Zirve: {{ format(run.peakMatter, 2, store.settings.notation) }} g Kütle
+                  Zirve: <span class="tabular-nums">{{ format(run.peakMatter, 2, store.settings.notation) }}</span> g Kütle
                 </div>
               </div>
             </div>

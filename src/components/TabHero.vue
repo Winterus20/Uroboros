@@ -39,7 +39,7 @@ withDefaults(
           <h2 class="text-base font-extrabold text-slate-100 tracking-tight">
             {{ title }}
           </h2>
-          <span v-if="badge" class="ds-badge" :class="badgeClass">{{ badge }}</span>
+          <span v-if="badge" class="ds-badge tabular-nums" :class="badgeClass">{{ badge }}</span>
         </div>
         <p v-if="subtitle" class="text-xs text-slate-400 max-w-3xl leading-relaxed">
           {{ subtitle }}

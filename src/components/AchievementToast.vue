@@ -46,7 +46,7 @@ onUnmounted(() => {
   <div
     role="status"
     aria-live="polite"
-    class="layer-toast fixed bottom-4 right-4 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)] z-50"
+    class="layer-toast fixed bottom-4 right-4 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)]"
   >
     <div
       v-for="id in store.achievementToastQueue"
@@ -65,7 +65,7 @@ onUnmounted(() => {
         <div class="flex items-center gap-2 mt-1.5">
           <button
             type="button"
-            class="px-2 py-1 rounded-md text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-200 hover:bg-amber-500/25 transition-colors cursor-pointer"
+            class="btn-tactile px-2 py-1 rounded-md text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-200 hover:bg-amber-500/25 transition-colors cursor-pointer"
             @click.stop="goToAchievements(id)"
           >
             İncele

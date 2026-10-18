@@ -19,7 +19,8 @@ const store = useGameStore();
 
 const effectiveCost = computed(() => store.labSeedEffectiveCost(props.seed.type));
 
-const affordable = computed(() => store.matter.gte(effectiveCost.value));
+const canAfford = computed(() => store.matter.gte(effectiveCost.value));
+const affordable = canAfford;
 </script>
 
 <template>
@@ -28,6 +29,8 @@ const affordable = computed(() => store.matter.gte(effectiveCost.value));
     @click="emit('select', seed.type)"
     class="btn-tactile p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer"
     :class="[
+      canAfford ? 'ds-ramp-ready' : 'ds-ramp-locked',
+      selected && canAfford ? 'affordance-pulse' : '',
       selected
         ? 'bg-cyan-500/15 border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
         : 'bg-black/40 border-white/[0.06] hover:border-white/[0.14]'

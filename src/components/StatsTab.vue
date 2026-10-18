@@ -98,7 +98,7 @@ const pastRunsCount = computed(() => store.pastSingularities.length);
         <span>{{ tab.label }}</span>
         <span
           v-if="tab.id === 'past10' && pastRunsCount > 0"
-          class="px-1.5 py-0.5 text-[9px] font-mono rounded bg-purple-500/20 text-purple-300"
+          class="px-1.5 py-0.5 text-[9px] font-mono rounded bg-purple-500/20 text-purple-300 tabular-nums"
         >
           {{ pastRunsCount }}
         </span>

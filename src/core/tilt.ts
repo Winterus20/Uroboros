@@ -35,9 +35,17 @@ const TILT_RELEASE_MS = 500
 /** Oyun içi hareket kısıtları ya da OS tercihi tilt'i engelliyor mu? */
 function motionBlocked(): boolean {
   if (typeof window === 'undefined' || typeof document === 'undefined') return true
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
   const root = document.documentElement.classList
-  return root.contains('reduce-anim') || root.contains('motion-off')
+  // useNavigation.ts kök elemana .reduce-anim (OS prefers-reduced-motion dahil), .motion-off ve .battery-saver damgalar.
+  if (root.contains('motion-off') || root.contains('reduce-anim') || root.contains('battery-saver')) {
+    return true
+  }
+  // Kök sınıflar henüz damgalanmadıysa (erken bağlama) OS tercihine geri dön:
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
 }
 
 function parseOptions(binding: { value: TiltOptions | boolean | undefined }): TiltOptions {

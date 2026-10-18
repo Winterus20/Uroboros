@@ -442,19 +442,19 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-purple-300 tracking-wider">💰 KAYNAKLAR</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button v-for="p in ['1e6', '1e12', '1e30', '1.79e308']" :key="p" @click="giveDopaminePreset(p)" class="px-2 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 cursor-pointer">+{{ p }}</button>
-            <button @click="resetDopamine" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Sıfırla</button>
+            <button v-for="p in ['1e6', '1e12', '1e30', '1.79e308']" :key="p" @click="giveDopaminePreset(p)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 cursor-pointer">+{{ p }}</button>
+            <button @click="resetDopamine" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Sıfırla</button>
           </div>
           <div class="flex gap-1.5">
-            <input v-model="customAmount" type="text" spellcheck="false" placeholder="1e12" class="flex-1 min-w-0 bg-black/60 border border-white/10 rounded-lg px-2 py-1.5 text-slate-100 focus:outline-none focus:border-purple-400" />
-            <button @click="addDopamine" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer">Ekle</button>
-            <button @click="setDopamine" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white border border-white/20 cursor-pointer">Ayarla</button>
+            <input v-model="customAmount" type="text" spellcheck="false" placeholder="1e12" class="flex-1 min-w-0 bg-black/60 border border-white/10 rounded-lg px-2 py-1.5 text-slate-100 tabular-nums focus:outline-none focus:border-purple-400" />
+            <button @click="addDopamine" class="btn-tactile px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer">Ekle</button>
+            <button @click="setDopamine" class="btn-tactile px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white border border-white/20 cursor-pointer">Ayarla</button>
           </div>
           <div class="flex gap-1.5 items-center">
             <span class="text-slate-400 shrink-0">SP:</span>
-            <input v-model="customSp" type="text" spellcheck="false" class="flex-1 min-w-0 bg-black/60 border border-white/10 rounded-lg px-2 py-1.5 text-slate-100 focus:outline-none focus:border-amber-400" />
-            <button @click="addSp" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 cursor-pointer">+SP</button>
-            <button @click="addSingularity" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 cursor-pointer">+Tekillik</button>
+            <input v-model="customSp" type="text" spellcheck="false" class="flex-1 min-w-0 bg-black/60 border border-white/10 rounded-lg px-2 py-1.5 text-slate-100 tabular-nums focus:outline-none focus:border-amber-400" />
+            <button @click="addSp" class="btn-tactile tabular-nums px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 cursor-pointer">+SP</button>
+            <button @click="addSingularity" class="btn-tactile px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 cursor-pointer">+Tekillik</button>
           </div>
         </section>
 
@@ -462,15 +462,15 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-cyan-300 tracking-wider">📐 BOYUTLAR & FREKANS</h4>
           <div class="grid grid-cols-4 gap-1.5">
-            <button v-for="t in 8" :key="t" @click="giveDim(t, 10)" class="px-1 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border border-cyan-500/30 cursor-pointer">D{{ t }} +10</button>
+            <button v-for="t in 8" :key="t" @click="giveDim(t, 10)" class="btn-tactile tabular-nums px-1 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border border-cyan-500/30 cursor-pointer">D{{ t }} +10</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="fillAllDims" class="px-2 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-100 border border-cyan-500/40 cursor-pointer">Tümü +100</button>
-            <button @click="zeroDims" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Sıfırla</button>
-            <button @click="addTickspeed(10)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">Hz +10</button>
-            <button @click="addTickspeed(100)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">Hz +100</button>
-            <button @click="addShift(1)" class="px-2 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 border border-violet-500/40 cursor-pointer">Shift +1</button>
-            <button @click="addGalaxy(1)" class="px-2 py-1.5 rounded-lg bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-200 border border-fuchsia-500/40 cursor-pointer">Galaksi +1</button>
+            <button @click="fillAllDims" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-100 border border-cyan-500/40 cursor-pointer">Tümü +100</button>
+            <button @click="zeroDims" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Sıfırla</button>
+            <button @click="addTickspeed(10)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">Hz +10</button>
+            <button @click="addTickspeed(100)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">Hz +100</button>
+            <button @click="addShift(1)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-200 border border-violet-500/40 cursor-pointer">Shift +1</button>
+            <button @click="addGalaxy(1)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-200 border border-fuchsia-500/40 cursor-pointer">Galaksi +1</button>
           </div>
         </section>
 
@@ -478,17 +478,17 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-rose-300 tracking-wider">🔥 BUFF & OLAY</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="giveFyp" class="px-2 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 border border-rose-500/30 cursor-pointer">Gece 3 (7x)</button>
-            <button @click="giveFrenzy" class="px-2 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 border border-rose-500/30 cursor-pointer">Histeri (300x)</button>
-            <button @click="giveCombo" class="px-2 py-1.5 rounded-lg bg-rose-600/30 hover:bg-rose-600/40 text-white border border-rose-400/50 font-bold cursor-pointer">KOMBO 2100x</button>
-            <button @click="clearBuffs" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Buff Temizle</button>
+            <button @click="giveFyp" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 border border-rose-500/30 cursor-pointer">Gece 3 (7x)</button>
+            <button @click="giveFrenzy" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 border border-rose-500/30 cursor-pointer">Histeri (300x)</button>
+            <button @click="giveCombo" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-rose-600/30 hover:bg-rose-600/40 text-white border border-rose-400/50 font-bold cursor-pointer">KOMBO 2100x</button>
+            <button @click="clearBuffs" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Buff Temizle</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="spawnAnomalies" class="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Anomali Doğur</button>
-            <button @click="clearAnomalies" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Anomali Temizle</button>
-            <button @click="spawnGuilt" class="px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">5 Vicdan Doğur</button>
-            <button @click="cashoutGuilt" class="px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">Primli Bozdur</button>
-            <button @click="clearGuilt" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Vicdan Sil</button>
+            <button @click="spawnAnomalies" class="btn-tactile px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Anomali Doğur</button>
+            <button @click="clearAnomalies" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Anomali Temizle</button>
+            <button @click="spawnGuilt" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">5 Vicdan Doğur</button>
+            <button @click="cashoutGuilt" class="btn-tactile px-2 py-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 cursor-pointer">Primli Bozdur</button>
+            <button @click="clearGuilt" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Vicdan Sil</button>
           </div>
         </section>
 
@@ -496,17 +496,17 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-emerald-300 tracking-wider">🧪 LAB, KRİZ & BOT</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="fillCaffeine" class="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Kafein Full</button>
-            <button @click="matureLab" class="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Lab Olgunlaştır</button>
-            <button @click="fillHype" class="px-2 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 border border-emerald-500/40 cursor-pointer font-bold">Hype %100</button>
-            <button @click="plantBrainrot" class="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">💥 Higgs Ekle</button>
-            <button @click="clearLab" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Lab Temizle</button>
+            <button @click="fillCaffeine" class="btn-tactile px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Kafein Full</button>
+            <button @click="matureLab" class="btn-tactile px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">Lab Olgunlaştır</button>
+            <button @click="fillHype" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 border border-emerald-500/40 cursor-pointer font-bold">Hype %100</button>
+            <button @click="plantBrainrot" class="btn-tactile px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-500/30 cursor-pointer">💥 Higgs Ekle</button>
+            <button @click="clearLab" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Lab Temizle</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="unlockAllBots" class="px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-500/30 cursor-pointer">Tüm Botları Aç</button>
-            <button @click="toggleAllBots(false)" class="px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-500/30 cursor-pointer">Botları Çalıştır</button>
-            <button @click="toggleAllBots(true)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Botları Durdur</button>
-            <button @click="maxSpUpgrades" class="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/30 cursor-pointer">SP Dükkanı Maxla</button>
+            <button @click="unlockAllBots" class="btn-tactile px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-500/30 cursor-pointer">Tüm Botları Aç</button>
+            <button @click="toggleAllBots(false)" class="btn-tactile px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-500/30 cursor-pointer">Botları Çalıştır</button>
+            <button @click="toggleAllBots(true)" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Botları Durdur</button>
+            <button @click="maxSpUpgrades" class="btn-tactile px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/30 cursor-pointer">SP Dükkanı Maxla</button>
           </div>
         </section>
 
@@ -514,11 +514,11 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-teal-300 tracking-wider">🌳 NÖRAL AĞAÇ</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="maxNeuralTree" class="px-2 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-100 border border-teal-500/40 cursor-pointer font-bold">Ağacı Maxla</button>
-            <button @click="resetNeuralTree" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Ağaç Sıfırla</button>
+            <button @click="maxNeuralTree" class="btn-tactile px-2 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-100 border border-teal-500/40 cursor-pointer font-bold">Ağacı Maxla</button>
+            <button @click="resetNeuralTree" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Ağaç Sıfırla</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button v-for="n in NEURAL_TREE" :key="n.id" @click="grantNeuralNode(n.id)" class="px-2 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-200 border border-teal-500/30 cursor-pointer">
+            <button v-for="n in NEURAL_TREE" :key="n.id" @click="grantNeuralNode(n.id)" class="btn-tactile px-2 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/25 text-teal-200 border border-teal-500/30 cursor-pointer">
               {{ n.icon }} {{ n.id }}
             </button>
           </div>
@@ -528,16 +528,16 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-amber-300 tracking-wider">⏩ ZAMAN & PRESTİJ</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="timeWarp(60)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+1 dk</button>
-            <button @click="timeWarp(600)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+10 dk</button>
-            <button @click="timeWarp(3600)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+1 sa</button>
-            <button @click="timeWarp(28800)" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+8 sa</button>
+            <button @click="timeWarp(60)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+1 dk</button>
+            <button @click="timeWarp(600)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+10 dk</button>
+            <button @click="timeWarp(3600)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+1 sa</button>
+            <button @click="timeWarp(28800)" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 cursor-pointer">+8 sa</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="forceShift" class="px-2 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-100 border border-violet-500/40 cursor-pointer">Shift Zorla</button>
-            <button @click="forceGalaxy" class="px-2 py-1.5 rounded-lg bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-100 border border-fuchsia-500/40 cursor-pointer">Galaksi Zorla</button>
-            <button @click="forceSingularity" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-500/40 cursor-pointer">Tekillik Zorla</button>
-            <button @click="hardReset" class="px-2 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/40 cursor-pointer">Hard Reset</button>
+            <button @click="forceShift" class="btn-tactile px-2 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-100 border border-violet-500/40 cursor-pointer">Shift Zorla</button>
+            <button @click="forceGalaxy" class="btn-tactile px-2 py-1.5 rounded-lg bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-100 border border-fuchsia-500/40 cursor-pointer">Galaksi Zorla</button>
+            <button @click="forceSingularity" class="btn-tactile px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-500/40 cursor-pointer">Tekillik Zorla</button>
+            <button @click="hardReset" class="btn-tactile px-2 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 border border-rose-500/40 cursor-pointer">Hard Reset</button>
           </div>
         </section>
 
@@ -545,9 +545,9 @@ function hardReset() {
         <section class="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
           <h4 class="font-bold text-cyan-300 tracking-wider">⏰ ZAMAN YAYI (TIME CLOCK)</h4>
           <div class="flex flex-wrap gap-1.5">
-            <button @click="spawnClock" class="px-2 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-100 border border-cyan-500/40 cursor-pointer font-bold">Saati Doğur</button>
-            <button @click="forceClockRelease" class="px-2 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-500/30 cursor-pointer">Tam Gergin Salgı (16×)</button>
-            <button @click="clearClock" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Saati Kapat</button>
+            <button @click="spawnClock" class="btn-tactile px-2 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-100 border border-cyan-500/40 cursor-pointer font-bold">Saati Doğur</button>
+            <button @click="forceClockRelease" class="btn-tactile tabular-nums px-2 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-500/30 cursor-pointer">Tam Gergin Salgı (16×)</button>
+            <button @click="clearClock" class="btn-tactile px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer">Saati Kapat</button>
           </div>
           <p class="text-[11px] text-slate-500 leading-relaxed">
             Saat yalnızca <span class="text-cyan-300">time_clock</span> kilidi açıkken ilerler; <span class="text-cyan-300">Saati Doğur</span> kilidi de açar.

@@ -385,7 +385,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
             </linearGradient>
             <radialGradient id="clock-core-grad" cx="0.5" cy="0.5" r="0.5">
               <stop offset="0%" stop-color="#0a0608" />
-              <stop offset="62%" stop-color="#141a2b" />
+              <stop offset="62%" stop-color="rgba(18, 11, 14, 0.92)" />
               <stop offset="100%" stop-color="#00f0ff" stop-opacity="0.28" />
             </radialGradient>
           </defs>
@@ -483,7 +483,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
           :class="isWinding ? 'opacity-100' : 'opacity-0'"
           :aria-hidden="!isWinding"
         >
-          <span class="font-display text-4xl sm:text-6xl text-white counter-glow tabular-nums leading-none">
+          <span class="font-mono text-[36px] sm:text-[54px] text-white counter-glow tabular-nums leading-none">
             %{{ tensionPct }}
           </span>
           <span class="font-mono text-[10px] tracking-[0.32em] text-cyan-300/80 mt-1">GERGİNLİK</span>
@@ -499,7 +499,7 @@ function fireReleaseEffects(tensionAtRelease: number) {
           :class="isReleasing ? 'opacity-100' : 'opacity-0'"
           :aria-hidden="!isReleasing"
         >
-          <span class="font-display text-[13px] sm:text-[15px] text-quantum-blue counter-glow tabular-nums leading-none">
+          <span class="font-mono text-[18px] text-quantum-blue counter-glow tabular-nums leading-none">
             ×{{ speedLabel }}
           </span>
           <span class="font-mono text-[9px] text-cyan-200/85 tabular-nums mt-0.5">
@@ -513,9 +513,9 @@ function fireReleaseEffects(tensionAtRelease: number) {
         v-if="isWinding"
         class="pointer-events-none absolute left-1/2 top-full mt-3 sm:mt-4 flex w-[min(92vw,520px)] -translate-x-1/2 flex-col items-center gap-2"
       >
-        <div class="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/70">
+        <div class="progress-track progress-track-md progress-track-bordered w-full">
           <div
-            class="h-full rounded-full transition-all duration-75"
+            class="progress-fill duration-75"
             :class="weakRelease ? 'bg-rose-500' : 'bg-gradient-to-r from-cyan-400 via-cyan-300 to-violet-500'"
             :style="{ width: `${tensionPct}%` }"
           ></div>

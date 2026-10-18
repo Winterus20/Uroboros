@@ -6,32 +6,14 @@ import { sounds } from "../core/audio";
 import { safeConfetti, isPageVisible } from "../core/celebrate";
 import { isMotionReduced, useMotionMode } from "./useMotion";
 
-let activeConsumers = 0;
-let decayInterval: number | null = null;
-
-function ensureDecayRunning(): void {
-  if (decayInterval !== null) return;
-  decayInterval = window.setInterval(() => {
-    // Sayaç ısı sönümlenme döngüsü
-  }, 100);
-}
-
-function stopDecayIfUnused(): void {
-  if (activeConsumers <= 0 && decayInterval !== null) {
-    clearInterval(decayInterval);
-    decayInterval = null;
-  }
-}
-
 /**
  * Sayac isi / alev / dekad fisegi mantigi.
  * ADR-0049: surekli nabiz kapali (counterHeatClass her zaman ""), olay ani
  * efektleri (decadeFlash) korunur. Alev histerezisi kapali, flameOn false kalir.
+ * F3.10: bos 100ms decayInterval sokuldu.
  */
 export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
   const store = useGameStore();
-  activeConsumers++;
-  ensureDecayRunning();
   let disposed = false;
 
   // 3 durumlu hareket kapısı: kök-sınıf mührü ('reduced'/'off') + reaktif mod (ayar
@@ -157,8 +139,6 @@ export function useCounterHeat(counterRef: Ref<HTMLElement | null>) {
       clearTimeout(decadeTimer);
       decadeTimer = null;
     }
-    activeConsumers = Math.max(0, activeConsumers - 1);
-    stopDecayIfUnused();
   }
 
   try {

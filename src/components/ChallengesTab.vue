@@ -112,6 +112,12 @@ function confirmExit() {
           <div>
             <div class="stat-box-label">Tamamlanan Meydan Okuma</div>
             <div class="stat-box-value text-rose-400 tabular-nums">{{ doneCount }}/{{ totalCount }}</div>
+            <div class="progress-track progress-track-mini w-20 mt-1">
+              <div
+                class="progress-fill progress-fill-dawn"
+                :style="{ width: `${totalCount > 0 ? (doneCount / totalCount) * 100 : 0}%` }"
+              ></div>
+            </div>
           </div>
         </div>
       </template>
@@ -146,7 +152,7 @@ function confirmExit() {
         v-tilt="{ max: 8, scale: 1.015, disabled: !(store.settings.holoCardsEnabled ?? true) }"
         class="card-tilt-surface p-3 rounded-xl border flex flex-col gap-1.5 transition-all relative overflow-hidden"
         :class="isCompleted(def.id)
-          ? 'edition-holo bg-cyan-950/40 border-cyan-500/40'
+          ? 'bg-amber-950/20 border-amber-400/50 ring-1 ring-amber-400/30'
           : isActive(def.id)
             ? 'edition-poly bg-rose-950/40 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.3)]'
             : isLocked(def)
@@ -159,12 +165,12 @@ function confirmExit() {
           </span>
           <span
             class="text-xs font-bold"
-            :class="isCompleted(def.id) ? 'text-cyan-200' : isActive(def.id) ? 'text-rose-200' : 'text-slate-300'"
+            :class="isCompleted(def.id) ? 'text-amber-200' : isActive(def.id) ? 'text-rose-200' : 'text-slate-300'"
           >
             {{ def.name }}
           </span>
           <span class="ml-auto shrink-0">
-            <span v-if="isCompleted(def.id)" class="edition-tag edition-tag-holo">✔ HOLO MÜHÜR</span>
+            <span v-if="isCompleted(def.id)" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40">✔ ALTIN MÜHÜR</span>
             <span v-else-if="isActive(def.id)" class="edition-tag edition-tag-poly animate-pulse">● POLY AKTİF</span>
             <span v-else-if="isLocked(def)" class="ds-badge">KİLİTLİ</span>
           </span>

@@ -83,8 +83,8 @@
      yarı saydam türevleri (vinyet halkası, feast tonlu kenarlar) senkron güncellenir. */
   --feast-rgb: 255 51 85;
   --feast: rgb(var(--feast-rgb));
-  --bicycle: #c40f2e;
   --bicycle-rgb: 196 15 46; /* kanal ayrışımı — motif-tone-ember ve ağır yüzeyler tek kaynaktan türesin */
+  --bicycle: rgb(var(--bicycle-rgb));
   --ds-abyss: #07030a; /* girdap fallback gradyanının en derin durağı (--ds-bg'den bir ton koyu) */
 
   /* --- Sıcak vinyet (cosmic-vignette ile paylaşılan tek kaynak) --- */
@@ -100,16 +100,31 @@
 
   /* --- Rezerve durum renkleri (Görev A — "durum ≠ hue" sözleşmesi) ---
      hue = katman KİMLİĞİ; durum = .ds-ramp-* üçlüsüyle verilir. */
-  --ds-prestige: #f59e0b; /* amber  — SADECE progression / prestige / milestone */
-  --ds-locked: #64748b;   /* gri    — kilitli (soluk slate) */
-  --ds-bonus: #06b6d2;    /* cyan   — bonus / telemetri primi */
-  --ds-danger: #f43f5e;   /* rose   — kriz / risk / parazit */
-  /* Kanal ayrışımları: ramp/türev yüzeyler tokenı literal kopyalamaz (denetim O-1). */
   --ds-prestige-rgb: 245 158 11;
+  --ds-prestige: rgb(var(--ds-prestige-rgb)); /* amber  — SADECE progression / prestige / milestone */
   --ds-locked-rgb: 100 116 139;
+  --ds-locked: rgb(var(--ds-locked-rgb));     /* gri    — kilitli (soluk slate) */
   --ds-bonus-rgb: 6 182 210;
+  --ds-bonus: rgb(var(--ds-bonus-rgb));       /* cyan   — bonus / telemetri primi */
   --ds-danger-rgb: 244 63 94;
+  --ds-danger: rgb(var(--ds-danger-rgb));     /* rose   — kriz / risk / parazit */
 }
+
+/* --- Semantik Token Tüketicileri (Audit T2 / T10 / F1) --- */
+.text-ds-feast { color: var(--feast); }
+.text-ds-bicycle { color: var(--bicycle); }
+.text-ds-prestige { color: var(--ds-prestige); }
+.text-ds-locked { color: var(--ds-locked); }
+.text-ds-bonus { color: var(--ds-bonus); }
+.text-ds-danger { color: var(--ds-danger); }
+.border-ds-prestige { border-color: var(--ds-prestige); }
+.border-ds-locked { border-color: var(--ds-locked); }
+.border-ds-bonus { border-color: var(--ds-bonus); }
+.border-ds-danger { border-color: var(--ds-danger); }
+.bg-ds-prestige { background-color: var(--ds-prestige); }
+.bg-ds-locked { background-color: var(--ds-locked); }
+.bg-ds-bonus { background-color: var(--ds-bonus); }
+.bg-ds-danger { background-color: var(--ds-danger); }
 
 /* --- Üç durumlu uygunluk rampası (kilitli → ara → hazır) ---
    Hue'yu ezmez; yalnızca opacity / kenarlık / zemin oynatır. */
@@ -1026,34 +1041,6 @@ body::after {
   text-shadow: 0 0 16px rgba(251, 191, 36, 0.5), 0 2px 0 rgba(0, 0, 0, 0.65);
 }
 
-/* Sütun 5: hız-reaktif sayaç ısısı — logaritmik kademe, sürekli nefes.
-   calm: baz glow yeterli. warm/hot/supernova şiddetlenir. */
-@keyframes rate-pulse-warm {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.012); }
-}
-@keyframes rate-pulse-hot {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.025); }
-}
-@keyframes rate-pulse-supernova {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-}
-.rate-warm {
-  text-shadow: 0 0 14px rgba(52, 211, 153, 0.5), 0 2px 0 rgba(0, 0, 0, 0.65);
-  animation: rate-pulse-warm 2.2s ease-in-out infinite;
-}
-.rate-hot {
-  text-shadow: 0 0 16px rgba(251, 191, 36, 0.55), 0 2px 0 rgba(0, 0, 0, 0.65);
-  animation: rate-pulse-hot 1.4s ease-in-out infinite;
-}
-/* Supernova: kromatik ayrım rakamda 1px'e indirildi (okunabilirlik);
-   asıl elektrik plaka çerçevesinde. */
-.rate-supernova {
-  text-shadow: -1px 0 0 rgba(255, 99, 104, 0.4), 1px 0 0 rgba(60, 180, 255, 0.4), 0 0 16px rgba(168, 85, 247, 0.5);
-  animation: rate-pulse-supernova 0.9s ease-in-out infinite;
-}
 
 /* Alev: sayı çok hızlı artarken rakamlar tutuşur, yavaşlayınca söner.
    Gradyan-kesme tekniği piksel fontu çamurlaştırdığı için yasak —
@@ -1577,14 +1564,18 @@ body::after {
   .crisis-aura-combo,
   .dps-surge,
   .edition-poly,
-  .rate-warm,
-  .rate-hot,
-  .rate-supernova,
   .flame-text,
   .decade-flash,
   .dps-delta-blink,
-  .decay-flicker,
-  .decay-glitch,
+  /* Denetim A4: OS azaltılmış hareket listesi bu 8 sonsuz animasyonu kapsamıyordu. */
+  .panic-pulse,
+  .animate-flame-sub,
+  .animate-cyber-heart,
+  .animate-starburst-spin,
+  .animate-ekg-line,
+  .animate-ping,
+  .animate-bounce,
+  .animate-spin,
   .animate-pulse {
     animation: none !important;
   }
@@ -1626,7 +1617,6 @@ body::after {
    Kozmik Tema — Derin Uzay Gravitasyonel Merceklenme & Olay Ufku
    - cosmic-vignette: derin uzay vinyeti ve merkez kuantum ışıması
    - singularity-horizon: tekillik eşiğinde parlayan alt ufuk aurası
-   - decay-*: D1 mikrodünya → D8 kozmik kuantum dalgalanması
    Hepsi .reduce-anim / battery-saver / prefers-reduced-motion'da susar.
    ========================================================================== */
 .cosmic-vignette {
@@ -1650,61 +1640,20 @@ body::after {
   display: none !important;
 }
 
-/* D4-D5: hafif sinyal paraziti — satırda ince tarama çizgisi */
-.decay-static {
-  position: relative;
-}
-.decay-static::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.025) 0px,
-    rgba(255, 255, 255, 0.025) 1px,
-    transparent 1px,
-    transparent 5px
-  );
-  opacity: 0.7;
-}
-
-/* D6-D7: uykusuz titreme — 3 saniyede bir nefes gibi */
-@keyframes decay-flicker-anim {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.82; }
-  94% { opacity: 1; }
-  96% { opacity: 0.9; }
-  97% { opacity: 1; }
-}
-.decay-flicker {
-  animation: decay-flicker-anim 3.2s ease-in-out infinite;
-}
-
-/* D8: brainrot glitch — kromatik gölge + mikro sarsıntı, 4 sn döngü */
-@keyframes decay-glitch-anim {
-  0%, 91%, 94%, 100% { transform: translate(0, 0); filter: none; }
-  92% { transform: translate(-1px, 0); filter: saturate(1.4); }
-  93% { transform: translate(1px, 0); filter: hue-rotate(12deg) saturate(1.6); }
-}
-.decay-glitch {
-  animation: decay-glitch-anim 4.1s steps(1, end) infinite;
-}
-.decay-glitch .text-slate-200 {
-  text-shadow: -1px 0 0 rgba(255, 99, 104, 0.35), 1px 0 0 rgba(60, 180, 255, 0.35);
-}
+/* Denetim A3/A4 (olu kod, ~45 satir): .decay-static / .decay-flicker / .decay-glitch
+   ve keyframe'leri repoda 0 tuketiciydi. Kaldirildi; yerini K3 .glitch-edge +
+   K4 .chromatic-edge (ADR-0069) aldi. Uyari: eski .decay-glitch kurali okunabilir
+   .text-slate-200 metnini hedefliyordu (okunabilirlik kanonu ihlali) — tamamen gitti. */
 
 /* ==========================================================================
    GÖREV E — Juice Standardı (teemo.dev araştırması) + Reduced-Motion 3-State
-   Tıklama yığını 5 katman ≤100ms; buradaki üç katman:
-     pointerdown → .juice-punch (140ms impuls+decay)
-                → .juice-bloom  (tek boxShadow flaşı, 200ms decay)
-     yükselen +N → .rise-float  (600ms ease-out, yukarı süzülür)
-   WCAG: tekrarlayan pulse YOK — üçü de animation-iteration-count: 1 (tek
-   impuls + decay). Saniyede ≤3 flaş sınırı katmanların rate-limit'iyle
-   (JuiceLayer anti-spam) sağlanır; CSS tarafı tekrarsızdır.
+   Tıklama yığını ≤100ms:
+     pointerdown → .juice-punch (140ms impuls+decay tek dokunmatik katman)
+   F3.7: .juice-bloom ve .rise-float DOM katmanları repoda 0 tüketici olduğu için
+   kaldırıldı; uçan sayılar ve parçacıklar doğrudan JuiceLayer canvas üzerinde çizilir.
+   WCAG: tekrarlayan pulse YOK — animation-iteration-count: 1 (tek impuls + decay).
+   Saniyede ≤3 flaş sınırı katmanların rate-limit'iyle (JuiceLayer anti-spam)
+   sağlanır; CSS tarafı tekrarsızdır.
    ========================================================================== */
 
 /* 1) Taktil punch — pointerdown'da scale 1 → 1.06 → 1 (140ms, tek tur).
@@ -1717,48 +1666,6 @@ body::after {
 .juice-punch {
   animation: juice-punch-anim 140ms cubic-bezier(0.22, 1, 0.36, 1) 1 both;
   will-change: transform;
-}
-
-/* 2) Bloom — kısa boxShadow flaşı (tek sefer, 200ms decay, tekrar yok).
-   opacity/display DEĞİL yalnızca gölge süresi oynar; katman kimliği korunur. */
-@keyframes juice-bloom-anim {
-  0% {
-    box-shadow:
-      0 0 0 0 rgba(168, 85, 247, 0.55),
-      0 0 22px 4px rgba(56, 189, 248, 0.35);
-  }
-  35% {
-    box-shadow:
-      0 0 0 3px rgba(168, 85, 247, 0.26),
-      0 0 26px 6px rgba(56, 189, 248, 0.26);
-  }
-  100% {
-    box-shadow:
-      0 0 0 0 rgba(168, 85, 247, 0),
-      0 0 0 0 rgba(56, 189, 248, 0);
-  }
-}
-.juice-bloom {
-  animation: juice-bloom-anim 200ms ease-out 1 both;
-}
-
-/* 3) Yükselen "+N" — translateY(0 → -28px) + opacity(1 → 0), 600ms ease-out.
-   DOM tabanlı yükselen "+N" metinleri için ayrılmış util. Canvas JuiceLayer
-   uçan yazıları kendi fiziğiyle çizer; SequentialStrikeLayer sahne rozetleri
-   kendi zamanlamasına sahiptir — bu sınıf yalnız DOM tüketicileri içindir. */
-@keyframes rise-float-anim {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(0, -28px, 0);
-    opacity: 0;
-  }
-}
-.rise-float {
-  animation: rise-float-anim 600ms ease-out 1 both;
-  pointer-events: none;
 }
 
 /* ==========================================================================

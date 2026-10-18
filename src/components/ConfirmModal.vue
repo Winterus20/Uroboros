@@ -51,7 +51,7 @@ const { dialogRef } = useFocusTrap(true, {
           class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           :class="danger ? 'bg-rose-500/15 border border-rose-400/30' : 'bg-cyan-500/15 border border-cyan-400/30'"
         >
-          <AlertTriangle class="w-4.5 h-4.5" :class="danger ? 'text-rose-300' : 'text-cyan-300'" />
+          <AlertTriangle class="w-4 h-4" :class="danger ? 'text-rose-300' : 'text-cyan-300'" />
         </div>
         <div class="min-w-0">
           <h3 :id="titleId" class="text-sm font-bold text-white leading-tight">{{ title }}</h3>
@@ -61,14 +61,14 @@ const { dialogRef } = useFocusTrap(true, {
       <div class="flex gap-2">
         <button
           ref="cancelButtonRef"
-          class="btn-tactile flex-1 h-10 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 text-xs font-semibold cursor-pointer"
+          class="btn-tactile flex-1 h-10 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 text-xs font-semibold cursor-pointer transition-all"
           @click="emit('cancel')"
         >
           Vazgeç
         </button>
         <button
-          class="btn-tactile flex-1 h-10 rounded-xl text-white text-xs font-bold cursor-pointer"
-          :class="danger ? 'bg-rose-500/90 hover:bg-rose-500' : 'bg-cyan-500/90 hover:bg-cyan-500'"
+          class="btn-tactile flex-1 h-10 rounded-xl text-white text-xs font-bold cursor-pointer transition-all"
+          :class="danger ? 'ds-ramp-danger bg-rose-500/90 hover:bg-rose-500' : 'ds-ramp-ready bg-cyan-500/90 hover:bg-cyan-500'"
           @click="emit('confirm')"
         >
           {{ confirmLabel || 'Onayla' }}

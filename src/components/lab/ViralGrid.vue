@@ -237,7 +237,7 @@ function isColResonant(colIndex: number): boolean {
         <!-- Merkez Odak Çekirdeği Rozeti -->
         <div
           v-if="cell.id === 4"
-          class="absolute top-1 left-1 z-10 text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+          class="absolute top-1 left-1 z-10 text-[8px] font-mono font-bold px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
         >
           Odak Çekirdeği
         </div>

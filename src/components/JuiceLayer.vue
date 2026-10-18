@@ -11,6 +11,11 @@ import {
   shouldSuppressFeast,
   type FeastSceneId
 } from '../core/particles'
+import {
+  ScreenShakeController,
+  ALL_SHAKE_CLASSES,
+  type ShakeLevelInput
+} from '../core/screen-shake'
 
 export interface JuiceTriggerOptions {
   x: number
@@ -90,8 +95,10 @@ interface Spark {
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let ctx: CanvasRenderingContext2D | null = null
 let animId: number | null = null
-let shakeTimeout: ReturnType<typeof setTimeout> | null = null
-let lastShakeAt = 0
+let lastFrameTs: number | null = null
+const shakeController = new ScreenShakeController(() =>
+  typeof document !== 'undefined' ? document.getElementById('game-main-content') : null
+)
 const particles: Particle[] = []
 const shockwaves: Shockwave[] = []
 const sparks: Spark[] = []
@@ -117,18 +124,20 @@ function getJuiceMode(): string {
 const store = useGameStore()
 
 // Sistem tercihi (OS seviyesi): prefers-reduced-motion. Tek kez okunur, değişikliğe tepki verir.
-// tilt.ts'teki matchMedia kalıbının canlı (değişiklik dinleyen) hali.
+// tilt.ts'teki matchMedia kalıbının canlı (değişiklik dinleyen) hali (F7.5: root .reduce-anim destekli).
 let prefersReducedMotion = false
 let reducedMotionQuery: MediaQueryList | null = null
 
 const onReducedMotionChange = (e: MediaQueryListEvent): void => {
-  prefersReducedMotion = e.matches
+  prefersReducedMotion =
+    e.matches ||
+    (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim'))
 }
 
 /**
  * Hareket bastırma birleşimi dört kaynaktan gelir:
  *  1) prefers-reduced-motion     — işletim sistemi tercihi (canlı dinlenir)
- *  2) 3 durumlu hareket kapısı   — isMotionReduced() kök-sınıf mührü + reaktif motionMode
+ *  2) 3 durumlu hareket kapısı   — isMotionReduced() kök-sınıf mührü + reaktif motionMode + .reduce-anim
  *  3) settings.reduceAnimations  — eski kayıt uyumu ('Animasyonları Azalt' bayrağı)
  *  4) settings.batterySaver     — pil tasarrufu (aynı bastırmayı paylaşır)
  * Hepsi aynı şeyi yapar: şok dalgası, kıvılcım, gövde sarsıntısı ve uçan metin üretilmez.
@@ -137,8 +146,13 @@ const onReducedMotionChange = (e: MediaQueryListEvent): void => {
 const motionMode = useMotionMode()
 
 function shouldReduceMotion(): boolean {
+  const rootHasReduceAnim =
+    typeof document !== 'undefined' &&
+    (document.documentElement.classList.contains('reduce-anim') ||
+      document.documentElement.classList.contains('motion-off'))
   return (
     prefersReducedMotion ||
+    rootHasReduceAnim ||
     isMotionReduced() ||
     motionMode.value !== 'full' ||
     store.settings.reduceAnimations === true ||
@@ -160,18 +174,14 @@ function stopAnimation(): void {
     cancelAnimationFrame(animId)
     animId = null
   }
+  lastFrameTs = null
 }
 
 function clearBodyShake(): void {
-  if (shakeTimeout) {
-    clearTimeout(shakeTimeout)
-    shakeTimeout = null
+  shakeController.clear()
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove(...ALL_SHAKE_CLASSES)
   }
-  const target = document.getElementById('game-main-content')
-  if (target) {
-    target.classList.remove('screen-shake', 'shake-soft', 'shake-hard')
-  }
-  document.body.classList.remove('screen-shake', 'shake-soft', 'shake-hard')
 }
 
 /** Azaltılmış hareket açıldığı anda uçan tüm efektleri düşürür (döngü kendini kapatır). */
@@ -216,6 +226,7 @@ function spawnParticle(x: number, y: number, text: string, color = '#e2e8f0', bi
   }
 
   if (animId === null) {
+    lastFrameTs = null
     animId = requestAnimationFrame(loop)
   }
 }
@@ -234,7 +245,8 @@ function spawnSingle(
   const vx = (Math.random() - 0.5) * spread
   const vy = -(2.5 + Math.random() * 2.0) - (big ? index * 0.35 : 0)
 
-  const cap = mode === 'tilt' ? 120 : mode === 'calm' ? 30 : 60
+  const baseCap = PARTICLE_BUDGET.MAX_PARTICLES
+  const cap = mode === 'tilt' ? baseCap * 2 : mode === 'calm' ? Math.floor(baseCap * 0.5) : baseCap
   const p: Particle = {
     // Yatay saçılım: aynı noktadan üst üste spawn'da metin yığını yerine şerit
     x: x + (Math.random() - 0.5) * (big ? 64 : 28),
@@ -322,6 +334,7 @@ function spawnShockwave(x: number, y: number, color = '#a855f7', maxRadius = 180
   }
 
   if (animId === null) {
+    lastFrameTs = null
     animId = requestAnimationFrame(loop)
   }
 }
@@ -348,7 +361,7 @@ function clearFeastKnockdown(): void {
   }
 }
 
-function pulseFeastKnockdown(ms: number): void {
+function pulseFeastKnockdown(ms: number = PARTICLE_BUDGET.KNOCK_DOWN_MS): void {
   if (ms <= 0 || typeof document === 'undefined') return
   // reduced/off/pil: zemin bastırma yok (şölen zaten sadeleşmiş/gizli).
   if (shouldReduceMotion()) return
@@ -490,6 +503,7 @@ function triggerFeastScene(options: FeastSceneTriggerOptions): void {
   }
 
   if (animId === null) {
+    lastFrameTs = null
     animId = requestAnimationFrame(loop)
   }
 }
@@ -513,13 +527,15 @@ function spawnYutSparks(x: number, y: number, color = '#e2e8f0'): void {
   const want = reduced ? 2 : FEAST_SCENES.yut.sparks
   spawnFeastSparks(x, y, color, want)
   if (animId === null && sparks.length > 0) {
+    lastFrameTs = null
     animId = requestAnimationFrame(loop)
   }
 }
 
-function loop() {
+function loop(ts?: number) {
   if (!ctx || !canvasRef.value) {
     animId = null
+    lastFrameTs = null
     return
   }
 
@@ -530,6 +546,11 @@ function loop() {
     return
   }
 
+  const now = typeof ts === 'number' ? ts : performance.now()
+  const rawDt = lastFrameTs !== null ? (now - lastFrameTs) / (1000 / 60) : 1
+  lastFrameTs = now
+  const dt = Math.min(2.5, Math.max(0.25, rawDt))
+
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   ctx.save()
   ctx.scale(dpr, dpr)
@@ -538,7 +559,7 @@ function loop() {
   // 1. Şok Dalgaları Render & Fizik
   for (let i = shockwaves.length - 1; i >= 0; i--) {
     const sw = shockwaves[i]
-    sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2.2
+    sw.radius += ((sw.maxRadius - sw.radius) * 0.16 + 2.2) * dt
     sw.alpha = Math.max(0, 1 - sw.radius / sw.maxRadius)
 
     if (sw.radius >= sw.maxRadius || sw.alpha <= 0) {
@@ -559,12 +580,12 @@ function loop() {
   // 2. Neon Kıvılcımlar Render & Fizik
   for (let i = sparks.length - 1; i >= 0; i--) {
     const s = sparks[i]
-    s.life++
-    s.x += s.vx
-    s.y += s.vy
-    s.vx *= 0.94
-    s.vy *= 0.94
-    s.vy += 0.08 // Yerçekimi
+    s.life += dt
+    s.x += s.vx * dt
+    s.y += s.vy * dt
+    s.vx *= Math.pow(0.94, dt)
+    s.vy *= Math.pow(0.94, dt)
+    s.vy += 0.08 * dt // Yerçekimi
     s.alpha = Math.max(0, 1 - s.life / s.maxLife)
 
     if (s.life >= s.maxLife || s.alpha <= 0) {
@@ -584,11 +605,11 @@ function loop() {
   // 3. Metin Parçacıkları Render & Fizik
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i]
-    p.life++
+    p.life += dt
 
-    p.x += p.vx
-    p.y += p.vy
-    p.vy *= 0.96
+    p.x += p.vx * dt
+    p.y += p.vy * dt
+    p.vy *= Math.pow(0.96, dt)
 
     const progress = p.life / p.maxLife
     p.alpha = Math.max(0, 1 - progress)
@@ -602,9 +623,8 @@ function loop() {
     ctx.globalAlpha = p.alpha
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    // İmza tipografi (ADR-0066): display font m6x11plus — ızgara boyutları 18'in
-    // katları; tek ağırlık Regular (sentetik bold piksel ızgarasını bozar).
-    ctx.font = `400 ${p.size}px "m6x11plus", "Space Mono", monospace`
+    // İmza tipografi (ADR-0066 + F3.4): display font m6x11plus — fallback "Space Grotesk", system-ui, sans-serif
+    ctx.font = `400 ${p.size}px "m6x11plus", "Space Grotesk", system-ui, sans-serif`
 
     // Koyu kontur: her zeminde okunabilirlik (karanlık panelde de açık alanda da).
     // Kalınlık boyutla ölçeklenir (18px'te 3.5 · 36px'te ~6.5 — eski 0.18 oranı).
@@ -625,6 +645,7 @@ function loop() {
     animId = requestAnimationFrame(loop)
   } else {
     animId = null
+    lastFrameTs = null
   }
 }
 
@@ -662,58 +683,8 @@ function handleShakeEvent(e: Event) {
     return
   }
 
-  const target = document.getElementById('game-main-content')
-  if (!target) return
-
-  // P0 Balatro: shake kademesi — detail.level: 'soft' | 'medium' | 'hard'
   const level = (e as CustomEvent<{ level?: string }>).detail?.level ?? 'medium'
-  const cls = level === 'hard' ? 'shake-hard' : level === 'soft' ? 'shake-soft' : 'screen-shake'
-  const ms = level === 'hard' ? 400 : level === 'soft' ? 200 : 250
-
-  const now = Date.now()
-  // Anti-Spam Koruması: Botlar veya hızlı döngüler çalışırken ekranın aralıksız titremesini önle
-  // Soft sarsıntılar için en az 600ms, orta sarsıntılar için en az 400ms aralık zorunludur
-  // İstisna: Mevcut durumdan daha sert bir seviyeye ('hard') yükselme her zaman uygulanır
-  const minInterval = level === 'soft' ? 600 : level === 'medium' ? 400 : 200
-  const isUpgradingToHard = level === 'hard' && !target.classList.contains('shake-hard')
-
-  if (now - lastShakeAt < minInterval && !isUpgradingToHard) {
-    return
-  }
-  lastShakeAt = now
-
-  const hasHard = target.classList.contains('shake-hard')
-  const hasMedium = target.classList.contains('screen-shake')
-
-  // Zaten aynı veya daha üst kademede bir sarsıntı aktifse, sınıfı silip eklemek
-  // ve reflow tetiklemek yerine sadece zamanlayıcıyı uzatırız.
-  // Bu sayede ardışık kütle/dekad artışlarında mobilde ve PC'de GPU katman yırtılması veya titreme olmaz.
-  if (
-    target.classList.contains(cls) ||
-    (cls === 'shake-soft' && (hasMedium || hasHard)) ||
-    (cls === 'screen-shake' && hasHard)
-  ) {
-    if (shakeTimeout) {
-      clearTimeout(shakeTimeout)
-    }
-    shakeTimeout = setTimeout(() => {
-      target.classList.remove('screen-shake', 'shake-soft', 'shake-hard')
-      shakeTimeout = null
-    }, ms)
-    return
-  }
-
-  if (shakeTimeout) {
-    clearTimeout(shakeTimeout)
-  }
-
-  target.classList.remove('screen-shake', 'shake-soft', 'shake-hard')
-  target.classList.add(cls)
-
-  shakeTimeout = setTimeout(() => {
-    target.classList.remove('screen-shake', 'shake-soft', 'shake-hard')
-    shakeTimeout = null
-  }, ms)
+  shakeController.trigger(level as ShakeLevelInput)
 }
 
 function handleJuiceModeEvent(e: Event) {
@@ -773,13 +744,17 @@ onMounted(() => {
     }
   } catch { /* yoksay */ }
 
-  // Sistem hareket tercihi: bir kez oku, çalışma boyunca değişiklikleri dinle
+  // Sistem hareket tercihi: bir kez oku, çalışma boyunca değişiklikleri dinle (F7.5: root .reduce-anim destekli)
   if (typeof window.matchMedia === 'function') {
     reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    prefersReducedMotion = reducedMotionQuery.matches
+    prefersReducedMotion =
+      reducedMotionQuery.matches ||
+      (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim'))
     if (typeof reducedMotionQuery.addEventListener === 'function') {
       reducedMotionQuery.addEventListener('change', onReducedMotionChange)
     }
+  } else if (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim')) {
+    prefersReducedMotion = true
   }
 
   window.addEventListener('resize', resizeCanvas)

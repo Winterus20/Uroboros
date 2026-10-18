@@ -100,13 +100,13 @@ const ventRampClass = computed(() => {
 
       <div class="progress-track progress-track-md">
         <div
-          class="h-full bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-400 transition-all duration-100"
+          class="progress-fill h-full bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-400 transition-all duration-100"
           :style="{ width: `${Math.min(100, (store.viralTimeRemaining / 25) * 100)}%` }"
         ></div>
       </div>
 
       <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
-        <span class="text-cyan-300 font-bold">⚡ ×{{ store.labViralMultiplier.toFixed(1) }} Canlı Plazma Çarpanı</span>
+        <span class="text-cyan-300 font-bold tabular-nums">⚡ ×{{ store.labViralMultiplier.toFixed(1) }} Canlı Plazma Çarpanı</span>
         <span class="text-cyan-300 font-bold">✨ 3× Kozmik Kriz Yağmuru</span>
       </div>
     </div>
@@ -117,7 +117,7 @@ const ventRampClass = computed(() => {
         <div class="flex items-center justify-between text-xs font-mono">
           <span class="text-slate-300 flex items-center gap-1">
             <span>Kritik Plazma Seviyesi:</span>
-            <b :class="isHypeFull ? 'text-cyan-400 font-bold' : 'text-slate-200'">{{ Math.floor(store.labHype) }}%</b>
+            <b :class="isHypeFull ? 'text-cyan-400 font-bold' : 'text-slate-200'" class="tabular-nums">{{ Math.floor(store.labHype) }}%</b>
           </span>
           <span v-if="isHypeFull" class="text-cyan-400 font-bold animate-pulse">
             REAKTÖR KRİTİK SEVİYEDE! BOŞALIMA HAZIR!
@@ -132,7 +132,7 @@ const ventRampClass = computed(() => {
 
         <div class="progress-track progress-track-lg relative overflow-hidden">
           <div
-            class="h-full transition-all duration-200"
+            class="progress-fill h-full transition-all duration-200"
             :class="isHypeFull ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-400 animate-pulse' : 'bg-cyan-500'"
             :style="{ width: `${store.labHype}%` }"
           ></div>

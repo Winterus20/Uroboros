@@ -32,7 +32,7 @@ export default {
         // mono = Space Mono (retro terminal/CRT telemetri), sans = Space Grotesk
         // (ayla aile, retro-teknik kimlik). İkisi de TR-verified (fonttools cmap).
         mono: ['Space Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        sans: ['Space Grotesk', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         // Display (ADR-0066 "Aç Kumarhane" pivotu): Balatro'nun piksel fontu
         // m6x11plus (Daniel Linssen, atıf zorunlu — public/fonts/ATTRIBUTION.md).
         // TR kapsaması doğrulanmış; ızgara boyutları 18'in katları (style.css @font-face notu).

@@ -244,8 +244,8 @@ defineExpose({ setImportError, setImportSuccess });
           aria-label="Kayıt kodunu içe aktar"
           class="btn-tactile px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-1 cursor-pointer"
           :class="importInspection?.valid
-            ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40'
-            : 'bg-black/30 text-slate-500 border border-white/[0.04] opacity-50 cursor-not-allowed'"
+            ? 'ds-ramp-ready bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40'
+            : 'ds-ramp-locked bg-black/30 text-slate-500 border border-white/[0.04] opacity-50 cursor-not-allowed'"
         >
           <Upload class="w-3.5 h-3.5" />
           Yükle
@@ -258,7 +258,7 @@ defineExpose({ setImportError, setImportSuccess });
           <CheckCircle2 class="w-3.5 h-3.5" />
           Geçerli Kayıt Doğrulandı
         </div>
-        <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-300">
+        <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-300 tabular-nums">
           <div>Kütle: <span class="text-white font-bold">{{ format(importInspection.summary.matter, 2, store.settings.notation) }}</span></div>
           <div>Çöküş: <span class="text-white font-bold">{{ importInspection.summary.singularities }}</span></div>
           <div>Süre: <span class="text-white font-bold">{{ formatTime(importInspection.summary.playtime) }}</span></div>

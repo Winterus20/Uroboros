@@ -14,14 +14,32 @@ export function isPageVisible(): boolean {
 }
 
 /**
- * Hareket kapısı — 'reduced' / 'off' modunda ağır parçacık kutlaması atlanır.
+ * Hareket kapısı — 'reduced' / 'off' modunda ya da pil tasarrufunda ağır parçacık kutlaması atlanır.
  * Kök sınıf mührü okunur (useNavigation yazar); core katmanı store'a bağlanmaz.
  * `force` yalnız bilinçli vitrin anları için istisnadır.
  */
 function motionAllowsConfetti(): boolean {
   if (typeof document === 'undefined') return false
   const root = document.documentElement
-  return !root.classList.contains('motion-off') && !root.classList.contains('reduce-anim')
+  return (
+    !root.classList.contains('motion-off') &&
+    !root.classList.contains('reduce-anim') &&
+    !root.classList.contains('battery-saver')
+  )
+}
+
+/** Juice moduna göre parçacık üst tavanı (ekranı parçacık seline boğmaz). */
+function getJuiceParticleCap(): number {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const mode = localStorage.getItem('doomscroll-juice-mode')
+      if (mode === 'off') return 0
+      if (mode === 'low' || mode === 'minimal') return 20
+    }
+  } catch {
+    /* yoksay */
+  }
+  return 50
 }
 
 export interface SafeConfettiOptions extends confetti.Options {
@@ -34,8 +52,12 @@ export function safeConfetti(opts?: SafeConfettiOptions): boolean {
   if (!isPageVisible()) return false
   const { force, ...confettiOpts } = opts ?? {}
   if (!force && !motionAllowsConfetti()) return false
+  const cap = getJuiceParticleCap()
+  if (!force && cap <= 0) return false
   try {
-    confetti(confettiOpts)
+    const rawCount = confettiOpts.particleCount ?? 35
+    const clampedCount = Math.max(1, Math.min(rawCount, cap))
+    confetti({ ...confettiOpts, particleCount: clampedCount })
     return true
   } catch {
     return false

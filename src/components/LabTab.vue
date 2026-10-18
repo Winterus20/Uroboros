@@ -395,7 +395,7 @@ function handleCollapseReactor() {
     <Teleport to="body">
       <div
         v-if="showCodexModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        class="layer-modal fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         @click.self="showCodexModal = false"
       >
         <div class="glass-panel-card max-w-2xl w-full p-5 rounded-2xl border border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.2)] space-y-4 max-h-[85vh] overflow-y-auto">
@@ -407,7 +407,13 @@ function handleCollapseReactor() {
                   Kuantum Parçacık Atlası & Sentez Kodeksi
                 </h2>
                 <div class="text-xs text-cyan-300 font-mono">
-                  Keşfedilen: {{ store.labCodexDiscoveredCount }}/{{ LAB_RECIPES.length }} Formül (+{{ store.labCodexBonusPercent }}% Kalıcı Global Kütle)
+                  Keşfedilen: <span class="tabular-nums font-bold">{{ store.labCodexDiscoveredCount }}/{{ LAB_RECIPES.length }}</span> Formül (+<span class="tabular-nums font-bold">{{ store.labCodexBonusPercent }}</span>% Kalıcı Global Kütle)
+                </div>
+                <div class="progress-track progress-track-mini mt-1.5 w-48 max-w-full">
+                  <div
+                    class="progress-fill progress-fill-cyan"
+                    :style="{ width: `${LAB_RECIPES.length > 0 ? (store.labCodexDiscoveredCount / LAB_RECIPES.length) * 100 : 0}%` }"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -429,7 +435,7 @@ function handleCollapseReactor() {
           <div class="pt-2 text-right">
             <button
               @click="showCodexModal = false"
-              class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-mono text-xs font-bold transition-all cursor-pointer"
+              class="btn-tactile px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-mono text-xs font-bold transition-all cursor-pointer"
             >
               Kapat
             </button>

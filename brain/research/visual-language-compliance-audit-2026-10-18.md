@@ -1,6 +1,6 @@
 # Görsel Dil Uyum Denetimi ve Düzeltme Planı — "Her Tarafı" (2026-10-18)
 
-> **Durum:** ARAŞTIRMA TAMAMLANDI — uygulama kullanıcı onayı bekliyor.
+> **Durum:** TAMAMLANDI (F0 + Dalga 1 + Dalga 2 — 2026-10-18).
 > **Bağlayıcı sözleşme:** [visual-language.md](../context/visual-language.md) · ADR-0060
 > (+ öncüller 0044/0049/0057/0058, faz ADR'leri 0061–0068)
 > **Yöntem:** 6 paralel bağımsız denetim ajanı (salt-okunur) + orchestrator mekanik kapsam matrisi.
@@ -208,7 +208,8 @@ Aşağıdaki bileşenlerde `ds-ramp-*`, `progress-track`, `.dim-glyph` veya moti
 
 ## 6. Uygulama planı
 
-**Dalga yapısı:** F0 (karar/belge) → F1–F4 (altyapı, paralel) → F5–F7 (kimlik/okunabilirlik, paralel) → F8 (QA).
+**Dalga yapısı:** F0 (karar/belge) ✅ → F1–F4 (altyapı, paralel) ✅ → F5–F7 (kimlik/okunabilirlik, paralel) ✅ → F8 (QA & kapanış) ✅.
+**Tamamlanma Durumu:** F0 (Tamamlandı) · Dalga 1: F1, F2, F4, F5 (Tamamlandı) · Dalga 2: F3, F6, F7, F8 + T10 (Tamamlandı).
 Her faz: `npm run typecheck` + `npm test` + `npm run build`; F8'de ayrıca `harness:smoke`, `harness:perf`, `harness:contrast`.
 
 | Faz | Ad | Kapsam | Ana dosyalar | Dosya sahipliği (paralel ajan) |
@@ -259,7 +260,7 @@ Her faz: `npm run typecheck` + `npm test` + `npm run build`; F8'de ayrıca `harn
 | K5 | **Feast tonu `#ff3355` sabit; ayrım kullanım disipliniyle kurulur** | Feast yalnız geniş ambient/vinyet yüzeylerinde; rose yalnız ikaz işareti/ikon; bonus-semantiği cyan'a çekilir (F2). |
 | K6 | **Amber tek ton `#f59e0b`; sözleşme düzeltildi** | §2 "→ #ffbe45" vaadi kaldırıldı (117 tailwind kullanımı token'a taşımak yerine ton sabitlendi). |
 | K7 | **Kapsam = tam F0→F8** | Tüm 138 bulgu + 12 motif + 23 bileşen retrofit turu; dalga dalga, her fazda typecheck/test/build. |
-| — | Uygulama fazı başladı | F0 tamamlandı (bu bölümün altındaki kayıt); F1–F8 dosya sahipliğiyle dalgalara bölündü. |
+| — | **Uygulama fazı** | **F0 + Dalga 1 (F1, F2, F4, F5) + Dalga 2 (F3, F6, F7, F8 + T10) TAMAMLANDI.** Tüm 6 kalite kapısı 0 hata ile doğrulandı. |
 
 > **Açık kalan tek mikro-karar:** `AdminPanel` (dev-only) görsel dil retrofitine dahil mi —
 > varsayılan: **dahil** (kapsam "her tarafı"), ancak en sona (F6 kuyruğu) bırakılır.

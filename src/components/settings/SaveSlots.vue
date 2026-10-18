@@ -64,12 +64,12 @@ defineExpose({ refreshSlots });
         :key="s"
         class="glass-panel-card p-3 rounded-xl border relative flex flex-col justify-between transition-all"
         :class="store.settings.activeSlot === s
-          ? 'border-cyan-500/50 bg-cyan-500/[0.06] shadow-sm'
+          ? 'ds-ramp-ready border-cyan-500/50 bg-cyan-500/[0.06] shadow-sm'
           : 'border-white/[0.07] bg-black/40'"
       >
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-xs font-mono font-bold text-white">Slot {{ s }}</span>
+            <span class="text-xs font-mono font-bold text-white tabular-nums">Slot {{ s }}</span>
             <span
               v-if="store.settings.activeSlot === s"
               class="ds-badge ds-badge-cyan"
@@ -78,7 +78,7 @@ defineExpose({ refreshSlots });
             </span>
           </div>
 
-          <div v-if="slotsMeta[s - 1]?.exists" class="space-y-0.5 text-[10px] font-mono text-slate-400">
+          <div v-if="slotsMeta[s - 1]?.exists" class="space-y-0.5 text-[10px] font-mono tabular-nums text-slate-400">
             <div class="text-slate-200 font-semibold truncate">
               Kütle: {{ format(slotsMeta[s - 1].matter || '0', 2, store.settings.notation) }}
             </div>

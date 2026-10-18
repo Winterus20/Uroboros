@@ -79,6 +79,32 @@ export function navLabelClass(isActive: boolean): string {
     : `${base} max-w-0 opacity-0 -mr-1.5 pointer-events-none`;
 }
 
+// F3.3: OS prefers-reduced-motion canlı dinleyici.
+// Kök elemana .reduce-anim sınıfı damgalanırken OS tercihi doğrudan tek kapı kontratına dahil edilir.
+const osReducedMotion = ref(false);
+let osMotionListenerInit = false;
+
+function ensureOsMotionListener(onOsChange?: () => void): void {
+  if (osMotionListenerInit) return;
+  osMotionListenerInit = true;
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+  try {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    osReducedMotion.value = query.matches;
+    const onChange = (e: MediaQueryListEvent): void => {
+      osReducedMotion.value = e.matches;
+      onOsChange?.();
+    };
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", onChange);
+    } else if (typeof (query as any).addListener === "function") {
+      (query as any).addListener(onChange);
+    }
+  } catch {
+    /* yoksay — kapı kapalı varsayılır */
+  }
+}
+
 export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
   const store = useGameStore();
 
@@ -311,6 +337,8 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
   // otomatik olaylar ilgili sekmede değilken sessiz geçer.
   watch(activeTab, (tab) => store.setActiveGameTab(tab), { immediate: true });
 
+  ensureOsMotionListener(() => syncEffectClasses());
+
   // QoL: animasyon azaltma ayarı — kök elemana sınıf bağlar (style.css: .reduce-anim / .motion-off)
   // 3 durumlu hareket kontrolü: motionMode yoksa reduceAnimations'dan türetilir (eski kayıt uyumu).
   function effectiveMotionMode(): 'full' | 'reduced' | 'off' {
@@ -319,14 +347,18 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     return store.settings.reduceAnimations ? 'reduced' : 'full';
   }
   function syncEffectClasses() {
+    if (typeof document === "undefined") return;
     const mode = effectiveMotionMode();
-    document.documentElement.classList.toggle("reduce-anim", mode === 'reduced');
-    document.documentElement.classList.toggle("motion-off", mode === 'off');
+    const osReduced = osReducedMotion.value;
+    const root = document.documentElement;
+    // F3.3: mod 'reduced' ise VEYA mod 'off' değilken OS tercihi aktifse köke 'reduce-anim' basılır.
+    root.classList.toggle("reduce-anim", mode === 'reduced' || (mode !== 'off' && osReduced));
+    root.classList.toggle("motion-off", mode === 'off');
     // ADR-0069: CRT katmanı kaldırıldı — crt-off kök sınıfı da söküldü.
-    document.documentElement.classList.toggle("battery-saver", !!store.settings.batterySaver);
+    root.classList.toggle("battery-saver", !!store.settings.batterySaver);
   }
   watch(
-    () => [store.settings.reduceAnimations, store.settings.motionMode, store.settings.batterySaver],
+    () => [store.settings.reduceAnimations, store.settings.motionMode, store.settings.batterySaver, osReducedMotion.value],
     () => syncEffectClasses(),
     { immediate: true }
   );

@@ -40,9 +40,17 @@ const challengeList = computed(() => {
           <Swords class="w-4 h-4 text-rose-400" />
           <span class="text-xs font-bold text-slate-200">Kozmik Kriz Meydan Okumaları Rekorları (C1–C8)</span>
         </div>
-        <span class="text-[11px] font-mono text-rose-300">
-          Tamamlanan: {{ store.completedChallenges.length }} / 8
-        </span>
+        <div class="flex flex-col items-end">
+          <span class="text-[11px] font-mono text-rose-300">
+            Tamamlanan: <span class="tabular-nums">{{ store.completedChallenges.length }} / 8</span>
+          </span>
+          <div class="progress-track progress-track-mini w-20 mt-1">
+            <div
+              class="progress-fill progress-fill-cyan"
+              :style="{ width: `${(store.completedChallenges.length / 8) * 100}%` }"
+            ></div>
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">

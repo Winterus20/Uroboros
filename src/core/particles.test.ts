@@ -137,10 +137,11 @@ describe('particles — motion ölçeği ve havuz kıskaçı', () => {
     expect(clampEmission(-5, 0, 220)).toBe(0)
   })
 
-  it('bütçe sabitleri planla birebir (metin 60 / halka 8 / kıvılcım 220)', () => {
+  it('bütçe sabitleri planla birebir (metin 60 / halka 8 / kıvılcım 220 / knock 140)', () => {
     expect(PARTICLE_BUDGET.MAX_PARTICLES).toBe(60)
     expect(PARTICLE_BUDGET.MAX_SHOCKWAVES).toBe(8)
     expect(PARTICLE_BUDGET.MAX_SPARKS).toBe(220)
     expect(PARTICLE_BUDGET.SUPPRESSION_WINDOW_MS).toBe(400)
+    expect(PARTICLE_BUDGET.KNOCK_DOWN_MS).toBe(140)
   })
 })

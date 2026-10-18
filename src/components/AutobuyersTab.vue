@@ -58,6 +58,12 @@ const speedBot = computed(() => {
               <Activity class="w-3.5 h-3.5 animate-pulse text-cyan-300" />
               <span class="tabular-nums font-mono">{{ store.activeAutobuyersCount }}/{{ store.totalAutobuyersCount }} Bot</span>
             </div>
+            <div class="progress-track progress-track-mini w-20 mt-1">
+              <div
+                class="progress-fill progress-fill-cyan"
+                :style="{ width: `${store.totalAutobuyersCount > 0 ? (store.activeAutobuyersCount / store.totalAutobuyersCount) * 100 : 0}%` }"
+              ></div>
+            </div>
           </div>
 
           <!-- Overclock Hız Kutusu -->

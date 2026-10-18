@@ -139,9 +139,9 @@ const showNapConfirm = ref(false)
       <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
         <span class="flex items-center gap-1">
           <Hourglass class="w-3 h-3" />
-          10 dk sonra: ~{{ projectedBots }} bot
+          10 dk sonra: ~<span class="tabular-nums">{{ projectedBots }}</span> bot
         </span>
-        <span>Toplu Çöküş: {{ store.napCount }}×</span>
+        <span>Toplu Çöküş: <span class="font-mono tabular-nums">{{ store.napCount }}×</span></span>
       </div>
 
       <!-- TOPLU ÇÖKÜŞ butonu -->

@@ -21,11 +21,11 @@ function getCellSeedDef(seedType: LabSeedType | null) {
     <div
       v-for="recipe in LAB_RECIPES"
       :key="recipe.result"
-      class="p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+      class="p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all"
       :class="[
         isSeedDiscovered(recipe.result)
-          ? 'bg-cyan-950/20 border-cyan-500/40'
-          : 'bg-black/50 border-white/[0.08]'
+          ? 'bg-cyan-950/20 border-cyan-500/40 ds-ramp-ready'
+          : 'bg-black/50 border-white/[0.08] ds-ramp-locked'
       ]"
     >
       <div class="flex items-center gap-3">
@@ -39,7 +39,7 @@ function getCellSeedDef(seedType: LabSeedType | null) {
             </span>
             <span
               v-if="isSeedDiscovered(recipe.result)"
-              class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1"
+              class="text-[9px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1"
             >
               <CheckCircle2 class="w-3 h-3" />
               <span>Sentezlendi (+%3)</span>
@@ -59,7 +59,7 @@ function getCellSeedDef(seedType: LabSeedType | null) {
       </div>
 
       <!-- Ebeveyn İpuçları -->
-      <div class="flex items-center gap-1.5 text-xs font-mono bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10 text-slate-300 shrink-0">
+      <div class="flex items-center gap-1.5 text-xs font-mono tabular-nums bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10 text-slate-300 shrink-0">
         <span>{{ getCellSeedDef(recipe.parent1)?.icon }} {{ getCellSeedDef(recipe.parent1)?.name }}</span>
         <span class="text-slate-400">+</span>
         <span>{{ getCellSeedDef(recipe.parent2)?.icon }} {{ getCellSeedDef(recipe.parent2)?.name }}</span>

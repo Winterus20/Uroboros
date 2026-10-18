@@ -1,6 +1,6 @@
 # Aktif Görev (In-Progress)
 
-## 🔄 Görsel Dil Uyum Turu — "Her Tarafı" (2026-10-18) — ARAŞTIRMA TAMAMLANDI, UYGULAMA ONAY BEKLİYOR
+## ✅ Görsel Dil Uyum Turu — "Her Tarafı" (2026-10-18) — TAMAMLANDI
 
 **Kaynak:** kullanıcı talebi — *"oyunu `brain/context/visual-language.md`'ye göre her tarafını düzeltmek istiyorum; önce araştırma yap subagentlarla, sonra uygulayacağız"*.
 **Master rapor:** [`brain/research/visual-language-compliance-audit-2026-10-18.md`](../research/visual-language-compliance-audit-2026-10-18.md)
@@ -22,11 +22,11 @@
 - [x] **Kullanıcı kararları (2026-10-18):** K1 = **CRT Yol B** (resmen kaldır) · K2 = **16/16 motif** · K3 = tek paylaşılan bant dizisi (28) · K4 = glitch+chromatic gerçekten uygulanır · K5 = feast tonu sabit, ayrım disiplinle · K6 = amber tek ton, sözleşme düzeltildi · K7 = **tam kapsam F0→F8**.
 - [x] **F0 — Karar & sözleşme senkronu:** ADR-0069 + `visual-language.md` §1/§2/§3/§4/§6/§8 güncellendi.
 - [x] **Dalga 1 (7 paralel ajan + orchestrator):** motif redraw ×3 grup (12 SVG) · motif kod katmanı (test kilidi + pencere dizilimi + bant ömrü) · yüzey token hijyeni (9 dosya) · rezerve renk semantiği (6 dosya) · ayarlar/istatistik hijyeni (3 dosya) · orchestrator: CRT sökümü, glitch/chromatic, planck geri, token tek kaynağı, `dark-*` ölçeği kaldırıldı.
-- [x] **Doğrulama:** typecheck 0 · 27 dosya / **385 test** · build 0 · `harness:smoke` baseline sabit. Rapor: [completed.md](completed.md) (2026-10-18 girişi).
-- [ ] **Dalga 2:** F3 (katman/motion/juice) + F6 (okunabilirlik & 23 bileşen retrofit) + F7 (tipografi rötuşu) + F8 (QA/kapanış).
+- [x] **Dalga 2 (6 paralel ajan + QA gate):** F3 (katman/motion/juice: modal `layer-modal`, OS reduced-motion kök mührü + 8 animasyon, JuiceLayer delta-time, MAX_PARTICLES bütçesi, screen-shake modülü), F6 (okunabilirlik & 23 bileşen retrofit: LabSeedCard 3-state ramp, DimensionRow 9-tier lore, MultipliersPanel glif, bespoke çubuklar `progress-track`'e, gold+ring mühür), F7 (TimeClockOverlay 18px ızgara + font-mono, tabular-nums, font fallback tek kaynak), F8 + T10 (243 çift WCAG AA kontrast, ölü CSS & tanımsız sınıf temizliği).
+- [x] **Doğrulama (Tüm 6 Kapı):** typecheck 0 · 27 dosya / **387 test** · build 0 · `harness:smoke` baseline sabit · `harness:perf` churn stabil · `harness:contrast` 243/243 çift WCAG 2.2 AA. Rapor: [completed.md](completed.md) (2026-10-18 girişi).
 
 ### Sıradaki adım
-Dalga 2 planlanacak: **F3** (modal `z-50`→`layer-modal`, OS reduced-motion kök mührü + 8 kapsanmayan animasyon, `JuiceLayer` timestamp/delta, partikül cap tek kaynağı, confetti cap, boş interval), **F6** (LabSeedCard ramp, DimensionRow 9 tier lore, MultipliersPanel glif, 9 bespoke çubuk, bar'sız oranlar), **F7** (`TimeClockOverlay` display rolü + 18px ızgara, canvas fallback hizası), **F8** (contrast kapsamı + AA + perf).
+Tüm F0–F8 fazları ve dalgalar tamamlandı. Sistem kararlı ve üretim derlemesi hazır.
 
 ---
 ## ✅ Zaman Yayı (Time Clock) (2026-10-17) — TAMAMLANDI

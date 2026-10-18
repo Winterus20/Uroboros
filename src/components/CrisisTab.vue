@@ -32,7 +32,7 @@ const hasCrisisCollage = computed(
 )
 
 // D4 (Bölünmüş Dikkat) pasifi: kriz spawn hızını artırır — etkinse hero'da rozet
-// Arayüzde "D4" yerine katman glifi gösterilir; teknik kimlik tooltip nüansında kalır.
+// Arayüzde "D4" yerine katman glifi ve satır içi görsel okuma (inline visual readout) gösterilir.
 const d4Passive = computed(() => {
   const id = getTierIdentity(4)
   if (!store.passiveBadges.d4Anomaly || !id) return null
@@ -154,7 +154,7 @@ function handleIntervention(type: CrisisInterventionType) {
 
 <template>
   <div class="space-y-4" :class="{ 'crisis-collage-frame rounded-xl p-2': hasCrisisCollage }">
-    <div v-if="hasCrisisCollage" class="collage-checker rounded-sm" aria-hidden="true"></div>
+    <div v-if="hasCrisisCollage" class="collage-checker crisis-dama-strip rounded-sm" aria-hidden="true"></div>
     <!-- Birleşik Hero: Olay Ufku Reaktörü -->
     <TabHero
       :icon="Activity"
@@ -233,7 +233,7 @@ function handleIntervention(type: CrisisInterventionType) {
       <!-- İnteraktif Termal Reaktör Barı & Faz Durumu -->
       <template #progress>
         <div class="space-y-1.5 w-full">
-          <div class="relative w-full h-4 bg-black/60 rounded-full overflow-hidden border border-white/10 p-0.5">
+          <div class="progress-track progress-track-lg progress-track-bordered relative w-full h-4 bg-black/60 rounded-full overflow-hidden border border-white/10 p-0.5">
             <!-- Dilim Arka Plan Bölgeleri -->
             <div class="absolute inset-0 flex text-[9px] font-mono pointer-events-none opacity-40">
               <div class="w-[30%] border-r border-white/20 bg-cyan-950/30"></div>
@@ -453,6 +453,12 @@ function handleIntervention(type: CrisisInterventionType) {
         Reaktör boşta kaldığında saniyede -%1.2 doğal olarak soğur.
       </div>
     </div>
-    <div v-if="hasCrisisCollage" class="collage-checker rounded-sm" aria-hidden="true"></div>
+    <div v-if="hasCrisisCollage" class="collage-checker crisis-dama-strip rounded-sm" aria-hidden="true"></div>
   </div>
 </template>
+
+<style scoped>
+.crisis-dama-strip {
+  opacity: max(0.32, calc(var(--substrate-opacity, 0.25) * 1.1));
+}
+</style>

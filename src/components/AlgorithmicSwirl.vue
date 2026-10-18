@@ -69,18 +69,21 @@ const prefersReducedMotion = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null
 
 const onReducedMotionChange = (e: MediaQueryListEvent): void => {
-  prefersReducedMotion.value = e.matches
+  prefersReducedMotion.value =
+    e.matches ||
+    (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim'))
 }
 
 // 3 durumlu hareket kapısı (reaktif): 'reduced'/'off' iken tam ekran WebGL döngüsü çalışmaz.
 const motionMode = useMotionMode()
 
-// Efektin aktif olup olmadığı (kullanıcı ayarı + pil tasarrufu + hareket kapısı + OS tercihi)
+// Efektin aktif olup olmadığı (kullanıcı ayarı + pil tasarrufu + hareket kapısı + OS tercihi + .reduce-anim)
 const isEnabled = computed(() => {
   if (store.settings.swirlShaderQuality === 'off') return false
   if (store.settings.batterySaver) return false
   if (motionMode.value !== 'full') return false
   if (isMotionReduced()) return false
+  if (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim')) return false
   if (prefersReducedMotion.value) return false
   return true
 })
@@ -441,13 +444,17 @@ watch(
 )
 
 onMounted(() => {
-  // Sistem hareket tercihi: bir kez oku, çalışma boyunca değişiklikleri dinle (JuiceLayer kalıbı).
+  // Sistem hareket tercihi: bir kez oku, çalışma boyunca değişiklikleri dinle (JuiceLayer kalıbı, F7.5: root .reduce-anim destekli).
   if (typeof window.matchMedia === 'function') {
     reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    prefersReducedMotion.value = reducedMotionQuery.matches
+    prefersReducedMotion.value =
+      reducedMotionQuery.matches ||
+      (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim'))
     if (typeof reducedMotionQuery.addEventListener === 'function') {
       reducedMotionQuery.addEventListener('change', onReducedMotionChange)
     }
+  } else if (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-anim')) {
+    prefersReducedMotion.value = true
   }
 
   if (isEnabled.value && !document.hidden) {

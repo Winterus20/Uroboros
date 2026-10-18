@@ -388,13 +388,19 @@ function buy(e?: MouseEvent) {
         <span class="text-[10px] font-bold opacity-90 leading-tight mt-0.5 whitespace-nowrap">{{ tierConfig.symbol }}</span>
       </div>
 
-      <!-- Başlık ve Meta Bilgileri (alt yazı kaldırıldı — açıklama ismin tooltip'inde) -->
+      <!-- Başlık ve Meta Bilgileri -->
       <div class="flex flex-col min-w-0 flex-1">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span
             class="text-xs font-bold text-slate-100 truncate max-w-[130px] sm:max-w-[200px] md:max-w-none"
           >
             {{ tierConfig.shortName }}
+          </span>
+          <span
+            v-if="tierConfig.subtitle"
+            class="hidden md:inline text-[10px] font-normal text-slate-400/90 truncate max-w-[200px]"
+          >
+            · {{ tierConfig.subtitle }}
           </span>
 
           <!-- Mobilde Sahip Olunan Adet Rozeti -->
@@ -477,9 +483,9 @@ function buy(e?: MouseEvent) {
         </div>
 
         <!-- İnce Alt Paket İlerleme Çubuğu -->
-        <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-black/40 pointer-events-none">
+        <div class="progress-track progress-track-mini absolute bottom-0 left-0 right-0 rounded-none pointer-events-none">
           <div
-            class="h-full bg-purple-400/80 transition-all duration-150"
+            class="progress-fill progress-fill-purple transition-all duration-150"
             :style="{ width: `${(packProgress / 10) * 100}%` }"
           ></div>
         </div>

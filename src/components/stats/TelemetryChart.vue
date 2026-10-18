@@ -82,7 +82,7 @@ const hoverDpsText = computed(() => {
       <div class="flex items-center gap-2">
         <Activity class="w-4 h-4 text-purple-400" />
         <span class="text-xs font-bold text-slate-200">Saniyelik Üretim Zaman Çizelgesi</span>
-        <span class="text-[10px] text-slate-500 font-mono">Son 10 dk ({{ store.dpsHistory.length }} sn)</span>
+        <span class="text-[10px] text-slate-500 font-mono">Son 10 dk (<span class="tabular-nums">{{ store.dpsHistory.length }}</span> sn)</span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -143,7 +143,7 @@ const hoverDpsText = computed(() => {
       </svg>
     </div>
     <div v-else class="h-24 rounded-lg bg-black/50 border border-white/[0.05] flex items-center justify-center">
-      <span class="text-xs font-mono text-slate-500">Telemetri verisi toplanıyor... ({{ store.dpsHistory.length }} sn)</span>
+      <span class="text-xs font-mono text-slate-500">Telemetri verisi toplanıyor... (<span class="tabular-nums">{{ store.dpsHistory.length }}</span> sn)</span>
     </div>
 
     <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">

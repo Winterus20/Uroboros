@@ -89,7 +89,7 @@ const cosmicTelemetry = computed(() => {
 const nightPhase = computed(() => {
   const p = cosmicProgress.value;
   if (p >= 1) return { label: "Kozmik Tekillik", dot: "bg-amber-300", text: "text-amber-200" };
-  if (p >= 0.8) return { label: "Galaktik Olay Ufku", dot: "bg-orange-300", text: "text-orange-200" };
+  if (p >= 0.8) return { label: "Galaktik Olay Ufku", dot: "bg-amber-400", text: "text-amber-300" };
   if (p >= 0.55) return { label: "Makro Çöküş", dot: "bg-purple-300", text: "text-purple-200" };
   if (p >= 0.25) return { label: "Mikro Karadelik", dot: "bg-cyan-300", text: "text-cyan-200" };
   return { label: "Planck Yırtılması", dot: "bg-blue-400", text: "text-slate-200" };
@@ -383,12 +383,11 @@ onUnmounted(() => {
         <span class="font-bold tracking-wider tabular-nums text-slate-200">{{ cosmicTelemetry }}</span>
         <span class="text-[10px] text-slate-400 font-semibold truncate hidden sm:inline">{{ nightPhase.label }}</span>
         <!-- Kozmik İlerleme İnce Şeridi -->
-        <span class="hidden md:inline-block w-16 h-1 rounded-full overflow-hidden bg-black/50 border border-white/[0.06] shrink-0" aria-hidden="true">
+        <span class="hidden md:inline-block progress-track progress-track-mini w-16 shrink-0" aria-hidden="true">
           <span
-            class="block h-full rounded-full transition-all duration-500"
+            class="block progress-fill progress-fill-dawn duration-500"
             :style="{
-              width: `${Math.round(cosmicProgress * 100)}%`,
-              background: 'linear-gradient(to right, #00f0ff, #a855f7, #f59e0b)'
+              width: `${Math.round(cosmicProgress * 100)}%`
             }"
           ></span>
         </span>
@@ -552,9 +551,9 @@ onUnmounted(() => {
           :class="comboRamp.box"
         >
           <span class="text-xs font-mono font-black tabular-nums leading-none" :class="comboRamp.text">{{ comboBadgeText }}</span>
-          <div class="w-full h-1 rounded-full bg-black/50 overflow-hidden">
+          <div class="progress-track progress-track-mini w-full">
             <div
-              class="h-full rounded-full bg-gradient-to-r transition-all duration-150"
+              class="progress-fill duration-150"
               :class="comboRamp.bar"
               :style="{ width: `${comboDrain * 100}%` }"
             ></div>

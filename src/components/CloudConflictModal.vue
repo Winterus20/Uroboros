@@ -53,7 +53,7 @@ const { dialogRef } = useFocusTrap(
 </script>
 
 <template>
-  <div v-if="authStore.showConflictModal && conflict" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+  <div v-if="authStore.showConflictModal && conflict" class="layer-modal fixed inset-0 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
     <div
       ref="dialogRef"
       role="dialog"
@@ -95,25 +95,25 @@ const { dialogRef } = useFocusTrap(
             <div class="space-y-3 mt-4 text-xs">
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kütle:</span>
-                <span class="font-mono font-bold text-cyan-300 text-sm">
+                <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
                   {{ formatMatter(conflict.localMeta.matter) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kozmik Çöküş:</span>
-                <span class="font-mono text-amber-300">
+                <span class="font-mono tabular-nums text-amber-300">
                   {{ conflict.localMeta.singularities }} kez
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Oynama Süresi:</span>
-                <span class="font-mono text-slate-300">
+                <span class="font-mono tabular-nums text-slate-300">
                   {{ formatTime(conflict.localMeta.playtime) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Son Güncelleme:</span>
-                <span class="font-mono text-slate-400 text-[11px]">
+                <span class="font-mono tabular-nums text-slate-400 text-[11px]">
                   {{ formatDate(conflict.localMeta.clientTimestamp) }}
                 </span>
               </div>
@@ -122,7 +122,7 @@ const { dialogRef } = useFocusTrap(
 
           <button
             @click="choose('local')"
-            class="mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition-all shadow-md active:scale-95"
+            class="btn-tactile mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition-all shadow-md active:scale-95 cursor-pointer"
           >
             Bu Cihazdakini Sakla (Bulutu Güncelle)
           </button>
@@ -131,7 +131,7 @@ const { dialogRef } = useFocusTrap(
         <!-- Sağ: Buluttaki İlerleme -->
         <div
           class="flex flex-col justify-between p-4 rounded-xl bg-[var(--ds-panel)] border transition-all"
-          :class="isCloudAhead ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30' : 'border-slate-700/60'"
+          :class="isCloudAhead ? 'ds-ramp-ready border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30' : 'border-slate-700/60'"
         >
           <div>
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -154,25 +154,25 @@ const { dialogRef } = useFocusTrap(
             <div class="space-y-3 mt-4 text-xs">
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kütle:</span>
-                <span class="font-mono font-bold text-cyan-300 text-sm">
+                <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
                   {{ formatMatter(conflict.cloudMeta.matter) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kozmik Çöküş:</span>
-                <span class="font-mono text-amber-300">
+                <span class="font-mono tabular-nums text-amber-300">
                   {{ conflict.cloudMeta.singularities }} kez
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Oynama Süresi:</span>
-                <span class="font-mono text-slate-300">
+                <span class="font-mono tabular-nums text-slate-300">
                   {{ formatTime(conflict.cloudMeta.playtime) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Son Güncelleme:</span>
-                <span class="font-mono text-slate-400 text-[11px]">
+                <span class="font-mono tabular-nums text-slate-400 text-[11px]">
                   {{ formatDate(toMillis(conflict.cloudPayload.updatedAt) ?? conflict.cloudMeta.clientTimestamp) }}
                 </span>
               </div>
@@ -181,7 +181,7 @@ const { dialogRef } = useFocusTrap(
 
           <button
             @click="choose('cloud')"
-            class="mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-500/20 active:scale-95 flex items-center justify-center gap-2"
+            class="btn-tactile ds-ramp-ready mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             <RefreshCw class="w-3.5 h-3.5" />
             Buluttakini Yükle (Cihazı Güncelle)

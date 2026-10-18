@@ -141,7 +141,7 @@ function executeHardReset() {
 </script>
 
 <template>
-  <div class="layer-modal fixed inset-0 flex items-center justify-center p-3 md:p-4 bg-black/80 backdrop-blur-md z-50" @click.self="emit('close')">
+  <div class="layer-modal fixed inset-0 flex items-center justify-center p-3 md:p-4 bg-black/80 backdrop-blur-md" @click.self="emit('close')">
     <div
       ref="dialogRef"
       role="dialog"
@@ -159,14 +159,14 @@ function executeHardReset() {
           <div>
             <h3 :id="titleId" class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
               <span>Sistem Ayarları</span>
-              <span class="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
+              <span class="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-mono tabular-nums text-cyan-300">
                 Slot {{ store.settings.activeSlot }} Aktif
               </span>
             </h3>
             <p class="text-[10px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
               <span>Otomatik Kayıt:</span>
-              <span class="text-cyan-400 font-semibold">{{ lastSavedAgoSeconds }} sn önce</span>
-              <span>· 10 sn aralık</span>
+              <span class="text-cyan-400 font-semibold tabular-nums">{{ lastSavedAgoSeconds }} sn önce</span>
+              <span class="tabular-nums">· 10 sn aralık</span>
             </p>
           </div>
         </div>

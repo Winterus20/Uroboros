@@ -50,7 +50,7 @@ const authStore = useAuthStore();
       <!-- Hesap Yönetimi / Giriş Butonu -->
       <button
         @click="authStore.openAuthModal()"
-        class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 shrink-0"
+        class="btn-tactile px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
         :class="authStore.isAuthenticated ? 'bg-[var(--ds-panel)] border-cyan-500/40 text-cyan-300 hover:bg-[var(--ds-panel-strong)]' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/20'"
       >
         <LogIn v-if="!authStore.isAuthenticated" class="w-3.5 h-3.5" />
@@ -62,7 +62,7 @@ const authStore = useAuthStore();
     <div v-if="authStore.isAuthenticated" class="mt-3 pt-1 flex flex-wrap items-center justify-between gap-2 text-xs">
       <div class="text-[11px] text-slate-400 font-mono">
         Buluttaki Son Kayıt:
-        <span class="text-slate-200 font-semibold">
+        <span class="text-slate-200 font-semibold tabular-nums">
           {{ authStore.cloudMeta ? format(new Decimal(authStore.cloudMeta.matter), 2, store.settings.notation) + ' g Kütle' : 'Henüz yok' }}
         </span>
       </div>
@@ -70,7 +70,7 @@ const authStore = useAuthStore();
         <button
           @click="authStore.saveToCloud(true)"
           :disabled="authStore.isSyncing"
-          class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+          class="btn-tactile px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
         >
           <Loader2 v-if="authStore.syncStatus === 'syncing'" class="w-3 h-3 animate-spin" />
           <UploadCloud v-else class="w-3 h-3" />
@@ -79,7 +79,7 @@ const authStore = useAuthStore();
         <button
           @click="authStore.loadFromCloud()"
           :disabled="authStore.isSyncing"
-          class="px-2.5 py-1 rounded-lg bg-[var(--ds-panel)] hover:bg-[var(--ds-panel-strong)] text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+          class="btn-tactile px-2.5 py-1 rounded-lg bg-[var(--ds-panel)] hover:bg-[var(--ds-panel-strong)] text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
         >
           <DownloadCloud class="w-3 h-3 text-cyan-400" />
           <span>Buluttan Çek</span>

@@ -64,7 +64,7 @@ const { dialogRef } = useFocusTrap(() => report.value !== null, {
         </div>
         <div class="min-w-0">
           <h2 :id="titleId" class="text-base font-bold text-white leading-tight">Tekrar hoş geldin!</h2>
-          <p class="text-xs text-slate-400">Uzakta {{ awayText }} geçirdin — akış durmadı.</p>
+          <p class="text-xs text-slate-400">Uzakta <span class="font-mono tabular-nums text-slate-200">{{ awayText }}</span> geçirdin — akış durmadı.</p>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ const { dialogRef } = useFocusTrap(() => report.value !== null, {
           <span>Ortalama</span>
           <span class="text-slate-300">{{ cpsText }} / sn</span>
         </div>
-        <div v-if="store.passiveBadges.d6Offline" class="text-[10px] text-slate-500 font-mono leading-snug">
+        <div v-if="store.passiveBadges.d6Offline" class="text-[10px] text-slate-500 font-mono tabular-nums leading-snug">
           D6 pasifi çevrimdışı üretimi ×1.02 güçlendirdi.
         </div>
         <div v-if="report.capped" class="text-[11px] text-slate-500 leading-snug">
@@ -90,7 +90,7 @@ const { dialogRef } = useFocusTrap(() => report.value !== null, {
 
       <button
         ref="resumeButtonRef"
-        class="btn-tactile mt-4 w-full h-11 rounded-xl bg-purple-500/90 hover:bg-purple-500 text-white text-sm font-bold cursor-pointer"
+        class="btn-tactile ds-ramp-ready mt-4 w-full h-11 rounded-xl bg-purple-500/90 hover:bg-purple-500 text-white text-sm font-bold cursor-pointer transition-all"
         @click="dismiss"
       >
         Akışa Dön

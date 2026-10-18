@@ -49,6 +49,15 @@ export interface FeastSceneSpec {
   big: boolean
 }
 
+/** Havuz tavanları + zamanlama sabitleri (test kilitli). */
+export const PARTICLE_BUDGET = {
+  MAX_PARTICLES: 60,
+  MAX_SHOCKWAVES: 8,
+  MAX_SPARKS: 220,
+  SUPPRESSION_WINDOW_MS: 400,
+  KNOCK_DOWN_MS: 140
+} as const
+
 /**
  * Sahne reçeteleri — renkler mevcut anomali diliyle birebir:
  * fyp mor (#a855f7), heart_frenzy cyan (#22d3ee), hawking açık-cyan (#67e8f9),
@@ -64,8 +73,8 @@ export const FEAST_SCENES: Record<FeastSceneId, FeastSceneSpec> = {
     ],
     texts: 2,
     shake: 'medium',
-    knockMs: 140,
-    suppressionMs: 400,
+    knockMs: PARTICLE_BUDGET.KNOCK_DOWN_MS,
+    suppressionMs: PARTICLE_BUDGET.SUPPRESSION_WINDOW_MS,
     big: false
   },
   mass_burst: {
@@ -77,8 +86,8 @@ export const FEAST_SCENES: Record<FeastSceneId, FeastSceneSpec> = {
     ],
     texts: 2,
     shake: 'hard',
-    knockMs: 140,
-    suppressionMs: 400,
+    knockMs: PARTICLE_BUDGET.KNOCK_DOWN_MS,
+    suppressionMs: PARTICLE_BUDGET.SUPPRESSION_WINDOW_MS,
     big: false
   },
   hawking: {
@@ -102,8 +111,8 @@ export const FEAST_SCENES: Record<FeastSceneId, FeastSceneSpec> = {
     ],
     texts: 3,
     shake: 'hard',
-    knockMs: 140,
-    suppressionMs: 400,
+    knockMs: PARTICLE_BUDGET.KNOCK_DOWN_MS,
+    suppressionMs: PARTICLE_BUDGET.SUPPRESSION_WINDOW_MS,
     big: true
   },
   crunch: {
@@ -153,20 +162,11 @@ export const FEAST_SCENES: Record<FeastSceneId, FeastSceneSpec> = {
     ],
     texts: 2,
     shake: 'hard',
-    knockMs: 140,
-    suppressionMs: 400,
+    knockMs: PARTICLE_BUDGET.KNOCK_DOWN_MS,
+    suppressionMs: PARTICLE_BUDGET.SUPPRESSION_WINDOW_MS,
     big: true
   }
 }
-
-/** Havuz tavanları + zamanlama sabitleri (test kilitli). */
-export const PARTICLE_BUDGET = {
-  MAX_PARTICLES: 60,
-  MAX_SHOCKWAVES: 8,
-  MAX_SPARKS: 220,
-  SUPPRESSION_WINDOW_MS: 400,
-  KNOCK_DOWN_MS: 140
-} as const
 
 /** Suppression koyan (kareyi sessizleştiren) büyük sahneler. */
 const BIG_SCENES: ReadonlySet<FeastSceneId> = new Set([
