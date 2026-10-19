@@ -1,5 +1,24 @@
 # Yapılacaklar Listesi (Backlog & Roadmap)
 
+## ⚖️ YENİ: Tempo & Ekonomi Yeniden Tasarımı (2026-10-19 — TASARIM)
+*(kullanıcı kararları: dikey/yatay denge + başarımla içerik açılımı + fiyat artışlarını kızıştır + shifti D8 sonrası hızlandırıcıya çevir · **Plan:** [`research/pacing-economy-shift-redesign-plan-2026-10.md`](../research/pacing-economy-shift-redesign-plan-2026-10.md))*
+
+> **⚖️ KAYNAK HİYERARŞİSİ KANUNU (plan §11 — BAĞLAYICI):** oyunun ana artan sayısı HER ZAMAN **Yutulan Kütle (g)**'dir. İkincil birimler (SP = oyunun ikinci birimi, izotop, nap…) GERÇEK para birimleridir — kendi sayaçları ve döngüleri meşrudur; AMA kazanımı kütle kilometre taşından türetilir, harcaması kütle akışını GÜÇLENDİRİR, gösterimi ikincil yüzeydedir ve kazanım eğrisi asla kütleyle yarışamaz. Her yeni mekanik 'kütle/sn çarpanına nasıl bağlanır?' sorusuna cevap vermelidir; cevapsız mekanik kapsam dışıdır. Header kütle sayacı tek görsel yıldız kalır. **BESLEME MERDİVENİ (§11.1b):** katmanlar birbirini aşağı doğru besler — L3 (Faz 3 birimi) → SP (L1) → Yutulan Kütle (L0, tek yıldız); her katman yalnız bir altındakini besler, kazanım alt katmanın derinlik eşiğinden doğar, harcama alt akışı güçlendirir.
+### Faz 0 — Hijyen & P0 Baseline ✅ (2026-10-19 · dalga 1: 5 paralel subagent, orchestrator doğruladı)
+- [x] **H1 — İkiz ADR-0033 çözüldü:** cloud-sync → **ADR-0070** (kronoloji korundu) · `brain/decisions/README.md` indeksi (71 satır = 71 dosya) · 19 kaynak yorumu + 2 yanlış atıf (`ADR-0013`) düzeltildi
+- [x] **H2 — Sim sabit drifti giderildi:** `simulate-economy.js` → `simulate-economy.ts`, sabitler gerçek `src/game/*`'ten import · `npm run harness:sim:verify` 6/6 geçti (eski sim: D1@50=3, gerçek 2)
+- [x] **H3 — Ölü dosya silindi:** `harness/run.ts.broken-backup`
+- [x] **P0 baseline:** [pacing-p0-baseline-2026-10.md](../research/pacing-p0-baseline-2026-10.md) + `harness/unlock-timeline.mjs` — ilk 8 dk'da **7 özellik kapısı** (teşhis doğrulandı), ölü bölge 26:27'de başlıyor
+- [x] **§8A — Şafak merdiveni (ADR-0071):** kırılma öncesi SP `1` → `1 + singularities`; 4-SP duvarı 4 koşu → **3 koşu** (≈14 sa → 10.5 sa)
+- [ ] **P0 — Ölçüm (kısmi ✅):** *(baseline + SP merdiveni alındı; kalan: ayar kollarının kilitlenmesi + `harness --dawns N` modu)* fiyat/shift ayar kolları smoke harness ile kilitlenir (kod yok) · **SP telemetrisi (§8E):** zaman-to-break / ilk-10-SP / derinlik-SP-saat eğrisi; §8 A-D kollarının sayıları ölçümle kilitlenir
+- [ ] **P1 — Fiyat eğrisi:** B0 30→15-20, ivme 0.011→0.02-0.03, erken oranlar 55/42/32/28/24/20→75/55/40/34/28/24 bandı (ADR-0023 3s30d korunur)
+- [ ] **P2 — Boyut açılış kapıları + shift rol değişimi:** D1-D8 açılımı sıçramadan kopar; sıçrama = D8 sonrası kalıcı hız çarpanı; corruption kaynağı + kayıt migrasyonu + yeni ADR (öneri 0070, ADR-0033 süperseeded)
+- [ ] **P3 — Başarım kapısı & ilk 10 dk:** omurga deterministik kalır, opsiyonel dallar başarım aileleriyle açılır, aile bazlı kalıcı çarpan, silüet teaserlar, erken merdiven yeniden zamanlaması (ilk oturumda ≤4 sistem)
+- [ ] **P4 — Görsel-öncelikli iletişim ("önce göster, gerekiyorsa yaz"):** iletişim kulesi T0-T4 kuralı; "ilk karşılaşmada anlat, sonrasında göster" öğretim geçişi; LabTab/AdminPanel/SettingsModal metin duvarları + veri korpusu (ipucu/başarım/challenge desc) kuleneye göre sökülür; CommentTicker muaf, okunabilirlik kanonu + aria-label koruması
+- [ ] **P1 eki (M1 — cüzdan ikilemi):** bot hız çipleri/bulk artan mass fiyatı (cost × mult^lvl); bot ALIMLARI ucuz tek seferlik kalır (ADR-0032 idle kilidi geri dönmez); smoke ile çifte kıtlık testi zorunlu
+- [ ] **P3 eki (M2 — meta ikilem):** nöral ağaçta Otomasyon Dalı vs Güç Dalı rekabeti (dal-başı dışlayıcılık ya da şafak dönemi başına tek dal); SP kıtlığı (§8) ikilemi besler
+- [ ] **Faz 2 taslağı (M3 — Odak Bütçesi):** bot kanalı/duruş/büyü Odak tüketir, toplam Odak sınırlı + prestijle büyür; loadout sürgüsü; Uyku Baskısı Matrisi'nin mekanik prototipi (ayrı ADR)
+
 ## 🎭 YENİ: Görsel Dil — "Aç Kumarhane" (Balatro zemin + VS şöleni + GIC kimlik) & Faz-temelli Bozulma
 *(2026-10-16 · tasarım kullanıcıyla uzlaşıldı · **Fazlı uygulama planı:** [`brain/research/visual-language-hungry-parlor-implementation-plan-2026-10.md`](../research/visual-language-hungry-parlor-implementation-plan-2026-10.md) · Sözleşme: [`brain/context/visual-language.md`](../context/visual-language.md) · ADR: [`0060-gic-phase-corruption-visual-pivot.md`](../decisions/0060-gic-phase-corruption-visual-pivot.md) · Öncüller: ADR-0049/0057/0058 geçerli)*
 

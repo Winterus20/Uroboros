@@ -16,7 +16,8 @@ const store = useGameStore()
 // Break Singularity alındıysa hero rozeti "Sınır Yıkıldı" durumuna geçer
 const singularityBroken = computed(() => store.hasBreakSingularity)
 
-// Faz 2 kilometre taşı: Kolektif Kozmik Tekillik (1e308 g Kütle — ADR-0033).
+// Faz 2 kilometre taşı: Kolektif Kozmik Tekillik (1e308 g Kütle — ADR-0013;
+// o ADR'deki 1e4000 notu bayattır, kod 1e308 eşiğini kullanır).
 // İlerleme şafak yoluyla aynı ölçekte: 0 → 1e308 = %0 → %100.
 const nightWatchUnlocked = computed(() => store.nightWatchUnlocked)
 const nightWatchProgress = computed(() => {

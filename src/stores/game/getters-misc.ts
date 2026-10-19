@@ -171,9 +171,15 @@ export const miscGetters = {
       const relicSpMult = this.reactorRelicBonuses.spGainMult
       const totalMult = dawnSpeedMult * spMult * relicSpMult
 
-      // Planck Duvarı kırılmadıysa kütle D_INFINITY eşiğinde kilitlidir; ilk çöküş taban 1 SP verir
+      // Planck Duvarı kırılmadıysa kütle D_INFINITY eşiğinde kilitlidir. Plan
+      // bölüm 8A "Şafak Merdiveni" (ADR-0071): taban sabit 1 kalırken
+      // break_singularity (4 SP) 4 tam koşu (~10-14 saat) bekletiyordu. Taban
+      // artık 1 + singularities: 1. şafak 1 SP (kasa 1), 2. şafak 2 SP (kasa 3),
+      // 3. şafak 3 SP (kasa 6) → kırılma duvarı 3 koşuya iner. Taban yine
+      // totalMult ile çarpılır ve min 1 korunur.
       if (!hasBreak) {
-        const baseGain = Decimal.floor(new Decimal(1).times(totalMult))
+        const baseDawn = 1 + state.singularities
+        const baseGain = Decimal.floor(new Decimal(baseDawn).times(totalMult))
         return baseGain.gte(1) ? baseGain : D_1
       }
 

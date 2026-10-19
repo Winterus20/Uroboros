@@ -17,7 +17,7 @@ const MOCK_USER_STORAGE_KEY = 'DOOMSCROLL_MOCK_AUTH_USER'
 /**
  * Simülasyon modunda oturum dinleyicileri.
  *
- * ADR-0033: `storage` olayı yalnızca DİĞER sekmelerde tetiklendiği için,
+ * ADR-0070: `storage` olayı yalnızca DİĞER sekmelerde tetiklendiği için,
  * aynı sekmede "Google ile Devam Et" denince hiçbir dinleyici uyarılmıyor ve
  * giriş sonrası bulut senkronizasyonu hiç çalışmıyordu. Kendi abonelerimize
  * doğrudan bildiriyoruz.
@@ -204,7 +204,7 @@ export function formatAuthError(err: unknown): string {
   if (!err) return 'Bilinmeyen bir hata oluştu.'
   const msg = err instanceof Error ? err.message : String(err)
 
-  // ADR-0033: önce "geçici hata / bağlantı yok" ayrımı. Eski sürümde çevrimdışı
+  // ADR-0070: önce "geçici hata / bağlantı yok" ayrımı. Eski sürümde çevrimdışı
   // bir oyuncuya "Firestore Veritabanı oluşturun" mesajı gösteriliyordu.
   if (err instanceof CloudTimeoutError) {
     return 'Bulut sunucusu zamanında yanıt vermedi. Bağlantı yavaş olabilir; ilerlemeniz bu cihazda güvende ve birazdan otomatik tekrar denenecek.'

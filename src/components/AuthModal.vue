@@ -79,7 +79,7 @@ async function handleSubmit() {
 
 async function handleSaveToCloud() {
   localActionSuccess.value = ''
-  // ADR-0033: bilinçli kullanıcı eylemi -> yaş koruması atlanır.
+  // ADR-0070: bilinçli kullanıcı eylemi -> yaş koruması atlanır.
   const ok = await authStore.saveToCloud(true)
   if (ok) {
     localActionSuccess.value = 'İlerlemeniz başarıyla buluta yedeklendi!'

@@ -103,7 +103,7 @@ const canHardReset = computed(() => {
 /**
  * Sıfırlamanın kalıcı olması için bulut tarafı da temizlenmeli.
  *
- * ADR-0033: yalnızca `SaveSystem.hardReset()` çağrıldığında buluttaki eski
+ * ADR-0070: yalnızca `SaveSystem.hardReset()` çağrıldığında buluttaki eski
  * kayıt kalıyordu; 5 dakika sonraki otomatik senkron bir çakışma bulup eski
  * ilerlemeyi geri getiriyordu, yani "sıfırla" işlevi tutmuyordu.
  *

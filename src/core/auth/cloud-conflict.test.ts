@@ -12,7 +12,7 @@ import {
 import type { CloudSaveMeta, CloudSavePayload } from '../../models/auth-types'
 
 /**
- * ADR-0033 — bulut karar katmanı regresyon testleri.
+ * ADR-0070 — bulut karar katmanı regresyon testleri.
  *
  * Buradaki testler, bulut kaydetmenin daha önce sessizce bozuk olan üç
  * davranışını kilitler:
@@ -148,7 +148,7 @@ describe('decideSyncAction', () => {
     expect(decideSyncAction({ cloudPayload: null, localMeta, baseline: null })).toBe('first-backup')
   })
 
-  // ADR-0033'ün ana regresyonu: 5 dakika oynayıp senkron isteyen oyuncu artık
+  // ADR-0070'in ana regresyonu: 5 dakika oynayıp senkron isteyen oyuncu artık
   // çakışma ekranı görmüyor.
   it('normal oynanış çakışma üretmez, yalnızca push üretir', () => {
     const cloud = payload(meta({ clientTimestamp: 1000, matter: '1e50', playtime: 3600 }))

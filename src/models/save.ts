@@ -200,7 +200,7 @@ export interface SerializedPlayerState {
   autobuyerBulkUnlocked?: boolean
   autobuyerMaxUnlocked?: boolean
   singularities?: number // Tekillik sayısı (v10: bot unlock koşulu için kalıcı)
-  nightWatchUnlocked?: boolean // Faz 2 kilometre taşı (1e308 Dopamin — ADR-0033)
+  nightWatchUnlocked?: boolean // Faz 2 kilometre taşı (1e308 Dopamin — ADR-0013; o ADR'deki 1e4000 notu bayat)
   singularityUpgrades?: Record<string, number>
   neuralNodesBought?: Record<string, number> // Nöral Ağaç satın alımları (v9)
   clickCombo?: { count: number; lastClickAt: number } // Tıklama serisi (geçici, güvenli varsayılanla yüklenir)

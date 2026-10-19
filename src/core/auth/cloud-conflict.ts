@@ -2,7 +2,7 @@ import { Decimal } from '../math'
 import type { CloudSaveMeta, CloudSavePayload } from '../../models/auth-types'
 
 /**
- * Bulut kaydetme sisteminin SAF karar katmanı (ADR-0033).
+ * Bulut kaydetme sisteminin SAF karar katmanı (ADR-0070).
  *
  * Buradaki hiçbir fonksiyon Firebase, localStorage veya DOM bilmez; girdi alır,
  * karar döndürür. "Neyi yazacağız / çakışma mı var" sorusunun tamamı burada
@@ -79,7 +79,7 @@ export interface WriteGuardInput {
 /**
  * Buluta yazılabilir mi, yoksa çakışma mı var?
  *
- * ADR-0033'ün düzeltmesi: karar artık istemci saatlerini KARŞILAŞTIRMAZ.
+ * ADR-0070'in düzeltmesi: karar artık istemci saatlerini KARŞILAŞTIRMAZ.
  * Referansımız varsa soru "bulut hâlâ benim bildiğim belge mi?" olur; değilse
  * başka bir cihaz yazmış demektir ve yazmadan önce oyuncuya sorulur. Bu, yanlış
  * saatli bir cihazın ya hep kazanmasına ya da hiç yazamamasına yol açan veri

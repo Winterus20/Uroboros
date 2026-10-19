@@ -1,5 +1,60 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-19] ✔ — Tempo & Ekonomi: Faz 0 (H1-H3 hijyen + P0 baseline) & Faz 1 (§8A şafak merdiveni)
+
+### Gerekçe:
+- Plan: `brain/research/pacing-economy-shift-redesign-plan-2026-10.md`. Teşhis ölçümle doğrulandı: oyun ilk 8 dakikada 7 özellik kapısı açıyor, 26. dakikadan sonra uzun düşey çöl.
+- **Sıra kararı (orchestrator, plandan sapma):** *yapı önce, sayı son* — P1 fiyat eğrisi, P2/P3 yapısal değişikliklerinden SONRA. Gerekçe: ikisi de ADR-0023 altın standardını oynatıyor; ayrı ayrı tune etmek aynı eğriyi iki kez kilitlemek olur.
+- En kritik tıkanma: kırılma öncesi düz 1 SP + 4 SP'lik `break_singularity` = 4 tam koşu (~10-14 saat) ölü bölge.
+
+### Çözüm & Değişiklikler:
+
+**H1 — İkiz ADR-0033 çözümü**
+1. `brain/decisions/0033-cloud-sync-...md` → `0070-cloud-sync-...md` (`git mv`; başlık `# ADR-0070:`). Kronoloji korundu: cloud-sync (2026-10-03) = 0070, yeni §8A kararı = 0071.
+2. `brain/decisions/README.md` **YENİ**: 71 ADR indeksi (numara/başlık/tarih/durum/dosya) + "Nasıl kullanılır" + ikiz çakışma notu.
+3. 19 kaynak yorumu `ADR-0033` → `ADR-0070` (auth/bulut katmanı: `App.vue`, `AuthModal`, `SettingsModal`, `auth-types`, `auth-service`, `cloud-conflict(+test)`, `cloud-save-service`, `firebase-config`, `stores/auth`).
+4. 2 **yanlış** atıf düzeltildi → `ADR-0013`: `SingularityTab.vue:19`, `models/save.ts:203`. Kanıt: ADR-0033'te `nightWatch`/`1e308`/`Faz 2` için 0 eşleşme; kaynak ADR-0013:20.
+
+**H2 — Sim sabit drifti**
+5. `brain/scratchpad/simulate-economy.js` → `simulate-economy.ts`; sabitler elle kopya yerine gerçek kaynaktan import (`balance.ts`, `autobuyer-data.ts`, `achievements.ts`, `challenges.ts`, `core/math.ts`).
+6. `harness/build-sim.mjs` + `harness/verify-sim-constants.ts` + `package.json` `harness:sim` / `harness:sim:verify`.
+7. 5 scratchpad betiğinin import yolu güncellendi; `LEGACY_COLLECTIVE_MILESTONES` / `LEGACY_ALGORITHM_UPGRADES` karşılıksız (src'de yok) olarak işaretlendi.
+
+**H3 — Ölü dosya**
+8. `brain/scratchpad/harness/run.ts.broken-backup` silindi.
+
+**P0 — Ölçüm**
+9. `brain/research/pacing-p0-baseline-2026-10.md` (238 satır) + `brain/scratchpad/harness/unlock-timeline.mjs` (results JSON → açılış çizelgesi).
+
+**§8A — Şafak merdiveni (ADR-0071)**
+10. `src/stores/game/getters-misc.ts` `singularityGain` kırılma öncesi dal: `floor(1 × totalMult)` → `floor((1 + singularities) × totalMult)`, min 1 korunur. Kırılma sonrası dal ve `nextSingularityPointAt` DEĞİŞMEDİ.
+11. `src/stores/balance.test.ts`: 4 yeni test (merdiven 1/2/3, `totalMult`, min-1 negatif koruma, kırılma sonrası etkilenmez).
+12. `brain/decisions/0071-sp-dawn-ladder-prelude.md` **YENİ**.
+
+### Ölçüm (kilitlenen sayılar):
+- İlk 8 dk'da **7 özellik kapısı**: 26s `crisis_spawn` · 40.5s ilk sıçrama · 104.5s D5 · 190s `autobuyers` · 262s `stance_spam` · 331.5s `stance_private` · 348s `colony` · 383.5s `crisis` · 470s `spell_espresso`.
+- Küme 1182.5s (19:42) · ölü bölge 1587.5s (26:27) sonrası.
+- 30 dk: `log10=90.72` (308'in %29.5'i).
+- SP merdiveni: **4. şafak (≈14 sa) → 3. şafak (≈10.5 sa)**; 1 koşu = 3s30dk tasarruf.
+
+### 🔴 KRİTİK BULGU — ADR-0023 altın standardı bugün ihlal ediliyor:
+- `assert-results.mjs --full` (active, seeds 1-3, dt=0.1): ilk tekillik **637.6 / 706.7 / 707.6 dk** = **~10.6-11.8 saat**; bant 150-300 dk → **3/3 FAIL** (~2.4× sapma).
+- Sonuç: P1'in "smoke altın standart ±%5" kriteri bugün kullanılamaz; §3'ün "fiyatları kızıştır" yönü tempoyu daha da bozar. **P1'in kapısı artık bu karar.**
+- Yan bulgu: `first-prestige-baseline.md`'nin 13 dk'lık ölçümü iki rebalance öncesine ait; güvenilmez.
+
+### Doğrulama:
+- `npm run typecheck`: **exit 0**
+- `npm test`: **397/397** (27 dosya)
+- `npm run build`: **exit 0**
+- `npm run harness:smoke`: **6/6 PASS** (`log10=90.72`, `shifts=8`, `gal=1` — baseline birebir aynı)
+- `npm run harness:sim:verify`: **6/6 OK**
+
+### Açık iş:
+- **P1'in kapısı:** tempo onarımı mı, ADR-0023 revizyonu mu, mevcut halin kabulü mü?
+- `harness --dawns N` modu (spec yazıldı, kod yok) — §8E telemetrisi.
+- Analitik sim hâlâ yaklaşım (7 bilinen formül sapması); yetkili araç `harness/run.ts`.
+- `LEGACY_*` tabloların emekliliği (karar bekliyor).
+
 ## [2026-10-18] ✔ — Zaman Yayı v2: Kusursuz Salgı, Seri Sistemi ve UI/eErişilebilirlik Turu
 
 ### Gerekçe:
@@ -1580,7 +1635,7 @@ Antimatter Dimensions (IvarK master), Cookie Clicker v2.058, Synergism, Progress
 - `npm run build` (`vue-tsc && vite build`) → **0 tip hatası**, 1686 modül.
 
 ### ADR:
-- [ADR-0033 — Bulut Kaydetme Karar Katmanının Yeniden Tasarımı](file:///c:/Users/Yigit/Documents/Incremental/brain/decisions/0033-cloud-sync-decision-layer-and-etag-conflict-detection.md)
+- [ADR-0070 — Bulut Kaydetme Karar Katmanının Yeniden Tasarımı](file:///c:/Users/Yigit/Documents/Incremental/brain/decisions/0070-cloud-sync-decision-layer-and-etag-conflict-detection.md)
 
 ---
 

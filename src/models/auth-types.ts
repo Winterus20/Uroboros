@@ -30,7 +30,7 @@ export interface CloudSavePayload {
    *  - Firestore'a `serverTimestamp()` ile yazıldığı için `fetchFromCloud()`
    *    gerçekte bir `Timestamp` NESNESİ döndürür.
    *
-   * ADR-0028 bu farkı belgeleyip düzeltmeyi ertelemişti; ADR-0033 düzeltti.
+   * ADR-0028 bu farkı belgeleyip düzeltmeyi ertelemişti; ADR-0070 düzeltti.
    * Artık tip dürüst, tüketiciler de `toMillis()` (core/auth/cloud-conflict)
    * ile normalize ediyor. Ham `updatedAt`'ı sayı gibi kullanan kod kalmadı.
    */

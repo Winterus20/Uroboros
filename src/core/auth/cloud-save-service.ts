@@ -15,7 +15,7 @@ const MOCK_CLOUD_STORAGE_PREFIX = 'DOOMSCROLL_MOCK_CLOUD_SAVE_'
 
 /**
  * Bu cihazın "en son gördüğü bulut belgesi" etiketi, slot başına saklanır.
- * ADR-0033: kararların çoğu ARTIK istemci saatine değil bu referansa bakar.
+ * ADR-0070: kararların çoğu ARTIK istemci saatine değil bu referansa bakar.
  */
 const LAST_SEEN_REV_PREFIX = 'DOOMSCROLL_CLOUD_REV_SLOT_'
 
@@ -79,7 +79,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs = CLOUD_TIMEOUT_MS): Prom
 }
 
 /**
- * ADR-0033: her bulut yazımına garanti EDİLEBİLİR benzersiz bir revizyon
+ * ADR-0070: her bulut yazımına garanti EDİLEBİLİR benzersiz bir revizyon
  * verilir. `clientTimestamp` yalnızca EŞİTLİK karşılaştırmasında kullanıldığı
  * için burada saat kayması bir veri kaybına yol açmaz; ama iki yazımın aynı
  * milisaniyeye düşmesi referans karşılaştırmasını bozabileceğinden
@@ -98,7 +98,7 @@ function issueRevision(stateTimestamp: number): number {
  * Neden: periyodik senkron ve çıkış anı yazımları çakışma kontrolünden geçmeden
  * yazıyordu. Artık yazma kendi kendini koruyor.
  *
- * ADR-0033: "daha yeni" karşılaştırması artık istemci saatlerini değil, bu
+ * ADR-0070: "daha yeni" karşılaştırması artık istemci saatlerini değil, bu
  * cihazın en son gördüğü bulut revizyonunu referans alır.
  */
 export class CloudWriteConflictError extends Error {
@@ -209,7 +209,7 @@ export const CloudSaveService = {
   /**
    * @param options.force Oyuncu bilinçli olarak üzerine yazmak istediğinde
    *   (Buluta Yedekle butonu, çakışmada "bunu sakla") yaş koruması atlanır.
-   *   Bu bayrak ADR-0033'te fiilen kullanılmaya başlandı; daha önce tüm çağrı
+   *   Bu bayrak ADR-0070'te fiilen kullanılmaya başlandı; daha önce tüm çağrı
    *   noktaları sessizce `false` geçiyordu.
    */
   async saveToCloud(

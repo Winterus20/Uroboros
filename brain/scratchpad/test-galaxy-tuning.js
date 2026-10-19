@@ -1,4 +1,4 @@
-import { Simulation, D_INFINITY } from './simulate-economy.js'
+import { Simulation, D_INFINITY } from '../harness/out/simulate-economy.mjs'
 import Decimal from 'break_eternity.js'
 
 function formatDec(d) {

@@ -73,7 +73,7 @@ const VISIBLE_CATCHUP_MS = 2 * 60 * 1000;
 /**
  * Sekme kapanırken / görünürlük değişince otomatik kaydet ve buluta yakala.
  *
- * ADR-0033: beforeunload içinde başlatılan Firestore yazımı en az bir ağ turu
+ * ADR-0070: beforeunload içinde başlatılan Firestore yazımı en az bir ağ turu
  * gerektirir; tarayıcı sekmeyi kapatırken uçuştaki isteği iptal eder. O yol
  * "bulut güvencesi" gibi görünüyordu ama gerçekte hiç tamamlanmıyordu.
  * visibilitychange hem daha güvenilir hem de sekme kapatılmadan (arka plana

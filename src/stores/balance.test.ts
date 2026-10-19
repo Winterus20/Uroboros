@@ -50,9 +50,10 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(store.minNapBots.toNumber()).toBeGreaterThan(1000)
   })
 
-  it('İlk Şafak Çöküşü (break_singularity yokken) tam olarak 1 SP verir', () => {
+  it('İlk Şafak Çöküşü (break_singularity yokken, singularities=0) tam olarak 1 SP verir', () => {
     const store = useGameStore()
     store.matter = new Decimal('1.8e308')
+    expect(store.singularities).toBe(0)
     expect(store.hasBreakSingularity).toBe(false)
     expect(store.singularityGain.toNumber()).toBe(1)
   })
@@ -63,6 +64,61 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(store.hasBreakSingularity).toBe(false)
     expect(store.singularityGain.toNumber()).toBe(1)
     expect(store.nextSingularityPointAt.eq(D_INFINITY)).toBe(true)
+  })
+
+  // ---- Plan bölüm 8A: Şafak Merdiveni (ADR-0071) ----
+  it('Şafak Merdiveni: kırılma öncesi kazanç 1 + singularities (1 -> 2 -> 3 SP)', () => {
+    const store = useGameStore()
+    store.matter = new Decimal('1.8e308')
+
+    store.singularities = 0
+    expect(store.singularityGain.toNumber()).toBe(1)
+
+    store.singularities = 1
+    expect(store.singularityGain.toNumber()).toBe(2)
+
+    store.singularities = 2
+    expect(store.singularityGain.toNumber()).toBe(3)
+
+    store.singularities = 5
+    expect(store.singularityGain.toNumber()).toBe(6)
+  })
+
+  it('Şafak Merdiveni: totalMult (Şafak Habercisi ×2) taban merdiveniyle çarpılır ve floor uygulanır', () => {
+    const store = useGameStore()
+    store.matter = new Decimal('1.8e308')
+    store.neuralNodesBought = { dawn_harbinger: 1 }
+
+    store.singularities = 0
+    expect(store.singularityGain.toNumber()).toBe(2) // floor(1 × 2)
+
+    store.singularities = 1
+    expect(store.singularityGain.toNumber()).toBe(4) // floor(2 × 2)
+
+    store.singularities = 2
+    expect(store.singularityGain.toNumber()).toBe(6) // floor(3 × 2)
+  })
+
+  it('Şafak Merdiveni: taban 1 in altına düşse bile kazanç min 1 korumasına takılır', () => {
+    const store = useGameStore()
+    store.matter = new Decimal('1.8e308')
+    // Savunma amaçlı senaryo: bozuk bir kayıt negatif tekilik sayısı enjekte
+    // ederse (1 + singularities) negatife düşer; çarpan ne olursa olsun kazanç
+    // 1 SP'nin altına inemez.
+    store.singularities = -5
+    expect(store.singularityGain.toNumber()).toBe(1)
+  })
+
+  it('Şafak Merdiveni: kırılma sonrası dal singularities sayısından ETKİLENMEZ (taban 3 korunur)', () => {
+    const store = useGameStore()
+    store.neuralNodesBought = { break_singularity: 1 }
+    store.matter = new Decimal('1.8e308')
+
+    store.singularities = 0
+    expect(store.singularityGain.toNumber()).toBe(3)
+
+    store.singularities = 25
+    expect(store.singularityGain.toNumber()).toBe(3)
   })
 
   it('break_singularity yokken addMatter kütleyi D_INFINITY de durdurur (hard-cap) ve isMatterCapped true olur', () => {

@@ -1,4 +1,4 @@
-# ADR 0033: Bulut Kaydetme Karar Katmanının Yeniden Tasarımı — Referans Tabanlı Çakışma Tespiti ve Saat Bağımsız Yazma Koruması
+# ADR-0070: Bulut Kaydetme Karar Katmanının Yeniden Tasarımı — Referans Tabanlı Çakışma Tespiti ve Saat Bağımsız Yazma Koruması
 
 - **Tarih:** 2026-10-03
 - **Durum:** Kabul Edildi (Accepted) & Uygulandı (Implemented)

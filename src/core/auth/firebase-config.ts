@@ -32,7 +32,7 @@ if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
     auth = getAuth(app)
-    // ADR-0033: kalıcı yerel önbellek. Mobilde sekme arka plana atıldığında
+    // ADR-0070: kalıcı yerel önbellek. Mobilde sekme arka plana atıldığında
     // uçuştaki yazma düşebiliyordu; IndexedDB önbelleği bunu kurtarır.
     // Desteklenmeyen tarayıcıda sessizce varsayılan önbelleğe düşüyoruz —
     // önbellek açılamaması bulut kaydının TAMAMEN devre dışı kalmasına

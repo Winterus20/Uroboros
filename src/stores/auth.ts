@@ -95,7 +95,7 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Giriş sonrası ilk temas.
      *
-     * ADR-0033: karar `planSync()`'e taşındı. Önceden "yerel ve bulut farklı
+     * ADR-0070: karar `planSync()`'e taşındı. Önceden "yerel ve bulut farklı
      * mı" diye soruluyordu; oyuncu 5 dakika oynayıp sekmeyi kapatıp açtığında
      * bu soru her seferinde "evet" diyor ve oyuncuya sahte çakışma
      * gösteriliyordu. Artık "bulut, benim bildiğim belgeden mi değişmiş?"
@@ -213,7 +213,7 @@ export const useAuthStore = defineStore('auth', {
      *
      * @param force Oyuncu bilinçli olarak üzerine yazmak istediğinde
      *   (Buluta Yedekle butonu, çakışmada "Bu Cihazdakini Sakla") yaş koruması
-     *   atlanır. ADR-0033: bu bayrağın daha önce HİÇBİR çağrı noktasında
+     *   atlanır. ADR-0070: bu bayrağın daha önce HİÇBİR çağrı noktasında
      *   kullanılmaması, çakışma ekranındaki "sakla" butonunu sessiz bir
      *   no-op yapıyordu.
      */
@@ -286,7 +286,7 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Arka plan (periyodik) senkronizasyonu.
      *
-     * ADR-0033 düzeltmesi: eskiden her döngüde "yerel ve bulut farklı mı?"
+     * ADR-0070 düzeltmesi: eskiden her döngüde "yerel ve bulut farklı mı?"
      * sorusu soruluyordu; normal oynanış zaten fark yarattığı için ilk
      * yazımdan sonra otomatik senkron HİÇ çalışmıyor ve oyuncu 5 dakikada
      * bir çakışma modalı görüyordu. Artık yalnızca bulutun gerçekten
@@ -379,7 +379,7 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Çakışmayı oyuncunun seçimiyle çözer.
      *
-     * ADR-0033 düzeltmeleri:
+     * ADR-0070 düzeltmeleri:
      *  1) 'local' dalı `force = true` kullanır — bilinçli karar yaş korumasını
      *     atlamalıdır. Daha önce `force = false` geçtiği için yazma reddediliyor,
      *     modal yine de kapanıyor ve oyuncu HİÇBİR geri bildirim almıyordu.

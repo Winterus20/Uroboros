@@ -1,41 +1,31 @@
-import Decimal from 'break_eternity.js'
+// Analitik ekonomi simülatörü — hızlı knob taraması için (yetkili ölçüm aracı:
+// brain/scratchpad/harness/run.ts, gerçek Pinia store'unu koşar; ADR-0053).
+//
+// H2 SABİT KAYNAĞI KURALI: denge sabitleri burada ELLE TUTULMAZ; gerçek oyundan import edilir.
+//   src/game/balance.ts        -> BASE_COSTS, COST_MULTS, RESOLUTION_MILESTONES, DIMENSION_CHAIN_RATE
+//   src/game/autobuyer-data.ts -> AUTOBUYER_COSTS, AUTOBUYER_PROGRESS_REQ
+//   src/game/achievements.ts   -> PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT
+// Node doğrudan TS çalıştıramadığı için bundle edilir:
+//   node brain/scratchpad/harness/build-sim.mjs
+//   node brain/scratchpad/harness/out/simulate-economy.mjs
+//   node brain/scratchpad/harness/out/verify-sim-constants.mjs
+import { D_1, D_INFINITY, Decimal } from '../../src/core/math'
+import { BASE_COSTS, COST_MULTS, DIMENSION_CHAIN_RATE, RESOLUTION_MILESTONES } from '../../src/game/balance'
+import { AUTOBUYER_COSTS, AUTOBUYER_PROGRESS_REQ } from '../../src/game/autobuyer-data'
+import { PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT } from '../../src/game/achievements'
+import { BASE_SHIFT_POWER } from '../../src/game/challenges'
 
-export const D_INFINITY = new Decimal('1.7976931348623157e308')
-const D_0 = new Decimal(0)
-const D_1 = new Decimal(1)
+// D_INFINITY (1.797e308 = ilk tekillik eşiği) src/core/math'ten re-export edilir;
+// burada ikinci bir kopya tanımlanmaz. Eski scratch script'leri bu isimle import ediyor.
+export { D_INFINITY }
 
-const BASE_COSTS = [
-  new Decimal(10),
-  new Decimal(100),
-  new Decimal(1e4),
-  new Decimal(1e6),
-  new Decimal(1e9),
-  new Decimal(1e13),
-  new Decimal(1e18),
-  new Decimal(1e24)
-]
-
-const COST_MULTS = [
-  new Decimal(1e3),
-  new Decimal(1e4),
-  new Decimal(1e5),
-  new Decimal(1e6),
-  new Decimal(1e8),
-  new Decimal(1e10),
-  new Decimal(1e12),
-  new Decimal(1e15)
-]
-
-const RESOLUTION_MILESTONES = [
-  { count: 25, mult: 2 },
-  { count: 50, mult: 3 },
-  { count: 100, mult: 4 },
-  { count: 250, mult: 8 },
-  { count: 500, mult: 16 },
-  { count: 1000, mult: 32 }
-]
-
-const COLLECTIVE_MILESTONES = [
+// ---- KARŞILIKSIZ (LEGACY) TABLOLAR ----
+// Aşağıdaki iki tablonun gerçek kodda ARTIK KARŞILIĞI YOK: Kolektif eşikleri ve Algoritma
+// Yamaları 37ed54f (v0.18.0 adayı) ile src'den kaldırıldı; "git grep COLLECTIVE_MILESTONES"
+// ve "git grep ALGORITHM_UPGRADES" yalnızca eski commitlerde (29a2653, src/stores/game.ts)
+// eşleşiyor. Import edilecek bir kaynak olmadığı için bunlar "kopya" değil, tek tanımdır.
+// Sim bu kaldırılmış mekanikleri modellemeye devam ediyor (emeklilik adayı — H2 raporu).
+const LEGACY_COLLECTIVE_MILESTONES: ReadonlyArray<{ minBought: number; mult: number }> = [
   { minBought: 25, mult: 2.0 },
   { minBought: 50, mult: 3.0 },
   { minBought: 100, mult: 5.0 },
@@ -44,7 +34,7 @@ const COLLECTIVE_MILESTONES = [
   { minBought: 1000, mult: 50.0 }
 ]
 
-const ALGORITHM_UPGRADES_DEF = [
+const LEGACY_ALGORITHM_UPGRADES: ReadonlyArray<{ id: string; cost: Decimal }> = [
   { id: 'play_speed', cost: new Decimal(1e5) },
   { id: 'double_tap', cost: new Decimal(1e6) },
   { id: 'amoled_black', cost: new Decimal(1e7) },
@@ -53,39 +43,62 @@ const ALGORITHM_UPGRADES_DEF = [
   { id: 'bass_boost', cost: new Decimal(1e11) }
 ]
 
-const AUTOBUYER_COSTS = {
-  dim1: new Decimal(5e5),
-  dim2: new Decimal(5e7),
-  dim3: new Decimal(5e9),
-  dim4: new Decimal(1e12),
-  dim5: new Decimal(1e16),
-  dim6: new Decimal(1e21),
-  dim7: new Decimal(1e27),
-  dim8: new Decimal(1e34),
-  tickspeed: new Decimal(5e8),
-  shift: new Decimal(5e13),
-  galaxy: new Decimal(1e23)
+export interface SimulationOptions {
+  shiftFormula?: string
+  galaxyFormula?: string
+  shiftPowerBase?: number
 }
 
-const AUTOBUYER_PROGRESS_REQ = {
-  dim1: {},
-  dim2: { needTier: 3 },
-  dim3: { shifts: 1 },
-  dim4: { shifts: 1 },
-  dim5: { shifts: 2 },
-  dim6: { shifts: 2 },
-  dim7: { shifts: 2 },
-  dim8: { shifts: 2 },
-  tickspeed: { needTier: 3 },
-  shift: { shifts: 1 },
-  galaxy: { galaxies: 1 }
+interface DimensionState {
+  amount: Decimal
+  bought: number
+}
+
+interface AutobuyerState {
+  unlocked: boolean
+  enabled: boolean
+  timer: number
+  interval: number
+}
+
+interface ActiveBuff {
+  type: string
+  duration: number
+  remaining: number
+  multiplier: number
 }
 
 export class Simulation {
-  constructor(options = {}) {
+  shiftFormula: string
+  galaxyFormula: string
+  shiftPowerBase: number
+  matter: Decimal
+  totalMatterProduced: Decimal
+  dimensions: DimensionState[]
+  tickspeedBought: number
+  dimensionShifts: number
+  galaxies: number
+  sacrificeMultiplier: Decimal
+  sacrificeCount: number
+  algorithmUpgrades: Set<string>
+  autobuyers: Record<string, AutobuyerState>
+  autobuyerBulkUnlocked: boolean
+  autobuyerMaxUnlocked: boolean
+  refreshCooldown: number
+  refreshActiveTime: number
+  currentStance: string
+  activeBuffs: ActiveBuff[]
+  anomalyTimer: number
+  nextAnomalyInterval: number
+  simTime: number
+  manualClicks: number
+  achievementsCount: number
+  logHistory: unknown[]
+
+  constructor(options: SimulationOptions = {}) {
     this.shiftFormula = options.shiftFormula || 'current' // 'current', 'linear_20', 'linear_25', 'ad_boost'
     this.galaxyFormula = options.galaxyFormula || 'current' // 'current' (100 + 60*g), 'ad_80_60' (80 + 60*g)
-    this.shiftPowerBase = options.shiftPowerBase || 1.07 // 1.07 (current) or 2.0 (standard AD)
+    this.shiftPowerBase = options.shiftPowerBase || BASE_SHIFT_POWER // varsayılan = gerçek taban (1.66); knob ile ezilebilir
     this.matter = new Decimal(10)
     this.totalMatterProduced = new Decimal(10)
     this.dimensions = Array.from({ length: 8 }, () => ({
@@ -97,7 +110,7 @@ export class Simulation {
     this.galaxies = 0
     this.sacrificeMultiplier = new Decimal(1)
     this.sacrificeCount = 0
-    this.algorithmUpgrades = new Set()
+    this.algorithmUpgrades = new Set<string>()
     this.autobuyers = {}
     for (const key of Object.keys(AUTOBUYER_COSTS)) {
       this.autobuyers[key] = { unlocked: false, enabled: true, timer: 0, interval: 0.5 }
@@ -120,11 +133,11 @@ export class Simulation {
     this.logHistory = []
   }
 
-  get unlockedDimensionsCount() {
+  get unlockedDimensionsCount(): number {
     return Math.min(8, 4 + this.dimensionShifts)
   }
 
-  get collectiveMinBought() {
+  get collectiveMinBought(): number {
     let min = Infinity
     for (let i = 0; i < this.unlockedDimensionsCount; i++) {
       if (this.dimensions[i].bought < min) {
@@ -134,17 +147,17 @@ export class Simulation {
     return min === Infinity ? 0 : min
   }
 
-  get collectiveMultiplier() {
+  get collectiveMultiplier(): Decimal {
     const min = this.collectiveMinBought
     let mult = D_1
-    for (const m of COLLECTIVE_MILESTONES) {
+    for (const m of LEGACY_COLLECTIVE_MILESTONES) {
       if (min >= m.minBought) mult = new Decimal(m.mult)
       else break
     }
     return mult
   }
 
-  get achievementMultiplier() {
+  get achievementMultiplier(): Decimal {
     // Estimate achievements based on progression
     let count = 0
     if (this.manualClicks >= 1) count++
@@ -169,12 +182,12 @@ export class Simulation {
     count += Math.min(10, Math.floor(this.simTime / 300))
     this.achievementsCount = count
 
-    const per = Decimal.pow(1.012, count)
-    const rows = Decimal.pow(1.06, Math.floor(count / 7))
+    const per = Decimal.pow(PER_ACHIEVEMENT_MULT, count)
+    const rows = Decimal.pow(ROW_COMPLETION_MULT, Math.floor(count / 7))
     return per.times(rows)
   }
 
-  get tickspeedMultiplier() {
+  get tickspeedMultiplier(): Decimal {
     const baseReduction = 0.89
     const galaxyBonus = Math.max(0.01, baseReduction - this.galaxies * 0.02)
     let mult = Decimal.pow(1 / galaxyBonus, this.tickspeedBought)
@@ -188,7 +201,7 @@ export class Simulation {
     return mult
   }
 
-  get tickspeedCost() {
+  get tickspeedCost(): Decimal {
     let cost = new Decimal(1000).times(Decimal.pow(13, this.tickspeedBought))
     if (this.currentStance === 'private_mode') {
       cost = cost.times(this.algorithmUpgrades.has('amoled_black') ? 0.75 : 0.85).floor()
@@ -202,12 +215,12 @@ export class Simulation {
     return cost
   }
 
-  getDimensionCost(tier) {
+  getDimensionCost(tier: number): Decimal {
     const dim = this.dimensions[tier - 1]
     return BASE_COSTS[tier - 1].times(Decimal.pow(COST_MULTS[tier - 1], Math.floor(dim.bought / 10)))
   }
 
-  getDimensionMultiplier(tier) {
+  getDimensionMultiplier(tier: number): Decimal {
     const dim = this.dimensions[tier - 1]
     if (!dim) return D_1
 
@@ -240,7 +253,7 @@ export class Simulation {
     return mult
   }
 
-  get shiftRequirement() {
+  get shiftRequirement(): { tier: number; amount: Decimal } {
     if (this.dimensionShifts < 4) {
       const tier = 4 + this.dimensionShifts
       return { tier, amount: new Decimal(25) }
@@ -265,13 +278,13 @@ export class Simulation {
     throw new Error('Unknown shift formula: ' + this.shiftFormula)
   }
 
-  get canShift() {
+  get canShift(): boolean {
     const req = this.shiftRequirement
     const dim = this.dimensions[req.tier - 1]
     return dim ? dim.amount.gte(req.amount) : false
   }
 
-  get galaxyRequirement() {
+  get galaxyRequirement(): number {
     if (this.galaxyFormula === 'current') {
       return 100 + this.galaxies * 60
     } else if (this.galaxyFormula === 'ad_80_60') {
@@ -280,12 +293,12 @@ export class Simulation {
     return 100 + this.galaxies * 60
   }
 
-  get canBuyGalaxy() {
+  get canBuyGalaxy(): boolean {
     const dim8 = this.dimensions[7]
     return dim8 ? dim8.amount.gte(this.galaxyRequirement) : false
   }
 
-  get canSacrifice() {
+  get canSacrifice(): boolean {
     const isUnlocked = this.dimensionShifts >= 5 || (this.dimensions[7] && this.dimensions[7].amount.gt(0))
     if (!isUnlocked) return false
     const dim1 = this.dimensions[0]
@@ -293,7 +306,7 @@ export class Simulation {
     return this.currentSacrificeReward.gt(this.sacrificeMultiplier.times(1.15))
   }
 
-  get currentSacrificeReward() {
+  get currentSacrificeReward(): Decimal {
     const dim1 = this.dimensions[0]
     if (!dim1 || dim1.amount.lt(10)) return D_1
     const logD1 = dim1.amount.log10().toNumber()
@@ -302,7 +315,7 @@ export class Simulation {
     return Decimal.pow(base, 2.5)
   }
 
-  buyDimension(tier) {
+  buyDimension(tier: number): boolean {
     if (tier > this.unlockedDimensionsCount) return false
     const cost = this.getDimensionCost(tier)
     if (this.matter.gte(cost)) {
@@ -315,7 +328,7 @@ export class Simulation {
     return false
   }
 
-  buyMaxDimension(tier) {
+  buyMaxDimension(tier: number): boolean {
     if (tier > this.unlockedDimensionsCount) return false
     let boughtAny = false
     for (let guard = 0; guard < 500; guard++) {
@@ -333,7 +346,7 @@ export class Simulation {
     return boughtAny
   }
 
-  buyTickspeed() {
+  buyTickspeed(): boolean {
     const cost = this.tickspeedCost
     if (this.matter.gte(cost)) {
       this.matter = this.matter.minus(cost)
@@ -343,7 +356,7 @@ export class Simulation {
     return false
   }
 
-  maxAll() {
+  maxAll(): void {
     for (let guard = 0; guard < 500 && this.matter.gte(this.tickspeedCost); guard++) {
       if (!this.buyTickspeed()) break
     }
@@ -352,7 +365,7 @@ export class Simulation {
     }
   }
 
-  dimensionShift() {
+  dimensionShift(): boolean {
     if (!this.canShift) return false
     this.dimensionShifts++
     this.matter = new Decimal(10)
@@ -365,7 +378,7 @@ export class Simulation {
     return true
   }
 
-  buyGalaxy() {
+  buyGalaxy(): boolean {
     if (!this.canBuyGalaxy) return false
     this.galaxies++
     this.dimensionShifts = 0
@@ -379,26 +392,26 @@ export class Simulation {
     return true
   }
 
-  sacrifice() {
+  sacrifice(): boolean {
     if (!this.canSacrifice) return false
     this.sacrificeMultiplier = this.currentSacrificeReward
     this.sacrificeCount++
     return true
   }
 
-  isAutobuyerReqMet(id) {
+  isAutobuyerReqMet(id: string): boolean {
     const req = AUTOBUYER_PROGRESS_REQ[id]
     if (!req) return true
     if (req.shifts !== undefined && this.dimensionShifts < req.shifts) return false
     if (req.galaxies !== undefined && this.galaxies < req.galaxies) return false
     if (req.needTier !== undefined) {
-      const dim = this.dimensions[req.tier - 1]
+      const dim = this.dimensions[req.needTier - 1]
       if (!dim || dim.amount.lt(1)) return false
     }
     return true
   }
 
-  checkAutobuyersUnlock() {
+  checkAutobuyersUnlock(): void {
     if (this.matter.gte(1e9)) { // Autobuyers tab unlocked
       for (const [id, cost] of Object.entries(AUTOBUYER_COSTS)) {
         if (!this.autobuyers[id]?.unlocked && this.isAutobuyerReqMet(id) && this.matter.gte(cost)) {
@@ -410,8 +423,8 @@ export class Simulation {
     }
   }
 
-  checkUpgrades() {
-    for (const upg of ALGORITHM_UPGRADES_DEF) {
+  checkUpgrades(): void {
+    for (const upg of LEGACY_ALGORITHM_UPGRADES) {
       if (!this.algorithmUpgrades.has(upg.id) && this.matter.gte(upg.cost)) {
         this.matter = this.matter.minus(upg.cost)
         this.algorithmUpgrades.add(upg.id)
@@ -419,7 +432,7 @@ export class Simulation {
     }
   }
 
-  triggerAnomaly() {
+  triggerAnomaly(): void {
     const types = ['heart_frenzy', 'fyp', 'sponsor', 'espresso']
     const type = types[Math.floor(Math.random() * types.length)]
 
@@ -447,7 +460,7 @@ export class Simulation {
     }
   }
 
-  manualClick(count = 1) {
+  manualClick(count = 1): void {
     for (let c = 0; c < count; c++) {
       let clickPower = D_1
       if (this.currentStance === 'spam') clickPower = clickPower.times(4)
@@ -474,7 +487,7 @@ export class Simulation {
     }
   }
 
-  tick(dt) {
+  tick(dt: number): void {
     this.simTime += dt
 
     // Buffs tick
@@ -520,7 +533,7 @@ export class Simulation {
           .times(mult)
           .times(speed)
           .times(achMult)
-          .times(0.1) // DIMENSION_CHAIN_RATE
+          .times(DIMENSION_CHAIN_RATE)
           .times(dt)
         lower.amount = lower.amount.plus(produced)
       }

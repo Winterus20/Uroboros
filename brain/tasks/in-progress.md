@@ -1,5 +1,48 @@
 # Aktif Görev (In-Progress)
 
+## 🔄 AKTİF: Tempo & Ekonomi Yeniden Tasarımı — Faz 0 + Faz 1 (2026-10-19)
+
+**Plan:** [pacing-economy-shift-redesign-plan-2026-10.md](../research/pacing-economy-shift-redesign-plan-2026-10.md)
+**Orchestrator:** ana ajan · **Dalga 1 (4 paralel subagent):** H1 · H2+H3 · §8A · P0
+**Sıra kararı (orchestrator, plandan sapma):** *yapı önce, sayı son* → P2/P3 yapısal, P1 sayısal en sonda.
+Gerekçe: P1 ve P2 aynı kabul metriğini (ADR-0023 altın standardı 3s30dk) oynatıyor; ikisini ayrı ayrı
+tune etmek aynı eğriyi iki kez kilitlemek demek. P2'nin kabulü zaten yapısal, P1'e numerik bağımlılığı yok.
+
+### Dalga 1 — dosya sahipliği (çakışmasız bölündü)
+- [x] **A** `e164f49e` — **H1:** ikiz ADR-0033 çözümü (cloud-sync → `0070`) + `brain/decisions/README.md` indeksi + link düzeltmeleri
+- [x] **B** `05b082b8` — **H2+H3:** `simulate-economy.js` sabit drifti → gerçek `src/game/*` importu; `run.ts.broken-backup` silinir
+- [x] **C** `b74c4110` — **§8A:** `singularityGain` pre-break `1 → 1 + singularities` + `ADR-0071` + testler
+- [x] **D** `d7949dc8` — **P0:** `pacing-p0-baseline-2026-10.md` + `unlock-timeline.mjs`
+- [x] **E** `c1c9f696` — **H1 devamı:** 19 kaynak yorumu `ADR-0033` → `ADR-0070` (auth/bulut katmanı) + 2 yanlış atıf `ADR-0013`'e çevrildi
+- [x] **Orchestrator:** `package.json` `harness:sim` / `harness:sim:verify` scriptleri · ADR indeksine `0071` satırı · `todo.md` Faz 0 işaretlemesi
+
+**Dalga 1 sonucu:** H1 ✅ H2 ✅ H3 ✅ P0 ✅ §8A ✅ — `typecheck 0` · `test 397/397` · `build 0`
+
+### ADR numara tahsisi (orchestrator kararı)
+- `0070` = cloud-sync (yeniden numaralandırılan ikiz; tarih sırası korunur — plan 0071 öneriyordu, kronoloji bozulmasın diye kaydırıldı)
+- `0071` = §8A şafak merdiveni (bu dalga)
+- `0072` = P2 boyut kapıları + shift rolü (Faz 2'de yazılacak)
+
+### Ölçüm baseline (orchestrator — `harness:smoke`, active/seed1/dt0.5/cap0.5h)
+İlk 8 dakikada **7 özellik kapısı**: 26s `crisis_spawn` · 41s ilk sıçrama · 105s D5 · 190s `autobuyers` ·
+262s `stance_spam` · 332s `stance_private` · 348s `colony` · 384s `crisis` · 470s `spell_espresso`;
+1183s `first_galaxy`; 1588s `seed_nucleon` → sonrası ölü bölge. log10=90.72 · shifts=8 · gal=1 · bots=11.
+→ **Plan §1 teşhisi doğrulandı.**
+
+### Sonraki dalgalar
+- [ ] **Faz 2 (P2):** boyut kapıları sıçramadan kopar · shift = D8 sonrası hız çarpanı · corruption kaynağı `lifetimePeakUnlockedDims` · save v19 migrasyon · `ADR-0072` (ADR-0033 süperseeded)
+- [ ] **Faz 3 (P3):** omurga/opsiyonel dal ayrımı · başarım aile→dal haritası · silüet teaserlar · ilk oturum ≤4 sistem
+- [ ] **Faz 4 (P1+M1):** fiyat eğrisi + bot hız çipleri — son yapı üzerinde tek tune turu
+
+### Açık kararlar (plan §6 — Faz 2'nin kapısı)
+1. D8 öncesi sıçramalar tamamen kaldırılsın mı? *(plan önerisi: evet, sayaç 0'dan başlar)*
+2. Sıçrama çarpanı bölüşümü: üretim / Hz / ikisi? *(plan önerisi: üretim ağırlıklı + Hz'ye sabit küçük katkı)*
+3. Küme (galaxy) eşikleri yeni tempoda yeniden ölçülecek mi? *(P1 ölçümüne bağlı)*
+4. Başarım çarpanı formülü? *(plan önerisi: aile tamamlama kademeleri, çizgisel değil)*
+5. Erken dekad merdiveninde ilk oturumda hangi sistemler kalır? *(smoke sonrası netleşir)*
+
+---
+
 ## ✅ Görsel Dil Uyum Turu — "Her Tarafı" (2026-10-18) — TAMAMLANDI
 
 **Kaynak:** kullanıcı talebi — *"oyunu `brain/context/visual-language.md`'ye göre her tarafını düzeltmek istiyorum; önce araştırma yap subagentlarla, sonra uygulayacağız"*.
