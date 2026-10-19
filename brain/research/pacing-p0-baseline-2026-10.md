@@ -1,7 +1,13 @@
 # P0 — Ölçüm Baseline Raporu: Açılış Zaman Çizelgesi & SP Merdiveni
 
 > **Tarih:** 2026-10-19 · **Kapsam:** ölçüm + analiz — **oyun kodu DEĞİŞMEDİ**
-> **Kaynak baseline:** `brain/scratchpad/harness/smoke.json` (YENİDEN ÜRETİLMEDİ)
+> **Kaynak baseline:** `brain/scratchpad/harness/smoke.json` (P2.1 öncesi, ölçüm anındaki hâli)
+> **⚠️ GÜNCELLİK (2026-10-19, Faz 2 sonrası):** Bu baseline, ADR-0072 (boyut açılımlarının sıçramadan
+> koparılması) **öncesine** aittir ve o kodun ölçümüdür — bir baseline'ın amacı da budur. P2.1 sonrası
+> `smoke.json` zorunlu olarak yeniden üretildi ve sayılar DEĞİŞTİ (zirve `log10` 90.72 → **99.8**,
+> `shifts` 8 → 9). Ayrıca smoke kapısı artık `peaks` (koşu zirvesi) alanını ölçüyor; gerekçe ve kanıt
+> `brain/tasks/completed.md` (2026-10-19 Faz 2 girişi) §9'dadır. §2'deki zaman çizelgesi ve §4'teki
+> SP merdiveni tarihsel ölçüm olarak geçerlidir.
 > **İlgili plan:** [pacing-economy-shift-redesign-plan-2026-10.md](pacing-economy-shift-redesign-plan-2026-10.md) §1 (şişkinlik teşhisi), §8 (SP ekonomisi), §5 (P0)
 > **İlgili kararlar:** ADR-0023 (ilk prestij ~3s30dk), ADR-0034 (SP yalnızca şafakta), ADR-0053 (harness smoke/full)
 
