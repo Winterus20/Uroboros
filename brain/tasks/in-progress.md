@@ -32,7 +32,7 @@ tune etmek aynı eğriyi iki kez kilitlemek demek. P2'nin kabulü zaten yapısal
 ### Dalga 2 — Faz 2 / P2.1 (2026-10-19 · boyut açılımı sıçramadan koparıldı)
 - [x] **F** `b9db218d` — harness boyut açılış telemetrisi: `dimUnlocks` (d4..d8: t + log10). Ölçüm: D4 34s/log10 2.84 · D5 88s/5.38 · D6 182s/8.87 · D7 252s/14.70 · **D8 654s (10:54)/40.90**
 - [x] **G** `6a08b592` — **P2.1 çekirdek:** `DIMENSION_UNLOCK_GATES` + `dimensionGateUnlockCount()` + `resolvedUnlockedDimensionCount` artık `lifetimePeakMatter` tabanlı · yeni kayıt alanı YOK · ADR-0072 · cache anahtarı `peakMatter` · test 410/410
-- [ ] **H** `6eb741f8` — regresyon düzeltmesi: açılış kutlaması tick'e taşınır + DimensionsTab kilitli-boyut metni kütle eşiğine bağlanır
+- [x] **H** `6eb741f8` — regresyon düzeltmesi: açılış kutlaması tick'e taşınır (`celebrateDimensionUnlocks()`) + DimensionsTab kilitli-boyut metni kütle eşiğine bağlanır
 
 **Dalga 2 kabul durumu:** mekanizma ✅ (sıçrama artık boyut açmıyor) · zamana yayma ❌ ·
 `npm run verify` exit 0 · smoke `log10=97.62 shifts=9` (baseline 90.72/8)
@@ -53,6 +53,33 @@ aralıklandırılmalı (muhtemelen yavaş-büyüme bölgesine, log10 ≈ 40-150 
 - [x] Testler doğru semantiğe göre yeniden yazıldı (4 test) · ADR-0072 Ek bölümü · P0 §8 eşik ölçümü
 
 **Dalga 3 sonucu:** `typecheck 0` · `test 418/418` · `build 0` · `smoke 6/6` (zirve log10=98.4, shifts=9)
+
+### Dalga 4 — Faz 3 / P3 (2026-10-19 · başarım kapısı + ilk 10 dk)
+
+**Plan §1-2:** omurga deterministik dekad eşiğinde kalır; opsiyonel yatay dallar başarım ailesiyle açılır;
+aile tamamlama *kademe* çarpanı (çizgisel değil); silüet teaserlar; ilk oturumda ≤4 yeni sistem.
+
+**Orchestrator tasarım kararları (faz başlamadan sabitlendi):**
+1. **Kapı seviyesi = özellik (feature), dal değil.** Neden: `lab` ve `guilt` aileleri *kendini kilitler*
+   (`lab_seed` için lab açılmış, `gui_seen` için parazitler açılmış olmalı) → bu iki ailenin **giriş**
+   katmanları (`lab`, `guilt_slackers`) omurgada kalır, **derin** katmanları (tohumlar, mercek/rezonatör)
+   aile kapısına girer. Yoksa softlock (plan §2'nin tam olarak uyardığı senaryo).
+2. **Softlock koruması kodda test edilir:** her kapı `safeAchievementIds` taşır = dal açılmadan
+   kazanılabilen aile başarım listesi. Invariant: `safe.length >= required` (asla false değil).
+3. **Kademe çarpanı, eski satır çarpanının tavanını korur:** `1.015^4 = 1.061 ≈ 1.06`/aile,
+   yani 8 ailede tavan 1.594 → 1.611 (nötr), ama ödeme %25'te başlar. → plan §6.4 **"aile tamamlama
+   kademeleri"** önerisi kabul edildi, çizgisel model (86 nokta) reddedildi.
+4. **Omurga =** `crisis_spawn`, `autobuyers`, `stance_spam`, `stance_private`, `lab`, `guilt_slackers`,
+   `night_watch`, `challenges`. **Dal =** colony (automation) · crisis+3 büyü (crisis) · seed_nucleon/
+   seed_gluon/seed_graviton (lab) · time_clock (singularity) · event_horizon_lens/hawking_resonator/
+   cosmic_filament (guilt) → **aile→dal haritası dokümante (P3 kabul maddesi) = ADR-0073.**
+
+- [x] **P3.0** `c855bd33` — erken merdiven *ölçümü* → `brain/scratchpad/p3-early-ladder-candidates.md` (A=10 sistem/10dk · B=10 · C′=1)
+- [x] **P3.1a** `7ad1b371` — `branches.ts` + `unlocks.ts` dal kapısı + `checkVisibility` export + invariant testleri
+- [x] **P3.1b** `396be41a` — aile kademe çarpanı `achievements.ts` + AchievementsTab kademe göstergesi + sim/verify senkronu
+- [ ] **P3.2** — silüet teaserlar (nav sekme silüeti + `LockedFeature` kademe/aile ipucu)
+- [ ] **P3.3** — erken merdiven yeniden zamanlaması (P3.0 ölçümüne göre) + ≤4 sistem ölçümü
+- [ ] **ADR-0073** + `brain/decisions/README.md` indeks satırı (orchestrator)
 
 ### Karar bekleyen (P2/P1 kapısı)
 1. **Altın standart (§7):** ölçülen ilk koşu ~11 sa vs ADR-0023 3s30dk → 3/3 FAIL. (a) onarım fazı · (b) ADR-0023 revizyonu · (c) kabul.

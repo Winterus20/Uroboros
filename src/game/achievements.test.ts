@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest'
 import {
   ACHIEVEMENTS,
   ACHIEVEMENT_CATEGORIES,
+  FAMILY_TIER_MULT,
+  FAMILY_TIER_STEPS,
   PER_ACHIEVEMENT_MULT,
-  ROW_COMPLETION_MULT,
   calcAchievementMultiplier,
   categoryDefs,
   countCompletedRows,
+  countFamilyTiers,
+  familyTierCount,
   getAchievement,
   hasAchievementReward,
   isCategoryComplete
@@ -54,9 +57,10 @@ const DECLARED_REWARD_KINDS: Record<AchievementRewardKind, true> = {
   prod_x2: true
 }
 
-/** GAME_DESIGN.md §8: `1.012^(başarım) × 1.06^(tam kategori)`. */
+/** GAME_DESIGN.md §8 (P3.1b revizyonu): `1.012^(başarım) × 1.015^(aile kademesi)` — kademe eşikleri %25/%50/%75/%100. */
 const DOC_PER_ACHIEVEMENT_MULT = 1.012
-const DOC_ROW_COMPLETION_MULT = 1.06
+const DOC_FAMILY_TIER_STEPS = [0.25, 0.5, 0.75, 1] as const
+const DOC_FAMILY_TIER_MULT = 1.015
 
 const ALL_IDS: readonly string[] = ACHIEVEMENTS.map((a) => a.id)
 const CHALLENGE_IDS: readonly string[] = CHALLENGES.map((c) => c.id)
@@ -206,7 +210,7 @@ describe('achievement registry integrity', () => {
 
   it('never leaves a declared category empty', () => {
     // An empty row would make isCategoryComplete() vacuously true and hand out a
-    // free +6% global multiplier for a row the player can never fill.
+    // free tier (4 × +1.5%) for a family the player can never fill.
     for (const c of ACHIEVEMENT_CATEGORIES) {
       expect(categoryDefs(c.id).length).toBeGreaterThan(0)
       expect(isCategoryComplete(c.id, [])).toBe(false)
@@ -333,10 +337,11 @@ describe('achievement registry integrity', () => {
   })
 })
 
-describe('achievement global multiplier (GAME_DESIGN.md §8)', () => {
-  it('pins the two documented constants', () => {
+describe('achievement global multiplier (GAME_DESIGN.md §8, P3.1b kademeler)', () => {
+  it('pins the documented constants', () => {
     expect(PER_ACHIEVEMENT_MULT).toBe(DOC_PER_ACHIEVEMENT_MULT)
-    expect(ROW_COMPLETION_MULT).toBe(DOC_ROW_COMPLETION_MULT)
+    expect(FAMILY_TIER_MULT).toBe(DOC_FAMILY_TIER_MULT)
+    expect([...FAMILY_TIER_STEPS]).toEqual([...DOC_FAMILY_TIER_STEPS])
   })
 
   it('is exactly ×1 with nothing unlocked', () => {
@@ -353,25 +358,83 @@ describe('achievement global multiplier (GAME_DESIGN.md §8)', () => {
     }
   })
 
-  it('applies an extra ×1.06 only when a whole row is filled', () => {
+  it('pays the first family tier at %25, not only at %100 (early payout)', () => {
     for (const category of ACHIEVEMENT_CATEGORIES) {
       const ids = categoryDefs(category.id).map((a) => a.id)
       expect(ids.length).toBeGreaterThan(1)
-      const beforeLast = calcAchievementMultiplier(ids.slice(0, -1)).toNumber()
-      const complete = calcAchievementMultiplier(ids).toNumber()
-      expect(complete / beforeLast).toBeCloseTo(
-        DOC_PER_ACHIEVEMENT_MULT * DOC_ROW_COMPLETION_MULT,
+      // %25 eşiğini ilk kez aşan plaket: 1.012 (plaket) + 1.015 (kademe) öder.
+      const quarterMark = Math.ceil(ids.length * DOC_FAMILY_TIER_STEPS[0])
+      const beforeQuarter = calcAchievementMultiplier(ids.slice(0, quarterMark - 1)).toNumber()
+      const atQuarter = calcAchievementMultiplier(ids.slice(0, quarterMark)).toNumber()
+      expect(familyTierCount(category.id, ids.slice(0, quarterMark - 1))).toBe(0)
+      expect(familyTierCount(category.id, ids.slice(0, quarterMark))).toBe(1)
+      expect(atQuarter / beforeQuarter).toBeCloseTo(
+        DOC_PER_ACHIEVEMENT_MULT * DOC_FAMILY_TIER_MULT,
         10
       )
     }
   })
 
+  it('adds exactly one tier per %25 step while filling every family in order', () => {
+    // Her aile için ayrı: sırayla başarım ekleyerek 0 → 4 kademe doğrulanır.
+    for (const category of ACHIEVEMENT_CATEGORIES) {
+      const ids = categoryDefs(category.id).map((a) => a.id)
+      const n = ids.length
+      expect(n).toBeGreaterThanOrEqual(DOC_FAMILY_TIER_STEPS.length * 2)
+      expect(familyTierCount(category.id, [])).toBe(0)
+      for (let k = 0; k <= n; k++) {
+        const expected = DOC_FAMILY_TIER_STEPS.filter((step) => k / n >= step).length
+        expect(familyTierCount(category.id, ids.slice(0, k))).toBe(expected)
+      }
+      expect(familyTierCount(category.id, ids)).toBe(DOC_FAMILY_TIER_STEPS.length)
+    }
+  })
+
+  it('never misses a tier for a nearly-complete family (n-1 keeps the %75 tier)', () => {
+    // "9/10 gibi" yarım kalan aile: son plaket eksikken kademe kaybı yalnızca
+    // %100 kademesidir; %25/%50/%75 kademeleri korunur (tüm aileler ≥ 4 plaket).
+    for (const category of ACHIEVEMENT_CATEGORIES) {
+      const ids = categoryDefs(category.id).map((a) => a.id)
+      expect(ids.length).toBeGreaterThanOrEqual(8)
+      expect((ids.length - 1) / ids.length).toBeGreaterThanOrEqual(DOC_FAMILY_TIER_STEPS[2])
+      expect((ids.length - 2) / ids.length).toBeGreaterThanOrEqual(DOC_FAMILY_TIER_STEPS[2])
+      expect(familyTierCount(category.id, ids.slice(0, -1))).toBe(DOC_FAMILY_TIER_STEPS.length - 1)
+      expect(familyTierCount(category.id, ids.slice(0, -2))).toBe(DOC_FAMILY_TIER_STEPS.length - 1)
+    }
+  })
+
+  it('never raises a tier for unknown ids (ADR-0031 whitelist guard)', () => {
+    const dopamine = categoryDefs('dopamine').map((a) => a.id)
+    expect(familyTierCount('dopamine', ['not_a_real_id'])).toBe(0)
+    expect(countFamilyTiers(['not_a_real_id', 'also_fake'])).toBe(0)
+    // Sahte id bilinenlerin arasına eklenirse hiçbir kademeyi şişirmez.
+    const known = dopamine.slice(0, 2)
+    expect(countFamilyTiers([...known, 'ghost_id'])).toBe(countFamilyTiers(known))
+    expect(familyTierCount('dopamine', [...dopamine.slice(0, -1), 'ghost_id'])).toBe(
+      DOC_FAMILY_TIER_STEPS.length - 1
+    )
+  })
+
+  it('sums tiers across all eight families (0 → 32)', () => {
+    expect(countFamilyTiers([])).toBe(0)
+    expect(countFamilyTiers(['bogus'])).toBe(0)
+    expect(ACHIEVEMENT_CATEGORIES.length).toBe(8)
+    expect(countFamilyTiers(ALL_IDS)).toBe(
+      ACHIEVEMENT_CATEGORIES.length * DOC_FAMILY_TIER_STEPS.length
+    )
+    expect(countFamilyTiers(ALL_IDS)).toBe(32)
+  })
+
   it('matches the documented formula across the whole registry', () => {
+    // 1.012^N × 1.015^(8 aile × 4 kademe) — Math.pow ile bağımsız doğrulama.
     const expected =
       Math.pow(DOC_PER_ACHIEVEMENT_MULT, ACHIEVEMENTS.length) *
-      Math.pow(DOC_ROW_COMPLETION_MULT, ACHIEVEMENT_CATEGORIES.length)
+      Math.pow(DOC_FAMILY_TIER_MULT, ACHIEVEMENT_CATEGORIES.length * DOC_FAMILY_TIER_STEPS.length)
     const actual = calcAchievementMultiplier(ALL_IDS).toNumber()
     expect(actual).toBeCloseTo(expected, 9)
+    // Kademe bileşeninin tavanı eski satır çarpanıyla neredeyse aynı:
+    // 1.015^32 ≈ ×1.611 (eski 1.06^8 ≈ ×1.594). Fark, erken ödemede.
+    expect(Math.pow(DOC_FAMILY_TIER_MULT, 32)).toBeCloseTo(1.6103, 3)
     // Sanity band: the design target for the full set is "a few ×", never runaway.
     expect(actual).toBeGreaterThan(2)
     expect(actual).toBeLessThan(5)
@@ -400,7 +463,7 @@ describe('achievement global multiplier (GAME_DESIGN.md §8)', () => {
     const dopamine = categoryDefs('dopamine').map((a) => a.id)
     const lab = categoryDefs('lab').map((a) => a.id)
     expect(countCompletedRows([])).toBe(0)
-    // One short of finishing the row: the +6% must not be granted.
+    // One short of finishing the row: the full-row flag must stay false.
     expect(countCompletedRows(dopamine.slice(0, -1))).toBe(0)
     expect(countCompletedRows(dopamine)).toBe(1)
     expect(countCompletedRows([...dopamine, ...lab.slice(0, -1)])).toBe(1)

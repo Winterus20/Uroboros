@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT } from '../game/achievements'
-import type { AchievementDef } from '../models/types'
+import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, FAMILY_TIER_MULT, PER_ACHIEVEMENT_MULT, familyTierCount } from '../game/achievements'
+import type { AchievementCategoryId, AchievementDef } from '../models/types'
 import { format } from '../core/format'
 import { Trophy, ChevronDown, Search, Gift } from 'lucide-vue-next'
 import TabHero from './TabHero.vue'
@@ -47,6 +47,12 @@ function categoryProgress(catId: string): { done: number; total: number } {
 function isCategoryComplete(catId: string): boolean {
   const defs = grouped.value[catId] ?? []
   return defs.length > 0 && defs.every((a) => isUnlocked(a.id))
+}
+
+// Aile kademesi (P3.1b): %25/%50/%75/%100 → 0..4 tik. Sayım tanımlar üzerinden
+// yürür; kayıttan gelen id'ler store'da beyaz listeyle süzülmüştür (ADR-0031).
+function categoryTiers(catId: AchievementCategoryId): number {
+  return familyTierCount(catId, store.achievements)
 }
 
 function matchesFilter(ach: AchievementDef): boolean {
@@ -180,7 +186,7 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
       <details class="text-[11px] text-slate-500">
         <summary class="cursor-pointer hover:text-slate-300 select-none">Formül detayı</summary>
         <p class="mt-1 leading-relaxed">
-          Her plaket kalıcı ×{{ PER_ACHIEVEMENT_MULT }} üretim verir, tam satır (kategori) ×{{ ROW_COMPLETION_MULT }} ekler.
+          Her kademe (%25/%50/%75/%100) ×{{ FAMILY_TIER_MULT }} global üretim çarpanı ekler; her plaket ayrıca ×{{ PER_ACHIEVEMENT_MULT }} verir.
           Gizli plaketler ipucu vermez, ödül vermez — sadece plaket.
         </p>
       </details>
@@ -208,8 +214,23 @@ const rewardedTotal = computed(() => ACHIEVEMENTS.filter((a) => a.reward).length
             <span class="min-w-0">
               <span class="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
                 {{ cat.name }}
-                <span v-if="isCategoryComplete(cat.id)" class="ds-badge ds-badge-amber">Tam satır ✓ ×1.06</span>
-                <span v-else class="ds-badge">Tam satır → ×1.06</span>
+                <span
+                  class="inline-flex items-center gap-0.5"
+                  role="img"
+                  :aria-label="`Aile kademesi ${categoryTiers(cat.id)}/4`"
+                >
+                  <span
+                    v-for="tier in 4"
+                    :key="tier"
+                    class="w-3.5 h-3.5 flex items-center justify-center rounded-[3px] border text-[9px] font-bold leading-none"
+                    :class="tier <= categoryTiers(cat.id)
+                      ? 'bg-amber-400/15 border-amber-400/60 text-amber-300'
+                      : 'bg-black/40 border-white/15 text-slate-600'"
+                    :title="`Kademe ${tier}: %${tier * 25} → ×${FAMILY_TIER_MULT}`"
+                    aria-hidden="true"
+                  >{{ tier <= categoryTiers(cat.id) ? '✓' : '·' }}</span>
+                </span>
+                <span v-if="isCategoryComplete(cat.id)" class="ds-badge ds-badge-amber">4/4 kademe ✓</span>
               </span>
               <span class="text-[11px] text-slate-500 block">{{ cat.desc }}</span>
             </span>

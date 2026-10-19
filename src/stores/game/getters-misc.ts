@@ -253,7 +253,10 @@ export const miscGetters = {
 
     // ---- Özellik Merdiveni (v0.11.0) ----
     unlockContext(this: StoreApi, state: GameState): UnlockContext {
-      return buildUnlockContext(state)
+      // P3.1: başarım listesi bağlama GERÇEKTEN iletilir — `achievements` field'ı
+      // yapısal olarak da akardı ama çağrıda açıkça yazmak niyeti görünür kılar;
+      // akmasaydı tüm dal kapıları üretimde sessizce kapalı kalırdı.
+      return buildUnlockContext({ ...state, achievements: state.achievements })
     },
 
     // ADR-0035: bir dopamin eşiği hiçbir koşuda "yeniden kilitlenmez".
@@ -267,7 +270,9 @@ export const miscGetters = {
       if (state.unlockedFeatures.includes(id)) return true
       const feature = getFeatureById(id)
       if (!feature) return false
-      return checkUnlock(buildUnlockContext(state), feature)
+      // P3.1: aynı bağlam `unlockContext` getter'ındaki gibidir — başarım listesi
+      // bilinçli olarak iletilir (dal kapıları state.achievements'tan beslenir).
+      return checkUnlock(buildUnlockContext({ ...state, achievements: state.achievements }), feature)
     },
 
     autobuyersUnlocked(this: StoreApi): boolean {

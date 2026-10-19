@@ -4,7 +4,7 @@
 // H2 SABİT KAYNAĞI KURALI: denge sabitleri burada ELLE TUTULMAZ; gerçek oyundan import edilir.
 //   src/game/balance.ts        -> BASE_COSTS, COST_MULTS, RESOLUTION_MILESTONES, DIMENSION_CHAIN_RATE
 //   src/game/autobuyer-data.ts -> AUTOBUYER_COSTS, AUTOBUYER_PROGRESS_REQ
-//   src/game/achievements.ts   -> PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT
+//   src/game/achievements.ts   -> PER_ACHIEVEMENT_MULT, FAMILY_TIER_MULT, countFamilyTiers
 // Node doğrudan TS çalıştıramadığı için bundle edilir:
 //   node brain/scratchpad/harness/build-sim.mjs
 //   node brain/scratchpad/harness/out/simulate-economy.mjs
@@ -12,8 +12,37 @@
 import { D_1, D_INFINITY, Decimal } from '../../src/core/math'
 import { BASE_COSTS, COST_MULTS, DIMENSION_CHAIN_RATE, RESOLUTION_MILESTONES } from '../../src/game/balance'
 import { AUTOBUYER_COSTS, AUTOBUYER_PROGRESS_REQ } from '../../src/game/autobuyer-data'
-import { PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT } from '../../src/game/achievements'
+import {
+  ACHIEVEMENTS,
+  ACHIEVEMENT_CATEGORIES,
+  FAMILY_TIER_MULT,
+  PER_ACHIEVEMENT_MULT,
+  countFamilyTiers
+} from '../../src/game/achievements'
 import { BASE_SHIFT_POWER } from '../../src/game/challenges'
+
+// ---- AİLE KADEME TAHMİNİ (P3.1b) ----
+// Sim, başarım kimliklerini tek tek TAKİP ETMEZ; yalnızca bir sayaç
+// (achievementsCount) tutar. Eski yaklaşım (`1.06 ^ floor(count/7)`) hem artık
+// kaldırılmış ROW_COMPLETION_MULT'e hem de "her ~7 başarım = 1 tam satır"
+// yanlış varsayımına dayanıyordu. Yeni yaklaşım: sayaç ailelere SIRA DOLU
+// dağıtır (gerçek ilerleme zaten dopamin → boyut → otomasyon sırasını izler),
+// aileden açılan plaket tahmin edilir ve GERÇEK countFamilyTiers() kademe
+// eşiğini uygular. Bu bir TAHMİN'dir; kesin kaynak src/game/achievements.ts
+// (familyTierCount/countFamilyTiers)'tir — H2 sabit kaynak kuralı gereği
+// eşikler ve çarpanlar burada elle tutulmaz.
+function estimateFamilyTiers(count: number): number {
+  const ids: string[] = []
+  let remaining = Math.max(0, Math.floor(count))
+  for (const cat of ACHIEVEMENT_CATEGORIES) {
+    const defs = ACHIEVEMENTS.filter((a) => a.category === cat.id)
+    const take = Math.min(defs.length, remaining)
+    ids.push(...defs.slice(0, take).map((a) => a.id))
+    remaining -= take
+    if (remaining <= 0) break
+  }
+  return countFamilyTiers(ids)
+}
 
 // D_INFINITY (1.797e308 = ilk tekillik eşiği) src/core/math'ten re-export edilir;
 // burada ikinci bir kopya tanımlanmaz. Eski scratch script'leri bu isimle import ediyor.
@@ -182,9 +211,12 @@ export class Simulation {
     count += Math.min(10, Math.floor(this.simTime / 300))
     this.achievementsCount = count
 
+    // P3.1b: 1.012^(başarım) × 1.015^(tahmini aile kademesi).
+    // Kademe, estimateFamilyTiers() ile TAHMİN edilir (gerçek kaynak:
+    // src/game/achievements.ts). Eski `1.06 ^ floor(count/7)` artık yok.
     const per = Decimal.pow(PER_ACHIEVEMENT_MULT, count)
-    const rows = Decimal.pow(ROW_COMPLETION_MULT, Math.floor(count / 7))
-    return per.times(rows)
+    const tiers = Decimal.pow(FAMILY_TIER_MULT, estimateFamilyTiers(count))
+    return per.times(tiers)
   }
 
   get tickspeedMultiplier(): Decimal {

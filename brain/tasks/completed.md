@@ -1,5 +1,72 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-19] ✔ — Tempo & Ekonomi Faz 3 / P3.1: Başarım Kapılı Dallar + Aile Kademe Çarpanı (ADR-0073)
+
+### Gerekçe:
+- Plan §2: 86 başarım hiçbir mekanik açmıyor; plan §1: ilk 10 dakikada ~7-10 sistem aynı anda iniyor.
+- Ölçülen (P0 baseline): ilk 8 dakikada 7 özellik kapısı; P3.0 ölçümü: **ilk 600 sn'de 10 sistem**.
+
+### Çözüm & Değişiklikler:
+1. **YENİ `src/game/branches.ts`** — omurga/opsiyonel dal ayrımının tek kaynağı:
+   `BranchGate { featureId, family, requiredAchievements, safeAchievementIds }` × 12 dal kaydı +
+   `SPINE_FEATURE_IDS` (8 id) + `getBranchGate` / `isSpineFeature` / `isBranchFeature` /
+   `countFamilyAchievements` / `branchProgress`.
+2. **Kapı seviyesi = ÖZELLİK (dal değil)** — `lab` ve `guilt` aileleri *kendini kilitler*
+   (`lab_seed` için lab açılmış, `gui_seen` için parazitler açılmış olmalı) → dal seviyesinde
+   kapı konsa plan §2'nin uyardığı softlock birebir oluşurdu. Bu iki ailenin **giriş** katmanları
+   (`lab`, `guilt_slackers`) omurgada; **derin** katmanları (tohumlar, mercek/rezonatör) aile kapısında.
+3. **Softlock koruması kodda test edilir:** her kapı `safeAchievementIds` taşır = dal açılmadan
+   kazanılabilen aile başarımları. Invariant: `safe.length >= required` — ihlal eden kapı **yazım
+   anında** kırmızı testle yakalanır. Sayım yalnızca güvenli listeden yapılır (daha fazlası
+   sayılırsa kapı görünürde açık ama gerçekte açılmaz → sahte ilerleme çubuğu).
+4. **`src/game/unlocks.ts`**: `UnlockContext.achievements?` alanı; `checkUnlock` = kendi şartı **ve**
+   dal kapısı; `unlockProgress` dal devredeyken başarım ilerlemesi (`current` hedefe kırpılır →
+   `progress >= target` sözleşmesi korunur); `unlockProgressFraction` dalda **lineer**, dekad öncesi
+   logaritmik davranış aynen kalır; `checkVisibility` **EXPORT** (görünürlük = kendi şartı, dal
+   katmanı yok) → P3.2 silüet UI'ının temeli.
+5. **`src/stores/game/getters-misc.ts`**: `buildUnlockContext(state)` çağrılarına
+   `achievements: state.achievements` **gerçekten** bağlandı (aksi halde typecheck yeşil kalır ama
+   üretimde dallar hiç açılmaz — sessiz softlock).
+6. **`src/game/achievements.ts`**: `ROW_COMPLETION_MULT = 1.06` **silindi**; yerine
+   `FAMILY_TIER_STEPS = [0.25, 0.5, 0.75, 1]` × `FAMILY_TIER_MULT = 1.015` kademe sistemi
+   (+ `familyTierCount`, `countFamilyTiers`). **Tavan korundu:** 1.06^8 = 1.594 → 1.015^32 = 1.610.
+   Fark: ödeme %25'te başlıyor (plan §6.4 "aile tamamlama kademeleri" kabul edildi, çizgisel
+   86-nokta modeli reddedildi).
+7. **`src/components/AchievementsTab.vue`**: "Tam satır ✓ ×1.06" rozeti yerine kategori başlığında
+   **4 kademe tik kutucuğu** (dolu/boş, tooltip'li, `aria-label`'lı) — görsel öncelikli (plan §7).
+8. `brain/scratchpad/simulate-economy.ts` + `harness/verify-sim-constants.ts`: kaldırılan sabitin yerine
+   **tahmin** yardımcısı (gerçek kaynak `src/game/achievements.ts`, yorumda belirtildi).
+9. [ADR-0073](../decisions/0073-achievement-gated-branch-spine-hybrid.md) yazıldı (aile→dal haritası
+   dahil) + `brain/decisions/README.md` indeksi güncellendi.
+10. `brain/scratchpad/harness/first-prestige-baseline.md` → **TARİHSEL** uyarı bandı eklendi
+    ("0:13:13" rakamları geçersiz; güncel otorite P0 raporu).
+
+### YENİ dosyalar:
+- `src/game/branches.ts` (YENİ) · `src/game/branches.test.ts` (YENİ, 13 test)
+
+### Ölçüm — P3.0 erken merdiven adayları (`brain/scratchpad/p3-early-ladder-candidates.md`):
+| Aday | 600 sn içindeki sistem | ≤4 hedefi |
+| :--- | ---: | :--- |
+| A — mevcut | **10** | ✗ |
+| B — plan metni (autobuyers 1e12) | **10** | ✗ |
+| C — ilk 10 dk kontratı (ham) | 3 | sayısal ✓ ama `1e65` kapıları 353.5 sn'de → mutlak kontrat ✗ |
+| **C′ — ölçümle düzeltilmiş** | **1** (yalnız izinli anomali) | **✓** |
+
+- Eğri o kadar dik ki **1e9 → 1e56 aralığı 74 saniyeye** sıkışıyor (190 → 263.4 sn) → plan §1'in
+  "autobuyers 1e9 → 1e12" önerisi **sayıyı değiştirmiyor**, saniyeleri kaydırıyor.
+- 600 sn kontratı için en küçük tam dekad **1e68 → 816.4 sn** (600 sn'deki ömür boyu tepe = 1e67.24).
+- **C′ bedeli:** casual profili 1800 sn'de tepe 69.39 · idle 67.00 → 1e70 eşikleri bu profillerde
+  30 dakikada bile açılmıyor. Ayrıca `unlockAutobuyer()` feature kapısını kontrol **etmiyor** →
+  harness eğrisi eşik kaydırmayı yansıtmaz (ölçüm sınırı, rapor §4.2/§5).
+
+### Doğrulama:
+- `npm run typecheck` **exit 0** · `npm test` **445/445** (30 dosya) · `npm run build` **exit 0**
+- `npm run harness:smoke` **6/6 PASS** — zirve `log10=99.8`, `shifts=9`, `tickspeed=81` (önceki 98.4/9/80)
+
+### Açık (kullanıcı kararı bekliyor):
+1. **Tempo:** ölçülen ilk koşu ~11 saat vs ADR-0023'ün 150–300 dk bandı → onarım mı, revizyon mu, kabul mü?
+2. **Erken merdiven:** A / B / C / C′ (C′ kontratı tutturuyor ama otomasyonu geciktiriyor).
+
 ## [2026-10-19] ✔ — Tempo & Ekonomi Faz 2 / P2.2: Sıçrama Kalıntıları Temizlendi + Eşik Yayılımı Ölçümü
 
 ### Gerekçe:

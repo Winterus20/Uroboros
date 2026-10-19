@@ -1,5 +1,17 @@
 # First-Prestige Baseline — Time to First Singularity (measurement only)
 
+> ## ⚠️ TARİHSEL — RAKAMLAR GEÇERSİZ (2026-10-19)
+>
+> Bu rapor **eski bir yapıda** alınmıştır ve zaman etiketleri geçerliliğini yitirmiştir:
+> başlık sonucu "ilk tekillik ≈13 dk" der, oysa güncel ölçüm (~11 saat) ile hem ADR-0023
+> (150–300 dk) hem de bu sayı büyük bir sapmadır. **Güncel otorite: [`brain/research/pacing-p0-baseline-2026-10.md`](../../research/pacing-p0-baseline-2026-10.md)**
+> (§7 ADR-0023 ihlali, §8 eşik yayılımı).
+>
+> Bu dosya yalnızca **yöntem referansı** olarak korunur: harness kurulumu, determinizm yöntemi
+> (seeded mulberry32 + sanal saat), profil tablosu ve telemetri anahtarları hâlâ geçerlidir.
+> 1–7. bölümlerdeki bütün sayısal sonuçlar (`0:13:13`, zaman çizelgeleri, log10 tabloları)
+> **tarihsel kabul edilir**; sıradaki ölçüm buna göre değil, P0 raporuna göre yapılır.
+
 > Headless, deterministic harness that drives the **real** Pinia store (`src/stores/game.ts`)
 > in Node. No game file was modified. The sim stops the clock the moment
 > `store.canSingularity` (matter ≥ 1.7976931348623157e308) first turns true — it never calls

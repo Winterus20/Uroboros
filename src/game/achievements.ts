@@ -8,9 +8,18 @@ import type {
 // ---- Denge Sabitleri ----
 // Taslak plandaki (×1.03 / ×1.10) değerler 56 başarımda toplam ×4.5+ veriyordu;
 // onaylanan "tam sette ~×2.5-3" hedefini tutturmak için aşağı ayarlandı.
-// Tam set (67 + 8 tam satır): 1.012^67 × 1.06^8 ≈ ×3.55 (8 Meydan Okuma başarımı dahil)
+//
+// P3.1b (plan §6/§4 — aile tamamlama kademeleri): "%100 satır dolunca ×1.06"
+// ödülü kaldırıldı; yerine %25/%50/%75/%100 KADEME ödülü geldi.
+// Toplam tavan ≈ AYNI kalır: 1.015^32 ≈ ×1.611 (eski 1.06^8 ≈ ×1.594) — fark
+// tavanın büyümesi değil, ödemin İLK %25'TE, yani ilk koşuda da başlaması
+// (sıradan oyuncu daha oyunun başında kademe çarpanını görür; eski sistemde
+// 86/86 plaket gerekirdi ve çoğu oyuncu hiç ödeme almazdı).
 export const PER_ACHIEVEMENT_MULT = 1.012
-export const ROW_COMPLETION_MULT = 1.06
+/** Aile tamamlanma eşikleri: %25 / %50 / %75 / %100 (gizli plaketler dahil). */
+export const FAMILY_TIER_STEPS = [0.25, 0.5, 0.75, 1] as const
+/** Aile kademesi başına ek küresel üretim çarpanı (8 aile × 4 kademe = 32). */
+export const FAMILY_TIER_MULT = 1.015
 
 export interface AchievementCategoryMeta {
   id: AchievementCategoryId
@@ -217,11 +226,42 @@ export function countCompletedRows(unlockedIds: readonly string[]): number {
   return ACHIEVEMENT_CATEGORIES.filter((c) => isCategoryComplete(c.id, unlockedIds)).length
 }
 
-// Global kalıcı çarpan: 1.012^(başarım) × 1.06^(tam satır). SP kazancına uygulanmaz.
+// ---- Aile Tamamlama Kademeleri (P3.1b) ----
+/**
+ * Tek bir ailenin (kategori) kademe sayısı: 0..4.
+ * Kural: unlocked/total >= FAMILY_TIER_STEPS[i] ise o kademe sayılır.
+ * Gizli/secret plaketler de paydadadır — eski "tam satır" semantiğiyle aynı
+ * kapsam, yalnızca %100 yerine dört ayrı eşiğe bölünmüş hâli.
+ */
+export function familyTierCount(
+  categoryId: AchievementCategoryId,
+  unlockedIds: readonly string[]
+): number {
+  const defs = categoryDefs(categoryId)
+  const total = defs.length
+  if (total === 0) return 0
+  const unlocked = defs.filter((a) => unlockedIds.includes(a.id)).length
+  const ratio = unlocked / total
+  return FAMILY_TIER_STEPS.filter((step) => ratio >= step).length
+}
+
+/**
+ * 8 ailenin kademe toplamı: 0..32 (8 × 4).
+ * Bilinmeyen id'ler tanımlar üzerinden sayılmadığı için kademe artırmaz
+ * (ADR-0031 beyaz liste korumasıyla uyumlu).
+ */
+export function countFamilyTiers(unlockedIds: readonly string[]): number {
+  return ACHIEVEMENT_CATEGORIES.reduce(
+    (sum, c) => sum + familyTierCount(c.id, unlockedIds),
+    0
+  )
+}
+
+// Global kalıcı çarpan: 1.012^(başarım) × 1.015^(aile kademesi). SP kazancına uygulanmaz.
 export function calcAchievementMultiplier(unlockedIds: readonly string[]): Decimal {
   const per = Decimal.pow(PER_ACHIEVEMENT_MULT, unlockedIds.length)
-  const rows = Decimal.pow(ROW_COMPLETION_MULT, countCompletedRows(unlockedIds))
-  return per.times(rows)
+  const tiers = Decimal.pow(FAMILY_TIER_MULT, countFamilyTiers(unlockedIds))
+  return per.times(tiers)
 }
 
 export function hasAchievementReward(unlockedIds: readonly string[], kind: AchievementRewardKind): boolean {

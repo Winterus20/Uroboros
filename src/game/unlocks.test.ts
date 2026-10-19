@@ -4,6 +4,7 @@ import {
   FEATURE_UNLOCKS,
   buildUnlockContext,
   checkUnlock,
+  checkVisibility,
   getFeatureById,
   lifetimeUnlockDopamine,
   meetsDopamineGate,
@@ -12,6 +13,9 @@ import {
   unlockProgress,
   unlockProgressFraction
 } from './unlocks'
+import { isSpineFeature } from './branches'
+import { ACHIEVEMENTS } from './achievements'
+import { createFreshStore } from '../test/helpers'
 import {
   FORMAT_UNLOCK_BUFF_MULT,
   FORMAT_UNLOCK_BUFF_SECONDS,
@@ -53,6 +57,8 @@ const COUNT_REQ_KINDS = [
 ] as const
 
 const ALL_IDS: readonly string[] = FEATURE_UNLOCKS.map((f) => f.id)
+// P3.1: "tamamlanmış" bağlam, başarım kapılı dalları da kapsar.
+const ALL_ACHIEVEMENT_IDS: readonly string[] = ACHIEVEMENTS.map((a) => a.id)
 const DIMENSION_TIER_COUNT = TIER_IDENTITIES.length
 
 /** The degenerate context a brand-new (or half-migrated) save produces. */
@@ -80,7 +86,9 @@ function saturatedContext(): UnlockContext {
     galaxies: 10,
     singularities: 20,
     spellsCast: 50,
-    anomaliesClicked: 500
+    anomaliesClicked: 500,
+    // P3.1: "her basamak açık" hâli başarım kapılı dalları da kapsar.
+    achievements: ALL_ACHIEVEMENT_IDS
   }
 }
 
@@ -507,7 +515,12 @@ describe('ADR-0035 — açılış kalıcılığı (hayat boyu dopamin)', () => {
   it('keeps every dopamine rung open after dopamine is reset to zero', () => {
     for (const f of DOPAMINE_RUNGS) {
       const amount = (f.req as { kind: 'dopamine'; amount: string }).amount
-      const reached: UnlockContext = { ...emptyContext(), matter: new Decimal(amount) }
+      // P3.1: başarım kapılı dallar da açılmış varsayılır (omurga + dal birlikte).
+      const reached: UnlockContext = {
+        ...emptyContext(),
+        matter: new Decimal(amount),
+        achievements: ALL_ACHIEVEMENT_IDS
+      }
       expect(checkUnlock(reached, f)).toBe(true)
       const reachedOnce = { ...reached, lifetimePeakMatter: new Decimal(amount) }
 
@@ -553,7 +566,10 @@ describe('ADR-0035 — açılış kalıcılığı (hayat boyu dopamin)', () => {
       lifetimePeakMatter: new Decimal(peak),
       dimensionShifts: 12,
       galaxies: 3,
-      singularities: 2
+      singularities: 2,
+      // P3.1: dal kapıları da açık — aksi hâlde koşu içinde açılan dallar
+      // sıfırlama testinin konusu zaten bu (kapılar geri kapanmamalı).
+      achievements: ALL_ACHIEVEMENT_IDS
     }
     const openBefore = FEATURE_UNLOCKS.filter((f) => checkUnlock(run, f)).map((f) => f.id)
     expect(openBefore.length).toBeGreaterThanOrEqual(10)
@@ -567,7 +583,8 @@ describe('ADR-0035 — açılış kalıcılığı (hayat boyu dopamin)', () => {
       galaxies: 0,
       singularities: 2,
       spellsCast: 0,
-      anomaliesClicked: 0
+      anomaliesClicked: 0,
+      achievements: ALL_ACHIEVEMENT_IDS
     }
     for (const f of FEATURE_UNLOCKS) {
       if (!openBefore.includes(f.id)) continue
@@ -775,5 +792,219 @@ describe('format unlock buff', () => {
     expect(formatUnlockBuffMult(3, 3, 1_000, 1_000)).toBe(1)
     expect(formatUnlockBuffMult(3, 3, 1_000, 1_001)).toBe(1)
     expect(formatUnlockBuffMult(3, 3, 0, 0)).toBe(1)
+  })
+})
+
+describe('P3.1 — başarım kapılı dallar (dal kapısı x dekad kapısı)', () => {
+  /** Dekad eşiği (1e28) aşılmış, başarım listesi verilmemiş bir koşu. */
+  function crisisPastDecade(achievements?: readonly string[]): UnlockContext {
+    return {
+      ...emptyContext(),
+      matter: new Decimal('1e28'),
+      lifetimePeakMatter: new Decimal('1e28'),
+      achievements
+    }
+  }
+
+  it('i) dekad kapısı geçilir ama başarım bosken crisis KAPALI kalir', () => {
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+    const ctx = crisisPastDecade()
+    // 1e28 dekad eşiği aşıldı; başarım listesi yok → dal kilitli.
+    expect(checkUnlock(ctx, f)).toBe(false)
+    const progress = unlockProgress(ctx, f)
+    expect(progress.current).toBe(0)
+    expect(progress.target).toBe(2)
+  })
+
+  it('ii) safe basarimlar kazanilinca ayni feature ACILIR', () => {
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+    const ctx = crisisPastDecade(['cri_first', 'cri_10'])
+    expect(checkUnlock(ctx, f)).toBe(true)
+    expect(unlockProgress(ctx, f)).toEqual({ current: 2, target: 2 })
+    expect(unlockProgressFraction(ctx, f)).toBe(1)
+    // Bir başarım eksikken hâlâ kapalı (yarım ilerleme).
+    const half = crisisPastDecade(['cri_first'])
+    expect(checkUnlock(half, f)).toBe(false)
+    expect(unlockProgress(half, f)).toEqual({ current: 1, target: 2 })
+    expect(unlockProgressFraction(half, f)).toBe(0.5)
+  })
+
+  it('iii) omurga ozellikleri basarimlardan ETKILENMEZ (achievements bos olsa dekada gore acilir)', () => {
+    const ctx: UnlockContext = {
+      ...emptyContext(),
+      matter: new Decimal('1e308'),
+      lifetimePeakMatter: new Decimal('1e308'),
+      singularities: 1,
+      achievements: []
+    }
+    for (const id of ['crisis_spawn', 'autobuyers', 'night_watch', 'challenges']) {
+      const f = getFeatureById(id)
+      expect(f).toBeDefined()
+      if (!f) continue
+      expect(isSpineFeature(id)).toBe(true)
+      expect(checkUnlock(ctx, f)).toBe(true)
+    }
+  })
+
+  it('iv) ADR-0035 monotonlugu: dal bir kez acildiktan sonra matter sifirlansa da acik kalir', () => {
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+    const opened = crisisPastDecade(['cri_first', 'cri_10'])
+    expect(checkUnlock(opened, f)).toBe(true)
+    // Sıçrama / şafak: koşu içi dopamin sıfırlandı — dal geri kilitlenmez.
+    const afterReset: UnlockContext = { ...opened, matter: new Decimal(0) }
+    expect(checkUnlock(afterReset, f)).toBe(true)
+    expect(unlockProgress(afterReset, f)).toEqual({ current: 2, target: 2 })
+    expect(unlockProgressFraction(afterReset, f)).toBe(1)
+  })
+
+  it('v) dal kapasinda unlockProgressFraction LINEER (current/target)', () => {
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+    expect(unlockProgressFraction(crisisPastDecade([]), f)).toBe(0)
+    expect(unlockProgressFraction(crisisPastDecade(['cri_first']), f)).toBe(0.5)
+    expect(unlockProgressFraction(crisisPastDecade(['cri_first', 'cri_10']), f)).toBe(1)
+    // Dekad öncesi aşama logaritmik kalır: 1e14, 1e28 hedefinin tam yarısı.
+    const preGate: UnlockContext = { ...emptyContext(), matter: new Decimal('1e14') }
+    expect(unlockProgressFraction(preGate, f)).toBeCloseTo(0.5, 6)
+  })
+
+  it('buildUnlockContext basarimlari state uzerinden gecirir (yoksa bos liste sayilir)', () => {
+    const base = {
+      matter: new Decimal('1e28'),
+      dimensions: [],
+      dimensionShifts: 0,
+      galaxies: 0,
+      singularities: 0
+    }
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+    const withAch = buildUnlockContext({ ...base, achievements: ['cri_first', 'cri_10'] })
+    expect(withAch.achievements).toEqual(['cri_first', 'cri_10'])
+    expect(checkUnlock(withAch, f)).toBe(true)
+    // Eski kayıt / alan yoksa boş liste: dal kapalı kalır ama omurga etkilenmez.
+    const legacy = buildUnlockContext(base)
+    expect(legacy.achievements).toEqual([])
+    expect(checkUnlock(legacy, f)).toBe(false)
+    expect(checkUnlock(legacy, getFeatureById('crisis_spawn')!)).toBe(true)
+  })
+
+  it('store ucu uca: state.achievements dal kapasini gercekten besler', () => {
+    const store = createFreshStore()
+    store.matter = new Decimal('1e28')
+    store.lifetimePeakMatter = new Decimal('1e28')
+    store.achievements = []
+    expect(store.unlockedFeatures).not.toContain('crisis')
+    expect(store.unlockContext.achievements).toEqual([])
+    // Dekad eşiği geçildi, başarım yok → dal KAPALI (softlock değil: doğru sonuç).
+    expect(store.isFeatureUnlocked('crisis')).toBe(false)
+    // Kaynak: store.state.achievements (actions-misc syncAchievements yazar).
+    store.achievements = ['cri_first', 'cri_10']
+    expect(store.unlockContext.achievements).toEqual(['cri_first', 'cri_10'])
+    expect(store.isFeatureUnlocked('crisis')).toBe(true)
+    // Omurga başarım listesinden bağımsız kalmaya devam eder.
+    expect(store.isFeatureUnlocked('crisis_spawn')).toBe(true)
+  })
+
+  it('nextLocked bir dali siradaki gosterdiginde ilerleme DAL kapasini gosterir (ipucu)', () => {
+    const ctx: UnlockContext = {
+      ...emptyContext(),
+      matter: new Decimal('1e28'),
+      lifetimePeakMatter: new Decimal('1e28')
+    }
+    // colony (1e22) dekadı aşıldı ama automation başarımı eksik → sıradaki dal bu.
+    const next = nextLocked(ctx, new Set())
+    expect(next?.id).toBe('colony')
+    if (!next) return
+    expect(unlockProgress(ctx, next)).toEqual({ current: 0, target: 2 })
+    expect(unlockProgressFraction(ctx, next)).toBe(0)
+    // Dalın başarım ilerlemesi ipucu olarak akar: 1/2 görünür.
+    const oneDone: UnlockContext = { ...ctx, achievements: ['auto_first'] }
+    expect(unlockProgress(oneDone, next)).toEqual({ current: 1, target: 2 })
+    expect(unlockProgressFraction(oneDone, next)).toBe(0.5)
+    // Dal açılınca bir sonraki basamak sıçrar: crisis (1e28, başarım eksik).
+    const open: UnlockContext = { ...ctx, achievements: ['auto_first', 'auto_bulk'] }
+    expect(checkUnlock(open, next)).toBe(true)
+    expect(nextLocked(open, new Set())?.id).toBe('crisis')
+  })
+})
+
+describe('P3.2 — checkVisibility (gorunurluk: dal katmani olmadan)', () => {
+  /** Dekad esigi verilmis bir baglam (basarim listesi ayrica belirtilir). */
+  function atDecade(achievements?: readonly string[]): UnlockContext {
+    return {
+      ...emptyContext(),
+      matter: new Decimal('1e28'),
+      lifetimePeakMatter: new Decimal('1e28'),
+      achievements
+    }
+  }
+
+  it('crisis: dekad oncesi FALSE; 1e28 asildi achievements bosken TRUE ama checkUnlock FALSE (siluet)', () => {
+    const f = getFeatureById('crisis')
+    expect(f).toBeDefined()
+    if (!f) return
+
+    const before: UnlockContext = {
+      ...emptyContext(),
+      matter: new Decimal('1e14'),
+      lifetimePeakMatter: new Decimal('1e14')
+    }
+    expect(checkVisibility(before, f)).toBe(false)
+    expect(checkUnlock(before, f)).toBe(false)
+
+    // Siluet durumu: dekad gecti, basarim eksik → gorunurluk acik, acilis kapali.
+    const silhouette = atDecade()
+    expect(checkVisibility(silhouette, f)).toBe(true)
+    expect(checkUnlock(silhouette, f)).toBe(false)
+
+    const opened = atDecade(['cri_first', 'cri_10'])
+    expect(checkVisibility(opened, f)).toBe(true)
+    expect(checkUnlock(opened, f)).toBe(true)
+  })
+
+  it('omurgada checkVisibility ile checkUnlock AYNI; acilan her sey gorunur', () => {
+    const contexts: UnlockContext[] = [
+      emptyContext(),
+      {
+        ...emptyContext(),
+        matter: new Decimal('1e308'),
+        lifetimePeakMatter: new Decimal('1e308'),
+        singularities: 1,
+        achievements: []
+      },
+      atDecade()
+    ]
+    for (const ctx of contexts) {
+      for (const feat of FEATURE_UNLOCKS) {
+        const visible = checkVisibility(ctx, feat)
+        if (isSpineFeature(feat.id)) {
+          // Omurgada dal katmani yok: gorunurluk == gercek acilis.
+          expect(visible).toBe(checkUnlock(ctx, feat))
+        }
+        // Acilan her ozellik gorunur olmak zorunda (gorunurluk ust kumesi).
+        if (checkUnlock(ctx, feat)) expect(visible).toBe(true)
+      }
+    }
+
+    // Ornek omurga ciftleri: achievements bosken de ikisi de true.
+    const open = contexts[1]
+    for (const id of ['crisis_spawn', 'autobuyers', 'night_watch', 'challenges']) {
+      const f = getFeatureById(id)
+      expect(f).toBeDefined()
+      if (!f) continue
+      expect(checkVisibility(open, f)).toBe(true)
+      expect(checkUnlock(open, f)).toBe(true)
+    }
+    // Dal orneginde (crisis) siluet ayrimi gorunur kalir:
+    expect(checkVisibility(contexts[2], getFeatureById('crisis')!)).toBe(true)
+    expect(checkUnlock(contexts[2], getFeatureById('crisis')!)).toBe(false)
   })
 })

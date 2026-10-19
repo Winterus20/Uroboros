@@ -1,5 +1,6 @@
 import { Decimal } from '../core/math'
 import { ARC_LOG10_MAX, decadeGate } from './pacing'
+import { branchProgress, getBranchGate } from './branches'
 
 /**
  * Özellik Merdiveni (Progressive Feature Unlock)
@@ -55,6 +56,15 @@ export interface UnlockContext {
   singularities: number
   spellsCast: number
   anomaliesClicked: number
+  /**
+   * Kazanılan başarım id'leri (P3.1 — başarım kapılı dallar).
+   *
+   * Dekad eşiği aşılsa bile dal gate'li bir özelliğin GERÇEK açılışı bu
+   * listeden gelir. Opsiyoneldir: alan yoksa (eski kayıt, harici bağlam)
+   * tüketiciler `?? []` ile boş liste sayar — hiçbir dal boş listeden
+   * açılmaz. Store tarafındaki kaynak: `state.achievements`.
+   */
+  achievements?: readonly string[]
 }
 
 /**
@@ -111,6 +121,8 @@ export function buildUnlockContext(state: {
   galaxies: number
   singularities: number
   stats?: { spellsCast?: number; anomaliesClicked?: number }
+  /** Kazanılan başarım id'leri (P3.1). Yoksa boş liste sayılır. */
+  achievements?: readonly string[]
 }): UnlockContext {
   return {
     matter: state.matter,
@@ -120,11 +132,22 @@ export function buildUnlockContext(state: {
     galaxies: state.galaxies,
     singularities: state.singularities,
     spellsCast: state.stats?.spellsCast || 0,
-    anomaliesClicked: state.stats?.anomaliesClicked || 0
+    anomaliesClicked: state.stats?.anomaliesClicked || 0,
+    // P3.1: başarım listesi bağlama gerçekten iletilir; eski kayıt / alan yoksa
+    // `?? []` boş listeye düşer ve hiçbir dal kapısı açılmaz (softlock değil:
+    // omurga dekad kapıları achievements'tan bağımsız çalışmaya devam eder).
+    achievements: state.achievements ?? []
   }
 }
 
-export function checkUnlock(ctx: UnlockContext, feature: FeatureUnlock): boolean {
+/**
+ * Görünürlük = özelliğin KENDİ şartı (dekad / sayaç kapısı); DAL KATMANI YOK.
+ *
+ * UI siluetini bu ayırır (P3.2): false → şart henüz geçmedi (görünmez),
+ * true ama `checkUnlock` false → dekad geçti, başarım eksik (siluet + ipucu).
+ * GERÇEK açılış her zaman `checkUnlock`'dur (dal katmanı dahil edilmiş hâli).
+ */
+export function checkVisibility(ctx: UnlockContext, feature: FeatureUnlock): boolean {
   const req = feature.req
   switch (req.kind) {
     case 'dimBought': {
@@ -148,10 +171,31 @@ export function checkUnlock(ctx: UnlockContext, feature: FeatureUnlock): boolean
   }
 }
 
+/**
+ * Dekad kapısı görünürlüğü verir; başarım kapısı (P3.1) GERÇEK açılışı verir:
+ * kendi şartı sağlansa bile dal kilitliyse özellik KİLİTLİ kalır. Spine
+ * (omurga) özelliklerinin gate'i yoktur, davranışları değişmez.
+ */
+export function checkUnlock(ctx: UnlockContext, feature: FeatureUnlock): boolean {
+  if (!checkVisibility(ctx, feature)) return false
+  const gate = getBranchGate(feature.id)
+  if (gate && !branchProgress(gate, ctx.achievements ?? []).unlocked) return false
+  return true
+}
+
 export function unlockProgress(
   ctx: UnlockContext,
   feature: FeatureUnlock
 ): { current: number; target: number } {
+  // P3.1: dal kapısı devrede (dekad eşiği aşıldı) ilerleme artık başarım
+  // sayısına geçer: mevcut güvenli başarım / hedef; dekad öncesi eski davranış.
+  // `current` hedefe kırpılır (safe listesi hedeften uzun olabilir, bkz. colony),
+  // böylece "progress >= target" = checkUnlock sözleşmesi korunur.
+  const gate = getBranchGate(feature.id)
+  if (gate && checkVisibility(ctx, feature)) {
+    const gateProgress = branchProgress(gate, ctx.achievements ?? [])
+    return { current: Math.min(gateProgress.current, gateProgress.target), target: gateProgress.target }
+  }
   const req = feature.req
   switch (req.kind) {
     case 'dimBought': {
@@ -192,6 +236,15 @@ export function unlockProgress(
  * böylece reset sonrası çubuk sıfıra düşmez.
  */
 export function unlockProgressFraction(ctx: UnlockContext, feature: FeatureUnlock): number {
+  // P3.1: dal kapısı devredeyken oran LINEERDİR (mevcut / hedef başarım sayısı):
+  // başarım sayacı 0..N aralığında ilerler; logaritmik ölçek yalnızca dekad
+  // aşamasındaki dopamin kapısında uygulanır.
+  const gate = getBranchGate(feature.id)
+  if (gate && checkVisibility(ctx, feature)) {
+    const { current, target } = unlockProgress(ctx, feature)
+    if (target <= 0) return 1
+    return Math.max(0, Math.min(1, current / target))
+  }
   const req = feature.req
   if (req.kind === 'dopamine') {
     const peak = lifetimeUnlockDopamine(ctx.matter, ctx.lifetimePeakMatter)

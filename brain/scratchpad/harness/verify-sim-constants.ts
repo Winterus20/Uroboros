@@ -6,7 +6,14 @@
 import Decimal from 'break_eternity.js'
 import { BASE_COSTS, COST_MULTS, DIMENSION_CHAIN_RATE, RESOLUTION_MILESTONES } from '../../../src/game/balance'
 import { AUTOBUYER_COSTS } from '../../../src/game/autobuyer-data'
-import { PER_ACHIEVEMENT_MULT, ROW_COMPLETION_MULT } from '../../../src/game/achievements'
+import {
+  ACHIEVEMENTS,
+  ACHIEVEMENT_CATEGORIES,
+  FAMILY_TIER_MULT,
+  FAMILY_TIER_STEPS,
+  PER_ACHIEVEMENT_MULT,
+  countFamilyTiers
+} from '../../../src/game/achievements'
 import { BASE_SHIFT_POWER } from '../../../src/game/challenges'
 import { Simulation } from '../simulate-economy'
 
@@ -35,7 +42,8 @@ console.log('[gerçek src/game/balance.ts] RESOLUTION_MILESTONES: ' +
 console.log('[gerçek src/game/autobuyer-data.ts] AUTOBUYER_COSTS.dim1: ' + AUTOBUYER_COSTS.dim1.toString())
 console.log('[gerçek src/game/balance.ts] DIMENSION_CHAIN_RATE: ' + DIMENSION_CHAIN_RATE)
 console.log('[gerçek src/game/achievements.ts] PER_ACHIEVEMENT_MULT: ' + PER_ACHIEVEMENT_MULT +
-  ', ROW_COMPLETION_MULT: ' + ROW_COMPLETION_MULT)
+  ', FAMILY_TIER_MULT: ' + FAMILY_TIER_MULT +
+  ', FAMILY_TIER_STEPS: ' + FAMILY_TIER_STEPS.join('/'))
 console.log('')
 
 console.log('1) RESOLUTION_MILESTONES — sim.getDimensionMultiplier(1) her eşikte gerçek tabloyu vermeli')
@@ -83,15 +91,54 @@ console.log('3) DIMENSION_CHAIN_RATE — sim.tick zincir beslemesi gerçek oran�
 }
 console.log('')
 
-console.log('4) PER_ACHIEVEMENT_MULT / ROW_COMPLETION_MULT — achievementMultiplier formülü')
+console.log('4) PER_ACHIEVEMENT_MULT / FAMILY_TIER_MULT — achievementMultiplier formülü (kademe TAHMİNİ)')
 {
-  const sim = new Simulation()
-  sim.manualClicks = 1000
-  const got = sim.achievementMultiplier
-  const count = sim.achievementsCount
-  const expected = Decimal.pow(PER_ACHIEVEMENT_MULT, count)
-    .times(Decimal.pow(ROW_COMPLETION_MULT, Math.floor(count / 7)))
-  assertDecimal('achievementsCount=' + count, got, expected)
+  // Sim'in kademe TAHMİNİNİN bağımsız kopyası (aynı belgelenmiş yaklaşım):
+  // sayaç sıra dolu ailelere dağıtılır, aileden açılan plaket tahmin edilir ve
+  // GERÇEK countFamilyTiers() eşiği uygulanır. Sim formülü ya da sabitleri
+  // kayarsa (örn. artık yok olan 1.06 ^ floor(count/7)) bu değer sapar,
+  // kontrol FAIL verir. Kesin kaynak: src/game/achievements.ts.
+  function estimateSimFamilyTiers(count: number): number {
+    const ids: string[] = []
+    let remaining = Math.max(0, Math.floor(count))
+    for (const cat of ACHIEVEMENT_CATEGORIES) {
+      const defs = ACHIEVEMENTS.filter((a) => a.category === cat.id)
+      const take = Math.min(defs.length, remaining)
+      ids.push(...defs.slice(0, take).map((a) => a.id))
+      remaining -= take
+      if (remaining <= 0) break
+    }
+    return countFamilyTiers(ids)
+  }
+
+  for (const scenario of [
+    { label: 'erken oyun (manualClicks=1000)', clicks: 1000, seconds: 0 },
+    { label: 'olgun koşu (manualClicks=1e6, 1 sa)', clicks: 1e6, seconds: 3600 }
+  ]) {
+    const sim = new Simulation()
+    sim.manualClicks = scenario.clicks
+    sim.simTime = scenario.seconds
+    const got = sim.achievementMultiplier // getter achievementsCount'ı doldurur
+    const count = sim.achievementsCount
+    const tiers = estimateSimFamilyTiers(count)
+    const expected = Decimal.pow(PER_ACHIEVEMENT_MULT, count)
+      .times(Decimal.pow(FAMILY_TIER_MULT, tiers))
+    assertDecimal(scenario.label + ' — achievementsCount=' + count + ', kademe≈' + tiers, got, expected)
+  }
+
+  // P3.1b davranışı: kademe ödülü ERKEN başlar — sayaç ilk ailenin %25
+  // eşiğini aştığında çarpan artık yalnızca 1.012^n değildir.
+  const early = new Simulation()
+  early.manualClicks = 1e6
+  early.simTime = 3600
+  const earlyGot = early.achievementMultiplier // getter'ı önce çalıştır
+  const earlyCount = early.achievementsCount
+  const earlyTiers = estimateSimFamilyTiers(earlyCount)
+  const perOnly = Decimal.pow(PER_ACHIEVEMENT_MULT, earlyCount)
+  const tierPays = earlyTiers > 0 && earlyGot.gt(perOnly)
+  if (!tierPays) failures++
+  console.log('  ' + (tierPays ? '[OK]  ' : '[FAIL]') +
+    ' erken kademe ödülü (kademe≈' + earlyTiers + ' > 0 ve çarpan 1.012^n üzerinde) => ' + tierPays)
 }
 console.log('')
 
