@@ -224,6 +224,8 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
   it('shiftRequirement 6+ sıçramalarda D5 pasifini uygular, taban 26 ile pürüzsüz artar ve her zaman tamsayı döner', () => {
     const store = useGameStore()
     store.dimensionShifts = 5
+    // ADR-0072: D8 açılımı artık sıçramadan gelmez; bu testte D8'i legacy
+    // `dimensionCapFloor` tabanı sağlar (sıçrama terimi açılıştan kaldırıldı).
     store.dimensionCapFloor = 8
     const reqShift5 = store.shiftRequirement
     expect(reqShift5.amount.toNumber()).toBe(25) // Shift 5 gereksinimi: 25 D8
@@ -248,5 +250,22 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
 
     store.dimensions[2].bought = 10
     expect(store.passiveBadges.d3Leech).toBe(true)
+  })
+
+  // ---- ADR-0072: boyut açılımı sıçramadan koparıldı ----
+  it('ADR-0072: sıçrama sayacı tek başına boyut açmaz', () => {
+    const store = useGameStore()
+    store.dimensionShifts = 8
+    expect(store.unlockedDimensionsCount).toBe(3)
+  })
+
+  it('ADR-0072: açılımı tepe kütle açar; koşu sıfırlanınca geri kilitlenmez', () => {
+    const store = useGameStore()
+    store.lifetimePeakMatter = new Decimal('1e11')
+    expect(store.unlockedDimensionsCount).toBe(5)
+
+    store.resetRunState()
+    expect(store.matter.toNumber()).toBe(10)
+    expect(store.unlockedDimensionsCount).toBe(5)
   })
 })

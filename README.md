@@ -71,7 +71,8 @@ Canlı durum: [`brain/tasks/todo.md`](brain/tasks/todo.md)
 | D7 | Yıldızlar & Güneş | `~1.98e33 g` |
 | D8 | Samanyolu & Karadelikler | `1e45 g+` |
 
-Yeni koşuda D1–D2 açıktır. Her **Ölçek Sıçraması** bir üst boyutu olay ufkuna katar (maks D8).
+Yeni koşuda D1–D3 açıktır. D4–D8, hayat boyu tepe kütle eşiklerinden açılır
+(`1e8 / 1e11 / 1e15 / 1e20 / 1e26 g`; ADR-0072). Ölçek Sıçraması artık boyut açmaz.
 
 ### Taktil ve idle sentezi
 
@@ -106,7 +107,7 @@ Yeni koşuda D1–D2 açıktır. Her **Ölçek Sıçraması** bir üst boyutu ol
 | Manuel yutma | **YUT!** butonu veya `Space` | Anlık kütle |
 | Satın al | Boyut satırındaki `+1 / +10 / Maks` | Üretimi büyüt |
 | Hızlan | Çekim Hızı (Hz) butonu | Tüm üretimi hızlandır |
-| Sıçra | Ölçek Sıçraması | Yeni boyut aç, alt katmanı sıfırla |
+| Sıçra | Ölçek Sıçraması | Alt katmanı sıfırla, çarpanı katla |
 | Galaksi | Galaksi butonu | Küresel çarpan |
 | Prestij | Kozmik Çöküş (`1.79e308 g`) | Koşuyu sıfırla, SP kazan |
 

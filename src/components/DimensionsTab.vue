@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useGameStore, BASE_UNLOCKED_DIMENSIONS } from '../stores/game'
+import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
-import { D_0 } from '../core/math'
+import { D_0, Decimal } from '../core/math'
+import { DIMENSION_UNLOCK_GATES } from '../game/balance'
+import { log10Safe } from '../game/pacing'
 import { getTierIdentity, getTierGlyph, getTierAccent } from '../game/dimension_identity'
 import { isMotionOff } from '../composables/useMotion'
 import DimensionRow from './DimensionRow.vue'
@@ -17,6 +19,17 @@ import {
   Lock,
   MousePointerClick
 } from 'lucide-vue-next'
+
+// ADR-0072 §B: kilitli boyut ipucu artık Sıçrama sayısından değil, kütle
+// kapılarından (DIMENSION_UNLOCK_GATES) türetilir. Eşikler burada ÖN-derlenir
+// (sıcak yolda yeni Decimal/log10 ayırmamak için); tek kaynak balance.ts'tir,
+// buradaki değerler ASLA elle yazılmaz.
+const DIMENSION_GATE_BY_TIER = new Map(
+  DIMENSION_UNLOCK_GATES.map((gate) => {
+    const minMatter = new Decimal(gate.minMatter)
+    return [gate.tier, { minMatter, log10: log10Safe(minMatter) }] as const
+  })
+)
 
 const store = useGameStore()
 // P2 cila: Vicdan kartı katlanabilir — alt scroll zorunluluğu kalkar, ceza rozeti üstte kalır
@@ -47,21 +60,29 @@ const visibleDimensions = computed(() => {
 })
 
 // ADR-0027: sıradaki kilitli format teaser'ı — unfolding "merak metni" (P1, research §5).
+// ADR-0072 §2: açılış eşiği artık DIMENSION_UNLOCK_GATES'ten okunur (sabit metin yok).
 const nextLockedTier = computed(() => {
   const unlocked = store.unlockedDimensionsCount
   if (unlocked >= 8 || store.activeChallenge) return null
   const tier = unlocked + 1
   const identity = getTierIdentity(tier)
-  // Kaçıncı Akış Sıçramasında açılacağı tek kaynaktan türetilir (ADR-0033).
-  const shiftsNeeded = Math.max(1, tier - BASE_UNLOCKED_DIMENSIONS)
-  return { tier, label: identity?.label ?? `D${tier}`, shiftsNeeded }
+  const gate = DIMENSION_GATE_BY_TIER.get(tier)
+  if (!gate) return null
+  return {
+    tier,
+    label: identity?.label ?? `D${tier}`,
+    gateText: format(gate.minMatter, 0, store.settings.notation),
+    gateLog10: gate.log10
+  }
 })
 
-// Teaser ilerleme çubuğu: mevcut sıçrama / gereken sıçrama oranı (oran = çubuk, sayı ikincil).
+// Teaser ilerleme çubuğu: log10(lifetimePeakMatter) / log10(eşik). Monotonik tepe
+// kullanılır ki resetlerde çubuk geri gitmesin; eşik metni ikincildir (çubuk öncelikli).
 const nextLockedTeaserPercent = computed(() => {
   const teaser = nextLockedTier.value
-  if (!teaser) return 0
-  return Math.min(100, (store.dimensionShifts / teaser.shiftsNeeded) * 100)
+  if (!teaser || teaser.gateLog10 <= 0) return 0
+  const peakLog10 = log10Safe(store.lifetimePeakMatter)
+  return Math.min(100, Math.max(0, (peakLog10 / teaser.gateLog10) * 100))
 })
 
 const shiftReq = computed(() => store.shiftRequirement)
@@ -391,7 +412,7 @@ function handleTouchEnd(e: TouchEvent) {
         <span>
           <span class="dim-glyph" :class="getTierAccent(nextLockedTier.tier)">{{ getTierGlyph(nextLockedTier.tier) }}</span>
           D{{ nextLockedTier.tier }} {{ nextLockedTier.label }} —
-          <span class="text-slate-400">{{ nextLockedTier.shiftsNeeded }}. Ölçek Sıçraması ile açılır</span>
+          <span class="text-slate-400 tabular-nums">{{ nextLockedTier.gateText }} g kütle ile açılır</span>
         </span>
         <div class="progress-track progress-track-mini w-full max-w-[220px] mt-1">
           <div class="progress-fill progress-fill-purple" :style="{ width: `${nextLockedTeaserPercent}%` }"></div>

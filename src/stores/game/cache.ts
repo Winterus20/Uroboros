@@ -104,7 +104,7 @@ export function dimMultCacheKey(
   dim1Growth: string,
   completedJoin: string,
   capFloor: number,
-  peakShifts: number,
+  peakMatter: string,
   formatBuffTier: number,
   formatBuffUntil: number,
   challengeTimeMult: number,
@@ -116,12 +116,13 @@ export function dimMultCacheKey(
   // formatBuffUntil zaman damgası tek başına yeterli değildir: süre dolduğunda damga
   // değişmez, anahtar değişmez ve bayat (süresiz) çarpan cache'ten geri döner.
   // Sürüm 12'de bu, geçici "Format Keşfi" bonusunun kalıcılaşmasına yol açıyordu.
-  // NOT (ADR-0035): peakShifts kalıcı boyut açılış tavanıdır; `shifts` (koşu sayacı)
-  // sıfırlandığında bile cap değişebildiği için ikisi de anahtarda yer almalı.
+  // NOT (ADR-0072): boyut açılışı tepe kütleye bağlıdır; `shifts` sayacı artık
+  // açılışı değiştirmez ama `peakMatter` bir kapıyı aştığında tier pasifi
+  // (tierProductionMult) değişebildiği için anahtarda yer almalı.
   return (
     tier + '|' + bought + '|' + shifts + '|' + eyeLvl + '|' + sac + '|' + partnerBought + '|' +
     neuralProd + '|' + offlineBoost + '|' + (activeChallenge || '') + '|' +
-    dim1Growth + '|' + completedJoin + '|' + capFloor + '|' + peakShifts + '|' + formatBuffTier +
+    dim1Growth + '|' + completedJoin + '|' + capFloor + '|' + peakMatter + '|' + formatBuffTier +
     '|' + formatBuffUntil + '|' + challengeTimeMult + '|' + (formatBuffActive ? 'A' : 'X') +
     '|' + relicCount + '|' + matureCellsCount
   )

@@ -29,6 +29,24 @@ tune etmek aynı eğriyi iki kez kilitlemek demek. P2'nin kabulü zaten yapısal
 1183s `first_galaxy`; 1588s `seed_nucleon` → sonrası ölü bölge. log10=90.72 · shifts=8 · gal=1 · bots=11.
 → **Plan §1 teşhisi doğrulandı.**
 
+### Dalga 2 — Faz 2 / P2.1 (2026-10-19 · boyut açılımı sıçramadan koparıldı)
+- [x] **F** `b9db218d` — harness boyut açılış telemetrisi: `dimUnlocks` (d4..d8: t + log10). Ölçüm: D4 34s/log10 2.84 · D5 88s/5.38 · D6 182s/8.87 · D7 252s/14.70 · **D8 654s (10:54)/40.90**
+- [x] **G** `6a08b592` — **P2.1 çekirdek:** `DIMENSION_UNLOCK_GATES` + `dimensionGateUnlockCount()` + `resolvedUnlockedDimensionCount` artık `lifetimePeakMatter` tabanlı · yeni kayıt alanı YOK · ADR-0072 · cache anahtarı `peakMatter` · test 410/410
+- [ ] **H** `6eb741f8` — regresyon düzeltmesi: açılış kutlaması tick'e taşınır + DimensionsTab kilitli-boyut metni kütle eşiğine bağlanır
+
+**Dalga 2 kabul durumu:** mekanizma ✅ (sıçrama artık boyut açmıyor) · zamana yayma ❌ ·
+`npm run verify` exit 0 · smoke `log10=97.62 shifts=9` (baseline 90.72/8)
+
+**⚠️ AÇIK P0 KOLU (dalga 2 bulgusu):** eşikler hâlâ kümeleniyor — D4 185.5s · D5 191s · D6 197s · D7 204.5s · D8 217s,
+yani D4→D8 arası **32 saniye**. Sebep: bu bantta ekonomi çok hızlı büyüyor; 18 dekad (1e8→1e26) saniyeler içinde geçiliyor.
+→ *"Açılışları zamana yayma" hedefi PROVISIONAL değerlerle sağlanmadı.* Eşikler P0'da dekad bazında çok daha geniş
+aralıklandırılmalı (muhtemelen yavaş-büyüme bölgesine, log10 ≈ 40-150 aralığına). **Kullanıcı kararı bekliyor.**
+
+**Dalga 2 yan etkileri (F/G bulguları):**
+- `shift_4` 268.5s → 132.5s (ilk sıçramalar artık D3'ü hedefliyor; açılış tier hedefi gevşedi).
+- `celebrateFormatUnlock` normal akışta tetiklenmiyordu → H ile düzeltiliyor.
+- Smoke 30 dk `log10` 90.72 → **97.62** (+7 dekad): D8 artık 1e26'da açıldığı için (eski ölçüm 1e41) erken hızlanma.
+- `harness/smoke.json` yeniden üretildi (P0 baseline dokümanı `generatedAt`'i güncellenmeli — açık iş).
 ### Sonraki dalgalar
 - [ ] **Faz 2 (P2):** boyut kapıları sıçramadan kopar · shift = D8 sonrası hız çarpanı · corruption kaynağı `lifetimePeakUnlockedDims` · save v19 migrasyon · `ADR-0072` (ADR-0033 süperseeded)
 - [ ] **Faz 3 (P3):** omurga/opsiyonel dal ayrımı · başarım aile→dal haritası · silüet teaserlar · ilk oturum ≤4 sistem

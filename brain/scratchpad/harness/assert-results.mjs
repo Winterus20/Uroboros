@@ -8,6 +8,9 @@
 //   active, seed 1, dt=0.5, 0.5 saat). Eşikler 2026-10-10 probe'undan
 //   (log10=89.7, shifts=8, gal=1) bilinçli gevşek tutuldu: amaç hassas
 //   denge değil, "oyun açılıyor ve ekonomi nefes alıyor mu" kapısıdır.
+//   Ölçülen değer koşunun ZİRVESİDİR (`peaks`); `final` reset-sonrası anlık
+//   görüntüdür ve galaksi alımı kütleyi sıfırladığı için tek başına yanıltıcıdır.
+//   `peaks` alanı olmayan eski JSON'larda `final`a düşülür.
 // --full: uzun denge koşusunu ADR-0023 bandına karşı kontrol eder
 //   (active: tekillik 150-300 dk; casual/idle: çökmesiz tamamlama).
 //
@@ -40,12 +43,28 @@ if (mode === "--smoke") {
     console.error("[FAIL] kosu yok");
     process.exit(1);
   }
+  // Zirve metrikleri: yeni JSON'da `peaks` vardir; alan yoksa eski JSON uyumu
+  // icin `final` kullanilir. Esikler degismez.
+  const peaks = run.peaks;
+  const hasPeak = (key) =>
+    peaks !== null && typeof peaks === "object" && typeof peaks[key] === "number";
+  const metric = (key) => Number((hasPeak(key) ? peaks[key] : run.final?.[key]) ?? 0);
+  const source = (key) => (hasPeak(key) ? "peaks" : "final");
+
   check(run.error === null || run.error === undefined, `hatasiz tamamlanma (error=${run.error ?? "yok"})`);
   check(run.reached === false, "0.5 saatte tekillik henuz YOK (erken bitme regresyonu yakalanir)");
-  const logM = Number(run.final?.logMatter ?? NaN);
-  check(Number.isFinite(logM) && logM >= 60, `30 dk aktif oyunda log10 >= 60 (bulunan: ${logM.toFixed(1)})`);
-  check(Number(run.final?.shifts ?? 0) >= 5, `en az 5 shift (bulunan: ${run.final?.shifts})`);
-  check(Number(run.final?.tickspeedBought ?? 0) > 0, "tickspeed alimi yapildi (ekonomi donmedi)");
+  const logM = metric("logMatter");
+  check(
+    Number.isFinite(logM) && logM >= 60,
+    `30 dk aktif oyunda zirve log10 >= 60 (bulunan: ${logM.toFixed(1)}, kaynak: ${source("logMatter")})`
+  );
+  const shifts = metric("shifts");
+  check(shifts >= 5, `en az 5 shift (zirve, bulunan: ${shifts}, kaynak: ${source("shifts")})`);
+  const tickspeedBought = metric("tickspeedBought");
+  check(
+    tickspeedBought > 0,
+    `zirve tickspeed alimi yapildi (bulunan: ${tickspeedBought}, kaynak: ${source("tickspeedBought")})`
+  );
 } else {
   for (const run of runs) {
     const tag = `${run.profile} seed=${run.seed}`;

@@ -15,7 +15,8 @@ export const dimensionGetters = {
       return state.matter
     },
 
-    // Kaç adet istasyonun açık olduğu (ADR-0025: başta 2, her sıçrama +1, legacy floor korunur)
+    // Kaç adet istasyonun açık olduğu (ADR-0072: başta 3, D4–D8 deterministik kütle
+    // kapıları; ADR-0025 legacy `dimensionCapFloor` tabanı korunur).
     // C7 (Hesap Kısıtlaması): registry'deki maxDimensions üst sınırı uygulanır.
     unlockedDimensionsCount(this: StoreApi, state: GameState): number {
       return resolvedUnlockedDimensionCount(state)
@@ -224,7 +225,7 @@ export const dimensionGetters = {
           tier = Math.min(unlocked, state.dimensionCapFloor)
         }
         tier = Math.min(tier, unlocked)
-        // Erken sıçramalarda yeni açılan boyuttan tek paket (10 adet) yeterlidir; akışı pürüzsüzleştirir
+        // Erken sıçramalarda hedef boyuttan tek paket (10 adet) yeterlidir; akışı pürüzsüzleştirir
         const baseReq = state.dimensionShifts <= 1 ? 10 : (state.dimensionShifts <= 2 ? 15 : 25)
         let amount = new Decimal(baseReq).times(shiftMult).floor()
         if (amount.lt(1)) amount = D_1
@@ -377,7 +378,7 @@ export const dimensionGetters = {
         tier, dim.bought, state.dimensionShifts, eyeDropsLvl, sacStr,
         partnerBought, neuralProd, 1,
         state.activeChallenge, dim1GrowthStr, completedJoin,
-        state.dimensionCapFloor, state.lifetimePeakShifts, state.formatUnlockBuffTier,
+        state.dimensionCapFloor, state.lifetimePeakMatter.toString(), state.formatUnlockBuffTier,
         state.formatUnlockBuffUntil, challengeTimeMult, formatBuffActive,
         relicCount, matureCellsCount
       )

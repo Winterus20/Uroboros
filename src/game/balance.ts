@@ -67,12 +67,36 @@ export const EARLY_D6_COST_RATIO = 20
 export const EARLY_D6_SOFT_BUCKETS = 2
 
 /**
- * Yeni koşuda açık format sayısı tabanı (her sıçrama +1, max 8).
- * ADR-0033: 3 (D1+D2+D3). Oyuncu geri bildirimi: "milyardan trilyona geçiş çok uzun"
- * ve "1. akış sıçramasında D4 yok". Taban 2 iken 1e9–1e12 bandında yalnızca 2 istasyon
- * vardı; taban 3 ile D3 baştan açık, D4 ise 1. sıçramada gelir.
+ * Yeni koşuda açık format sayısı tabanı: 3 (D1+D2+D3).
+ * ADR-0072: bu taban SABİTTİR; D4–D8 artık sıçramadan değil deterministik kütle
+ * eşiklerinden (`DIMENSION_UNLOCK_GATES`) açılır. ADR-0033'ün "D4 1. sıçramada
+ * açılır" maddesi bu ADR ile süperseeded edildi.
  */
 export const BASE_UNLOCKED_DIMENSIONS = 3
+
+/**
+ * D4–D8 açılış kapıları — TEK KAYNAK (ADR-0072 §2).
+ *
+ * Türetme kuralı: eşik = boyutun `BASE_COSTS` taban fiyatının 100 katı.
+ * D4 (1e6) → 1e8, D5 (1e9) → 1e11, D6 (1e13) → 1e15, D7 (1e18) → 1e20,
+ * D8 (1e24) → 1e26. Sıçrama sayısı bu tabloda YOKTUR.
+ *
+ * PROVISIONAL: değerler P0 ölçümü ile kilitlenecek
+ * (bkz. brain/research/pacing-p0-baseline-2026-10.md); ölçüm öncesi değişebilir.
+ */
+export const DIMENSION_UNLOCK_GATES: ReadonlyArray<{ tier: number; minMatter: string }> = [
+  { tier: 4, minMatter: '1e8' },
+  { tier: 5, minMatter: '1e11' },
+  { tier: 6, minMatter: '1e15' },
+  { tier: 7, minMatter: '1e20' },
+  { tier: 8, minMatter: '1e26' }
+]
+
+/** Kapı eşiklerinin Decimal ön-derlemesi — sıcak yolda yeni Decimal ayırmamak için. */
+const DIMENSION_UNLOCK_GATE_VALUES = DIMENSION_UNLOCK_GATES.map((gate) => ({
+  tier: gate.tier,
+  minMatter: new Decimal(gate.minMatter)
+}))
 
 /** D2+ satın alımında alt kata anında aktarılan “zincir darbesi” (sn); üst sayaçların hissedilir hızlanması için. */
 export const PURCHASE_CHAIN_BONUS_SECONDS = 2.5
@@ -104,21 +128,38 @@ export function challengeDimensionCap(state: { activeChallenge: string | null })
   return getChallengeById(state.activeChallenge)?.modifiers.maxDimensions
 }
 
-/** ADR-0025: shift cap + legacy save floor (v12). ADR-0035: cap kalıcıdır. */
+/** Tepe kütlenin aştığı kapı sayısı (0..5). NaN/geçersiz girdi güvenli tarafta 0 döner. */
+export function dimensionGateUnlockCount(lifetimePeakMatter?: Decimal): number {
+  if (!lifetimePeakMatter) return 0
+  if (lifetimePeakMatter.isNan() || Number.isNaN(lifetimePeakMatter.mag)) return 0
+  let opened = 0
+  for (const gate of DIMENSION_UNLOCK_GATE_VALUES) {
+    if (!lifetimePeakMatter.gte(gate.minMatter)) break
+    opened++
+  }
+  return opened
+}
+
+/**
+ * Açık boyut sayısı — ADR-0072: taban + deterministik kütle kapıları.
+ *
+ * - Sıçrama terimi (`dimensionShifts` / `lifetimePeakShifts`) artık kullanılmaz;
+ *   o alanlar yalnızca istatistik olarak state'te ve kayıtta kalır.
+ * - Açılış kaynağı `lifetimePeakMatter`dır: monotoniktir (ADR-0035 "açılış bir
+ *   OLAYdır"), böylece yeni kayıt alanı ve migrasyon gerekmez.
+ * - `dimensionCapFloor` (save v12 legacy taban) ve `challengeDimensionCap` (C7)
+ *   davranışı korunur.
+ */
 export function resolvedUnlockedDimensionCount(state: {
-  dimensionShifts: number
-  lifetimePeakShifts?: number
   dimensionCapFloor: number
   activeChallenge: string | null
+  lifetimePeakMatter?: Decimal
 }): number {
-  // ADR-0035: Boyut açılışı bir OLAYdır. `buyGalaxy()` koşu sayacını 0'a indirdiği
-  // için sadece `dimensionShifts`'e bakmak, ilk kümeden sonra D4–D8'i geri kilitliyordu.
-  // Hayat boyu en yüksek sıçrama sayısı kullanılır: bir kez açılan boyut kapanmaz.
-  const shiftCap = Math.min(
+  const gateCap = Math.min(
     8,
-    BASE_UNLOCKED_DIMENSIONS + Math.max(state.lifetimePeakShifts ?? 0, state.dimensionShifts)
+    BASE_UNLOCKED_DIMENSIONS + dimensionGateUnlockCount(state.lifetimePeakMatter)
   )
-  const base = Math.max(shiftCap, state.dimensionCapFloor)
+  const base = Math.max(gateCap, state.dimensionCapFloor)
   const cap = challengeDimensionCap(state)
   return cap === undefined ? base : Math.min(base, cap)
 }

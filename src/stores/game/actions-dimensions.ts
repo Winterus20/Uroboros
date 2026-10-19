@@ -312,6 +312,29 @@ export const dimensionActions = {
       }
     },
 
+    /**
+     * ADR-0072 §A: Kütle kapılarından açılan boyutların TICK kutlaması.
+     *
+     * Neden ayrı bir yol: açılış artık Sıçrama olayından değil, `lifetimePeakMatter`
+     * eşiklerinden gelir (tick içinde sessizce olur). Eski kutlama
+     * `performScaleJump('shift')` dalındaydı ve bu yüzden hiç tetiklenmiyordu.
+     *
+     * Garantiler:
+     *  - Yalnızca `update()` içinden çağrılır. Kayıt yükleme/deserialize bu action'ı
+     *    ÇAĞIRMAZ; orada sayaç sessizce hizalanır. Böylece restore kutlama ateşlemez.
+     *  - Aynı tick'te birden çok boyut açılırsa TEK kutlama, EN YÜKSEK tier ile
+     *    yapılır (spam yok); `celebrateFormatUnlock` buff'ı ve efekti o tier'a kurar.
+     *  - Çevrimdışı simülasyonda (offlineSimActive) ses/konfeti susar; sayaç yine de
+     *    ilerletilir ki oyuncu döndüğünde gecikmeli bir kutlama patlaması olmasın.
+     */
+    celebrateDimensionUnlocks(this: StoreApi): void {
+      const unlocked = this.unlockedDimensionsCount
+      if (unlocked <= this.celebratedDimensionCap) return
+      this.celebratedDimensionCap = unlocked
+      if (this.offlineSimActive) return
+      this.celebrateFormatUnlock(unlocked)
+    },
+
     // Akış Sıçraması (Dimension Shift / Boost)
     // ---- Ölçek Sıçrama Motoru (ADR-0052) ----
     // dimensionShift / buyGalaxy / singularityReset ince sarmalayıcılardır.
@@ -338,7 +361,6 @@ export const dimensionActions = {
       if (layer === 'shift') {
         if (!this.canShift) return false
 
-        const capBefore = resolvedUnlockedDimensionCount(this)
         this.dimensionShifts++
         // ADR-0035: açılışları ve yüksek su seviyelerini dopamin sıfırlanmadan hemen
         // önce kaydet. `syncUnlocks()` sayacı da okuduğu için 5. sıçrama eşiği de
@@ -351,9 +373,10 @@ export const dimensionActions = {
         // C3 üstel sayaç sıfırlanır, C8 bildirim sayacı %40 temizlenir.
         this.relieveChallengeOnPrestige()
 
-        if (capAfter > capBefore && playSound) {
-          this.celebrateFormatUnlock(capAfter)
-        }
+        // ADR-0072: Açılış kutlaması artık burada DEĞİL. Açılışlar kütle
+        // kapılarından geldiği için performScaleJump('shift') çoğu zaman hiç
+        // tetiklenmez; kutlama update() tick'indedir (celebrateDimensionUnlocks).
+        // Burada bırakılsaydı aynı açılış için İKİ kez kutlama olurdu.
         if (playSound) {
           sounds.playShift()
           safeConfetti({ ...spec.fx.confetti, origin: { y: spec.fx.confetti.originY } })

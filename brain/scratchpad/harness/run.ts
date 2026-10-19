@@ -198,6 +198,12 @@ interface TraceEntry {
   gal: number;
 }
 
+/** Bir boyut acilisinin tespit ani ve o anki tetikleyici kutle. */
+interface DimUnlock {
+  t: number; // tespit edildigi simulasyon saniyesi
+  log10: number; // sicramayi tetikleyen log10(kutle) - sifirlama ONCESI deger
+}
+
 interface RunResult {
   profile: ProfileName;
   seed: number;
@@ -208,12 +214,21 @@ interface RunResult {
   timeHms: string;
   wallMs: number;
   milestones: Record<string, number | null>;
+  // d4..d8 acilis telemetrisi; `milestones` semasi (duz saniye) DEGISMEZ.
+  dimUnlocks: Record<string, DimUnlock | null>;
   logMarks: Record<string, number | null>; // "15m".."240m" -> log10(matter)
   samples: Sample[];
   stalls: Array<{ start: number; end: number | null }>;
   spells: Record<string, number>;
   anomalyClicks: number;
   trace: TraceEntry[] | null;
+  // Kosunun ZIRVESI (reset sonrasi anlik goruntu degil). Olcum kapisi bunu kullanir.
+  peaks: {
+    logMatter: number;
+    shifts: number;
+    galaxies: number;
+    tickspeedBought: number;
+  };
   final: Record<string, unknown>;
   error: string | null;
 }
@@ -292,18 +307,24 @@ export async function runOnce(
     wallMs: 0,
     milestones: {
       first_shift: null,
+      d4: null,
       d5: null,
+      d6: null,
+      d7: null,
+      d8: null,
       shift_4: null,
       first_galaxy: null,
       bulk_mode: null,
       max_mode: null,
     },
+    dimUnlocks: { d4: null, d5: null, d6: null, d7: null, d8: null },
     logMarks: {},
     samples: [],
     stalls: [],
     spells: { espresso_shot: 0, fast_charge: 0, sleep_denial: 0, noise_cancelling: 0 },
     anomalyClicks: 0,
     trace: traceEnabled ? [] : null,
+    peaks: { logMatter: 0, shifts: 0, galaxies: 0, tickspeedBought: 0 },
     final: {},
     error: null,
   };
@@ -319,6 +340,10 @@ export async function runOnce(
   let nextSampleAt = 60;
   let nextMarkIdx = 0;
   let lastLogMatter = 0;
+  // Boyut acilis ani icin: sicrama/kume/sacrifice butonlarindan HEMEN onceki kutle.
+  // (Boyut acilisi bir sicrama olayidir; sicrama kutleyi sifirlar, bu yuzden
+  //  tespit anindaki kutle degil, tetikleyici kutle kaydedilir.)
+  let logMatterBeforeActions = 0;
   let flatSec = 0;
   let stallStart: number | null = null;
   const anomalyState = new Map<string, number>(); // id -> fireAt (>=0 catch, -1 skip)
@@ -326,11 +351,23 @@ export async function runOnce(
   let prevBots = 0;
   const clickInterval = cfg.clicksPerSec > 0 ? 1 / cfg.clicksPerSec : Infinity;
   let tick = 0;
+  // Zirve takibi: her tick'te yalnizca Decimal karsilastirmasi yapilir; log10()
+  // sadece final snapshot'ta bir kez cagrilir (perf kurali).
+  // Decimal'ler degismezdir (bkz. src/core/math.ts), bu yuzden referans tutmak guvenli.
+  // Baslangic degeri store.matter: dongu hic donmese de zirve anlamli kalir.
+  let peakMatter = store.matter;
 
   const markMilestone = (key: string, t: number): void => {
     if (result.milestones[key] === null || result.milestones[key] === undefined) {
       result.milestones[key] = t;
     }
+  };
+
+  // d4..d8 acilisi: milestone zamani (duz saniye) + ayri dimUnlocks kaydi
+  // (tespit ani ve o anki tetikleyici log10(kutle)).
+  const captureDimUnlock = (key: string, t: number): void => {
+    if (result.dimUnlocks[key] !== null) return;
+    result.dimUnlocks[key] = { t, log10: logMatterBeforeActions };
   };
 
   const closeStall = (t: number): void => {
@@ -492,6 +529,9 @@ export async function runOnce(
       }
     }
 
+    // Acilis telemetrisi: reset butonlarindan once tetikleyici kutleyi sabitle.
+    logMatterBeforeActions = store.matter.lte(0) ? 0 : store.matter.log10().toNumber();
+
     // 4. resets / buttons the player takes instantly when they light up
     if (cfg.manualShifts && store.canShift) store.dimensionShift(false);
     if (cfg.manualGalaxies && store.canBuyGalaxy) store.buyGalaxy(false);
@@ -515,6 +555,13 @@ export async function runOnce(
     store.update(dt);
     simTime += dt;
 
+    // 6b. zirve takibi (log10 YOK): matter Decimal olarak karsilastirilir,
+    // sayaclar duz sayi olarak Math.max ile guncellenir.
+    if (store.matter.gt(peakMatter)) peakMatter = store.matter;
+    result.peaks.shifts = Math.max(result.peaks.shifts, store.dimensionShifts);
+    result.peaks.galaxies = Math.max(result.peaks.galaxies, store.galaxies);
+    result.peaks.tickspeedBought = Math.max(result.peaks.tickspeedBought, store.tickspeedBought);
+
     if (store.canSingularity) {
       result.reached = true;
       result.timeSeconds = simTime;
@@ -526,8 +573,25 @@ export async function runOnce(
     if (result.milestones.first_shift === null && store.dimensionShifts >= 1) {
       markMilestone("first_shift", simTime);
     }
+    if (result.milestones.d4 === null && store.unlockedDimensionsCount >= 4) {
+      markMilestone("d4", simTime);
+      captureDimUnlock("d4", simTime);
+    }
     if (result.milestones.d5 === null && store.unlockedDimensionsCount >= 5) {
       markMilestone("d5", simTime);
+      captureDimUnlock("d5", simTime);
+    }
+    if (result.milestones.d6 === null && store.unlockedDimensionsCount >= 6) {
+      markMilestone("d6", simTime);
+      captureDimUnlock("d6", simTime);
+    }
+    if (result.milestones.d7 === null && store.unlockedDimensionsCount >= 7) {
+      markMilestone("d7", simTime);
+      captureDimUnlock("d7", simTime);
+    }
+    if (result.milestones.d8 === null && store.unlockedDimensionsCount >= 8) {
+      markMilestone("d8", simTime);
+      captureDimUnlock("d8", simTime);
     }
     if (result.milestones.shift_4 === null && store.dimensionShifts >= 4) {
       markMilestone("shift_4", simTime);
@@ -619,6 +683,15 @@ export async function runOnce(
     result.logMarks["capped"] = lastSample.logMatter;
   }
   closeStall(simTime);
+
+  // Erken cikis yollari (reached / error) dahil: son durumu da zirveye kat.
+  if (store.matter.gt(peakMatter)) peakMatter = store.matter;
+  result.peaks.shifts = Math.max(result.peaks.shifts, store.dimensionShifts);
+  result.peaks.galaxies = Math.max(result.peaks.galaxies, store.galaxies);
+  result.peaks.tickspeedBought = Math.max(result.peaks.tickspeedBought, store.tickspeedBought);
+  const peakLogMatter = peakMatter.lte(0) ? 0 : peakMatter.log10().toNumber();
+  result.peaks.logMatter =
+    peakMatter.isNan() || Number.isNaN(peakLogMatter) ? 0 : peakLogMatter;
 
   const finalLogMatter = store.matter.lte(0) ? 0 : store.matter.log10().toNumber();
   const finalLogDps = store.matterPerSecond.lte(0) ? 0 : store.matterPerSecond.log10().toNumber();

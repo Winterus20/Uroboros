@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0071**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0072**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -84,3 +84,4 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0069 | CRT Katmanının Kaldırılması (visual-language §3 L1 iptali) | 2026-10-18 | Kabul edildi (kullanıcı kararı) — ADR-0061/0062'nin CRT ayağını iptal eder | [0069-crt-layer-removal.md](0069-crt-layer-removal.md) |
 | 0070 | Bulut Kaydetme Karar Katmanının Yeniden Tasarımı — Referans Tabanlı Çakışma Tespiti ve Saat Bağımsız Yazma Koruması | 2026-10-03 | Kabul Edildi (Accepted) & Uygulandı — ADR-0029/ADR-0030'un bulut katmanını yeniden kurar | [0070-cloud-sync-decision-layer-and-etag-conflict-detection.md](0070-cloud-sync-decision-layer-and-etag-conflict-detection.md) |
 | 0071 | Şafak Merdiveni — Kırılma Öncesi SP Kazanımı `1` → `1 + singularities` | 2026-10-19 | Kabul edildi & uygulandı — ADR-0034'ün SP kaynağını değiştirmez, yalnız kazanım büyüklüğünü düzeltir | [0071-sp-dawn-ladder-prelude.md](0071-sp-dawn-ladder-prelude.md) |
+| 0072 | Boyut Açılımlarının Sıçramadan Koparılması (Deterministik Kütle Kapıları) | 2026-10-19 | Kabul edildi & uygulandı — ADR-0033'ün "D4 1. sıçramada" maddesini geçersiz kılar | [0072-dimension-unlocks-decoupled-from-shifts.md](0072-dimension-unlocks-decoupled-from-shifts.md) |

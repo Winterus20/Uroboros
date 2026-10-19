@@ -456,7 +456,7 @@ export const miscGetters = {
 
     // Faz B — Bozulma seviyesi (K0..K4, K5 tavanlı). Store'a YENİ STATE eklenmez;
     // mevcut monotonik sinyallerden türetilir (sözleşme: visual-language.md §4).
-    // resolvedUnlockedDimensionCount lifetimePeakShifts tabanlıdır → reset sonrası düşmez.
+    // resolvedUnlockedDimensionCount lifetimePeakMatter tabanlıdır (ADR-0072) → reset sonrası düşmez.
     corruptionLevel(this: StoreApi, state: GameState): CorruptionLevel {
       return deriveCorruptionLevel({
         unlockedDimensionsCount: resolvedUnlockedDimensionCount(state),

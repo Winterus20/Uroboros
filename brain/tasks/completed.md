@@ -1,5 +1,37 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-19] ✔ — Tempo & Ekonomi Faz 2 / P2.1: Boyut Açılımları Sıçramadan Koparıldı (ADR-0072)
+
+### Gerekçe:
+- Plan §4: D1-D8'in tamamı sıçramadan koparılır; açılımlar deterministik kütle eşiklerine taşınır.
+- Ölçüm teşhisi doğruladı: D4 34s · D5 88s · D6 182s · D7 252s · **D8 654s (10:54)** — yani 11 dakikada tüm boyutlar açılıyor, oyuncu 11 saatlik koşunun geri kalanında yeni boyut keşfetmiyor.
+
+### Çözüm & Değişiklikler:
+1. `src/game/balance.ts`: YENİ `DIMENSION_UNLOCK_GATES` (D4 1e8 · D5 1e11 · D6 1e15 · D7 1e20 · D8 1e26 — **PROVISIONAL**, = boyutun taban fiyatı ×100) + `dimensionGateUnlockCount()`; `resolvedUnlockedDimensionCount` artık `lifetimePeakMatter` tabanlı (sıçrama terimi çıkarıldı).
+2. **Yeni kayıt alanı YOK, migrasyon YOK:** `lifetimePeakMatter` zaten monotonik ve kayıtlı (ADR-0035 ruhu). `dimensionCapFloor` ve `challengeDimensionCap` korundu; `dimensionShifts`/`lifetimePeakShifts` istatistik olarak duruyor.
+3. `src/game/balance.test.ts` (YENİ, 11 test) + `src/stores/balance.test.ts` (2 yeni test): eşik sınırları, monotoniklik, taban, C7 kırpması, NaN güvenliği, "eşik = taban ×100" türetme kuralı.
+4. `src/stores/game/cache.ts`: `dimMultCacheKey` `peakShifts` → `peakMatter` (bayat çarpan önlendi).
+5. **Açılış kutlaması tick'e taşındı:** `celebratedDimensionCap` (uçucu) + `celebrateDimensionUnlocks()`; kayıt yüklemede ve çevrimdışı simülasyonda susar, aynı tick'te çoklu açılışta tek kutlama. `performScaleJump`'daki eski `capAfter > capBefore` kutlaması kaldırıldı (diğer davranışlar aynen).
+6. `DimensionsTab.vue`: kilitli boyut ipucu + ilerleme çubuğu artık kütle eşiğinden (notasyona uyumlu metin); `shiftsNeeded` kaldırıldı.
+7. Metin düzeltmeleri: `README.md` (2 yer: "sıçrama boyut açar" iddiaları), `src/game/achievements.ts` ("4 Ölçek Sıçraması yap (D8 açılır)" → başarım koşulu değişmeden metin düzeltildi).
+8. Harness: `dimUnlocks` telemetrisi (d4..d8: t + log10) + `peaks` (koşu zirvesi) alanı.
+9. `assert-results.mjs --smoke` artık **zirveyi** ölçüyor (eşikler AYNI: log10≥60, shifts≥5, tickspeed>0). Gerekçe: koşu son tick'inde prestij alınırsa `final` reset-sonrası anlık görüntü oluyor ve sağlıklı koşu FAIL veriyordu — kanıt: `final` 2.07/0/0 vs `peaks` 99.85/9/81; örnek eğrisi t=1740'ta 97.53/9/79. Bu bir ölçüm artefaktıydı, oyun hatası değil.
+10. `brain/decisions/0072-dimension-unlocks-decoupled-from-shifts.md` **YENİ** (ADR-0033'ün "D4 1. sıçramada" maddesi SUPERSEDED).
+
+### Doğrulama:
+- `npm run typecheck`: **exit 0**
+- `npm test`: **414/414** (29 dosya)
+- `npm run build`: **exit 0**
+- `npm run harness:smoke`: **6/6 PASS** (zirve `log10=99.8`, `shifts=9`, `tickspeed=81`)
+- `npm run harness:perf`: churn 2.4-4.2 ms · wall 0.26 ms (bant içinde, fingerprint aynı)
+
+### ⚠️ Açık P0 kolu (bu dalganın bulgusu):
+- **Eşikler hâlâ kümeleniyor:** `dimUnlocks` D4 185.5s · D5 191s · D6 197s · D7 205s · D8 216.5s → D4→D8 arası **~31 saniye**. Sebep: bu bantta ekonomi çok hızlı büyüyor, 18 dekad saniyeler içinde geçiliyor. *"Açılışları zamana yayma" hedefi PROVISIONAL değerlerle SAĞLANMADI.* Eşikler P0'da dekad bazında çok daha geniş aralıklandırılmalı (muhtemelen yavaş-büyüme bölgesine, log10 ≈ 40-150).
+- **Yan etki (tempo):** smoke zirve `log10` **90.72 → 99.8** (+9 dekad); `shift_4` 268.5s → 132.5s. D8 artık 1e26'da açıldığı için (eski ölçüm 1e41) erken hızlanma var — P1'in tempo kararıyla birlikte değerlendirilmeli.
+
+### Ertelenenler (ADR-0072'de kayıtlı):
+- Sıçrama = D8 sonrası hız çarpanı · sıçrama UI silueti · sıçrama gereksiniminin üstel kızışması (plan §6 açık kararlarına bağlı).
+
 ## [2026-10-19] ✔ — Tempo & Ekonomi: Faz 0 (H1-H3 hijyen + P0 baseline) & Faz 1 (§8A şafak merdiveni)
 
 ### Gerekçe:

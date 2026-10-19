@@ -100,7 +100,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.tickspeedBought >= 20
   },
   { id: 'dim_shift', name: 'İlk Ölçek Sıçraması', desc: '1 Ölçek Sıçraması yap', icon: '🎢', category: 'dimensions', check: (c) => c.shifts >= 1 },
-  { id: 'dim_shift4', name: 'Galaktik Genişleme', desc: '4 Ölçek Sıçraması yap (D8 açılır)', icon: '🌌', category: 'dimensions', check: (c) => c.shifts >= 4 },
+  { id: 'dim_shift4', name: 'Galaktik Genişleme', desc: '4 Ölçek Sıçraması yap', icon: '🌌', category: 'dimensions', check: (c) => c.shifts >= 4 },
   { id: 'dim_galaxy', name: 'Kozmik Kütle Kümesi', desc: '1 Kütle Kümesi yarat', icon: '🌀', category: 'dimensions', check: (c) => c.galaxies >= 1 },
   { id: 'dim_fresh', name: 'Saf Tekillik', desc: 'Sıçrama/Küme yapmadan 1e6 g Kütleye ulaş', icon: '✨', category: 'dimensions', secret: true, check: (c) => c.matter.gte(N1E6) && c.shifts === 0 && c.galaxies === 0 },
 

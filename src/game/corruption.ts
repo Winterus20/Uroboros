@@ -7,7 +7,7 @@
  * Kurallar:
  * - SAF MODÜLDÜR: store/Vue import etmez, Decimal kullanmaz (sade sayılar).
  * - Kayıt formatına YENİ ALAN EKLEMEZ — mevcut monotonik sinyallerden türetir:
- *   `unlockedDimensionsCount` (lifetimePeakShifts tabanlı, bir kez açılan kapanmaz),
+ *   `unlockedDimensionsCount` (lifetimePeakMatter tabanlı kütle kapıları; ADR-0072),
  *   `singularities` (kalıcı sayaç), `nightWatchUnlocked` (kalıcı boolean).
  * - Monotoniktir: prestij/sıçrama resetlerinde geriye DÜŞMEZ (sinyallerin hepsi monotonik).
  * - K5 tavanı: Faz 3 içeriği yok → derive son dönüşü min(level, 4). K5 açılınca kaldırılır.
@@ -20,7 +20,7 @@ export type CorruptionLevel = 0 | 1 | 2 | 3 | 4 | 5
 
 /** Türetme girdisi — üçü de monotonik kalıcı sinyaldir. */
 export interface CorruptionInput {
-  /** Monotonik açık boyut sayısı (resolvedUnlockedDimensionCount → lifetimePeakShifts tabanlı). */
+  /** Monotonik açık boyut sayısı (resolvedUnlockedDimensionCount → lifetimePeakMatter tabanlı). */
   unlockedDimensionsCount: number
   /** Kalıcı prestij sayacı. */
   singularities: number
@@ -111,8 +111,8 @@ function sanitizeSingularities(v: unknown): number {
  *
  * Merdiven (plan §2.1 + O1 kararı — test kilitli):
  * - K0: unlocked < 5 (D5 kilitli, Faz 0 ilk yarısı)
- * - K1: unlocked >= 5 (D5 açılır — mikro-karadelik doğar)
- * - K2: unlocked >= 6 (D6–D8 — Dünya → Güneş → Samanyolu)
+ * - K1: unlocked >= 5 (D5 açılır — kütle kapısı 1e11, ADR-0072; mikro-karadelik doğar)
+ * - K2: unlocked >= 6 (D6–D8 — Dünya → Güneş → Samanyolu; ilk eşik 1e15)
  * - K3: singularities >= 1 (ilk Big Crunch — Faz 1)
  * - K4: nightWatchUnlocked && singularities >= 1 (Faz 2)
  *

@@ -372,6 +372,12 @@ export const miscActions = {
         this.syncUnlocks()
       }
 
+      // ADR-0072 §A: kütle kapılarından açılan boyutların kutlaması. syncUnlocks()
+      // tepe kütleyi yükselttikten SONRA okunur; aynı tick'te birden çok boyut
+      // açılsa bile TEK kutlama (en yüksek tier) yapılır. Çevrimdışı simülasyonda
+      // ses/konfeti susar, sayaç sessizce ilerler — ayrıntı action'ın içindedir.
+      this.celebrateDimensionUnlocks()
+
       // G2: Challenge hedefi sağlandığında otomatik tamamla (sessiz — kullanıcı eylemi değil).
       if (this.activeChallenge && this.challengeGoalReached) {
         this.completeChallenge(false)

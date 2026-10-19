@@ -44,7 +44,7 @@ describe('corruption — faz-temelli bozulma merdiveni (Faz B)', () => {
   })
 
   it('monotonik: reset senaryosunda seviye düşmez (koşu sayacı sıfırlansa bile kalıcı sinyaller)', () => {
-    // unlockedDimensionsCount zaten lifetimePeakShifts tabanlıdır (ADR-0035);
+    // unlockedDimensionsCount zaten lifetimePeakMatter tabanlı kütle kapılarıdır (ADR-0072);
     // burada monotonluk sözleşmesi: daha yüksek kalıcı sinyal asla düşük seviye vermez.
     const low = deriveCorruptionLevel({ unlockedDimensionsCount: 3, singularities: 0, nightWatchUnlocked: false })
     const mid = deriveCorruptionLevel({ unlockedDimensionsCount: 5, singularities: 0, nightWatchUnlocked: false })

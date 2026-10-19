@@ -173,6 +173,7 @@ export interface StoreApi extends GameState {
   manualClick(coords?: { x: number; y: number }): void;
   sacrificeDimensions(playSound?: boolean): boolean;
   celebrateFormatUnlock(tier: number): void;
+  celebrateDimensionUnlocks(): void;
   snapshotJump(layer: ScaleLayerId, spGained: Decimal): void;
   performScaleJump(layer: ScaleLayerId, playSound?: boolean): boolean;
   dimensionShift(playSound?: boolean): boolean;

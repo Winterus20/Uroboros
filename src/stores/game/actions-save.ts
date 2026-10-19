@@ -381,10 +381,14 @@ export const saveActions = {
           })
           const legacyFloor = Math.max(4, Math.min(8, progressCap))
           this.dimensionCapFloor = legacyFloor
+          // ADR-0072: açılış artık tepe kütleye bağlı. Bu göç bloğu, asıl tepe nokta
+          // (lifetimePeakMatter) restore edilmeden ÖNCE çalışır; bu yüzden henüz
+          // yüklenmiş olan `matter` geçici tepe kabul edilir. Sonuç `legacyFloor`
+          // (>= 4) ile tabanlandığı için eski kayıtların açık tier sayısı düşmez.
           this.formatDiscoverSeenCap = Math.max(
             this.formatDiscoverSeenCap,
             resolvedUnlockedDimensionCount({
-              dimensionShifts: this.dimensionShifts,
+              lifetimePeakMatter: this.matter,
               dimensionCapFloor: legacyFloor,
               activeChallenge: null
             })
@@ -961,6 +965,12 @@ export const saveActions = {
         this.floatingAnomalies = []
         this.activeCrisisDilemma = null
         this.crisisBackfireDebuff = 0
+
+        // ADR-0072 §A: kutlama sayacını yüklenen duruma SESSİZCE hizala. Bu satır,
+        // restore sonrası ilk canlı tick'in "artış" görüp geçmiş açılışları yeniden
+        // kutlamasını engeller. Çevrimdışı simülasyon bu noktadan ÖNCE çalıştığı için
+        // sayaç nihai (post-offline) değere hizalanır; dönüşte gecikmeli patlama olmaz.
+        this.celebratedDimensionCap = this.unlockedDimensionsCount
       } catch (err) {
         console.error('Save yüklenirken hata:', err)
       }

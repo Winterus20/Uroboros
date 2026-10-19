@@ -5,12 +5,20 @@ declare module '../../models/types' {
 }
 
 import { Decimal } from '../../core/math'
-import { BASE_COSTS, BASE_UNLOCKED_DIMENSIONS, COST_MULTS } from '../../game/balance'
+import { BASE_COSTS, BASE_UNLOCKED_DIMENSIONS, COST_MULTS, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { TIME_CLOCK_SPAWN_INTERVAL_MIN, createIdleTimeClock } from '../../game/clock-data'
 import { VIRAL_DROP_COOLDOWN_SECONDS } from '../../game/lab-data'
 import type { ActiveBuff, AutobuyerConfig, CrisisDilemma, DimensionData, FloatingAnomaly, GameSettings, GuiltWrinkler, LabCell, LabMode, LabSeedType, MusicTrackId, OfflineReport, PastSingularityRecord, PlayerStats, ScaleJumpRecord, StanceType } from '../../models/types'
 
 export function buildInitialState() {
+  // ADR-0072 §A: kutlama sayacının başlangıcı, kütle kapılarından türeyen açık
+  // boyut sayısıyla HİZALI doğar (taban 3). Aksi hâlde ilk tick bunu "artış"
+  // sanıp yeni oyunda sahte bir doğum kutlaması ateşlerdi.
+  const initialUnlockedDimensions = resolvedUnlockedDimensionCount({
+    dimensionCapFloor: BASE_UNLOCKED_DIMENSIONS,
+    activeChallenge: null,
+    lifetimePeakMatter: new Decimal(10)
+  })
   return {
     // Temel Kaynak: DOPAMİN (Dopamine)
     matter: new Decimal(10),
@@ -27,9 +35,14 @@ export function buildInitialState() {
     tickspeedBought: 0, // Algoritma Frekansı (Hz) Seviyesi
     dimensionShifts: 0, // Akış Sıçraması (Feed Shift / Boost) Seviyesi
     dimensionCapFloor: BASE_UNLOCKED_DIMENSIONS, // Save v12 legacy min açık tier (ADR-0033: taban 3)
-    formatDiscoverSeenCap: 3, // Kutlanmış / tanıtılmış max tier (yeni oyun 3; D4 1. Sıçramada kutlanır)
+    formatDiscoverSeenCap: 3, // Kutlanmış / tanıtılmış max tier (yeni oyun 3; D4+ kütle kapısıyla açılır — ADR-0072)
     formatUnlockBuffTier: 0,
     formatUnlockBuffUntil: 0,
+    // ADR-0072 §A: kütle kapısı kutlaması için "son kutlanan açık boyut sayısı".
+    // UÇUCUDUR (kayıt edilmez): deserialize sonunda sessizce hizalanır, böylece
+    // kayıt yükleme kutlama tetiklemez. Yalnızca canlı update() tick'inde artış
+    // olduğunda celebrateDimensionUnlocks() ateşlenir.
+    celebratedDimensionCap: initialUnlockedDimensions,
     galaxies: 0, // Sonsuz Akış Kümeleri
     singularityPoints: new Decimal(0), // Uykusuzluk / Şöhret Puanı (SP)
     singularities: 0,
