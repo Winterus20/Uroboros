@@ -55,6 +55,8 @@ const {
   hasHarvestableTrend,
   hasCrisisAlert,
   hasBotAlert,
+  navSilhouettes,
+  navSilhouetteSteps,
   switchTab,
   switchTabByOffset,
   handleSwipeStart,
@@ -64,6 +66,19 @@ const {
 });
 
 const { showSettings, showAdmin, saveIssue } = useModals({ switchTab, switchTabByOffset });
+
+/**
+ * P3.2 — siluet teaser kabuğu.
+ *
+ * Aynı dış kabuk (NAV_BTN + navClass), ama sekme İSİMSİZ ve etkileşimsiz:
+ * ikon soluk + hafif bulanık, metin etiketi yok, "disabled" (odaklanamaz) ve
+ * "pointer-events-none" (tıklanamaz). Erişilebilirlik için aria-label zorunlu.
+ *
+ * !cursor-not-allowed: NAV_BTN "cursor-pointer" taşıyor ve Tailwind çıktısında
+ * cursor-pointer daha SONRA geliyor; önemli işaretle ikisi çakışmadan
+ * "tıklanamaz" imleci kazanır.
+ */
+const SILHOUETTE_BTN = "opacity-40 blur-[1.5px] pointer-events-none !cursor-not-allowed";
 
 let cloudSyncTimer: number | null = null;
 
@@ -273,47 +288,149 @@ onUnmounted(() => {
           <span v-if="store.canShift" class="tab-dot tab-dot-cyan"></span>
         </button>
 
-        <!-- Algoritma Laboratuvarı Sekmesi -->
+        <!-- Algoritma Laboratuvarı Sekmesi (P3.2: dekad eşiği geçti, dal kapısı eksikse "siluet" gölgesi) -->
         <button v-if="store.labUnlocked" @click="switchTab('lab')" :aria-current="activeTab === 'lab' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'lab', 'lab')]">
           <FlaskConical class="w-3.5 h-3.5 text-emerald-400" />
           <span :class="navLabelClass(activeTab === 'lab')">Lab</span>
           <span v-if="hasHarvestableTrend" class="tab-dot tab-dot-cyan"></span>
         </button>
+        <button
+          v-else-if="navSilhouettes.lab === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Lab"
+          :class="[NAV_BTN, navClass(false, 'lab'), SILHOUETTE_BTN]"
+        >
+          <FlaskConical class="w-3.5 h-3.5 text-emerald-400" />
+          <span v-if="navSilhouetteSteps.lab.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.lab"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
+        </button>
 
-        <!-- Gece Kriz Yönetimi Sekmesi -->
+        <!-- Gece Kriz Yönetimi Sekmesi (P3.2 siluet yongası) -->
         <button v-if="store.crisisUnlocked" @click="switchTab('crisis')" :aria-current="activeTab === 'crisis' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'crisis', 'crisis')]">
           <Zap class="w-3.5 h-3.5 text-cyan-400" />
           <span :class="navLabelClass(activeTab === 'crisis')">Kriz</span>
           <span v-if="hasCrisisAlert" class="tab-dot tab-dot-rose"></span>
         </button>
+        <button
+          v-else-if="navSilhouettes.crisis === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Kriz"
+          :class="[NAV_BTN, navClass(false, 'crisis'), SILHOUETTE_BTN]"
+        >
+          <Zap class="w-3.5 h-3.5 text-cyan-400" />
+          <span v-if="navSilhouetteSteps.crisis.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.crisis"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
+        </button>
 
-        <!-- Otomatik Botlar Sekmesi -->
+        <!-- Otomatik Botlar Sekmesi (P3.2 siluet yongası) -->
         <button v-if="store.autobuyersUnlocked" @click="switchTab('autobuyers')" :aria-current="activeTab === 'autobuyers' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'autobuyers', 'autobuyers')]">
           <Bot class="w-3.5 h-3.5 text-blue-400" />
           <span :class="navLabelClass(activeTab === 'autobuyers')">{{ store.isAutobuyerCockpitMode ? 'Kokpit' : 'Botlar' }}</span>
           <span v-if="hasBotAlert" class="tab-dot tab-dot-cyan"></span>
         </button>
+        <button
+          v-else-if="navSilhouettes.autobuyers === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Botlar"
+          :class="[NAV_BTN, navClass(false, 'autobuyers'), SILHOUETTE_BTN]"
+        >
+          <Bot class="w-3.5 h-3.5 text-blue-400" />
+          <span v-if="navSilhouetteSteps.autobuyers.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.autobuyers"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
+        </button>
 
-        <!-- Nöral İzleme Kolonisi Sekmesi -->
+        <!-- Nöral İzleme Kolonisi Sekmesi (P3.2 siluet yongası) -->
         <button v-if="store.colonyUnlocked" @click="switchTab('colony')" :aria-current="activeTab === 'colony' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'colony', 'colony')]">
           <Network class="w-3.5 h-3.5 text-violet-400" />
           <span :class="navLabelClass(activeTab === 'colony')">Koloni</span>
           <span v-if="store.canPowerNap" class="tab-dot tab-dot-cyan"></span>
         </button>
+        <button
+          v-else-if="navSilhouettes.colony === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Koloni"
+          :class="[NAV_BTN, navClass(false, 'colony'), SILHOUETTE_BTN]"
+        >
+          <Network class="w-3.5 h-3.5 text-violet-400" />
+          <span v-if="navSilhouetteSteps.colony.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.colony"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
+        </button>
 
-        <!-- Kozmik Çöküş / Tekillik Sekmesi -->
+        <!-- Kozmik Çöküş / Tekillik Sekmesi (P3.2 siluet yongası) -->
         <button v-if="store.singularityUnlocked" @click="switchTab('singularity')" :aria-current="activeTab === 'singularity' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'singularity', 'singularity')]">
           <Sunrise class="w-3.5 h-3.5 text-amber-400" />
           <span :class="navLabelClass(activeTab === 'singularity')">Tekillik</span>
           <span v-if="store.canSingularity" class="tab-dot tab-dot-amber"></span>
           <span v-else-if="store.hasAffordableNeuralNode" class="tab-dot tab-dot-cyan"></span>
         </button>
+        <button
+          v-else-if="navSilhouettes.singularity === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Tekillik"
+          :class="[NAV_BTN, navClass(false, 'singularity'), SILHOUETTE_BTN]"
+        >
+          <Sunrise class="w-3.5 h-3.5 text-amber-400" />
+          <span v-if="navSilhouetteSteps.singularity.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.singularity"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
+        </button>
 
-        <!-- Gece Kriz Meydan Okumaları Sekmesi -->
+        <!-- Gece Kriz Meydan Okumaları Sekmesi (P3.2 siluet yongası) -->
         <button v-if="store.challengesUnlocked" @click="switchTab('challenges')" :aria-current="activeTab === 'challenges' ? 'page' : undefined" :class="[NAV_BTN, navClass(activeTab === 'challenges', 'challenges')]">
           <Swords class="w-3.5 h-3.5 text-rose-400" />
           <span :class="navLabelClass(activeTab === 'challenges')">Meydan</span>
           <span v-if="store.activeChallenge" class="tab-dot tab-dot-rose"></span>
+        </button>
+        <button
+          v-else-if="navSilhouettes.challenges === 'silhouette'"
+          type="button"
+          disabled
+          aria-label="Kilitli sekme: Meydan"
+          :class="[NAV_BTN, navClass(false, 'challenges'), SILHOUETTE_BTN]"
+        >
+          <Swords class="w-3.5 h-3.5 text-rose-400" />
+          <span v-if="navSilhouetteSteps.challenges.length" class="flex items-center gap-0.5" aria-hidden="true">
+            <span
+              v-for="(filled, stepIndex) in navSilhouetteSteps.challenges"
+              :key="stepIndex"
+              class="w-[3px] h-[3px] rounded-full"
+              :class="filled ? 'bg-white/70' : 'bg-white/20'"
+            ></span>
+          </span>
         </button>
 
         <!-- Başarımlar Sekmesi -->

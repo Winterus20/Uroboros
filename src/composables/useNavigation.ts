@@ -1,7 +1,8 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useGameStore } from "../stores/game";
 import { sounds } from "../core/audio";
-import { nextLocked, unlockProgressFraction } from "../game/unlocks";
+import { checkUnlock, checkVisibility, getFeatureById, nextLocked, unlockProgress, unlockProgressFraction } from "../game/unlocks";
+import type { UnlockContext } from "../game/unlocks";
 import { ARC_LOG10_MAX, bandForLog10, log10Safe } from "../game/pacing";
 import { isMotionReduced, useMotionMode } from "./useMotion";
 
@@ -79,6 +80,89 @@ export function navLabelClass(isActive: boolean): string {
     : `${base} max-w-0 opacity-0 -mr-1.5 pointer-events-none`;
 }
 
+/**
+ * P3.2 — Siluet teaser: "görünürlük" ile "gerçek açılış" ayrımının nav'a yansıması.
+ *
+ * ADR-0073 iki katmanlı kapı kurdu: dekad eşiği özelliği GÖRÜNÜR yapar, başarım
+ * ailesi ise GERÇEK açılımı verir. Aradaki boşluk (görünür ama henüz kapalı) nav'da
+ * "siluet" olarak gösterilir: isimsiz, bulanık, tıklanamaz bir gölge.
+ *
+ * Durum matrisi:
+ * - "hidden"     → özelliğin KENDİ şartı (dekad/sayaç) henüz sağlanmadı → HİÇ GÖSTERİLMEZ
+ * - "open"       → görünür ve gerçekten açık → normal buton (mevcut davranış)
+ * - "silhouette" → görünür ama dal kapısı (başarım ailesi) eksik → isimsiz teaser
+ */
+export type NavSilhouetteState = "hidden" | "silhouette" | "open";
+
+/**
+ * Sekme → özellik id'si (FEATURE_UNLOCKS anahtarı). null = özellik kapısı yok.
+ *
+ * KODDAN OKUNDU (src/stores/game/getters-*.ts):
+ * - labUnlocked        → isFeatureUnlocked("lab")        → "lab"
+ * - crisisUnlocked     → isFeatureUnlocked("crisis")     → "crisis"
+ * - autobuyersUnlocked → isFeatureUnlocked("autobuyers") → "autobuyers"
+ * - colonyUnlocked     → isFeatureUnlocked("colony") (+ nöral bot/nap koşulları) → "colony"
+ * - challengesUnlocked → isFeatureUnlocked("challenges") → "challenges"
+ * - singularityUnlocked → singularities > 0 || 1e30 kütle eşiği: FEATURE_UNLOCKS'te
+ *   karşılığı YOK (doğrudan eşik) → null
+ * - dimensions / achievements / stats → hiçbir özellik kapısına bağlı değil → null
+ */
+export const NAV_FEATURE_IDS: Record<TabId, string | null> = {
+  dimensions: null,
+  lab: "lab",
+  crisis: "crisis",
+  autobuyers: "autobuyers",
+  colony: "colony",
+  singularity: null,
+  challenges: "challenges",
+  achievements: null,
+  stats: null
+};
+
+/**
+ * Bir sekmenin nav'daki üç durumlu görünürlüğü.
+ *
+ * - null özellik kapısı → "open" (sekme hep açıktır: dimensions/achievements/stats)
+ * - özelliğin kendi şartı sağlanmamış → "hidden" (dekad eşiği geçmedi)
+ * - dekad eşiği geçti, başarım ailesi eksik → "silhouette"
+ * - gerçek açılış (checkUnlock) → "open"
+ */
+export function navSilhouetteState(featureId: string | null, ctx: UnlockContext): NavSilhouetteState {
+  if (featureId === null) return "open";
+  const feature = getFeatureById(featureId);
+  if (!feature) return "hidden";
+  if (!checkVisibility(ctx, feature)) return "hidden";
+  if (checkUnlock(ctx, feature)) return "open";
+  return "silhouette";
+}
+
+/**
+ * Siluet durumundaki dal ilerlemesi (kazanılan güvenli başarım / hedef).
+ * Yalnızca "silhouette" durumunda dolu; diğer durumlarda null.
+ */
+export function navSilhouetteMeter(
+  featureId: string | null,
+  ctx: UnlockContext
+): { current: number; target: number } | null {
+  if (featureId === null) return null;
+  const feature = getFeatureById(featureId);
+  if (!feature) return null;
+  if (navSilhouetteState(featureId, ctx) !== "silhouette") return null;
+  return unlockProgress(ctx, feature);
+}
+
+/**
+ * Siluet kademe göstergesi için nokta bayrakları: her eleman bir kademe,
+ * true = dolu (kazanıldı), false = boş. Toplam = dalın gerektirdiği başarım adedi.
+ */
+export function navSilhouetteStepFlags(featureId: string | null, ctx: UnlockContext): boolean[] {
+  const meter = navSilhouetteMeter(featureId, ctx);
+  if (!meter) return [];
+  const total = Math.max(0, Math.min(12, Math.round(meter.target)));
+  const filled = Math.max(0, Math.min(total, Math.round(meter.current)));
+  return Array.from({ length: total }, (_, index) => index < filled);
+}
+
 // F3.3: OS prefers-reduced-motion canlı dinleyici.
 // Kök elemana .reduce-anim sınıfı damgalanırken OS tercihi doğrudan tek kapı kontratına dahil edilir.
 const osReducedMotion = ref(false);
@@ -120,6 +204,10 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
   }
 
   // Sekme kilit haritası — tek elden senkron (nav + içerik + otomatik geri dönüş)
+  // P3.2: siluet sekme (= dekad eşiği geçmiş ama dal kapısı/başarım eksik) de
+  // KAPALI sayılır. Anlamı bozulmaz: "içeriğe girilemez" sözleşmesi aynen korunur.
+  // Böylece teaser yalnızca GÖRSELDİR — mobil kaydırma (availableTabs) onu listeden
+  // çıkarır, switchTab reddeder, içerik sekmesi hiç açılmaz.
   const tabLocked = computed<Record<TabId, boolean>>(() => ({
     dimensions: false,
     lab: !store.labUnlocked,
@@ -131,6 +219,40 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     achievements: false,
     stats: false
   }));
+
+  // P3.2 — siluet teaser durumu. Dekad eşiği geçti ama dal kapısı (başarım
+  // ailesi) eksikse sekme "görünür ama kapalı"dır: nav'da isimsiz, bulanık ve
+  // tıklanamaz bir gölge olarak görünür (App.vue).
+  const navSilhouettes = computed<Record<TabId, NavSilhouetteState>>(() => {
+    const ctx = store.unlockContext;
+    return {
+      dimensions: navSilhouetteState(NAV_FEATURE_IDS.dimensions, ctx),
+      lab: navSilhouetteState(NAV_FEATURE_IDS.lab, ctx),
+      crisis: navSilhouetteState(NAV_FEATURE_IDS.crisis, ctx),
+      autobuyers: navSilhouetteState(NAV_FEATURE_IDS.autobuyers, ctx),
+      colony: navSilhouetteState(NAV_FEATURE_IDS.colony, ctx),
+      singularity: navSilhouetteState(NAV_FEATURE_IDS.singularity, ctx),
+      challenges: navSilhouetteState(NAV_FEATURE_IDS.challenges, ctx),
+      achievements: navSilhouetteState(NAV_FEATURE_IDS.achievements, ctx),
+      stats: navSilhouetteState(NAV_FEATURE_IDS.stats, ctx)
+    };
+  });
+
+  // Siluet kademe göstergesi: her nokta bir dal kademesi, dolu = kazanıldı.
+  const navSilhouetteSteps = computed<Record<TabId, boolean[]>>(() => {
+    const ctx = store.unlockContext;
+    return {
+      dimensions: navSilhouetteStepFlags(NAV_FEATURE_IDS.dimensions, ctx),
+      lab: navSilhouetteStepFlags(NAV_FEATURE_IDS.lab, ctx),
+      crisis: navSilhouetteStepFlags(NAV_FEATURE_IDS.crisis, ctx),
+      autobuyers: navSilhouetteStepFlags(NAV_FEATURE_IDS.autobuyers, ctx),
+      colony: navSilhouetteStepFlags(NAV_FEATURE_IDS.colony, ctx),
+      singularity: navSilhouetteStepFlags(NAV_FEATURE_IDS.singularity, ctx),
+      challenges: navSilhouetteStepFlags(NAV_FEATURE_IDS.challenges, ctx),
+      achievements: navSilhouetteStepFlags(NAV_FEATURE_IDS.achievements, ctx),
+      stats: navSilhouetteStepFlags(NAV_FEATURE_IDS.stats, ctx)
+    };
+  });
 
   // ADR-0032 — "Sonraki Açılacak" bandı.
   // Ölçüm (brain/scratchpad/harness/results-308-audit.json) gösterdi ki koşunun
@@ -413,6 +535,8 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     isMobile,
     tabLocked,
     availableTabs,
+    navSilhouettes,
+    navSilhouetteSteps,
     slideDirection,
     transitionName,
     nextUnlockLabel,

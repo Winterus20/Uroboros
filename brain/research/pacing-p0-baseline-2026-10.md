@@ -283,3 +283,67 @@ demektir. Bu, ilk koşuyu **daha da uzatır** — oysa §7'de ölçüldüğü ü
 
 *P0 çıktısı: teşhis ölçümle kilitlendi; altın standardın bugün ihlal edildiği ortaya çıkarıldı; SP kollarının*
 *sayıları için gereken `--dawns N` modu spec'lendi. §8 eşik yayılımı kararını bekliyor. Uygulama bir sonraki faza aittir.*
+
+---
+
+## 9. P3.0 ÖLÇÜMÜ — Erken Merdiven Adayları ve "Aday D" Önerisi (2026-10-19)
+
+Tam rapor: `brain/scratchpad/p3-early-ladder-candidates.md` (salt okunur ölçüm; `src/` dosyasına dokunulmadı).
+
+### 9.1 Ölçülen çarpıklık — eğri ilk 4 dakikada 47 dekad kat ediyor
+
+| Eşik | İlk aşılma | Tür |
+| :--- | ---: | :--- |
+| 1e3 (crisis_spawn) | 26 s | kesin |
+| 1e9 (autobuyers) | 190 s | kesin |
+| 1e14 / 1e18 (duruşlar) | 194 / 197.5 s | kesin |
+| 1e22 (colony) | 201 s | kesin |
+| 1e28 (crisis) | 207 s | kesin |
+| 1e34 / 1e42 / 1e52 (büyüler) | 209.5 / 215 / 236 s | kesin |
+| 1e65 (lab) | 353.5 s | kesin |
+| 1e80 (seed_nucleon) | 893.5 s | kesin |
+| 1e100 (seed_gluon) | 1703.5 s | kesin |
+
+**Eğri 1e9 → 1e56 aralığını 74 saniyeye sıkıştırıyor** (190 → 263.4 s). Plan §1'in önerisi
+("autobuyers 1e9 → 1e12") bu yüzden **sayıyı değiştirmiyor**, yalnızca saniyeleri kaydırıyor:
+
+| Aday | 600 sn içindeki sistem sayısı | ≤4 kabul ölçütü |
+| :--- | ---: | :--- |
+| A — mevcut | **10** | ✗ |
+| B — plan metni | **10** | ✗ |
+| C — ham kontrat | 3 | sayısal ✓ ama 1e65 kapıları 353.5 s'de → mutlak kontrat ✗ |
+| C′ — ölçümle düzeltilmiş | **1** | ✓ (ama ağır bedel) |
+
+600 sn kontratı için en küçük tam dekad **1e68 → 816.4 s** (600 sn'deki ömür boyu tepe = 1e67.24).
+
+### 9.2 C′'nin bedeli (rapor §4.2)
+
+- `casual` profili 1800 sn'de tepe **69.39**, `idle` **67.00** → 1e70 eşikleri bu profillerde
+  **30 dakikada bile açılmıyor** (otomasyon 30+ dakika yok).
+- `unlockAutobuyer()` feature kapısını kontrol **etmiyor** → harness eşiği yansıtmaz (ölçüm sınırı).
+
+### 9.3 Aday D (orchestrator önerisi) — eşiği sentetik yükseltmek yerine **eğriyi yavaşlatmak**
+
+Çarpıklığın kaynağı yatay eşikler değil, **boyut açılım eşiklerinin 190-205 s'de 16 dekadı**
+kat etmesi (D4 1e8 → D8 1e26, ADR-0072'nin PROVISIONAL tablosu). Boyutlar üretimin kaynağı olduğu
+için, boyut eşikleri yayıldığında **ekonomi kendiliğinden yavaşlar** ve yatay sistemler
+kendiliğinden dağılır — sentetik 1e68 eşiklerine gerek kalmaz.
+
+P0 §8'in aday tablosu bu yönde hazır: **A** mevcut (D8 4 dk) · **C** orta (D8 43 dk) · **B** yayılmış (D8 62 dk).
+
+**Beklenen etki (ölçülecek, varsayım değil):**
+1. 600 sn içindeki yatay sistem sayısı düşer (≤4 hedefi).
+2. İlk koşu süresi **uzar** (geç açılan boyut = geç gelen üretim) → ADR-0023 gerilimi büyür.
+3. P3.1'in dal kapıları (başarım gerekli sistemler) bu yavaşlamayı **üretim takviyesi** olarak
+   telafi edebilir → iki etki birlikte ölçülmeli.
+
+**Bu, P0 §8'in açık kararının (eşik yayılımı) ve P3.3'ün (erken merdiven) ortak ölçümüdür:**
+önce D4-D8 eşikleri yayılır, eğri yeniden ölçülür, sonra yatay merdiven **yeni eğriye göre**
+kararlaştırılır. Sırayı tersine çevirmek (önce sentetik eşik, sonra yayılım) iki kez ayar demektir.
+
+### 9.4 Açık kararlar (P3.3'ün kapısı)
+
+1. **Tempo:** (a) P1'den önce onarım fazı, (b) ADR-0023 bandını güncel ölçüme revize, (c) ~11 saat
+   geçici taban kabul (onarım P1+M1'e bağlanır).
+2. **Erken merdiven:** A / B / C / C′ / **D**.
+
