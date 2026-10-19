@@ -220,6 +220,9 @@ export const dimensionGetters = {
       const unlocked = resolvedUnlockedDimensionCount(state)
       const shiftMult = tierShiftReqMult(state.dimensions, unlocked)
       if (state.dimensionShifts < 6) {
+        // ADR-0072: kilit açma artık KÜTLE KAPILARINDAN gelir; hedef tier gerçek açık boyut
+        // sayısıyla kırpılır (aşağıdaki `Math.min(tier, unlocked)`). Sıçrama sayacının
+        // kademeli yükselişi bir ZORLUK RAMPASIDIR (kilit açma mekanizması DEĞİL) — korunur.
         let tier = Math.min(8, BASE_UNLOCKED_DIMENSIONS + state.dimensionShifts)
         if (state.dimensionCapFloor > tier) {
           tier = Math.min(unlocked, state.dimensionCapFloor)
@@ -243,7 +246,7 @@ export const dimensionGetters = {
         let amount = new Decimal(26 + 16 * (state.dimensionShifts - 6)).times(shiftMult).floor()
         if (amount.lt(1)) amount = D_1
         return {
-          tier: 8,
+          tier: unlocked,
           amount
         }
       }

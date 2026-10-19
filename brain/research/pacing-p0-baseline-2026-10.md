@@ -239,5 +239,47 @@ kabul kriterini belirler.
 
 ---
 
+---
+
+## 8. Eşik Yayılımı Ölçümü (Faz 2 / P2.1 sonrası) — **AÇIK KARAR**
+
+P2.1 boyut açılımını sıçramadan kopardı, ancak planın *"açılışları zamana yay"* hedefine ulaşmadı:
+`dimUnlocks` → D4 **185.5s** · D5 191s · D6 197s · D7 205s · D8 216.5s; yani D4→D8 arası **~31 saniye**.
+
+### Yöntem ve ölçülen zarf
+
+`active` profil · seed 1 · `dt=0.1` · 2 saat · örnekli koşu. Kapılar `lifetimePeakMatter`'a bağlı
+olduğu için ölçülen metrik **zarf** (koşu boyunca en yüksek `log10`). Koşu galaksi resetleriyle testere
+dişlidir (t=5400'de `log10` anlık **1.0**'a düşer) — zarf monotonik kaldığı için kapı mantığı doğrudur
+ve ADR-0035'in "açılış bir OLAYdır" ilkesiyle uyumludur.
+
+| t | 60s | 180s | 300s | 600s | 1200s | 1800s | 3000s | 3600s | 4200s | 7200s |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `log10` zarf | 3.7 | 18.5 | 49.0 | 65.0 | 90.7 | 97.9 | 112.4 | 121.8 | 127.4 | 136.6 |
+
+Ekonomi **2 ile 5. dakika arasında `log10` 5.7 → 49.0** (43 dekad) sıçrıyor. Bu yüzden D4 ile D5'i
+birbirinden ayırmak o pencerede yapısal olarak imkânsıza yakındır; anlamlı ayrım D6 ve sonrasında kurulur.
+
+### Aday tablolar ve bu koşuda ölçülen açılış zamanları
+
+| Tablo | D4 | D5 | D6 | D7 | D8 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **A — mevcut** (1e8 / 1e11 / 1e15 / 1e20 / 1e26) | 3.0 dk | 3.0 dk | 3.0 dk | 4.0 dk | 4.0 dk |
+| **C — orta** (1e8 / 1e25 / 1e50 / 1e75 / 1e100) | 3.0 dk | 4.0 dk | 6.0 dk | 17.0 dk | 43.0 dk |
+| **B — yayılmış** (1e8 / 1e45 / 1e80 / 1e97 / 1e122) | 3.0 dk | 4.0 dk | 18.0 dk | 25.0 dk | 62.0 dk |
+
+### ⚠️ Tempo takası (kritik)
+
+D8'i **4. dakikadan ~60. dakikaya** taşımak, oyuncunun ilk saatini 8 yerine daha az boyutla oynaması
+demektir. Bu, ilk koşuyu **daha da uzatır** — oysa §7'de ölçüldüğü üzere ilk koşu zaten **~11 saat**
+(ADR-0023 hedefi 3s30dk). Yani:
+
+- Eşik yayılımı **tek başına** yapılırsa tempo daha da bozulur.
+- Altın standart kararı (§7) **önce** verilmezse eşik tablosu bilinçli seçilemez.
+
+**Karar bekleyen:** hangi tablo (A / B / C / başka bir dağılım) ve §7'deki tempo kararıyla birlikte.
+
+---
+
 *P0 çıktısı: teşhis ölçümle kilitlendi; altın standardın bugün ihlal edildiği ortaya çıkarıldı; SP kollarının*
-*sayıları için gereken `--dawns N` modu spec'lendi. Uygulama bir sonraki faza aittir.*
+*sayıları için gereken `--dawns N` modu spec'lendi. §8 eşik yayılımı kararını bekliyor. Uygulama bir sonraki faza aittir.*

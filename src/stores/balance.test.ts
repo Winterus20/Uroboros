@@ -228,6 +228,8 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     // `dimensionCapFloor` tabanı sağlar (sıçrama terimi açılıştan kaldırıldı).
     store.dimensionCapFloor = 8
     const reqShift5 = store.shiftRequirement
+    // ADR-0072: hedef tier gerçek açık boyut sayısıdır (burada legacy taban 8).
+    expect(reqShift5.tier).toBe(8)
     expect(reqShift5.amount.toNumber()).toBe(25) // Shift 5 gereksinimi: 25 D8
 
     store.dimensionShifts = 6
@@ -241,6 +243,102 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     const reqWithD5 = store.shiftRequirement
     expect(reqWithD5.amount.toNumber()).toBe(25)
     expect(Number.isInteger(reqWithD5.amount.toNumber())).toBe(true)
+  })
+
+  // ---- ADR-0072: shiftRequirement hedef tier'ı sıçramadan değil açık boyuttan gelir ----
+  it('ADR-0072: hedef tier rampa ile yükselir ama gerçek açık boyut sayısını asmaz', () => {
+    const store = useGameStore()
+    store.dimensionCapFloor = 0
+    store.dimensionShifts = 0
+    // Kütle kapıları (D4 1e8, D5 1e11, D6 1e15) → 6 açık boyut; rampa tabanı 3+0 = 3
+    store.lifetimePeakMatter = new Decimal('1e15')
+    expect(store.unlockedDimensionsCount).toBe(6)
+    expect(store.shiftRequirement.tier).toBe(3)
+
+    // Rampa tam açık sayıya oturur
+    store.dimensionShifts = 3
+    expect(store.shiftRequirement.tier).toBe(6)
+
+    // Rampa 8 ister ama açık boyut 6 → kırpılır
+    store.dimensionShifts = 5
+    expect(store.shiftRequirement.tier).toBe(6)
+
+    // Kapılar açılınca rampa hedefine ulaşır
+    store.lifetimePeakMatter = new Decimal('1e26')
+    expect(store.shiftRequirement.tier).toBe(8)
+  })
+
+  it('ADR-0072 regresyon: dimensionShifts değişse bile hedef tier değişmez (eski 3+sıçrama davranışı gitti)', () => {
+    const store = useGameStore()
+    store.dimensionCapFloor = 0
+    store.lifetimePeakMatter = new Decimal('1e26') // 8 açık boyut
+
+    // Erken dal rampası (ADR-0033) korunur: 3 → 8
+    const early: number[] = []
+    for (const shifts of [0, 1, 2, 3, 4, 5]) {
+      store.dimensionShifts = shifts
+      early.push(store.shiftRequirement.tier)
+    }
+    expect(early).toEqual([3, 4, 5, 6, 7, 8])
+
+    // Geç dal açık boyut sayısına oturur
+    const late: number[] = []
+    for (const shifts of [6, 7, 12]) {
+      store.dimensionShifts = shifts
+      late.push(store.shiftRequirement.tier)
+    }
+    expect(new Set(late)).toEqual(new Set([8]))
+
+    // Daha az açık boyutta rampa büyüse bile hedef açık sayıyı AŞMAZ (dal geçişi dahil).
+    store.lifetimePeakMatter = new Decimal('1e11') // 5 açık boyut
+    const capped: number[] = []
+    for (const shifts of [0, 1, 2, 3, 5, 6, 9]) {
+      store.dimensionShifts = shifts
+      capped.push(store.shiftRequirement.tier)
+    }
+    expect(capped).toEqual([3, 4, 5, 5, 5, 5, 5])
+  })
+
+  it('ADR-0072: shiftRequirement challengeDimensionCap (C7) kırpmasını korur ve C7 miktar formülleri değişmez', () => {
+    const store = useGameStore()
+    store.dimensionCapFloor = 0
+    store.lifetimePeakMatter = new Decimal('1e26') // kapısız 8 açık boyut
+    expect(store.unlockedDimensionsCount).toBe(8)
+    store.dimensionShifts = 5
+    expect(store.shiftRequirement.tier).toBe(8)
+
+    store.activeChallenge = 'c7'
+    expect(store.unlockedDimensionsCount).toBe(6) // C7: üst sınır 6
+    // Rampa 8 ister, C7 cap'i 6'ya kırpar
+    expect(store.shiftRequirement.tier).toBe(6)
+
+    // Geç sıçrama dalı (shifts >= 6): kırpılmış miktar formülü 30 + 15*(s-3).
+    store.dimensionShifts = 6
+    const capped = store.shiftRequirement
+    expect(capped.tier).toBe(6)
+    expect(capped.tier).toBeLessThanOrEqual(6)
+    // D5 pasifi tetiklenmediği için shiftMult = 1 → 30 + 15*3 = 75
+    expect(capped.amount.toNumber()).toBe(75)
+
+    // Erken sıçrama dalı (shifts < 6): rampa 5'e oturur; cap'in ALTINDA kaldığı için kırpılmaz.
+    store.dimensionShifts = 2
+    const earlyCapped = store.shiftRequirement
+    expect(earlyCapped.tier).toBe(5)
+    expect(earlyCapped.amount.toNumber()).toBe(15)
+  })
+
+  it('ADR-0072: shiftRequirement her zaman tamsayı tier ve en az 1 miktar döner', () => {
+    const store = useGameStore()
+    store.lifetimePeakMatter = new Decimal('1e8') // 4 açık boyut
+    for (const shifts of [0, 1, 2, 3, 5, 6, 11, 40]) {
+      store.dimensionShifts = shifts
+      const req = store.shiftRequirement
+      expect(Number.isInteger(req.tier)).toBe(true)
+      expect(req.tier).toBeGreaterThanOrEqual(1)
+      const amountNum = req.amount.toNumber()
+      expect(Number.isInteger(amountNum)).toBe(true)
+      expect(amountNum).toBeGreaterThanOrEqual(1)
+    }
   })
 
   it('tierSlackerLeechMult D3 alınmamışken 1, alınınca 0.97 döner', () => {

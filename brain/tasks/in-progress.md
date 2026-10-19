@@ -47,6 +47,17 @@ aralıklandırılmalı (muhtemelen yavaş-büyüme bölgesine, log10 ≈ 40-150 
 - `celebrateFormatUnlock` normal akışta tetiklenmiyordu → H ile düzeltiliyor.
 - Smoke 30 dk `log10` 90.72 → **97.62** (+7 dekad): D8 artık 1e26'da açıldığı için (eski ölçüm 1e41) erken hızlanma.
 - `harness/smoke.json` yeniden üretildi (P0 baseline dokümanı `generatedAt`'i güncellenmeli — açık iş).
+### Dalga 3 — Faz 2 / P2.2 (2026-10-19 · sıçrama kalıntı temizliği + eşik ölçümü)
+- [x] `9b87b7fa` — sıçrama hedef tier kalıntısı; geç dal `tier: 8` → `tier: unlocked`; `isShiftUnlock` ölü etiketi kaldırıldı; parite doğrulandı (eksik değil)
+- [x] Orchestrator düzeltmesi: erken dal **zorluk rampası geri alındı** (kaldırılması ölçüldü ve reddedildi: zirve 99.8 → 88.4)
+- [x] Testler doğru semantiğe göre yeniden yazıldı (4 test) · ADR-0072 Ek bölümü · P0 §8 eşik ölçümü
+
+**Dalga 3 sonucu:** `typecheck 0` · `test 418/418` · `build 0` · `smoke 6/6` (zirve log10=98.4, shifts=9)
+
+### Karar bekleyen (P2/P1 kapısı)
+1. **Altın standart (§7):** ölçülen ilk koşu ~11 sa vs ADR-0023 3s30dk → 3/3 FAIL. (a) onarım fazı · (b) ADR-0023 revizyonu · (c) kabul.
+2. **Eşik yayılımı (§8):** A mevcut (D8 4dk) / C orta (43dk) / B yayılmış (62dk) — tempo kararıyla birlikte.
+3. **Plan §6.1/§6.2:** D8 öncesi sıçramalar kaldırılsın mı + sıçrama çarpanı bölüşümü (P2.2'nin silüet kısmını bloke ediyor).
 ### Sonraki dalgalar
 - [ ] **Faz 2 (P2):** boyut kapıları sıçramadan kopar · shift = D8 sonrası hız çarpanı · corruption kaynağı `lifetimePeakUnlockedDims` · save v19 migrasyon · `ADR-0072` (ADR-0033 süperseeded)
 - [ ] **Faz 3 (P3):** omurga/opsiyonel dal ayrımı · başarım aile→dal haritası · silüet teaserlar · ilk oturum ≤4 sistem

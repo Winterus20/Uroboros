@@ -243,5 +243,31 @@ log10 **60'ın altına düşmedi**; açılış kaynağı değiştiği için shif
 | `src/game/corruption.ts` | Yalnızca yorumlar: girdi kaynağı `lifetimePeakMatter` tabanlı kapılar (davranış değişmedi). |
 | `src/stores/game/getters-misc.ts` | Yalnızca yorum: `corruptionLevel` girdisi ADR-0072 kaynağına bağlandı. |
 
-**Dokunulmayanlar:** `save-version.ts` (migrasyon yok), `src/models/save.ts`
-(yeni alan yok), `shiftRequirement`, `shiftPowerMultiplier`, tekillik/SP.
+**Dokunulmayanlar:** `save-version.ts` (migrasyon yok), `src/models/save.ts` (yeni alan yok),
+`shiftPowerMultiplier`, tekillik/SP. `shiftRequirement` için bkz. aşağıdaki Ek.
+---
+
+## Ek — Sıçrama Gereksinimi Hedef Tier'ı (2026-10-19, aynı gün)
+
+`shiftRequirement` hedef tier'ı seçerken iki ayrı kalıntı taşıyordu; ayrım netleştirildi:
+
+1. **Erken dal (`shifts < 6`) — DEĞİŞMEDİ.** `tier = min(8, BASE_UNLOCKED_DIMENSIONS + shifts)`
+   ifadesi "her sıçrama +1 boyut açar" varsayımı **değil**, bir **zorluk rampasıdır**: sıçramalar
+   kademeli olarak daha yüksek boyut ister. Kilit açma artık kütle kapılarından geldiği için,
+   zaten var olan `tier = min(tier, unlocked)` kırpması bu rampayı gerçek açık sayıya bağlar.
+   Rampa **korunmuştur** — kaldırılması sıçramayı aşırı zorlaştırıyordu (ölçüm: smoke zirve
+   `log10` 99.8 → 88.4, shift 9 → 8).
+
+2. **Geç dal (`shifts >= 6`) — DÜZELTİLDİ.** Eskiden `tier: 8` sabitti; bu, "6+ sıçrama ⇒ D8
+   açıktır" varsayımına dayanıyordu ve ADR-0072'den sonra **yanlış** olabilir: D8 henüz kilitliyken
+   sıçrama, var olmayan D8 miktarını ister ve oyuncu sıçrama yapamaz hâle gelirdi. Artık
+   `tier = unlocked` kullanılır: D8 açıkken değer yine 8'e eşitlenir (davranış korunur), kilitliyken
+   erişilebilir en yüksek boyuta düşer.
+
+**Yan düzeltme:** `DimensionsTab.vue` içindeki `isShiftUnlock` (ve "Boyut Aç" / "Yeni Format!"
+metinleri) kaldırıldı — sıçrama artık boyut açmadığı için ölü ve yanıltıcıydı; buton yalnız boost
+etiketini gösterir.
+
+**Ölçülen etki (`harness:smoke` kapısı):** zirve `log10` 99.85 → **98.4** · shift 9 → 9 ·
+tickspeed 81 → 80. Fark yalnızca geç dal düzeltmesinden gelir ve kabul edilmiştir.
+

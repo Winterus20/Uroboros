@@ -86,7 +86,6 @@ const nextLockedTeaserPercent = computed(() => {
 })
 
 const shiftReq = computed(() => store.shiftRequirement)
-const isShiftUnlock = computed(() => store.dimensionShifts < 6)
 
 const currentShiftDimAmount = computed(() => {
   const dim = store.dimensions[shiftReq.value.tier - 1]
@@ -177,7 +176,7 @@ function triggerShift(e: MouseEvent) {
       detail: {
         x,
         y,
-        text: isShiftUnlock.value ? 'Yeni Format!' : `×${format(store.singleShiftPower, 1, store.settings.notation)} Boost!`,
+        text: `×${format(store.singleShiftPower, 1, store.settings.notation)} Boost!`,
         color: '#d8b4fe',
         big: true
       }
@@ -465,7 +464,7 @@ function handleTouchEnd(e: TouchEvent) {
             ? 'bg-purple-600/25 hover:bg-purple-600/35 text-purple-200 border-purple-500/40 cursor-pointer affordance-pulse'
             : `bg-black/30 text-slate-600 border-white/[0.04] cursor-not-allowed ${shiftAffordRampClass}`"
         >
-          {{ isShiftUnlock ? 'Boyut Aç' : `×${format(store.singleShiftPower, 1, store.settings.notation)} Boost` }}
+          {{ `×${format(store.singleShiftPower, 1, store.settings.notation)} Boost` }}
         </button>
       </div>
 

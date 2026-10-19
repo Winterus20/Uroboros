@@ -1,5 +1,29 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-19] ✔ — Tempo & Ekonomi Faz 2 / P2.2: Sıçrama Kalıntıları Temizlendi + Eşik Yayılımı Ölçümü
+
+### Gerekçe:
+- ADR-0072 boyut açılımını sıçramadan kopardı; sıçramayla ilgili iki kalıntı varsayım kaldı ve `DimensionsTab`'da ölü bir "Boyut Aç" etiketi duruyordu.
+
+### Çözüm & Değişiklikler:
+1. `shiftRequirement` **geç dal** (`shifts >= 6`): sabit `tier: 8` → `tier: unlocked`. Eski sabit "6+ sıçrama ⇒ D8 açıktır" varsayımına dayanıyordu; D8 kilitliyken sıçrama, var olmayan D8 miktarını ister ve oyuncu sıçrama yapamaz hâle gelebilirdi.
+2. **Erken dal rampası KORUNDU:** `tier = min(8, BASE_UNLOCKED_DIMENSIONS + shifts)` bir *zorluk rampasıdır*, kilit mekanizması değil — mevcut `min(tier, unlocked)` kırpması zaten gerçek açık sayıya bağlıyor. Kaldırılması denendi ve ölçüldü (**zirve `log10` 99.8 → 88.4, shift 9 → 8**) → geri alındı.
+3. `src/components/DimensionsTab.vue`: ölü `isShiftUnlock` computed'i ve "Boyut Aç" / "Yeni Format!" metinleri kaldırıldı (sıçrama artık boyut açmıyor); buton yalnız boost etiketi gösteriyor. `disabled`/rampa/çubuk/`aria-label` değişmedi.
+4. **Parite doğrulandı, düzeltme gerekmedi:** `getDimensionMultiplier` (önbellekli sıcak yol) ve `getDimensionBreakdown` shift faktörünü birebir taşıyor; cache anahtarı `dimensionShifts` içerdiği için bayat cache riski yok. Mevcut parite testi: `scale-jumps.test.ts:114-122`.
+5. `src/stores/balance.test.ts`: 4 test doğru semantiğe göre yeniden yazıldı → rampa 3→8, açık-sayı kırpması, C7 kırpması, tamsayılık.
+6. [ADR-0072](0072-dimension-unlocks-decoupled-from-shifts.md)'ye **"Ek — Sıçrama Gereksinimi Hedef Tier'ı"** bölümü eklendi.
+7. [pacing-p0-baseline-2026-10.md](../research/pacing-p0-baseline-2026-10.md) raporuna **§8 Eşik Yayılımı Ölçümü** eklendi (karar bekliyor).
+
+### Ölçüm — eşik yayılımı (P0 §8):
+- Zarf (`lifetimePeakMatter`) eğrisi: **3.7** @60s · 18.5 @180s · 49.0 @300s · 90.7 @1200s · 127.4 @4200s · 136.6 @7200s
+- Koşu galaksi resetleriyle testere dişlidir (t=5400'de anlık `log10`=**1.0**) → monotonik tepe noktasına bağlı kapı mantığı doğrudur (ADR-0035).
+- Aday tablolar (ölçülen D8 zamanı): **A** mevcut 4 dk · **C** orta 43 dk · **B** yayılmış 62 dk.
+- **Tempo takası:** D8'i 4 dk'dan ~60 dk'ya taşımak ilk koşuyu daha da uzatır (zaten ~11 sa). Eşik kararı §7'deki altın standart kararıyla **birlikte** verilmeli.
+
+### Doğrulama:
+- `npm run typecheck` **exit 0** · `npm test` **418/418** (29 dosya) · `npm run build` **exit 0**
+- `npm run harness:smoke` **6/6 PASS** — zirve `log10=98.4`, `shifts=9`, `tickspeed=80` (önceki 99.85/9/81)
+
 ## [2026-10-19] ✔ — Tempo & Ekonomi Faz 2 / P2.1: Boyut Açılımları Sıçramadan Koparıldı (ADR-0072)
 
 ### Gerekçe:
