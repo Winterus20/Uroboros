@@ -267,13 +267,37 @@ function log10Of(matter: Decimal): number {
 }
 
 /**
- * Dekad merdiveni (ADR-0032).
+ * Dekad merdiveni (ADR-0032) — P3.3 ÖLÇÜLMÜŞ MERDİVEN.
  *
  * `order` alanı doğrudan dekad üssünün 10 katıdır: nextLocked() küçük order'ı
  * seçtiği için merdivenin görünür sırası ve zamanlaması aynı sayıdan gelir.
- * Hedef süreler, brain/scratchpad/harness ölçümündeki active profilinin geçtiği
- * dekadlara göre konmuştur (300 dk'lık mevcut koşu; ölçüm düzeltmesiyle
- * 240 dk bandına iner).
+ * İki istisna: `crisis_spawn` (ilk basamak — order 10) ve `challenges`
+ * (sayaç kapısı — order ARC_LOG10_MAX * 10 + 10).
+ *
+ * P3.3 — yatay kapılar yeniden zamanlandı (ölçüme dayalı, orchestrator kararı):
+ *   autobuyers     1e9  → 1e12   (plan böl. 1 önerisi: 1e9 → 1e12+; maliyeti ~0)
+ *   stance_spam    1e14 → 1e20   (195s kumesinden çıkarıldı — sındırma vadi)
+ *   stance_private 1e18 → 1e32   (aynı gerekçe)
+ *   colony         1e22 → 1e66   (241s kumesinden çıkarıldı; 4 yüzeyli
+ *                              "≥ 8 dk" ölçütü için tek çözüm: Kriz (810.5s)
+ *                              sonrası ve Lab öncesi — D8 (1e65 @1377s) ile
+ *                              40.5 sn farkla, aynı saniyede çakışmadan)
+ *   lab            1e65 → 1e70   (D8 kapısıyla aynı-tik çakışmasını kırdı)
+ * Diğer tüm basamaklar (crisis_spawn 1e3 · crisis 1e28 · spell_espresso 1e34 ·
+ * spell_noise 1e42 · spell_sleep 1e52 · seed_nucleon 1e80 ·
+ * seed_gluon 1e100 · time_clock 1e120 · seed_graviton 1e125 ·
+ * guilt_slackers 1e160 · event_horizon_lens 1e200 · hawking_resonator 1e240 ·
+ * cosmic_filament 1e280 · night_watch 1e308 · challenges 1 tekillik) KORUNDU.
+ *
+ * YERLEŞİM KURALI: yatay kapılar ölçülmüş boyut kapılarının (E5: 1e8 @186s ·
+ * 1e14 @195s · 1e24 @231.5s · 1e40 @353s · 1e65 @1377s) ARASINDA bir dekada
+ * oturur; yalnız iki kapı (colony 1e66 · lab 1e70) D8'in (1e65) sonrasına düşer —
+ * çünkü dört yüzeyli "≥ 8 dk" ölçütü için Kriz ile Lab arasına bir yüzey daha
+ * gerekir. Böylece (a) hiçbir yatay kapı bir boyut kapısıyla aynı saniyede
+ * açılmaz, (b) yatay yüzeyler (Botlar/Koloni/Kriz/Lab) arasında ≥ 8 dk boşluk
+ * oluşur — sındırma vadi oluşmaz.
+ *
+ * Ölçüm ve kabul ölçütleri: brain/scratchpad/p3-final-ladder.md.
  */
 export const FEATURE_UNLOCKS: FeatureUnlock[] = [
   {
@@ -286,30 +310,16 @@ export const FEATURE_UNLOCKS: FeatureUnlock[] = [
   {
     id: 'autobuyers',
     name: 'Otonom Çekim Botları Sekmesi',
-    hint: '1.000.000.000 (1e9) g Kütle biriktir',
-    req: { kind: 'dopamine', amount: decadeGate(9) },
-    order: 90
+    hint: '1e12 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(12) },
+    order: 120
   },
   {
     id: 'stance_spam',
     name: 'Obur Çekim Duruşu',
-    hint: '1e14 g Kütle biriktir',
-    req: { kind: 'dopamine', amount: decadeGate(14) },
-    order: 140
-  },
-  {
-    id: 'stance_private',
-    name: 'Vakum Kalkanı Duruşu',
-    hint: '1e18 g Kütle biriktir',
-    req: { kind: 'dopamine', amount: decadeGate(18) },
-    order: 180
-  },
-  {
-    id: 'colony',
-    name: 'Kuantum Rezonans Kolonisi',
-    hint: '1e22 g Kütle biriktir',
-    req: { kind: 'dopamine', amount: decadeGate(22) },
-    order: 220
+    hint: '1e20 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(20) },
+    order: 200
   },
   {
     id: 'crisis',
@@ -317,6 +327,13 @@ export const FEATURE_UNLOCKS: FeatureUnlock[] = [
     hint: '1e28 g Kütle biriktir',
     req: { kind: 'dopamine', amount: decadeGate(28) },
     order: 280
+  },
+  {
+    id: 'stance_private',
+    name: 'Vakum Kalkanı Duruşu',
+    hint: '1e32 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(32) },
+    order: 320
   },
   {
     id: 'spell_espresso',
@@ -340,11 +357,18 @@ export const FEATURE_UNLOCKS: FeatureUnlock[] = [
     order: 520
   },
   {
+    id: 'colony',
+    name: 'Kuantum Rezonans Kolonisi',
+    hint: '1e66 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(66) },
+    order: 660
+  },
+  {
     id: 'lab',
     name: 'Kuantum Parçacık Reaktörü Sekmesi',
-    hint: '1e65 g Kütle biriktir',
-    req: { kind: 'dopamine', amount: decadeGate(65) },
-    order: 650
+    hint: '1e70 g Kütle biriktir',
+    req: { kind: 'dopamine', amount: decadeGate(70) },
+    order: 700
   },
   {
     id: 'seed_nucleon',

@@ -167,7 +167,8 @@ describe('feature unlock ladder', () => {
   })
 
   it('keeps features that share a requirement distinguishable', () => {
-    // stance_spam / stance_private deliberately share one requirement.
+    // P3.3 merdiveninden sonra iki basamak aynı eşiği paylaşmıyor; yine de
+    // genel kural korunur: aynı şartı paylaşan basamaklar ayırt edilebilir olmalı.
     const byReq = new Map<string, FeatureUnlock[]>()
     for (const f of FEATURE_UNLOCKS) {
       const key = JSON.stringify(f.req)
@@ -914,25 +915,64 @@ describe('P3.1 — başarım kapılı dallar (dal kapısı x dekad kapısı)', (
   })
 
   it('nextLocked bir dali siradaki gosterdiginde ilerleme DAL kapasini gosterir (ipucu)', () => {
+    // P3.3 merdiveni: crisis 1e28 · colony 1e30 — dal sırası eşiğe göre değişti.
     const ctx: UnlockContext = {
       ...emptyContext(),
       matter: new Decimal('1e28'),
       lifetimePeakMatter: new Decimal('1e28')
     }
-    // colony (1e22) dekadı aşıldı ama automation başarımı eksik → sıradaki dal bu.
+    // crisis (1e28) dekadı aşıldı ama crisis ailesi başarım eksik → sıradaki dal bu.
+    const next = nextLocked(ctx, new Set())
+    expect(next?.id).toBe('crisis')
+    if (!next) return
+    expect(unlockProgress(ctx, next)).toEqual({ current: 0, target: 2 })
+    expect(unlockProgressFraction(ctx, next)).toBe(0)
+    // Dalın başarım ilerlemesi ipucu olarak akar: 1/2 görünür.
+    const oneDone: UnlockContext = { ...ctx, achievements: ['cri_first'] }
+    expect(unlockProgress(oneDone, next)).toEqual({ current: 1, target: 2 })
+    expect(unlockProgressFraction(oneDone, next)).toBe(0.5)
+    // Dal açılınca bir sonraki basamak sıçrar: stance_private (1e32) henüz eşiğe
+    // ulaşmadığı için kilitli basamak olarak devralır.
+    const open: UnlockContext = { ...ctx, achievements: ['cri_first', 'cri_10'] }
+    expect(checkUnlock(open, next)).toBe(true)
+    expect(nextLocked(open, new Set())?.id).toBe('stance_private')
+  })
+
+  it('colony dali (1e66) kendi automation basarimlarini bekler', () => {
+    const ctx: UnlockContext = {
+      ...emptyContext(),
+      matter: new Decimal('1e66'),
+      lifetimePeakMatter: new Decimal('1e66'),
+      // Kriz ailesi dallari (crisis 1e28 · spell_espresso 1e34 · spell_noise 1e42 ·
+      // spell_sleep 1e52) acilmis olmali ki colony siradaki kilitli basamak olsun.
+      achievements: ['cri_first', 'cri_10', 'cri_combo', 'cri_50', 'cri_combo5']
+    }
     const next = nextLocked(ctx, new Set())
     expect(next?.id).toBe('colony')
     if (!next) return
     expect(unlockProgress(ctx, next)).toEqual({ current: 0, target: 2 })
     expect(unlockProgressFraction(ctx, next)).toBe(0)
-    // Dalın başarım ilerlemesi ipucu olarak akar: 1/2 görünür.
-    const oneDone: UnlockContext = { ...ctx, achievements: ['auto_first'] }
+    const oneDone: UnlockContext = {
+      ...ctx,
+      achievements: ['cri_first', 'cri_10', 'cri_combo', 'cri_50', 'cri_combo5', 'auto_first']
+    }
     expect(unlockProgress(oneDone, next)).toEqual({ current: 1, target: 2 })
     expect(unlockProgressFraction(oneDone, next)).toBe(0.5)
-    // Dal açılınca bir sonraki basamak sıçrar: crisis (1e28, başarım eksik).
-    const open: UnlockContext = { ...ctx, achievements: ['auto_first', 'auto_bulk'] }
+    const open: UnlockContext = {
+      ...ctx,
+      achievements: [
+        'cri_first',
+        'cri_10',
+        'cri_combo',
+        'cri_50',
+        'cri_combo5',
+        'auto_first',
+        'auto_bulk'
+      ]
+    }
     expect(checkUnlock(open, next)).toBe(true)
-    expect(nextLocked(open, new Set())?.id).toBe('crisis')
+    // colony açıldı → sıradaki basamak lab (1e70) henüz eşiğe ulaşmadı.
+    expect(nextLocked(open, new Set())?.id).toBe('lab')
   })
 })
 

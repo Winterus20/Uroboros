@@ -5,15 +5,18 @@ import { buildUnlockContext, FEATURE_UNLOCKS, getFeatureById } from "../game/unl
 import { getBranchGate } from "../game/branches";
 import {
   NAV_FEATURE_IDS,
+  branchAchievementHint,
   navSilhouetteMeter,
   navSilhouetteState,
   navSilhouetteStepFlags,
+  nextUnlockLabelFor,
   TAB_ORDER
 } from "./useNavigation";
 import type { UnlockContext } from "../game/unlocks";
 
 /**
- * P3.2 — nav siluet teaser testleri (saf fonksiyonlar; bileşen mount edilmez).
+ * P3.2 — nav siluet durumu + "Sıradaki Açılacak" bandı ipucu testleri
+ * (saf fonksiyonlar; bileşen mount edilmez).
  *
  * Bağlam `buildUnlockContext` ile kurulur — store'a gerek yoktur.
  */
@@ -111,8 +114,8 @@ describe("navSilhouetteState", () => {
   it("omurga sekmeleri boş bağlamda hidden, kendi eşiğinde open", () => {
     // challenges'ın kapısı kütle değil 1 tekilliktir; her sekme kendi eşiğinde.
     const openContexts: Record<(typeof SPINE_TABS)[number], UnlockContext> = {
-      autobuyers: makeContext({ matter: "1e9" }),
-      lab: makeContext({ matter: "1e65" }),
+      autobuyers: makeContext({ matter: "1e12" }),
+      lab: makeContext({ matter: "1e70" }),
       challenges: makeContext({ matter: "1e310", singularities: 1 })
     };
     for (const tab of SPINE_TABS) {
@@ -135,10 +138,10 @@ describe("navSilhouetteState", () => {
   });
 
   it("colony: aynı akış (automation ailesi)", () => {
-    expect(navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e21" }))).toBe("hidden");
-    expect(navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e22", achievements: [] }))).toBe("silhouette");
+    expect(navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e65" }))).toBe("hidden");
+    expect(navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e66", achievements: [] }))).toBe("silhouette");
     expect(
-      navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e22", achievements: ["auto_first", "auto_bulk"] }))
+      navSilhouetteState(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e66", achievements: ["auto_first", "auto_bulk"] }))
     ).toBe("open");
   });
 
@@ -180,7 +183,7 @@ describe("navSilhouetteMeter", () => {
   });
 
   it("colony meter: automation ailesi 0/2", () => {
-    expect(navSilhouetteMeter(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e22" }))).toEqual({ current: 0, target: 2 });
+    expect(navSilhouetteMeter(NAV_FEATURE_IDS.colony, makeContext({ matter: "1e66" }))).toEqual({ current: 0, target: 2 });
   });
 });
 
@@ -199,5 +202,38 @@ describe("navSilhouetteStepFlags", () => {
       makeContext({ matter: "1e28", achievements: ["cri_first"] })
     );
     expect(half).toEqual([true, false]);
+  });
+});
+
+describe("nextUnlockLabelFor — 'Sıradaki Açılacak' bandı ipucu", () => {
+  it("dal kapılı açılışta BAŞARIM ŞARTI ipucu ekler (hedef bilgisi, kilitli içerik değil)", () => {
+    // crisis dalı: "Kozmik Dalgalanmalar" ailesinden 2 başarım gerekiyor (BRANCH_GATES).
+    // Dekad eşiği (1e28) geçti, 1 güvenli başarım kazanıldı → hâlâ kapalı.
+    const ctx = makeContext({ matter: "1e28", achievements: ["cri_first"] });
+    const crisis = getFeatureById("crisis");
+    expect(crisis).not.toBeNull();
+
+    const label = nextUnlockLabelFor(crisis, ctx);
+    expect(label).toBe(
+      `${crisis!.name} · ${crisis!.hint} · 2 Kozmik Dalgalanmalar başarımı (1/2)`
+    );
+    expect(label).toContain("2 Kozmik Dalgalanmalar başarımı");
+    expect(label).toContain("(1/2)");
+
+    // Aynı bilgi ayrı yardımcıdan da gelir (boş string = ipucu yok).
+    expect(branchAchievementHint(crisis, ctx)).toBe("2 Kozmik Dalgalanmalar başarımı (1/2)");
+  });
+
+  it("omurga (dal kapısı olmayan) açılışta etiket DEĞİŞMEZ — ipucu eklenmez", () => {
+    // stance_spam omurga özelliği: BRANCH_GATES kaydı yok, dekad eşiği (1e20) açar.
+    const ctx = makeContext({ matter: "1e19" });
+    const spine = getFeatureById("stance_spam");
+    expect(spine).not.toBeNull();
+    expect(getBranchGate("stance_spam")).toBeNull();
+
+    const label = nextUnlockLabelFor(spine, ctx);
+    expect(label).toBe(`${spine!.name} · ${spine!.hint}`);
+    expect(label).not.toContain("başarımı");
+    expect(branchAchievementHint(spine, ctx)).toBe("");
   });
 });

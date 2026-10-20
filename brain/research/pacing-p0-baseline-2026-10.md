@@ -341,6 +341,32 @@ P0 §8'in aday tablosu bu yönde hazır: **A** mevcut (D8 4 dk) · **C** orta (D
 önce D4-D8 eşikleri yayılır, eğri yeniden ölçülür, sonra yatay merdiven **yeni eğriye göre**
 kararlaştırılır. Sırayı tersine çevirmek (önce sentetik eşik, sonra yayılım) iki kez ayar demektir.
 
+
+### 9.5 E1 deneyi — fiyat eğrisi kolları erken eğriyi değiştirmiyor, koşuyu UZATTIYOR (2026-10-19)
+
+Plan §3'ün üç fiyat kolu birlikte uygulandı (ölçüm için, kod kalıcı değil):
+EARLY_D1..D6 oranları 55/42/32/28/24/20 → **75/55/40/34/28/24** · B0_BUCKET_THRESHOLD 30 → **20** ·
+COST_ACCEL_DECADES_PER_STEP 0.011 → **0.025**. Patch saklandı: `brain/scratchpad/p1-price-curve-e1.patch`.
+
+| Ölçüm | Değer |
+| :--- | :--- |
+| 30 dk tepe log10 | **98.44** (baseline 98.39 → **değişmedi**) |
+| 30 dk shifts / tickspeed / galaxies | 9 / 80 / 2 (baseline 9 / 80 / 2 → **değişmedi**) |
+| 10 dk'da açılan özellik | 6 (P3.1 dal kapısı etkisiyle) |
+| **12 saatlik koşu** | **1e308'e ULAŞILMADI** — tepe **1e224**, shifts 14, galaxies 6 |
+
+**İki çıkarım (ölçümden, varsayımdan değil):**
+1. **Fiyat eğrisi erken kalabalığı çözmüyor.** 30 dk'da tepe neredeyse birebir aynı; kümelenme
+   kaynağı fiyat değil, boyut eşiği yoğunluğu + başarım kapısı. Yani plan §3'ün "fiyatları
+   kızıştır" kolu §1'in "ilk 10 dk kontratı" hedefini **taşımıyor**.
+2. **Fiyat eğrisi koşuyu uzatıyor.** 12 saatlik tavan aşıldı (tepe 1e224 < 1e308) → plan §3'ün
+   katı kısıtı ("ADR-0023 altın standardı korunmalı") **P1'in kendisi tarafından daha da
+   zorlaştırılıyor**. Tempo onarımı fiyat tarafından **gelemez**; üretim tarafından (M1 bot hız
+   çipleri + ADR-0073 aile kademe çarpanı) gelmelidir.
+
+**Sonuç:** Faz 4'te P1, M1 ile birlikte uygulanmalı (M1 olmadan P1 tek başına işlevsiz);
+P1'in sayıları ölçümle yumuşatılmalı. Bu, tempo kararını da netleştirir: onarım kolu **üretim**.
+
 ### 9.4 Açık kararlar (P3.3'ün kapısı)
 
 1. **Tempo:** (a) P1'den önce onarım fazı, (b) ADR-0023 bandını güncel ölçüme revize, (c) ~11 saat

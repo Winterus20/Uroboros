@@ -28,6 +28,7 @@
  *   --out PATH               results JSON path (default: harness/results.json)
  *   --all                    run active, casual, idle (+ idle_plus with --withIdlePlus)
  *   --trace                  per-tick debug trace once log10(matter) > 200 (endgame forensics)
+ *   --chips                  M1 "Otonom Hız Çipi" davranışını AÇ (varsayılan KAPALI)
  *
  * DETERMINISM:
  *   - Math.random is replaced per run by a seeded mulberry32 LCG.
@@ -47,6 +48,29 @@
  *              NO anomalies, spells, lab, refresh, upgrades, shifts or galaxies.
  *   idle_plus (diagnostic): idle + manual shifts/galaxies.
  *              Isolates how much of idle's progress is capped by missing shifts.
+ *
+ * M1 — OTONOM HIZ ÇİPİ (--chips, varsayılan KAPALI)
+ * ---------------------------------------------------------------------------
+ * Spec: brain/research/m1-speed-chip-spec-2026-10.md
+ * Çip bot satın alma sıklığını artırır (bot aralığı ÷ (1 + 0.15×seviye)),
+ * yani büyüme hızı k'yı artırır — sabit üretim çarpanı DEĞİLDİR (spec §1.1).
+ *
+ *   * Bayrak verilmezse davranış BİREBİR AYNIDIR (ölçüm karşılaştırılabilirlik): çip
+ *     alınmaz, store.state değişmez, JSON çıktısı eski koşularla birebir aynıdır.
+ *   * Kural ("çip fırsat varsa hemen al"): her tick'te çip alınabiliyorsa (cüzdan yeterli
+ *     VE CHIP_MAX_LEVEL'a ulaşılmamış) BİR seviye alınır. Maliyet seviye başına
+ *     1e4 katına çıktığı için bu kural pratikte "maliyet eşiği aşıldığı
+ *     anda tek seviye" demektir; ek bir tick sayacı kuralına gerek yoktur (deterministik, en temiz).
+ *   * KURAL TÜM PROFİLLERDE AYNI (active/casual/idle/idle_plus): profil OYUNCU davranışını
+ *     (tıklama/kaos) modeller; çip alımı profil bağımsız bir "yatırım disiplini" olarak
+ *     modellenmiştir (aksiyon her profilde aynı — sadece ne zaman tetiklendiği değişir).
+ *   * SIRALAMA: çip alımı, aynı tick'in boyut alımlarından (maxAll) SONRA, dünya tick'inden
+ *     (store.update) hemen önce yapılır. Böylece çip aynı tick'teki boyut alımını engellemez;
+ *     bedeli bir sonraki tick'in boyut bütçesinde görülür (spec §2.3 "paylaşılan cüzdan").
+ *   * Telemetri: `speedChipLevel` (son seviye), `speedChipsBought` (alınan toplam seviye),
+ *     ayrıca `peaks.speedChipLevel` ve `final.speedChipLevel`.
+ *   * PRESTIJ: çip koşu içi bir yatırımdır (prestijde sıfırlanır); bu harness ilk tekilliğe
+ *     kadar çalıştığı için tek bir koşu ölçülür (reset yok).
  */
 import { createPinia, setActivePinia } from "pinia";
 import {
@@ -222,12 +246,16 @@ interface RunResult {
   spells: Record<string, number>;
   anomalyClicks: number;
   trace: TraceEntry[] | null;
+  // M1 — Otonom Hız Çipi telemetrisi (--chips KAPALI iken 0).
+  speedChipLevel: number; // koşunun sonundaki çip seviyesi
+  speedChipsBought: number; // koşu boyunca satın alınan TOPLAM çip seviyesi
   // Kosunun ZIRVESI (reset sonrasi anlik goruntu degil). Olcum kapisi bunu kullanir.
   peaks: {
     logMatter: number;
     shifts: number;
     galaxies: number;
     tickspeedBought: number;
+    speedChipLevel: number; // M1 çip seviyesi (koşu içi en yüksek seviye; shift çipi sıfırlar, bu yüzden monoton DEĞİLDİR)
   };
   final: Record<string, unknown>;
   error: string | null;
@@ -287,7 +315,10 @@ export async function runOnce(
   dt: number,
   capHours: number,
   traceEnabled: boolean,
-  collectSamples: boolean
+  collectSamples: boolean,
+  // M1 — Otonom Hz Çipi: false (varsayılan) ise hiçbir çip alınmaz, koşu birebir eski
+  // davranışla aynıdır (regresyon yok / ölçüm karşılaştırılabilirlik).
+  chipsEnabled = false
 ): Promise<RunResult> {
   // fresh deterministic world
   Math.random = mulberry32(seed);
@@ -324,7 +355,9 @@ export async function runOnce(
     spells: { espresso_shot: 0, fast_charge: 0, sleep_denial: 0, noise_cancelling: 0 },
     anomalyClicks: 0,
     trace: traceEnabled ? [] : null,
-    peaks: { logMatter: 0, shifts: 0, galaxies: 0, tickspeedBought: 0 },
+    speedChipLevel: 0,
+    speedChipsBought: 0,
+    peaks: { logMatter: 0, shifts: 0, galaxies: 0, tickspeedBought: 0, speedChipLevel: 0 },
     final: {},
     error: null,
   };
@@ -460,6 +493,20 @@ export async function runOnce(
     }
   };
 
+  // M1 — Otonom Hız Çipi satin alma (yalnızca --chips).
+  // Kural: "çip fırsat varsa hemen al" — her tick'te, çip alınabiliyorsa (cüzdan yeterli
+  // VE CHIP_MAX_LEVEL'a ulaşılmamış) BİR seviye alınır. Maliyet seviye başına 1e4
+  // katına çıktığı için kural pratikte "maliyet eşiği aşıldığı anda tek seviye"
+  // davranışı verir; tick sayacı gibi ek bir koşul gerekmez (deterministik).
+  // store.buySpeedChip() zaten no-op korumali (cüzdan yetersiz / tavan) ve seviye artırmaz;
+  // burada yine de canBuySpeedChip kapısı ile erken çıkış yapılır (ucuz, yan etkisiz).
+  const doSpeedChip = (): void => {
+    if (!chipsEnabled) return;
+    if (!store.canBuySpeedChip) return;
+    // playSound=false: headless koşuda ses oynanmaz.
+    if (store.buySpeedChip(false)) result.speedChipsBought++;
+  };
+
   const takeSample = (): Sample => {
     const logMatter = store.matter.lte(0) ? 0 : store.matter.log10().toNumber();
     const dps = store.matterPerSecond;
@@ -551,6 +598,11 @@ export async function runOnce(
       break;
     }
 
+    // 5b. M1 — Otonom Hız Çipi (yalnızca --chips; varsayılan KAPALI).
+    // Sıralama: aynı tick'in boyut alımları (maxAll) zaten yapıldı; çip bedeli bir sonraki
+    // tick'in boyut bütçesinde görülür (spec §2.3 "paylaşılan cüzdan").
+    doSpeedChip();
+
     // 6. world tick
     store.update(dt);
     simTime += dt;
@@ -561,6 +613,7 @@ export async function runOnce(
     result.peaks.shifts = Math.max(result.peaks.shifts, store.dimensionShifts);
     result.peaks.galaxies = Math.max(result.peaks.galaxies, store.galaxies);
     result.peaks.tickspeedBought = Math.max(result.peaks.tickspeedBought, store.tickspeedBought);
+    result.peaks.speedChipLevel = Math.max(result.peaks.speedChipLevel, store.speedChipLevel);
 
     if (store.canSingularity) {
       result.reached = true;
@@ -689,6 +742,7 @@ export async function runOnce(
   result.peaks.shifts = Math.max(result.peaks.shifts, store.dimensionShifts);
   result.peaks.galaxies = Math.max(result.peaks.galaxies, store.galaxies);
   result.peaks.tickspeedBought = Math.max(result.peaks.tickspeedBought, store.tickspeedBought);
+  result.peaks.speedChipLevel = Math.max(result.peaks.speedChipLevel, store.speedChipLevel);
   const peakLogMatter = peakMatter.lte(0) ? 0 : peakMatter.log10().toNumber();
   result.peaks.logMatter =
     peakMatter.isNan() || Number.isNaN(peakLogMatter) ? 0 : peakLogMatter;
@@ -697,6 +751,8 @@ export async function runOnce(
   const finalLogDps = store.matterPerSecond.lte(0) ? 0 : store.matterPerSecond.log10().toNumber();
   result.logMarks["final"] = finalLogMatter;
 
+  result.speedChipLevel = store.speedChipLevel;
+
   result.final = {
     t: simTime,
     logMatter: finalLogMatter,
@@ -704,6 +760,7 @@ export async function runOnce(
     shifts: store.dimensionShifts,
     galaxies: store.galaxies,
     tickspeedBought: store.tickspeedBought,
+    speedChipLevel: store.speedChipLevel,
     logTickspeedMult: store.tickspeedMultiplier.log10().toNumber(),
     bought: store.dimensions.map((d) => d.bought),
     unlockedFeatures: [...store.unlockedFeatures],
@@ -744,6 +801,7 @@ interface CliArgs {
   trace: boolean;
   lite: boolean;
   jobs: number;
+  chips: boolean; // M1 — Otonom Hız Çipi (varsayılan KAPALI)
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -758,6 +816,7 @@ function parseArgs(argv: string[]): CliArgs {
     trace: false,
     lite: false,
     jobs: 1,
+    chips: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -771,6 +830,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === "--trace") args.trace = true;
     else if (a === "--lite") args.lite = true;
     else if (a === "--jobs") args.jobs = Math.max(1, parseInt(argv[++i], 10));
+    else if (a === "--chips") args.chips = true;
     else if (a === "--fast") {
       args.lite = true;
       args.jobs = Math.max(1, os.cpus().length);
@@ -779,7 +839,7 @@ function parseArgs(argv: string[]): CliArgs {
       console.log(
         "Usage: node out/run.mjs [--all] [--profile active|casual|idle|idle_plus] " +
           "[--seeds 1,2,3] [--dt 0.1] [--capHours 12] [--out results.json] [--withIdlePlus] [--trace] " +
-          "[--lite] [--jobs N] [--fast]"
+          "[--lite] [--jobs N] [--fast] [--chips]"
       );
       process.exit(0);
     }
@@ -803,6 +863,7 @@ interface WorkerRunPayload {
   capHours: number;
   trace: boolean;
   collectSamples: boolean;
+  chips: boolean; // M1 — Otonom Hız Çipi bayrağı (worker'a da taşınır)
 }
 
 function runInWorker(payload: WorkerRunPayload): Promise<RunResult> {
@@ -829,13 +890,14 @@ async function runJobBatch(
   capHours: number,
   trace: boolean,
   collectSamples: boolean,
-  parallelism: number
+  parallelism: number,
+  chips: boolean
 ): Promise<RunResult[]> {
   if (parallelism <= 1 || jobs.length <= 1) {
     const out: RunResult[] = [];
     for (const job of jobs) {
       out.push(
-        await runOnce(PROFILES[job.profile], job.seed, dt, capHours, trace, collectSamples)
+        await runOnce(PROFILES[job.profile], job.seed, dt, capHours, trace, collectSamples, chips)
       );
     }
     return out;
@@ -855,6 +917,7 @@ async function runJobBatch(
         capHours,
         trace,
         collectSamples,
+        chips,
       });
     }
   };
@@ -874,6 +937,7 @@ function summarize(res: RunResult, dt: number): string {
     `[${res.profile} seed=${res.seed} dt=${dt}] ${status} | log10=${fm.toFixed(2)} ` +
     `shifts=${Number(res.final.shifts)} gal=${Number(res.final.galaxies)} ` +
     `tickspeed=${Number(res.final.tickspeedBought)} bots=${res.final.unlockedBots instanceof Array ? res.final.unlockedBots.length : 0} ` +
+    `chip=${res.speedChipLevel}/${res.speedChipsBought} ` +
     `wall=${(res.wallMs / 1000).toFixed(1)}s`
   );
 }
@@ -898,7 +962,8 @@ async function main(): Promise<void> {
     args.capHours,
     args.trace,
     collectSamples,
-    args.jobs
+    args.jobs,
+    args.chips
   );
   for (const res of results) console.log(summarize(res, args.dt));
 

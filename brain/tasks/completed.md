@@ -1,5 +1,169 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-20] ✔ — Kilitli İçerik Gizleme (kullanıcı kararı) + M1 v2 Otonom Yatırım Çipi
+
+### Gerekçe (kullanıcı):
+"Kilitli şeyler görünmesin; sadece kilidi açıldığında görünsün." → P3.2'nin silüet teaser'ı
+**geri alındı**: `LockedFeature.vue` silindi, nav silüetleri kaldırıldı, Lab tohumları / Kriz müdahale
+kartlarında kilitli içerik hiç render edilmiyor. Boyut satırları, bot/SP ağacı merdivenleri ve
+"Sıradaki Açılış" bandı **korunur** (hedef bilgisi) — band, dal kapılı hedefler için **başarım
+şartı ipucu** da verir ("… · 2 Kozmik Dalgalanmalar başarımı (1/2)"). Header'daki kilitli duruş
+ipuçları kaldırıldı; ColonyTab'daki Lock kartı incelendi (ulaşılamaz durumda, korundu).
+
+### M1 v1 → v2 (ölçümle yeniden tasarım):
+- **v1 ("bot hızı") ÖLÇÜLDÜ VE ETKİSİZ ÇIKTI:** aktif 12 sa (9:33:17 → 9:33:09) ve idle 12 sa
+  (tepe 121.69 → 121.69). **Teşhis:** darboğaz bot hızı değil **KÜTLE** (botlar paraları olmadığı
+  için bekler). Kütleyi çipe harcamak boyut kovasına harcamaktan her zaman daha zayıf →
+  mekanizma ekonomik olarak **baskılanmış** (dominated).
+- **v2 (uygulandı):** çip *boyut üretim çarpanını* `1.03^seviye` yükseltir (seviye 5 → ×1.16,
+  tavan 40 → ×3.26). Uygulama: `getDimensionMultiplier` + **cache anahtarı** (`dimMultCacheKey`)
+  `speedChipLevel`'ı içerir (bayat çarpan sessiz hatası kapatıldı).
+- **Retun:** 1e12 taban + %10/seviye erken seviyeleri ×45'e biriktiriyor, colony/lab'ı 600 sn'ye
+  çekiyordu (F600=6, tepe 181.8) → **taban 1e40** (ilk çip ~353 sn) + **%3/seviye**'ye indirildi.
+
+### Ölçüm (v2, dengeli):
+| Koşu | 30 dk tepe | 600 sn kapı | 12 sa ilk tekillik |
+| :--- | ---: | ---: | ---: |
+| Çipsiz (T0) | 1e69.1 | 4 | 9:33:17 |
+| v2 +3%/seviye, taban 1e40 | **1e81.25** | **4** | **4:28:09** |
+
+=> Çip **gerçek fayda** verir (+12 dekad/30 dk), **pacing'i korur** (F600=4) ve koşuyu **2.1×
+kısaltır** (9s33dk → 4s28dk). Revize band (8–11 sa) taban oyun içindir; çip, oyuncunun
+*kazandığı* hızdır.
+
+### Dosyalar:
+- `src/game/speed-chip.ts` (YENİ, v2) · `src/stores/speed-chip.test.ts` (YENİ, 17 test) ·
+  `src/stores/game/{state,getters-dimensions,actions-dimensions,actions-misc,cache,store-api}.ts` ·
+  `src/game/layers.ts` (reset kancası) · `src/components/AutobuyersTab.vue` (Otonom Hız kartı: seviye
+  rozeti, üretim çarpanı göstergesi, maliyet, alım butonu, tavan rozeti) ·
+  `brain/scratchpad/harness/{run,run-worker}.ts` (`--chips` opt-in bayrağı + telemetri) ·
+  `brain/research/m1-speed-chip-spec-2026-10.md` (spec + ölçüm + v2 kararı).
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **484/484** (32 dosya) · `npm run build` **0**
+- `npm run harness:smoke` **6/6 PASS**
+
+## [2026-10-20] ✔ — Tempo & Ekonomi Faz 3 / P3.3: Ölçülmüş Erken Merdiven (ADR-0074)
+
+### Gerekçe:
+- Plan §1'in "ilk 10 dakika kontratı" ölçüle göre ihlal ediliyordu: 600 sn'de **10 özellik kapısı**
+  (plan "7'ye yakın" diyordu), 4 yüzey 18 saniye içinde (Botlar 190s · Koloni 201s · Kriz 207s ·
+  Tekillik ~208s), D4–D8 boyutları 16 saniyede 18 dekad kat ediyordu.
+- Plan §1'in önerdiği reçete ("autobuyers 1e9 → 1e12") **ölçümle çürütüldü**: sayı değişmiyor
+  (A=10 → B=10); eğri 1e9→1e56 aralığını 74 saniyeye sıkıştırıyor.
+
+### Çözüm & Değişiklikler:
+1. **Ölçüm dizisi (E1…E6)**: her aday 30 dakikalık gerçek koşuyla ölçüldü (harness, active/seed1/dt0.5).
+   Katkı ayrımı: **fiyat 0** · **dal kapıları −4** · **boyut eşiği yoğunluğu −1…−2**.
+2. `src/game/balance.ts` → `DIMENSION_UNLOCK_GATES`: **1e8 / 1e14 / 1e24 / 1e40 / 1e65** (E5).
+   Ölçülen açılış: 186 / 195 / 231.5 / 353 / 1377 s (D4→D8 penceresi **1191 s**).
+   ADR-0072'nin "eşik = taban fiyatı × 100" türetme kuralı **geçersiz** (PROVISIONAL olarak ölçüldü).
+3. `src/game/unlocks.ts` → `FEATURE_UNLOCKS` yatay kapıları: autobuyers **1e12** (189s) ·
+   stance_spam **1e20** (207s) · stance_private **1e32** (260s) · colony **1e66** (1417.5s) ·
+   lab **1e70** (~1927s). crisis 1e28 + spells 1e34/1e42/1e52 **dal kapılı** (ADR-0073) → ~810 s ve ötesi.
+   **Yerleşim kuralı:** her yatay kapı bir boyut kapısının arasına oturur → aynı-tik çakışma 0.
+4. Test dosyaları yeni merdivene göre güncellendi (`balance.test.ts`, `stores/balance.test.ts`,
+   `unlocks.test.ts`, `nav-silhouette.test.ts`, `dimension-unlock-celebration.test.ts`,
+   `tests/lab-rebalance.spec.ts`).
+5. [ADR-0074](../decisions/0074-measured-early-ladder.md) yazıldı (deney dizisi + kabul ölçütleri +
+   reddedilen seçenekler dahil) + `brain/decisions/README.md` indeksi.
+6. Beyin: `brain/research/p3-ladder-experiment-2026-10.md` (E1…E6 analizi) ·
+   `brain/scratchpad/p3-final-ladder.md` (P3.3 raporu) · P0 raporu §9 (deney dizisi + §9.5 E1).
+
+### Kabul ölçütleri (ölçülen)
+| # | Ölçüt | Ölçülen | Sonuç |
+| :-- | :--- | :--- | :--- |
+| 1 | 600 sn'de açılan özellik ≤ 5 | **4** | ✅ |
+| 2 | Aynı saniyede boyut+özellik çakışması = 0 | **0** | ✅ |
+| 3 | D4 → D8 penceresi ≥ 60 s | **1191 s** | ✅ |
+| 4 | İlk küme ≤ 1500 s · max_mode ≤ 1800 s | **1448.5 s** · **1702 s** | ✅ |
+| 5 | 12 saatlik koşuda tepe ≥ 1e250 | **1e308.25** (ilk tekillik 9s33dk) | ✅ |
+| 6 | Yüzeyler arası ≥ 8 dk | 621.5 s · 607 s · ~510 s | ✅ |
+
+### Ölçüt 6'nın zorlayıcı yanı
+Sabit çapalar (`autobuyers` 189 s, `crisis` 810.5 s) arasında **621.5 s** var; dört yüzeyin her ardışık
+çifti ≥480 s olacaksa araya tek yüzey sığar ve penceresi 669 s ile 330.5 s arasında olmalıdır →
+**hiçbir koloni eşiği oraya yerleşemez**. Koloni ancak D8'in (1e65) hemen ardına (~1e66) çekilince dört
+yüzey de 8 dk'ya oturur — ve ölçüt 1 5'ten **4'e** iner.
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **484/484** (32 dosya) · `npm run build` **0**
+- `npm run harness:smoke` **6/6 PASS**
+
+## [2026-10-20] ✔ — Tempo & Ekonomi Faz 3 / P3.2: Silüet Teaser (ADR-0073 UI yüzeyi)
+
+### Gerekçe:
+- Plan §1: "Geri kalan her yüzey silüet (etkileşimsiz, isimsiz teaser) olarak durur."
+- ADR-0073 dal kapısı yeni bir durum yarattı: dekad eşiği geçti ama başarım eksik → eski davranışta
+  özellik **hiç görünmez** olurdu; oyuncu neden açılmadığını anlamazdı.
+
+### Çözüm & Değişiklikler:
+1. `src/composables/useNavigation.ts`: `NAV_FEATURE_IDS` (TabId → özellik id'si; getter'lardan **koddan okunarak**
+   türetildi, uydurma id kullanılmadı) + saf `navSilhouetteState()` / `navSilhouetteMeter()` /
+   `navSilhouetteStepFlags()`. Durum matrisi: `hidden` (kendi şartı geçmedi → hiç gösterilmez) ·
+   `open` (açık) · `silhouette` (görünür + kapalı).
+2. `src/App.vue`: 6 kilitli sekmenin ardına `v-else-if` silüet yongası — aynı dış kabuk, **metin etiketi yok**
+   (isimsiz), ikon soluk+bulanık, `disabled` + `pointer-events-none` + `!cursor-not-allowed`
+   (derlenmiş CSS'te `cursor-pointer` daha sonra geldiği için importance şart), `aria-label`
+   ("Kilitli sekme: Kriz"), kademe noktaları.
+3. `src/components/LockedFeature.vue`: dal kapısı devredeyken sayaç artık **tam sayı** (`formatNumber`
+   1e308 biçimine sokuyordu → "2.00" hatası), + kademe kutucukları + aile ipucu ("Kozmik Dalgalanmalar:
+   1/2"). Dekad öncesi hiçbir şey değişmedi.
+4. `src/composables/nav-silhouette.test.ts` (YENİ, 18 saf test): omurga sekmeleri hiçbir bağlamda
+   silüet değil · crisis/colony akışları · meter yalnız silüette dolu · ADR-0035 monotonluğu.
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **463/463** (31 dosya) · `npm run build` **0**
+- `npm run harness:smoke` **6/6 PASS** (UI değişimi simi etkilemiyor)
+
+### ⚠️ KULLANICI KARARIYLA GERİ ALINDI (2026-10-20)
+"Kilitli şeyler görünmesin; sadece kilidi açıldığında görünsün." → **nav silüet yongaları kaldırıldı**
+(`App.vue`), `LockedFeature.vue` **silindi** ve Lab tohumları / Kriz müdahale kartlarında **kilitli
+içerik hiç render edilmiyor** artık. Boyut satırları, bot/SP ağacı merdivenleri ve "Sıradaki Açılış"
+bandı **korunur** (hedef bilgisi). Band artık dal kapılı hedefler için **başarım şartı ipucu** da veriyor
+("… · 2 Kozmik Dalgalanmalar başarımı (1/2)"). Geri alma dalgası: `src/App.vue`,
+`src/composables/useNavigation.ts`, `src/components/LabTab.vue`, `src/components/CrisisTab.vue`,
+`src/components/lab/ViralGrid.vue`, `src/components/LockedFeature.vue` (silindi).
+
+---
+
+## [2026-10-20] ✔ — Tempo & Ekonomi Faz 4 / 6a: M1 Otonom Hız Çipi (çekirdek)
+
+### Gerekçe (ölçümden):
+- P0 §9.5 (E1 ölçümü): **fiyat eğrisi** erken kalabalığı çözmüyor (30 dk tepe 98.39 → 98.44) ve
+  koşuyu **uzatıyor** (12 saatlik tavan aşıldı) → tempo onarımı fiyattan **gelemez**.
+- Fizik: bu oyunda kütle üstel geri beslemeyle büyür (`dM/dt ≈ k·M`). **Sabit** üretim çarpanı eğriyi
+  yalnız ~0.3 dekad kaydırır (süreyi değiştirmez); süreyi değiştiren tek şey **`k`** = büyüme hızı.
+  Geç oyunda tek motor **bot satın alma temposu** → M1 oraya dokunur.
+
+### Çözüm & Değişiklikler:
+1. `src/game/speed-chip.ts` (YENİ, saf modül): `CHIP_BASE_COST=1e12` · `CHIP_COST_MULT=1e4` ·
+   `CHIP_INTERVAL_GAIN=0.15` · `CHIP_MAX_LEVEL=40` + `speedChipCost()` · `speedChipIntervalDivisor()` ·
+   `speedChipFrequencyMult()` · `isSpeedChipMaxed()` · `speedChipEffectLabel()`. Tek kaynak, store bağımsız.
+2. `state.speedChipLevel` (koşu içi → **kayıt migrasyonu YOK**, serialize listesine girmiyor).
+3. Getter'lar: `speedChipCost` · `speedChipEffectMult` (bölücü) · `canBuySpeedChip`.
+4. `buySpeedChip()`: cüzdan yetersiz/tavan → **no-op** (hata fırlatmaz); yeterliyse `matter -= cost`.
+5. **Etki yalnız bot yolunda:** `actions-misc.ts` → autobuyer tick döngüsünde `bot.timer += delta × botSpeedMult`,
+   `botSpeedMult` çip bölücüsüyle çarpılıyor → etkin aralık `bot.interval / (1 + 0.15×seviye)`.
+   Manuel tıklama / üretim döngüsü / üretim çarpanları **etkilenmez**.
+6. **Reset kancası:** `src/game/layers.ts` → `applyResetScope` içinde `tickspeedBought` ile **aynı yerde**
+   sıfırlanır (ADR-0052 "tek doğru adres") → shift/galaxy/singularity çipi de sıfırlar (koşu içi).
+7. `getters-misc.ts` → `autobuyerFleetSpeedMult` çip bölücüsünü içerir (yalnız **gösterim**; işlevsel etki
+   tick döngüsünde, çift uygulama yok).
+8. `src/stores/speed-chip.test.ts` (YENİ, 15 test): maliyet/etki monotonluğu · cüzdan no-op · tavan ·
+   prestij reseti · **bot tick sayacıyla etki ölçümü** · manuel tıklamanın etkilenmediği · kayıtta olmama.
+9. `brain/research/m1-speed-chip-spec-2026-10.md` (YENİ): tasarım spec'i (fizik gerekçesi, ikilem kuralı,
+   tuzak önleme, sayı aralıkları, ölçüm döngüsü).
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **480/480** (32 dosya) · `npm run build` **0**
+
+### Ölçüm aracı:
+- `brain/scratchpad/harness/run.ts` → **`--chips` bayrağı** (varsayılan **KAPALI** → mevcut ölçümlerle
+  birebir karşılaştırılabilir) + telemetri (`speedChipLevel`, `speedChipsBought`, `peaks.speedChipLevel`).
+  Çip kuralı: "fırsat varsa hemen al" (her tick, cüzdan yeterliyse bir seviye), boyut alımından sonra,
+  dünya tick'inden hemen önce → çip aynı tick'teki boyut alımını engellemez (paylaşılan cüzdan kuralı).
+
 ## [2026-10-19] ✔ — Tempo & Ekonomi Faz 3 / P3.1: Başarım Kapılı Dallar + Aile Kademe Çarpanı (ADR-0073)
 
 ### Gerekçe:

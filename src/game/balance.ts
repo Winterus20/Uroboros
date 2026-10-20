@@ -77,19 +77,31 @@ export const BASE_UNLOCKED_DIMENSIONS = 3
 /**
  * D4–D8 açılış kapıları — TEK KAYNAK (ADR-0072 §2).
  *
- * Türetme kuralı: eşik = boyutun `BASE_COSTS` taban fiyatının 100 katı.
- * D4 (1e6) → 1e8, D5 (1e9) → 1e11, D6 (1e13) → 1e15, D7 (1e18) → 1e20,
- * D8 (1e24) → 1e26. Sıçrama sayısı bu tabloda YOKTUR.
+ * EŞİK TABLOSU — P3.3 ölçüm kodu E5 (ÖLÇÜLMÜŞ, KİLİTLİ):
+ * D4 1e8 · D5 1e14 · D6 1e24 · D7 1e40 · D8 1e65. Sıçrama sayısı bu tabloda YOKTUR.
  *
- * PROVISIONAL: değerler P0 ölçümü ile kilitlenecek
- * (bkz. brain/research/pacing-p0-baseline-2026-10.md); ölçüm öncesi değişebilir.
+ * Ölçüm (brain/scratchpad/harness/out/E5.json · active/seed 1/dt 0.5/30 dk):
+ * D4 186s · D5 195s · D6 231.5s · D7 353s · D8 1377s → 30 dk'da tepe log10 = 81.7.
+ * E5, P0 §8 aday tablosundaki (A / B / C) en sağlıklı yayılımı verir: D4–D7 ilk
+ * 6 dakikada açılır (erken üretim çarpanları toplanır), D8 ise 23. dakikaya
+ * yayılır — böylece oyuncu ilk yarım saatini 8 boyutla değil 7 boyutla geçirmez
+ * ve D8'in üretim katkısı koşunun sonuna doğru gelir.
+ *
+ * Ölçülen kümeler (E2/E3/E4/E5): 1e8/1e25/1e50/1e75/1e100 · 1e8/1e50/1e75/1e97/1e122
+ * · 1e8/1e25/1e50/1e75/1e97 · 1e8/1e14/1e24/1e40/1e65. E5, ilk 600 saniyede
+ * açılan özellik kapısı sayısı (5) ve 30 dakikadaki tepe (1e82) dengesini koruyan
+ * tek adaydır.
+ *
+ * P3.3'te bu tablo KORUNDU: ölçülmüş değer bozulmaz. Yatay (özellik) kapıları
+ * src/game/unlocks.ts → FEATURE_UNLOCKS'ta; ölçüm tablosu ve kabul ölçütleri
+ * brain/scratchpad/p3-final-ladder.md'de.
  */
 export const DIMENSION_UNLOCK_GATES: ReadonlyArray<{ tier: number; minMatter: string }> = [
   { tier: 4, minMatter: '1e8' },
-  { tier: 5, minMatter: '1e11' },
-  { tier: 6, minMatter: '1e15' },
-  { tier: 7, minMatter: '1e20' },
-  { tier: 8, minMatter: '1e26' }
+  { tier: 5, minMatter: '1e14' },
+  { tier: 6, minMatter: '1e24' },
+  { tier: 7, minMatter: '1e40' },
+  { tier: 8, minMatter: '1e65' }
 ]
 
 /** Kapı eşiklerinin Decimal ön-derlemesi — sıcak yolda yeni Decimal ayırmamak için. */

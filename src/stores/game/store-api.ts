@@ -18,6 +18,11 @@ export interface StoreApi extends GameState {
   primaryFeedTier: number
   tickspeedMultiplier: Decimal
   tickspeedCost: Decimal
+  // M1 — Üretim Çipi (koşu içi): sıradaki çipin maliyeti, boyut üretim çarpanı,
+  // satın alınabilirlik bayrağı ve satın alma aksiyonu.
+  speedChipCost: Decimal
+  speedChipProductionMult: Decimal
+  canBuySpeedChip: boolean
   getDimensionSynergyMultiplier: (tier: number) => Decimal
   getPartnerInfo: (tier: number) => { partnerTier: number; label: string; partnerBought: number; mult: number }
   getDimensionMilestone: (tier: number) => {
@@ -167,6 +172,7 @@ export interface StoreApi extends GameState {
   buyDimension(tier: number, playSound?: boolean): boolean;
   buyMaxDimension(tier: number, playSound?: boolean, feedbackSurge?: boolean): boolean;
   buyTickspeed(playSound?: boolean): boolean;
+  buySpeedChip(playSound?: boolean): boolean;
   buyMaxTickspeed(playSound?: boolean, feedbackSurge?: boolean): boolean;
   maxAll(): void;
   addMatter(amount: Decimal, trackTotal?: boolean): void;

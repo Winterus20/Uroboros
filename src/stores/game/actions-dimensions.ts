@@ -9,6 +9,7 @@ import { FORMAT_UNLOCK_BUFF_SECONDS, getTierIdentity } from '../../game/dimensio
 import { SCALE_LAYERS, applyResetScope, recordJump } from '../../game/layers'
 import { NEURAL_TREE } from '../../game/neural-data'
 import { log10Safe } from '../../game/pacing'
+import { CHIP_MAX_LEVEL, speedChipCost as computeSpeedChipCost } from "../../game/speed-chip"
 import { memoChallengeEffects, _dimMultCache } from './cache'
 import type { JumpSnapshot, ScaleLayerId } from '../../game/layers'
 import type { StoreApi } from './store-api'
@@ -185,6 +186,22 @@ export const dimensionActions = {
         return true
       }
       return false
+    },
+
+    // M1 — Üretim Çipi satın al.
+    // Etki: boyut üretim çarpanı ×(1.1^level) — getDimensionMultiplier üzerinden
+    // tüm boyutlara uygulanır (bkz. getters-dimensions.ts).
+    // Maliyet: CHIP_BASE_COST × CHIP_COST_MULT^level (koşu içi, kayıtta tutulmaz).
+    // Sözleşme: cüzdan yetersizse veya CHIP_MAX_LEVEL aşıldıysa NO-OP —
+    // state DEĞİŞMEZ, oyuncuya hata fırlatılmaz (sessiz red).
+    buySpeedChip(this: StoreApi, playSound = true): boolean {
+        if (this.speedChipLevel >= CHIP_MAX_LEVEL) return false
+        const cost = computeSpeedChipCost(this.speedChipLevel)
+        if (this.matter.lt(cost)) return false
+        this.matter = this.matter.minus(cost)
+        this.speedChipLevel += 1
+        if (playSound) sounds.playUpgrade()
+        return true
     },
 
     // Frekanstan alınabildiği kadar al (matematiksel: 1000×16^n geometrik seri)

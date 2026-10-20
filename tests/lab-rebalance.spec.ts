@@ -17,8 +17,8 @@ import { getFeatureById } from '../src/game/unlocks'
 // ---------------------------------------------------------------------------
 
 describe('lab kilit eşikleri (unlocks.ts)', () => {
-  it('lab sekmesi 1e65, tohumlar 1e80 / 1e100 / 1e125 eşiklerinde', () => {
-    expect(getFeatureById('lab')?.req).toEqual({ kind: 'dopamine', amount: '1e65' })
+  it('lab sekmesi 1e70, tohumlar 1e80 / 1e100 / 1e125 eşiklerinde', () => {
+    expect(getFeatureById('lab')?.req).toEqual({ kind: 'dopamine', amount: '1e70' })
     expect(getFeatureById('seed_nucleon')?.req).toEqual({ kind: 'dopamine', amount: '1e80' })
     expect(getFeatureById('seed_gluon')?.req).toEqual({ kind: 'dopamine', amount: '1e100' })
     expect(getFeatureById('seed_graviton')?.req).toEqual({ kind: 'dopamine', amount: '1e125' })

@@ -86,6 +86,26 @@ const selectedSeed = computed(() => {
   return LAB_SEEDS.find((s) => s.type === props.selectedSeedType) || LAB_SEEDS[0];
 });
 
+/**
+ * Seçili tohum kilitli mi?
+ *
+ * Karar (kilitli içerik gizleme): kilitli tohumun KİMLİĞİ (isim, ikon,
+ * rezonans önizlemesi) hiçbir yerde gösterilmez — sadece kilidi açıldığında
+ * görünür. Bu bileşen ayrı bir kilit kartı kullanmaz; kilitli grid öğesini gizleme
+ * yükümlülüğü isim/ikon sızıntısını kapatarak burada yerine getirilir.
+ */
+const selectedSeedLocked = computed(() => isSeedLocked(props.selectedSeedType));
+
+/** Kilitli tohumun adı sızmaz: yalnızca nötr bir etiket görünür. */
+const selectedSeedLabel = computed(() =>
+  selectedSeedLocked.value ? "Kilitli Tohum" : selectedSeed.value.name
+);
+
+/** Kilitli tohumun ikonu sızmaz: nötr bir kilit glifi kullanılır. */
+const selectedSeedIcon = computed(() =>
+  selectedSeedLocked.value ? "🔒" : selectedSeed.value.icon
+);
+
 function canAffordSeed(seedType: LabSeedType): boolean {
   const seed = LAB_SEEDS.find((s) => s.type === seedType);
   if (!seed) return false;
@@ -188,7 +208,7 @@ function isColResonant(colIndex: number): boolean {
         ]"
       >
         <Layers class="w-3.5 h-3.5" />
-        <span>Toplu Ek: {{ selectedSeed.name }} ({{ emptyCellCount }})</span>
+        <span>Toplu Ek: {{ selectedSeedLabel }} ({{ emptyCellCount }})</span>
       </button>
       <span v-if="bulkHarvestInfo" class="text-[10px] font-mono text-cyan-400">
         {{ bulkHarvestInfo }}
@@ -196,7 +216,7 @@ function isColResonant(colIndex: number): boolean {
     </div>
 
     <!-- Rezonans önizlemesi: seçili tohumun en iyi boş hücredeki tahmini komşuluk bonusu -->
-    <div v-if="resonancePreview" class="mb-2.5 text-[10px] font-mono text-slate-400 tabular-nums">
+    <div v-if="resonancePreview && !selectedSeedLocked" class="mb-2.5 text-[10px] font-mono text-slate-400 tabular-nums">
       <span v-if="resonancePreview.mult > 1" class="text-cyan-300">
         ✨ {{ selectedSeed.name }} → Hücre {{ resonancePreview.cellId }}: tahmini komşuluk bonusu ×{{ resonancePreview.mult.toFixed(2) }} (foton +%15, graviton ×1.25, merkez ×1.5 / komşu +%20)
       </span>
@@ -246,13 +266,13 @@ function isColResonant(colIndex: number): boolean {
         <template v-if="cell.seedType === null">
           <div class="h-full w-full flex flex-col items-center justify-center text-slate-600 group-hover:text-cyan-400 transition-colors gap-1.5">
             <span class="text-3xl opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-transform">
-              {{ selectedSeed.icon }}
+              {{ selectedSeedIcon }}
             </span>
             <span class="text-[10px] font-mono font-bold group-hover:text-cyan-300">
               + Yerleştir
             </span>
             <span class="text-[9px] font-mono text-slate-600 line-clamp-1">
-              {{ selectedSeed.name }}
+              {{ selectedSeedLabel }}
             </span>
           </div>
         </template>

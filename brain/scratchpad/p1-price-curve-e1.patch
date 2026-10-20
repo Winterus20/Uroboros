@@ -1,0 +1,45 @@
+diff --git a/src/game/balance.ts b/src/game/balance.ts
+index 4618445..45be37f 100644
+--- a/src/game/balance.ts
++++ b/src/game/balance.ts
+@@ -51,19 +51,19 @@ export const COST_MULTS = [
+ export const DIMENSION_CHAIN_RATE = 0.060
+ 
+ /** Erken koşu maliyet duvarı: D1/D2 için ×1000/adım yerine yumuşak merdiven (ADR-0026). */
+-export const EARLY_D1_COST_RATIO = 55
++export const EARLY_D1_COST_RATIO = 75
+ export const EARLY_D1_SOFT_BUCKETS = 4
+-export const EARLY_D2_COST_RATIO = 42
++export const EARLY_D2_COST_RATIO = 55
+ export const EARLY_D2_SOFT_BUCKETS = 3
+ /** D3/D4 yumuşak merdiven: milyardan trilyona geçişteki 1e9-1e14 duvarını çözer */
+-export const EARLY_D3_COST_RATIO = 32
++export const EARLY_D3_COST_RATIO = 40
+ export const EARLY_D3_SOFT_BUCKETS = 3
+-export const EARLY_D4_COST_RATIO = 28
++export const EARLY_D4_COST_RATIO = 34
+ export const EARLY_D4_SOFT_BUCKETS = 2
+ /** D5/D6 yumuşak merdiven: Shift 2 ve Shift 3'teki 1e9->1e17 ölümcül uçurumu çözer */
+-export const EARLY_D5_COST_RATIO = 24
++export const EARLY_D5_COST_RATIO = 28
+ export const EARLY_D5_SOFT_BUCKETS = 2
+-export const EARLY_D6_COST_RATIO = 20
++export const EARLY_D6_COST_RATIO = 24
+ export const EARLY_D6_SOFT_BUCKETS = 2
+ 
+ /**
+@@ -254,12 +254,12 @@ export function diminishingPurchaseCount(raw: number, threshold: number, gain: n
+  * Eşik altındaki tüm kovalarda maliyet ADR-0023 (3s30d altın standardı) ve
+  * ADR-0026 (yumuşak erken merdivenler) ile birebir aynı kalır.
+  */
+-export const B0_BUCKET_THRESHOLD = 30
++export const B0_BUCKET_THRESHOLD = 20
+ /**
+  * Eşiğin her kova üstü için eklenen maliyet ivmesi (ondalık basamak / kova).
+  * 0.02 → kova 50'de bir sonraki kova 1 ondalık, kova 80'de 2 ondalık daha pahalı.
+  */
+-export const COST_ACCEL_DECADES_PER_STEP = 0.011
++export const COST_ACCEL_DECADES_PER_STEP = 0.025
+ 
+ /**
+  * Kademeli ivmelenme çarpanı: cost(b) = merdiven_maliyeti × 10^(S·d(d-1)/2), d = b - B0.

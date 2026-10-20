@@ -2,7 +2,9 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useGameStore } from "../stores/game";
 import { sounds } from "../core/audio";
 import { checkUnlock, checkVisibility, getFeatureById, nextLocked, unlockProgress, unlockProgressFraction } from "../game/unlocks";
-import type { UnlockContext } from "../game/unlocks";
+import type { FeatureUnlock, UnlockContext } from "../game/unlocks";
+import { getBranchGate } from "../game/branches";
+import { ACHIEVEMENT_CATEGORIES } from "../game/achievements";
 import { ARC_LOG10_MAX, bandForLog10, log10Safe } from "../game/pacing";
 import { isMotionReduced, useMotionMode } from "./useMotion";
 
@@ -81,16 +83,22 @@ export function navLabelClass(isActive: boolean): string {
 }
 
 /**
- * P3.2 — Siluet teaser: "görünürlük" ile "gerçek açılış" ayrımının nav'a yansıması.
+ * P3.2 — "görünürlük" ile "gerçek açılış" ayrımının veri modeli.
  *
  * ADR-0073 iki katmanlı kapı kurdu: dekad eşiği özelliği GÖRÜNÜR yapar, başarım
- * ailesi ise GERÇEK açılımı verir. Aradaki boşluk (görünür ama henüz kapalı) nav'da
- * "siluet" olarak gösterilir: isimsiz, bulanık, tıklanamaz bir gölge.
+ * ailesi ise GERÇEK açılımı verir. Aradaki boşluk (görünür ama henüz kapalı)
+ * eskiden nav'da isimsiz bir "siluet" gölgesi olarak çiziliyordu.
+ *
+ * KULLANICI KARARI (P3.2 revizyon): kilitli içerik GÖSTERİLMEZ. Nav'da siluet
+ * yongası tamamen kaldırıldı — kilitli sekme ya hiç görünmez ya da (kilit
+ * açıldığında) normal butondur. Bu durum matrisi artık nav'da değil, "Sıradaki
+ * Açılacak" bandının ipucu hesabında kullanılır: hangi özelliğin hangi başarım
+ * ailesine bağlı olduğunu bilen TEK doğruluk kaynağıdır.
  *
  * Durum matrisi:
  * - "hidden"     → özelliğin KENDİ şartı (dekad/sayaç) henüz sağlanmadı → HİÇ GÖSTERİLMEZ
  * - "open"       → görünür ve gerçekten açık → normal buton (mevcut davranış)
- * - "silhouette" → görünür ama dal kapısı (başarım ailesi) eksik → isimsiz teaser
+ * - "silhouette" → dekad eşiği geçti, dal kapısı (başarım ailesi) eksik → band ipucu
  */
 export type NavSilhouetteState = "hidden" | "silhouette" | "open";
 
@@ -163,6 +171,53 @@ export function navSilhouetteStepFlags(featureId: string | null, ctx: UnlockCont
   return Array.from({ length: total }, (_, index) => index < filled);
 }
 
+/**
+ * "Sıradaki Açılacak" bandı — dal kapısı BAŞARIM şartı ipucu.
+ *
+ * Kullanıcı kararı: kilitli içerik GÖSTERİLMEZ, sadece kilidi açıldığında
+ * görünür. Band ise HEDEF BİLGİSİ olarak kalır ve bir dal kapılı özellikte
+ * oyuncunun neyi tamamlaması gerektiğini söyler (başarım ailesi + sayaç).
+ *
+ * Üç koşul birden gerekir:
+ * - özellik dal kapılı (getBranchGate non-null) — omurga özelliklerde ipucu YOK
+ * - dekad eşiği geçilmiş (checkVisibility true)
+ * - hâlâ açılmamış (checkUnlock false)
+ *
+ * Sayılar branchProgress(gate, ctx.achievements) ile aynıdır: unlockProgress,
+ * dal modunda doğrudan branchProgress'ten beslenir. Sayaç metinde TAM SAYI
+ * olarak yazılır ("2 Kozmik Dalgalanmalar başarımı (1/2)") — ondalık biçim
+ * ("2.00") başarım adedi için anlamsızdır.
+ */
+export function branchAchievementHint(feature: FeatureUnlock | null, ctx: UnlockContext): string {
+  if (!feature) return "";
+  const gate = getBranchGate(feature.id);
+  if (!gate) return "";
+  if (!checkVisibility(ctx, feature)) return "";
+  if (checkUnlock(ctx, feature)) return "";
+  // Siluet = "görünür ama kapalı": bandın ipucu üretebileceği tek durum.
+  if (navSilhouetteState(feature.id, ctx) !== "silhouette") return "";
+  const meter = navSilhouetteMeter(feature.id, ctx);
+  if (!meter) return "";
+  const family = ACHIEVEMENT_CATEGORIES.find((c) => c.id === gate.family);
+  const familyName = family ? family.name : gate.family;
+  const current = Math.round(meter.current);
+  const target = Math.round(meter.target);
+  return `${target} ${familyName} başarımı (${current}/${target})`;
+}
+
+/**
+ * Bandın tam etiketi: "özellik adı · şart" (+ dal kapısı varsa başarım ipucu).
+ *
+ * Örnek: "Olay Ufku Kriz Yönetimi Sekmesi · 1e28 g Kütle biriktir ·
+ * 2 Kozmik Dalgalanmalar başarımı (1/2)".
+ */
+export function nextUnlockLabelFor(feature: FeatureUnlock | null, ctx: UnlockContext): string {
+  if (!feature) return "Merdiven tamam — şafak eşiğine götürürsün";
+  const base = `${feature.name} · ${feature.hint}`;
+  const hint = branchAchievementHint(feature, ctx);
+  return hint ? `${base} · ${hint}` : base;
+}
+
 // F3.3: OS prefers-reduced-motion canlı dinleyici.
 // Kök elemana .reduce-anim sınıfı damgalanırken OS tercihi doğrudan tek kapı kontratına dahil edilir.
 const osReducedMotion = ref(false);
@@ -204,10 +259,9 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
   }
 
   // Sekme kilit haritası — tek elden senkron (nav + içerik + otomatik geri dönüş)
-  // P3.2: siluet sekme (= dekad eşiği geçmiş ama dal kapısı/başarım eksik) de
-  // KAPALI sayılır. Anlamı bozulmaz: "içeriğe girilemez" sözleşmesi aynen korunur.
-  // Böylece teaser yalnızca GÖRSELDİR — mobil kaydırma (availableTabs) onu listeden
-  // çıkarır, switchTab reddeder, içerik sekmesi hiç açılmaz.
+  // Kilitli sekme (= dekad eşiği geçmiş ama dal kapısı/başarım eksik) de KAPALI
+  // sayılır. "İçeriğe girilemez" sözleşmesi aynen korunur: mobil kaydırma
+  // (availableTabs) onu listeden çıkarır, switchTab reddeder, içerik sekmesi hiç açılmaz.
   const tabLocked = computed<Record<TabId, boolean>>(() => ({
     dimensions: false,
     lab: !store.labUnlocked,
@@ -220,39 +274,10 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     stats: false
   }));
 
-  // P3.2 — siluet teaser durumu. Dekad eşiği geçti ama dal kapısı (başarım
-  // ailesi) eksikse sekme "görünür ama kapalı"dır: nav'da isimsiz, bulanık ve
-  // tıklanamaz bir gölge olarak görünür (App.vue).
-  const navSilhouettes = computed<Record<TabId, NavSilhouetteState>>(() => {
-    const ctx = store.unlockContext;
-    return {
-      dimensions: navSilhouetteState(NAV_FEATURE_IDS.dimensions, ctx),
-      lab: navSilhouetteState(NAV_FEATURE_IDS.lab, ctx),
-      crisis: navSilhouetteState(NAV_FEATURE_IDS.crisis, ctx),
-      autobuyers: navSilhouetteState(NAV_FEATURE_IDS.autobuyers, ctx),
-      colony: navSilhouetteState(NAV_FEATURE_IDS.colony, ctx),
-      singularity: navSilhouetteState(NAV_FEATURE_IDS.singularity, ctx),
-      challenges: navSilhouetteState(NAV_FEATURE_IDS.challenges, ctx),
-      achievements: navSilhouetteState(NAV_FEATURE_IDS.achievements, ctx),
-      stats: navSilhouetteState(NAV_FEATURE_IDS.stats, ctx)
-    };
-  });
-
-  // Siluet kademe göstergesi: her nokta bir dal kademesi, dolu = kazanıldı.
-  const navSilhouetteSteps = computed<Record<TabId, boolean[]>>(() => {
-    const ctx = store.unlockContext;
-    return {
-      dimensions: navSilhouetteStepFlags(NAV_FEATURE_IDS.dimensions, ctx),
-      lab: navSilhouetteStepFlags(NAV_FEATURE_IDS.lab, ctx),
-      crisis: navSilhouetteStepFlags(NAV_FEATURE_IDS.crisis, ctx),
-      autobuyers: navSilhouetteStepFlags(NAV_FEATURE_IDS.autobuyers, ctx),
-      colony: navSilhouetteStepFlags(NAV_FEATURE_IDS.colony, ctx),
-      singularity: navSilhouetteStepFlags(NAV_FEATURE_IDS.singularity, ctx),
-      challenges: navSilhouetteStepFlags(NAV_FEATURE_IDS.challenges, ctx),
-      achievements: navSilhouetteStepFlags(NAV_FEATURE_IDS.achievements, ctx),
-      stats: navSilhouetteStepFlags(NAV_FEATURE_IDS.stats, ctx)
-    };
-  });
+  // NOT (P3.2 revizyon): nav'da siluet yongası KALDIRILDI — kilitli sekmeler
+  // tamamen gizlidir (kilitli içerik hiç gösterilmez). Siluet durumu artık
+  // yalnızca aşağıdaki "Sıradaki Açılacak" bandının ipucu hesabında kullanılır
+  // (navSilhouetteState / navSilhouetteMeter).
 
   // ADR-0032 — "Sonraki Açılacak" bandı.
   // Ölçüm (brain/scratchpad/harness/results-308-audit.json) gösterdi ki koşunun
@@ -263,11 +288,9 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     const f = nextUnlock.value;
     return f ? unlockProgressFraction(store.unlockContext, f) * 100 : 100;
   });
-  const nextUnlockLabel = computed(() => {
-    const f = nextUnlock.value;
-    if (!f) return "Merdiven tamam — şafak eşiğine götürürsün";
-    return `${f.name} · ${f.hint}`;
-  });
+  // Band etiketi: "ad · şart" + (dal kapılı özellikte) başarım şartı ipucu.
+  // Kilitli içerik gösterilmez — ipucu yalnızca HEDEF bilgisidir.
+  const nextUnlockLabel = computed(() => nextUnlockLabelFor(nextUnlock.value, store.unlockContext));
   const arcPercent = computed(() => (log10Safe(store.matter) / ARC_LOG10_MAX) * 100);
   const arcBandName = computed(() => bandForLog10(log10Safe(store.matter)).name);
 
@@ -535,8 +558,6 @@ export function useNavigation(options?: { isSwipeBlocked?: () => boolean }) {
     isMobile,
     tabLocked,
     availableTabs,
-    navSilhouettes,
-    navSilhouetteSteps,
     slideDirection,
     transitionName,
     nextUnlockLabel,

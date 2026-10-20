@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useGameStore, LAB_SEEDS, LAB_RECIPES } from "../stores/game";
 import { formatNumber } from "../core/format";
 import type { LabSeedType } from "../models/types";
@@ -17,7 +17,6 @@ import {
   Crown
 } from "lucide-vue-next";
 import TabHero from "./TabHero.vue";
-import LockedFeature from "./LockedFeature.vue";
 import LabSeedCard from "./lab/LabSeedCard.vue";
 import LabRecipeList from "./lab/LabRecipeList.vue";
 import ViralGrid from "./lab/ViralGrid.vue";
@@ -48,6 +47,16 @@ function isSeedLocked(seedType: LabSeedType): boolean {
 function isSeedDiscovered(seedType: LabSeedType): boolean {
   return store.discoveredFormulas.includes(seedType);
 }
+
+/**
+ * Seçim paletinde GÖRÜLECEK tohumlar.
+ *
+ * Karar (kilitli içerik gizleme): kilitli tohumlar hiçbir şekilde
+ * render edilmez — ne kilit kartı ne isim ne şart metni. Eskiden kilitli
+ * tohumlar ayrı bir kilit kartı olarak çiziliyordu; o kart artık yok,
+ * kilitli tohum bu filtreyle paletten tamamen düşer.
+ */
+const visibleSeeds = computed(() => LAB_SEEDS.filter((seed) => !isSeedLocked(seed.type)));
 
 function handleCollapseReactor() {
   if (!store.canCollapseReactor) return;
@@ -352,17 +361,16 @@ function handleCollapseReactor() {
         <span class="section-hint">Seçtikten sonra matristeki bir hücreye tıkla</span>
       </div>
 
+      <!--
+        Kilitli tohumlar LİSTEDEN ÇIKARILIR (visibleSeeds): gridde hiçbir kart
+        çizilmez. Karar: kilitli seyler görünmeyecek; sadece kilidi açıldığında
+        görünecek. Önceden burada ayrı bir kilit kartı vardı.
+      -->
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-2.5">
-        <template v-for="seed in LAB_SEEDS" :key="seed.type">
-          <!-- Kilitli Temel Tohum -->
-          <LockedFeature
-            v-if="isSeedLocked(seed.type)"
-            :feature-id="seedUnlockFeatureId(seed.type)"
-          />
-
+        <template v-for="seed in visibleSeeds" :key="seed.type">
           <!-- Henüz Keşfedilmemiş Egzotik Formül -->
           <div
-            v-else-if="seed.isMutationOnly && !isSeedDiscovered(seed.type)"
+            v-if="seed.isMutationOnly && !isSeedDiscovered(seed.type)"
             class="p-3 rounded-xl border border-dashed border-white/10 bg-black/30 flex flex-col justify-between opacity-60"
           >
             <div>

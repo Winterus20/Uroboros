@@ -46,6 +46,11 @@ export interface ScaleJumpHost {
   matter: Decimal
   dimensions: Array<{ amount: Decimal; bought: number }>
   tickspeedBought: number
+  /**
+   * M1 — Otonom Hız Çipi seviyesi (koşu içi). tickspeedBought ile AYNI kancada
+   * sıfırlanır; isteğe bağlıdır çünkü sahte host'lar (layers.test.ts) alanı taşımaz.
+   */
+  speedChipLevel?: number
   dimensionShifts: number
   galaxies: number
   slackers: unknown[]
@@ -194,7 +199,12 @@ export function applyResetScope(
       d.bought = 0
     }
   }
-  if (scope.resetTickspeed) host.tickspeedBought = 0
+  if (scope.resetTickspeed) {
+    host.tickspeedBought = 0
+    // M1 — Otonom Hız Çipi koşu içidir: tickspeed ile aynı anda sıfırlanır
+    // (shift / galaxy / singularity — yani tickspeedBought'ın sıfırlandığı her kanca).
+    if (host.speedChipLevel !== undefined) host.speedChipLevel = 0
+  }
   if (scope.resetOptimizerSamples) {
     host.singularityBotSamples = []
     host.singularityDecelStreak = 0

@@ -19,8 +19,9 @@ import {
  *    geri kilitlenmez; bu yüzden yeni kayıt alanı gerekmez.
  *  - `dimensionCapFloor` (save v12 legacy taban) ve `challengeDimensionCap` (C7)
  *    davranışı korunur.
- *  - Eşikler PROVISIONAL; testler değeri değil TÜRETME KURALINI kilitler
- *    (eşik = taban fiyatın 100 katı), böylece P0 kilitlemesi testi kırmaz.
+ *  - Eşikler P3.3'te ÖLÇÜLMÜŞ tabloyla (E5) kilitlendi: 1e8 / 1e14 / 1e24 /
+ *    1e40 / 1e65. Testler bu değerleri ve tablonun YAPISAL sözleşmesini
+ *    (artan sıra, kapının altı/üstü, monotonluk) birlikte kilitler.
  */
 
 const BASE_STATE = {
@@ -32,21 +33,26 @@ function gateCap(peak?: Decimal): number {
   return resolvedUnlockedDimensionCount({ ...BASE_STATE, lifetimePeakMatter: peak })
 }
 
-/** Her kapının hemen altındaki temsilî tepe kütle (aynı basamak, eşiğin altı). */
+/**
+ * Her kapının hemen altındaki temsilî tepe kütle (aynı basamak, eşiğin altı).
+ * E5 tablosu: D4 1e8 · D5 1e14 · D6 1e24 · D7 1e40 · D8 1e65 (P3.3'te korundu).
+ */
 const BELOW_GATE: Record<number, string> = {
   4: '9.99e7',
-  5: '9.99e10',
-  6: '9.99e14',
-  7: '9.99e19',
-  8: '9.99e25'
+  5: '9.99e13',
+  6: '9.99e23',
+  7: '9.99e39',
+  8: '9.99e64'
 }
 
 describe('ADR-0072 boyut açılış kapıları (saf fonksiyon)', () => {
-  it("kapı tablosu D4–D8'i kapsar ve her eşik taban fiyatın 100 katıdır", () => {
+  it('kapı tablosu D4–D8 kapsar, eşikler artan sırada ve her biri bir öncekinden büyük', () => {
     expect(DIMENSION_UNLOCK_GATES.map((g) => g.tier)).toEqual([4, 5, 6, 7, 8])
+    let previous = new Decimal(0)
     for (const gate of DIMENSION_UNLOCK_GATES) {
-      const expected = BASE_COSTS[gate.tier - 1].times(100)
-      expect(new Decimal(gate.minMatter).eq(expected)).toBe(true)
+      const value = new Decimal(gate.minMatter)
+      expect(value.gt(previous)).toBe(true)
+      previous = value
     }
   })
 
@@ -62,8 +68,16 @@ describe('ADR-0072 boyut açılış kapıları (saf fonksiyon)', () => {
     })
   }
 
+  it('her kapı, ilgili boyutun taban maliyetinden yüksektir (kapı asla "bedava" değil)', () => {
+    for (const gate of DIMENSION_UNLOCK_GATES) {
+      const baseCost = BASE_COSTS[gate.tier - 1]
+      expect(baseCost).toBeDefined()
+      expect(new Decimal(gate.minMatter).gt(baseCost)).toBe(true)
+    }
+  })
+
   it('tepe kütle monoton artarken açık boyut sayısı asla azalmaz', () => {
-    const peaks = ['1e7', '1e8', '1e9', '1e10', '1e11', '1e14', '1e15', '1e19', '1e20', '1e25', '1e26', '1e100']
+    const peaks = ['1e7', '1e8', '1e13', '1e14', '1e23', '1e24', '1e39', '1e40', '1e64', '1e65']
     let previous = 0
     for (const peak of peaks) {
       const current = gateCap(new Decimal(peak))
@@ -86,7 +100,7 @@ describe('ADR-0072 boyut açılış kapıları (saf fonksiyon)', () => {
       resolvedUnlockedDimensionCount({
         dimensionCapFloor: 4,
         activeChallenge: null,
-        lifetimePeakMatter: new Decimal('1e26')
+        lifetimePeakMatter: new Decimal('1e65')
       })
     ).toBe(8)
   })

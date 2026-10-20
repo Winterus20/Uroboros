@@ -18,7 +18,6 @@ import {
 } from 'lucide-vue-next'
 import type { CrisisInterventionType } from '../models/types'
 import TabHero from './TabHero.vue'
-import LockedFeature from './LockedFeature.vue'
 
 const store = useGameStore()
 
@@ -55,6 +54,18 @@ function isInterventionLocked(type: CrisisInterventionType): boolean {
   const featureId = interventionUnlockFeatureId(type)
   return !!featureId && !store.isFeatureUnlocked(featureId)
 }
+
+/**
+ * Gösterilecek müdahale kartları.
+ *
+ * Karar (kilitli içerik gizleme): kilitli müdahaleler hiçbir şekilde
+ * render edilmez — ne kilit kartı ne isim ne şart metni. Eskiden kilitli
+ * müdahaleler ayrı bir kilit kartı olarak çiziliyordu; o kart artık yok,
+ * kilitli müdahale bu filtreyle ızgaradan tamamen düşer.
+ */
+const visibleInterventions = computed(() =>
+  CRISIS_INTERVENTIONS.filter((intv) => !isInterventionLocked(intv.id))
+)
 
 function getInterventionIcon(type: CrisisInterventionType) {
   switch (type) {
@@ -357,15 +368,15 @@ function handleIntervention(type: CrisisInterventionType) {
       </div>
     </transition>
 
-    <!-- 4 Taktiksel Müdahale Kartı -->
+    <!--
+      4 Taktiksel Müdahale Kartı — kilitli müdahaleler LİSTEDEN ÇIKARILIR
+      (visibleInterventions): hiçbir kart çizilmez. Karar: kilitli seyler
+      görünmeyecek; sadece kilidi açıldığında görünecek. Önceden burada
+      ayrı bir kilit kartı vardı.
+    -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <template v-for="intv in CRISIS_INTERVENTIONS" :key="intv.id">
-        <LockedFeature
-          v-if="isInterventionLocked(intv.id)"
-          :feature-id="interventionUnlockFeatureId(intv.id)"
-        />
+      <template v-for="intv in visibleInterventions" :key="intv.id">
         <div
-          v-else
           class="glass-panel-card p-4 rounded-xl flex flex-col justify-between transition-all"
           :class="isMeltdownActive ? 'opacity-50 grayscale' : 'hover:border-purple-500/40'"
         >

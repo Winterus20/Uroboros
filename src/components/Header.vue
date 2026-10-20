@@ -12,11 +12,8 @@ import {
   Cpu,
   Layers,
   Activity,
-  Lock,
   Cloud
 } from "lucide-vue-next";
-import { getFeatureById, unlockProgress, unlockProgressFraction } from "../game/unlocks";
-import { Decimal } from "../core/math";
 import { isMotionOff, isMotionReduced } from "../composables/useMotion";
 import { useAuthStore } from "../stores/auth";
 import ConfirmModal from "./ConfirmModal.vue";
@@ -157,22 +154,13 @@ function setStance(stance: StanceType): void {
   store.setStance(stance);
 }
 
-// Stance kilitlemeleri (Özellik Merdiveni: dopamin kapıları)
-function stanceLockHint(featureId: string): { hint: string; progress: string; percent: number } | null {
-  if (store.isFeatureUnlocked(featureId)) return null;
-  const f = getFeatureById(featureId);
-  if (!f) return null;
-  const p = unlockProgress(store.unlockContext, f);
-  const cur = format(new Decimal(p.current), 0, store.settings.notation);
-  const tgt = format(new Decimal(p.target), 0, store.settings.notation);
-  return {
-    hint: f.hint,
-    progress: `${cur} / ${tgt} g`,
-    percent: unlockProgressFraction(store.unlockContext, f)
-  };
-}
-const stanceSpamLock = computed(() => stanceLockHint("stance_spam"));
-const stancePrivateLock = computed(() => stanceLockHint("stance_private"));
+// Kilitli duruşlar GİZLENİR (kilitli içerik gizleme kuralı): kilit açılana kadar
+// Obur/Kalkan düğmesi, kilit rozeti, şart metni ve ilerleme çubuğu HİÇ render
+// edilmez — "ne yapmalıyım" bilgisi artık yalnız "Sıradaki Acilacak" bandından gelir.
+// Aktif duruş göstergeleri (Kuantum + açılan Obur/Kalkan) korunur.
+// NOT: isFeatureUnlocked yapışkandır (unlockedFeatures) → açılan duruş bir daha kapanmaz.
+const isSpamUnlocked = computed(() => store.isFeatureUnlocked("stance_spam"));
+const isPrivateUnlocked = computed(() => store.isFeatureUnlocked("stance_private"));
 // Bir kez açılan kapanmaz: D1×25 erken önizlemesi sıçramada sıfırlanıyordu.
 // İlk açılış localStorage'a mühürlenir, bir daha kapanmaz.
 const STANCE_SEEN_KEY = "uroboros-stance-seen";
@@ -482,111 +470,65 @@ onUnmounted(() => {
           </div>
         </button>
 
+        <!-- Obur Çekim: kilitliyken HİÇ render edilmez (kilitli içerik gizleme) -->
         <button
+          v-if="isSpamUnlocked"
           @click="setStance('spam')"
           @pointerdown="punchTap"
-          :disabled="!!stanceSpamLock"
           aria-label="Obur çekim duruşuna geç"
           :aria-pressed="store.currentStance === 'spam'"
           class="btn-tactile h-11 px-2.5 sm:px-3 rounded-lg text-xs font-mono flex items-center gap-2 transition-all whitespace-nowrap"
-          :class="stanceSpamLock
-            ? 'ds-ramp-locked text-slate-400 border border-white/[0.04] bg-black/30 cursor-not-allowed'
-            : store.currentStance === 'spam'
-              ? 'bg-rose-500/20 text-rose-200 border border-rose-500/45 shadow-sm cursor-pointer'
-              : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
+          :class="store.currentStance === 'spam'
+            ? 'bg-rose-500/20 text-rose-200 border border-rose-500/45 shadow-sm cursor-pointer'
+            : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
         >
-          <Lock v-if="stanceSpamLock" class="w-4 h-4 text-slate-400 shrink-0" />
-          <Flame v-else class="w-4 h-4 text-rose-400 shrink-0" />
+          <Flame class="w-4 h-4 text-rose-400 shrink-0" />
           <div class="flex flex-col items-start text-left leading-tight">
             <div class="flex items-center gap-1.5">
               <span class="font-sans font-bold text-xs tracking-wide">Obur</span>
               <span
-                v-if="!stanceSpamLock && store.currentStance === 'spam'"
+                v-if="store.currentStance === 'spam'"
                 class="w-1.5 h-1.5 rounded-full bg-rose-300 shrink-0"
                 aria-hidden="true"
               ></span>
-              <span
-                v-if="stanceSpamLock"
-                class="text-[9px] font-mono text-slate-400 tabular-nums"
-              >
-                {{ stanceSpamLock.progress }}
-              </span>
             </div>
             <span
-              v-if="!stanceSpamLock"
               class="text-[10px] font-mono tabular-nums"
               :class="store.currentStance === 'spam' ? 'text-rose-200 font-bold' : 'text-slate-400'"
             >
               Yut ×4 · Dalga ×1.5
             </span>
-            <div
-              v-else
-              class="flex items-center gap-1.5"
-            >
-              <span class="text-[9px] font-mono text-slate-400 tabular-nums">Yut ×4</span>
-              <span class="inline-block w-14">
-                <span class="progress-track progress-track-mini block">
-                  <span
-                    class="progress-fill progress-fill-slate block"
-                    :style="{ width: `${stanceSpamLock.percent * 100}%` }"
-                  ></span>
-                </span>
-              </span>
-            </div>
           </div>
         </button>
 
+        <!-- Vakum Kalkanı: kilitliyken HİÇ render edilmez (kilitli içerik gizleme) -->
         <button
+          v-if="isPrivateUnlocked"
           @click="setStance('private_mode')"
           @pointerdown="punchTap"
-          :disabled="!!stancePrivateLock"
           aria-label="Vakum kalkanı duruşuna geç"
           :aria-pressed="store.currentStance === 'private_mode'"
           class="btn-tactile h-11 px-2.5 sm:px-3 rounded-lg text-xs font-mono flex items-center gap-2 transition-all whitespace-nowrap"
-          :class="stancePrivateLock
-            ? 'ds-ramp-locked text-slate-400 border border-white/[0.04] bg-black/30 cursor-not-allowed'
-            : store.currentStance === 'private_mode'
-              ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/45 shadow-sm cursor-pointer'
-              : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
+          :class="store.currentStance === 'private_mode'
+            ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/45 shadow-sm cursor-pointer'
+            : 'text-slate-300 hover:text-white border border-transparent cursor-pointer'"
         >
-          <Lock v-if="stancePrivateLock" class="w-4 h-4 text-slate-400 shrink-0" />
-          <Shield v-else class="w-4 h-4 text-cyan-400 shrink-0" />
+          <Shield class="w-4 h-4 text-cyan-400 shrink-0" />
           <div class="flex flex-col items-start text-left leading-tight">
             <div class="flex items-center gap-1.5">
               <span class="font-sans font-bold text-xs tracking-wide">Kalkan</span>
               <span
-                v-if="!stancePrivateLock && store.currentStance === 'private_mode'"
+                v-if="store.currentStance === 'private_mode'"
                 class="w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0"
                 aria-hidden="true"
               ></span>
-              <span
-                v-if="stancePrivateLock"
-                class="text-[9px] font-mono text-slate-400 tabular-nums"
-              >
-                {{ stancePrivateLock.progress }}
-              </span>
             </div>
             <span
-              v-if="!stancePrivateLock"
               class="text-[10px] font-mono tabular-nums"
               :class="store.currentStance === 'private_mode' ? 'text-cyan-200 font-bold' : 'text-slate-400'"
             >
               Hz Fiyat −%15
             </span>
-            <div
-              v-else
-              class="flex items-center gap-1.5"
-            >
-              <span class="text-[9px] font-mono text-slate-400 tabular-nums">Hz −%15</span>
-              <span class="inline-block w-14">
-                <span class="progress-track progress-track-mini block">
-                  <span
-                    class="progress-fill progress-fill-slate block"
-                    :style="{ width: `${stancePrivateLock.percent * 100}%` }"
-                  ></span>
-                </span>
-              </span>
-            </div>
           </div>
         </button>
       </div>

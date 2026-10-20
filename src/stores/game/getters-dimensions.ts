@@ -4,6 +4,7 @@ import { hasAchievementReward } from '../../game/achievements'
 import { BASE_UNLOCKED_DIMENSIONS, BUCKET_CAP_GAIN, BUCKET_CAP_THRESHOLD, CHALLENGE_C7_GALAXY_COST_MULT, CHALLENGE_C7_TIER_COST_STEP, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, SHIFT_CAP_GAIN, SHIFT_CAP_THRESHOLD, TICKSPEED_CAP_GAIN, TICKSPEED_CAP_THRESHOLD, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, diminishingPurchaseCount, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { ALL_CHALLENGES_COMPLETE_MULT, challengeTimeTierMult, getChallengeById, isAllChallengesComplete } from '../../game/challenges'
 import { FORMAT_UNLOCK_BUFF_MULT, FORMAT_UNLOCK_BUFF_SECONDS, formatUnlockBuffMult, getTierIdentity, tierProductionMult, tierShiftReqMult } from '../../game/dimension_identity'
+import { CHIP_MAX_LEVEL, speedChipCost as computeSpeedChipCost, speedChipProductionMult as computeSpeedChipProductionMult } from '../../game/speed-chip'
 import { dimMultCacheKey, memoChallengeEffects, memoCompletedJoin, memoNeuralEffects, _dimCostCache, _dimMultCache } from './cache'
 import type { ResolutionMilestone } from '../../models/types'
 import type { GameState } from './state'
@@ -54,6 +55,25 @@ export const dimensionGetters = {
         }
       }
       return bestTier
+    },
+
+    // M1 — Üretim Çipi (production chip) getter'ları.
+    // Sıradaki çipin maliyeti: CHIP_BASE_COST × CHIP_COST_MULT^level (saf modül: src/game/speed-chip.ts).
+    speedChipCost(this: StoreApi, state: GameState): Decimal {
+        return computeSpeedChipCost(state.speedChipLevel)
+    },
+
+    // Boyut üretim çarpanı: (1 + CHIP_PRODUCTION_PER_LEVEL)^level = 1.1^level.
+    // Seviye 0'da 1 (etkisiz). M1 v2: çip botları değil, BOYUT ÜRETİMİNİ çarpanlar
+    // (ölçüm: bot hızı etkisi sıfırdı; darboğaz kütle idi).
+    speedChipProductionMult(this: StoreApi, state: GameState): Decimal {
+        return computeSpeedChipProductionMult(state.speedChipLevel)
+    },
+
+    // Çip alınabilir mi? (tavan dolduysa veya cüzdan yetersizse false — satın alma no-op)
+    canBuySpeedChip(this: StoreApi, state: GameState): boolean {
+        if (state.speedChipLevel >= CHIP_MAX_LEVEL) return false
+        return state.matter.gte(computeSpeedChipCost(state.speedChipLevel))
     },
 
     // Algoritma Frekansı (Tickspeed) indirim oranı (Hızlı Şarj Adaptörü ile güçlenir)
@@ -383,7 +403,7 @@ export const dimensionGetters = {
         state.activeChallenge, dim1GrowthStr, completedJoin,
         state.dimensionCapFloor, state.lifetimePeakMatter.toString(), state.formatUnlockBuffTier,
         state.formatUnlockBuffUntil, challengeTimeMult, formatBuffActive,
-        relicCount, matureCellsCount
+        relicCount, matureCellsCount, state.speedChipLevel
       )
       const cached = _dimMultCache.get(tier)
       if (cached && cached.key === cacheKey) return cached.val
@@ -494,6 +514,13 @@ export const dimensionGetters = {
         mult = mult.times(discoverMult)
       }
 
+      // M1 — Üretim Çipi: boyut üretim çarpanı (1.1^seviye) TÜM boyutlara uygulanır.
+      // Bu, oyunun ana üretim kaynağıdır (D1 → dopamin üretimi bu çarpandan geçer).
+      // NOT: cache anahtarı speedChipLevel'ı İÇERMEK ZORUNDA; aksi hâlde çip
+      // alındıktan sonra çarpan bayat kalır (sessiz hata) — bkz. cache.ts.
+      const chipProdMult = computeSpeedChipProductionMult(state.speedChipLevel)
+      mult = mult.times(chipProdMult)
+
       _dimMultCache.set(tier, { key: cacheKey, val: mult })
       return mult
     },
@@ -600,6 +627,9 @@ export const dimensionGetters = {
       if (discoverMult !== 1) {
         parts.push({ source: 'format-buff', mult: new Decimal(discoverMult) })
       }
+      // M1 — Üretim Çipi (ADR-0052 paritesi: getDimensionMultiplier ile AYNI sırada
+      // AYNI çarpan → çarpımlar birebir eşittir).
+      parts.push({ source: 'speed-chip', mult: computeSpeedChipProductionMult(state.speedChipLevel) })
 
       return parts
     },

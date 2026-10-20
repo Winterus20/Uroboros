@@ -250,8 +250,8 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     const store = useGameStore()
     store.dimensionCapFloor = 0
     store.dimensionShifts = 0
-    // Kütle kapıları (D4 1e8, D5 1e11, D6 1e15) → 6 açık boyut; rampa tabanı 3+0 = 3
-    store.lifetimePeakMatter = new Decimal('1e15')
+    // Kütle kapıları (D4 1e8, D5 1e14, D6 1e24) → 6 açık boyut; rampa tabanı 3+0 = 3
+    store.lifetimePeakMatter = new Decimal('1e24')
     expect(store.unlockedDimensionsCount).toBe(6)
     expect(store.shiftRequirement.tier).toBe(3)
 
@@ -264,14 +264,14 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(store.shiftRequirement.tier).toBe(6)
 
     // Kapılar açılınca rampa hedefine ulaşır
-    store.lifetimePeakMatter = new Decimal('1e26')
+    store.lifetimePeakMatter = new Decimal('1e65')
     expect(store.shiftRequirement.tier).toBe(8)
   })
 
   it('ADR-0072 regresyon: dimensionShifts değişse bile hedef tier değişmez (eski 3+sıçrama davranışı gitti)', () => {
     const store = useGameStore()
     store.dimensionCapFloor = 0
-    store.lifetimePeakMatter = new Decimal('1e26') // 8 açık boyut
+    store.lifetimePeakMatter = new Decimal('1e65') // 8 açık boyut
 
     // Erken dal rampası (ADR-0033) korunur: 3 → 8
     const early: number[] = []
@@ -290,7 +290,7 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(new Set(late)).toEqual(new Set([8]))
 
     // Daha az açık boyutta rampa büyüse bile hedef açık sayıyı AŞMAZ (dal geçişi dahil).
-    store.lifetimePeakMatter = new Decimal('1e11') // 5 açık boyut
+    store.lifetimePeakMatter = new Decimal('1e14') // 5 açık boyut
     const capped: number[] = []
     for (const shifts of [0, 1, 2, 3, 5, 6, 9]) {
       store.dimensionShifts = shifts
@@ -302,7 +302,7 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
   it('ADR-0072: shiftRequirement challengeDimensionCap (C7) kırpmasını korur ve C7 miktar formülleri değişmez', () => {
     const store = useGameStore()
     store.dimensionCapFloor = 0
-    store.lifetimePeakMatter = new Decimal('1e26') // kapısız 8 açık boyut
+    store.lifetimePeakMatter = new Decimal('1e65') // kapısız 8 açık boyut
     expect(store.unlockedDimensionsCount).toBe(8)
     store.dimensionShifts = 5
     expect(store.shiftRequirement.tier).toBe(8)
@@ -359,7 +359,7 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
 
   it('ADR-0072: açılımı tepe kütle açar; koşu sıfırlanınca geri kilitlenmez', () => {
     const store = useGameStore()
-    store.lifetimePeakMatter = new Decimal('1e11')
+    store.lifetimePeakMatter = new Decimal('1e14')
     expect(store.unlockedDimensionsCount).toBe(5)
 
     store.resetRunState()

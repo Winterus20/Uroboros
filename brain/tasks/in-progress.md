@@ -81,6 +81,105 @@ aile tamamlama *kademe* çarpanı (çizgisel değil); silüet teaserlar; ilk otu
 - [ ] **P3.3** — erken merdiven yeniden zamanlaması (P3.0 ölçümüne göre) + ≤4 sistem ölçümü
 - [ ] **ADR-0073** + `brain/decisions/README.md` indeks satırı (orchestrator)
 
+
+### Dalga 5 — Faz 3 / P3.3: Erken Merdiven Yeniden Zamanlaması (2026-10-19)
+
+**Plan §1'in ölçülmüş teşhisi:** ilk 10 dakikada **10 özellik kapısı** (A) — plan "7'ye yakın" diyordu.
+Gerçek çarpıklık sayıda değil **kümelenmede**: Botlar 190s · Koloni 201s · Kriz 207s · Tekillik 208s
+(4 yüzey 18 saniyede). Plan §1'in "sindirme vadisi" (ardışık yatay açılış arası ≥10-15 dk) ölçümle ihlal.
+
+**P3.0 ölçümü (brain/scratchpad/p3-early-ladder-candidates.md):**
+- A (mevcut) = 10 sistem/10dk · B (plan metni, autobuyers 1e12) = **10** → plan §1'in reçetesi sayıyı değiştirmiyor.
+- C′ (sentetik 1e68+) = 1 sistem ama otomasyon 13+ dk gecikir, casual/idle'de 30 dk'da bile açılmaz;
+  ayrıca `unlockAutobuyer()` feature kapısını kontrol **etmiyor** → harness ölçemiyor (ölçüm körlüğü).
+- **P3.1'in dal kapısı tek başına 10 → 5-6 sektöre indirdi** (Kriz sekmesi artık 10 anomali istiyor:
+  anomali aralığı 40-65 sn → ~810 sn). Ölçüm bunu "fiyat etkisi" sanabilirdi; **değil**.
+
+**Orchestrator deney dizisi (hepsi ölçüldü, tahmin yok):**
+| Aday | Boyut eşikleri | 30 dk tepe | 600 sn'deki özellik | Not |
+| :--- | :--- | ---: | ---: | :--- |
+| A | 1e8/1e11/1e15/1e20/1e26 | 1e98 | 10 | baseline |
+| E1 | A + fiyat kolları (75/55/40/34/28/24, B0 20, ivme 0.025) | 1e98 | 6 | **erken eğriyi değiştirmiyor**; 12 sa'te 1e308'e ulaşılamadı (tepe 1e224) → **koşuyu uzatıyor** |
+| E2 | 1e8/1e25/1e50/1e75/1e100 | 1e40 | **4** | kalabalığı çözer ama üretimi katliyor |
+| E3 | 1e8/1e18/1e32/1e50/1e75 | 1e68 | 5 | |
+| E4 | 1e8/1e20/1e35/1e55/1e85 | 1e54 | 5 | |
+| E5 | 1e8/1e14/1e24/1e40/1e65 | 1e82 | 5 | **üretim en az zarar gören** |
+
+**Kalan 5'in hepsi aynı yerde:** duruşlar (195s/202s) + koloni (241s) kümesi → yatay kapılar da
+dağıtılıyor (autobuyers 1e12, duruşlar 1e26/1e40, koloni 1e30).
+
+**Karar (tempo):** ~11 saat **geçici taban** kabul; onarım kolu **üretim** (M1 bot hız çipleri +
+ADR-0073 aile kademe çarpanı), fiyat değil. Gerekçe: E1 ölçümü P1'in fiyat kolunun koşuyu
+**uzattığını** gösterdi → onarım fiyattan gelemez. ADR-0023 P1+M1 sonrası yeniden ölçülüp revize edilecek.
+
+- [ ] **P3.3a** `e0f35ada` — ölçülmüş merdivenin uygulanması (boyut + yatay kapılar) + test uyumu + 12 sa ölçümü
+- [ ] **P3.3b** `d8f41a37` — beyin tarafı ölçüm raporu (brain/research/p3-ladder-experiment-2026-10.md)
+- [ ] **ADR-0074** — ölçülmüş erken merdiven tablosu (orchestrator, P3.3a sonrası)
+- [ ] **Faz 4** (P1 + M1) — fiyat kolu M1 ile birlikte, üretim onarımı
+
+
+### ▶️ DEVAM NOTU (2026-10-20 12:45) — dünkü durdurma notunun yerine
+
+**Kullanıcı kararları (2026-10-20):**
+1. **Kilitli şeyler görünmesin; sadece kilidi açıldığında görünsün.** → nav silüetleri kaldırıldı,
+   `LockedFeature.vue` silindi, Lab tohumları/Kriz müdahale kartlarında kilitli içerik hiç render
+   edilmiyor. Boyut satırları, bot/SP ağacı merdivenleri ve "Sıradaki Açılış" bandı **korunur**
+   (band ayrıca dal kapılı hedefler için başarım şartı ipucu veriyor: "… · 2 Kozmik Dalgalanmalar
+   başarımı (1/2)").
+2. **Tempo:** ADR-0075 → ADR-0023 bandı 150–300 dk yerine **ölçülen 8–11 saat**; P1 (fiyat
+   kızıştırma) **ölçümle reddedildi** (patch saklandı, ertelendi).
+
+**Commit edilmiş ve push'lanmış (güvende):**
+- `092f399` P3.1 (başarım kapılı dallar + aile kademe çarpanı, ADR-0073) → push `44d38b3..092f399`
+- `c0128fb` P3.2 (silüet teaser) → push `c0128fb` sonrası
+
+**Çalışma ağacında, COMMIT EDİLMEMİŞ (kaldığı yer):**
+1. **P3.3 ölçülmüş merdiven** — `src/game/balance.ts` (DIMENSION_UNLOCK_GATES 1e8/1e14/1e24/1e40/1e65 = E5),
+   `src/game/unlocks.ts` yatay kapılar: crisis_spawn 1e3 · autobuyers 1e12 · stance_spam 1e20 ·
+   crisis 1e28 · stance_private 1e32 · **colony 1e66** · spells 1e34/1e42/1e52 · lab 1e70 ·
+   seeds 1e80/1e100/1e125 · time_clock 1e120 … + 4 test dosyası + `tests/lab-rebalance.spec.ts`
+2. **M1 Otonom Hız Çipi çekirdeği** — `src/game/speed-chip.ts` (yeni) · `state.speedChipLevel` ·
+   getter'lar (speedChipCost / speedChipEffectMult / canBuySpeedChip) · `buySpeedChip()` ·
+   `layers.ts` reset kancası · `getters-misc.ts` → `autobuyerFleetSpeedMult` çip bölücüsü · 15 test
+3. **Harness `--chips` bayrağı** (varsayılan KAPALI) + telemetri (speedChipLevel / speedChipsBought) —
+   çalıştığı doğrulandı (küçük koşu: `chip=0/0`), ölçüm karşılaştırılabilirliği korunuyor
+4. **Beyin** — `pacing-p0-baseline` §9/§9.5 · `p3-ladder-experiment-2026-10.md` ·
+   `m1-speed-chip-spec-2026-10.md` · `p3-final-ladder.md` · `in-progress` Dalga 5
+
+**Bu dalda bitenler:**
+- P3.3 ölçülmüş merdiven (ADR-0074) + 12 saatlik ölçüm: **ilk tekillik 9s33dk**, 600 sn'de 4 kapı,
+  aynı-tik çakışma 0, D4→D8 penceresi 1191 sn, yüzeyler arası 621/607/~510 sn (hepsi ≥8 dk).
+- `colony 1e66` **ölçüldü** (`out/orch-colony166.json`): D8 1e65'ten 40.5 sn sonra açılıyor → çakışma yok.
+- Kilitli içerik gizleme (kullanıcı kararı) + kalan ipucu yüzeyleri temizliği.
+- **M1 v1'in etkisiz olduğu ölçüldü**: aktif 12 sa (9:33:17 → 9:33:09) ve idle 12 sa (tepe 121.69 →
+  121.69) → darboğaz bot hızı değil **KÜTLE**; çip v1 rasyonel oyuncuya **baskılanmış** (dominated).
+  → **v2**: çip *boyut üretim çarpanını* 1.1^seviye yükseltir (kovaya denk değerde fayda → ikilem gerçek).
+- ADR-0074 + ADR-0075 + indeks satırları + completed.md kayıtları + `_run-head.ts` temizliği.
+
+**Kalan işler:**
+1. M1 v2 uygulaması (üretim çarpanı + cache anahtarı) + 30 dk ölçüm (çipsiz/cipli tepe karşılaştırması;
+   600 sn'deki 4 kapı korunmalı) → AutobuyersTab kartı v2'ye göre.
+2. **Tam kapı:** `npm run typecheck` + `npm test` + `npm run build` + `npm run harness:smoke`
+3. **TEK commit** → push.
+4. Kullanıcı onayı: ADR-0075 (tempo bandı revizyonu + P1'in reddi).
+5. Sonraki faz (ayrı proje): altın standardın 3s30dk'ya onarımı — kaldıraç `k`'yı büyüten boyut
+   bileşim çarpanı (ADR-0075 §3.3).
+
+**ÖLÇÜLMÜŞ SONUÇLAR (P3.3a, 12 saatlik koşu dahil):**
+| Ölçüt | Ölçülen | Durum |
+| :--- | :--- | :--- |
+| 600 sn'de açılan kapı | 5 (eskisi 10) | ✅ |
+| Aynı saniyede boyut+özellik çakışması | 0 | ✅ |
+| D4 → D8 penceresi | 1191 sn | ✅ |
+| ilk küme / max_mode | 1448.5 sn / 1702 sn | ✅ |
+| 12 saatlik koşu | ilk tekillik **9s33dk** (tepe 1e308.25) | ✅ |
+| Yüzeyler arası ≥8 dk | 96.5 sn (Botlar→Koloni) | ❌ yapısal: çapalar arası 621.5 sn'de iki 480 sn'lik boşluk sığmıyor |
+
+**KULLANICIYA AÇIK KARARLAR (yanıtlanmadı):**
+1. **Tempo:** ADR-0023 bandı 150-300 dk; ölçülen ~9.5 saat → (a) onarım fazı, (b) bandı revize,
+   (c) ~10 saat geçici taban kabul. Onarım kolu **üretim** (M1), fiyat değil (ölçümle kanıtlı).
+2. **P1:** ölçülebilir faydası (fiyat duvarı hissi) M1'in temposunu karşılıyorsa uygulansın mı?
+
 ### Karar bekleyen (P2/P1 kapısı)
 1. **Altın standart (§7):** ölçülen ilk koşu ~11 sa vs ADR-0023 3s30dk → 3/3 FAIL. (a) onarım fazı · (b) ADR-0023 revizyonu · (c) kabul.
 2. **Eşik yayılımı (§8):** A mevcut (D8 4dk) / C orta (43dk) / B yayılmış (62dk) — tempo kararıyla birlikte.

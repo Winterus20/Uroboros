@@ -684,6 +684,11 @@ export const miscActions = {
 
       // 8. Otomatik Kaydırma Botları (Autobuyer - tekli/toplu/max)
       // Nöral Ağaç: Otonom Kaydırma Çipi (eski bağlantı) + Bot Aşırı Yüklemesi çarpanı
+      // M1 v2: Üretim Çipi bot temposunu ETKİLEMEZ. Ölçüm: bot hızı çarpanı sıfır
+      // etki verdi (darboğaz bot hızı değil KÜTLE idi) ve çipe harcanan kütle
+      // boyut kovasına harcanan kütleye göre HER ZAMAN daha zayıftı (baskılanmış
+      // mekanizma). Çip artık boyut üretim çarpanını yükseltir
+      // (bkz. getters-dimensions.ts getDimensionMultiplier).
       const botSpeedMult = Math.pow(1.5, this.singularityUpgrades?.neural_chip || 0) * this.neuralEffects.botFrequencyMult
       const challengeBotsDisabled = this.activeChallengeDef?.modifiers.autobuyersDisabled === true
       Object.keys(this.autobuyers).forEach((key) => {

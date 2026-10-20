@@ -34,6 +34,10 @@ export function buildInitialState() {
 
     tickspeedBought: 0, // Algoritma Frekansı (Hz) Seviyesi
     dimensionShifts: 0, // Akış Sıçraması (Feed Shift / Boost) Seviyesi
+    // M1 — Otonom Hız Çipi seviyesi: bot satın alma sıklığını artırır (büyüme hızı k artar → koşu kısalır).
+    // KOŞU İÇİDİR: tickspeedBought ile aynı kancada sıfırlanır (src/game/layers.ts → applyResetScope)
+    // ve serialize listesine EKLENMEZ (kayıt şeması/migrasyon yok — spec §2.2).
+    speedChipLevel: 0,
     dimensionCapFloor: BASE_UNLOCKED_DIMENSIONS, // Save v12 legacy min açık tier (ADR-0033: taban 3)
     formatDiscoverSeenCap: 3, // Kutlanmış / tanıtılmış max tier (yeni oyun 3; D4+ kütle kapısıyla açılır — ADR-0072)
     formatUnlockBuffTier: 0,

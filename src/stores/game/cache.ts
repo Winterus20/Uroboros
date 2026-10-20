@@ -110,7 +110,8 @@ export function dimMultCacheKey(
   challengeTimeMult: number,
   formatBuffActive: boolean,
   relicCount = 0,
-  matureCellsCount = 0
+  matureCellsCount = 0,
+  speedChipLevel = 0
 ): string {
   // NOT (ADR-0029): formatBuffActive ve challengeTimeMult TÜREV alanlardır. Ham
   // formatBuffUntil zaman damgası tek başına yeterli değildir: süre dolduğunda damga
@@ -119,12 +120,15 @@ export function dimMultCacheKey(
   // NOT (ADR-0072): boyut açılışı tepe kütleye bağlıdır; `shifts` sayacı artık
   // açılışı değiştirmez ama `peakMatter` bir kapıyı aştığında tier pasifi
   // (tierProductionMult) değişebildiği için anahtarda yer almalı.
+  // NOT (M1 v2): `speedChipLevel` ÜRETİM ÇARPANI'nı değiştirir (1.1^seviye).
+  // Anahtarda YER ALMASI ZORUNLU: çip alındıktan sonra çarpan bayat kalırsa
+  // üretim sessizce eski değerle çalışır (sessiz hata) — bkz. speed-chip.test.ts.
   return (
     tier + '|' + bought + '|' + shifts + '|' + eyeLvl + '|' + sac + '|' + partnerBought + '|' +
     neuralProd + '|' + offlineBoost + '|' + (activeChallenge || '') + '|' +
     dim1Growth + '|' + completedJoin + '|' + capFloor + '|' + peakMatter + '|' + formatBuffTier +
     '|' + formatBuffUntil + '|' + challengeTimeMult + '|' + (formatBuffActive ? 'A' : 'X') +
-    '|' + relicCount + '|' + matureCellsCount
+    '|' + relicCount + '|' + matureCellsCount + '|' + speedChipLevel
   )
 }
 

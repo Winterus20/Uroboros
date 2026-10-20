@@ -37,9 +37,9 @@ describe('ADR-0072 kütle kapısı kutlaması', () => {
     const store = createFreshStore()
     const spy = vi.spyOn(store, 'celebrateFormatUnlock')
 
-    // 1e21 → D4+D5+D6+D7 kapıları (1e8/1e11/1e15/1e20) aynı tick'te açılır.
-    store.matter = new Decimal('1e21')
-    store.lifetimePeakMatter = new Decimal('1e21')
+    // 1e41 → D4+D5+D6+D7 kapıları (1e8/1e14/1e24/1e40) aynı tick'te açılır.
+    store.matter = new Decimal('1e41')
+    store.lifetimePeakMatter = new Decimal('1e41')
     store.unlockCheckAcc = 0.5
     store.update(0.1)
 
@@ -51,8 +51,8 @@ describe('ADR-0072 kütle kapısı kutlaması', () => {
 
   it('kayıt yükleme kutlama ateşlemez, sayaç sessizce hizalanır', () => {
     const saver = createFreshStore()
-    saver.matter = new Decimal('1e30')
-    saver.lifetimePeakMatter = new Decimal('1e30')
+    saver.matter = new Decimal('1e65')
+    saver.lifetimePeakMatter = new Decimal('1e65')
     const saved = saver.serialize()
 
     const store = createFreshStore()
@@ -72,8 +72,8 @@ describe('ADR-0072 kütle kapısı kutlaması', () => {
 
   it('çevrimdışı simülasyonda kutlama susar ama sayaç ilerler', () => {
     const store = createFreshStore()
-    store.matter = new Decimal('1e11')
-    store.lifetimePeakMatter = new Decimal('1e11')
+    store.matter = new Decimal('1e14')
+    store.lifetimePeakMatter = new Decimal('1e14')
     store.unlockCheckAcc = 0.5
     store.offlineSimActive = true
     store.update(0.1)

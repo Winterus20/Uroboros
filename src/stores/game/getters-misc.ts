@@ -35,6 +35,12 @@ export const miscGetters = {
       return Object.values(state.autobuyers).filter((b) => b.unlocked).length
     },
 
+    // Bot filosunun toplam hiz carpani (UI: "Bot Islem Hizi" / bot tetiklenme araligi).
+    // M1 v2: Uretim Cipi bu carpanda YER ALMAZ - cip bot temposunu degil, boyut
+    // uretim carpanini etkiler (bkz. getters-dimensions.ts getDimensionMultiplier).
+    // NOT: fonksiyonel etki TICK DONGUSUNDE (bot.timer += delta x botSpeedMult);
+    // bu getter YALNIZCA GOSTERIM icindir, ikinci kez uygulanmaz -
+    // carpma tek yerde (burada) yapilir.
     autobuyerFleetSpeedMult(this: StoreApi): number {
       const chipBonus = Math.pow(1.5, this.singularityUpgrades?.neural_chip || 0)
       const overclock = this.neuralEffects?.botFrequencyMult || 1

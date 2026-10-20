@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0073**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0074**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -86,3 +86,5 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0071 | Şafak Merdiveni — Kırılma Öncesi SP Kazanımı `1` → `1 + singularities` | 2026-10-19 | Kabul edildi & uygulandı — ADR-0034'ün SP kaynağını değiştirmez, yalnız kazanım büyüklüğünü düzeltir | [0071-sp-dawn-ladder-prelude.md](0071-sp-dawn-ladder-prelude.md) |
 | 0072 | Boyut Açılımlarının Sıçramadan Koparılması (Deterministik Kütle Kapıları) | 2026-10-19 | Kabul edildi & uygulandı — ADR-0033'ün "D4 1. sıçramada" maddesini geçersiz kılar | [0072-dimension-unlocks-decoupled-from-shifts.md](0072-dimension-unlocks-decoupled-from-shifts.md) |
 | 0073 | Başarım Kapısı — Omurga/Opsiyonel Dal Ayrımı ve Aile Kademe Çarpanı | 2026-10-19 | Kabul edildi & uygulanıyor (P3) — ADR-0026/0032'nin dekad omurgasını korur, opsiyonel dalları başarım ailesine bağlar | [0073-achievement-gated-branch-spine-hybrid.md](0073-achievement-gated-branch-spine-hybrid.md) |
+| 0074 | Ölçülmüş Erken Merdiven — İlk 10 Dakika Kalabalığının Çözümü | 2026-10-20 | Kabul edildi & uygulandı (P3.3) — ADR-0072'nin "eşik = taban fiyatı × 100" kuralını geçersiz kılar | [0074-measured-early-ladder.md](0074-measured-early-ladder.md) |
+| 0075 | Tempo Bandının Yeniden Tanımlanması ve P1'in Ölçümle Reddi | 2026-10-20 | Kabul edildi (kullanıcı onayı bekliyor) — ADR-0023'ün 150–300 dk bandını ölçülen 8–11 saat bandıyla değiştirir | [0075-tempo-band-revision-and-p1-rejection.md](0075-tempo-band-revision-and-p1-rejection.md) |

@@ -8,6 +8,8 @@ interface WorkerRunPayload {
   capHours: number;
   trace: boolean;
   collectSamples: boolean;
+  // M1 — Otonom Hız Çipi: false ise çip alınmaz (koşu eski davranışla birebir aynı).
+  chips: boolean;
 }
 
 const payload = workerData as WorkerRunPayload;
@@ -18,6 +20,7 @@ const result = await runOnce(
   payload.dt,
   payload.capHours,
   payload.trace,
-  payload.collectSamples
+  payload.collectSamples,
+  payload.chips
 );
 parentPort?.postMessage(result);
