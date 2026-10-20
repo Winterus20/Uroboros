@@ -192,6 +192,10 @@ P0 raporuna §10 olarak yazıldı (2. saat yüzeysiz; `event_horizon_lens`/`hawk
 yazıldı; ilk aday: `event_horizon_lens`/`hawking_resonator`/`cosmic_filament` kapıları **hiçbir
 UI'a bağlı değil** (içeriksiz) → ya gerçek sistem yapılacak ya da 1e160 bandı öne alınacak.
 
+**Dalga 6 kapanışı (2026-10-20 15:25):** `b47aa87` (P4) · `4ca6c51` (O3) · `951a8a3` (`--dawns N`) — hepsi
+push'landı. Kapı: typecheck 0 · test **512/512** · build 0 · smoke 6/6. `--dawns` ölçümü: **şafak 1 = 268 dk →
+şafak 2 = 49 dk → şafak 3 = 13 dk** (kırılma 3. şafakta) → ADR-0071 doğrulandı, SP/saat 0.22 → 18.29.
+
 **Sana açık:** ADR-0075 — tempo bandı artık ölçülen gerçeği taşıyor (taban oyun 8–11 sa; yatırımla
 oynayan oyuncu ~4.5 sa). Onaylıyor musun, yoksa 3s30dk hedefi için ayrı denge projesi mi?
 
