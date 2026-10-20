@@ -161,6 +161,25 @@ idi — bu, **kütle karşılığında kovaya yakın değerde** bir fayda ile m�
 geliyor; 600 sn sonuna kadar 1-3 seviye (×1.1-1.33) → F600=4 korunur, ama 30 dk tepe
 +29 dekad yükselir (harnesin chip alım politikası agresif olduğu için).
 
+### Ölçülen iki denge noktası (taban 1e40 sabit)
+
+| Seviye başına | 30 dk tepe | 600 sn kapı | 12 sa ilk tekillik | Kriz→Koloni vadi | Karar |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| — (çipsiz) | 1e69.1 | 4 | 9:33:17 | 621.5 sn | taban |
+| **+%3 (SEÇİLDİ)** | **1e81.25** | **4** | **4:28:09** | 461 sn | ✅ dengeli |
+| +%10 | 1e98.19 | 4 | 1:14:14 | **166.5 sn** | ❌ vadi kırık |
+
+**+%10 neden reddedildi:** tempo hedefini (3s30dk bandı) aşıyor (1s14dk) ama çip orta-oyundaki
+üretimi hızlandırdığı için **sindirme vadisini** eziyor (Kriz 810.5 sn → Koloni 977 sn = 166.5 sn;
+ölçüt ≥480 sn). Pacing bu fazın ana işiydi; hız için vadiyi vermek, kazanılanı kaybetmektir.
+**+%3** ikisini de korur: tempo 2.1× iyileşir (9s33dk → 4s28dk), vadi ~7.7 dk'da kalır
+(621 → 461 sn, kabul ölçütünün 4% altında), 600 sn'de kapı sayısı değişmez (4).
+
+Not: çip tabanı 1e40 → ilk çip ~353 sn (D7 bölgesi). Maliyet 1e40 × 1e4^N, tavan 40 (toplam ×3.26).
+Çip **opsiyonel** bir yatırımdır: oyuncu mass cüzdanını çipe ya da boyut kovasına harcar
+(ikilem gerçek). Band tanımı taban oyun içindir (çipsiz 8–11 sa); yatırımla oynayan oyuncu
+~4.5 saatte tekilliğe ulaşır.
+
 - **ADR-0023 (altın standart):** bu spec onarımın **üretim** kolunu tanımlar; bant revizyonu
   ölçüm sonrası ayrı bir karardır (P0 §9.5).
 - **Plan §3 (fiyat):** P1 fiyat kolu **M1 ile aynı turda** uygulanmalı; tek başına işlevsizdir
