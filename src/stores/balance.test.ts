@@ -186,6 +186,8 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
   it('insomnia_heart sıçrama (shift) ve küme (galaxy) resetlerinde de 10.000 g korur', () => {
     const store = useGameStore()
     store.neuralNodesBought = { insomnia_heart: 1 }
+    // ADR-0076: Ölçek Sıçraması D8 çağı mekaniğidir — D8 açık olmadan sıçrama yapılamaz.
+    store.lifetimeMaxDimensionTier = 7
 
     // Shift şartını sağla ve çalıştır
     const shiftReq = store.shiftRequirement
@@ -245,71 +247,46 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     expect(Number.isInteger(reqWithD5.amount.toNumber())).toBe(true)
   })
 
-  // ---- ADR-0072: shiftRequirement hedef tier'ı sıçramadan değil açık boyuttan gelir ----
-  it('ADR-0072: hedef tier rampa ile yükselir ama gerçek açık boyut sayısını asmaz', () => {
+  // ---- ADR-0076: Ölçek Sıçraması bir D8 çağı mekaniğidir ----
+  it('ADR-0076: hedef tier her zaman D8 (sıçrama sayısından bağımsız)', () => {
     const store = useGameStore()
-    store.dimensionCapFloor = 0
-    store.dimensionShifts = 0
-    // Kütle kapıları (D4 1e8, D5 1e14, D6 1e24) → 6 açık boyut; rampa tabanı 3+0 = 3
-    store.lifetimePeakMatter = new Decimal('1e24')
-    expect(store.unlockedDimensionsCount).toBe(6)
-    expect(store.shiftRequirement.tier).toBe(3)
-
-    // Rampa tam açık sayıya oturur
-    store.dimensionShifts = 3
-    expect(store.shiftRequirement.tier).toBe(6)
-
-    // Rampa 8 ister ama açık boyut 6 → kırpılır
-    store.dimensionShifts = 5
-    expect(store.shiftRequirement.tier).toBe(6)
-
-    // Kapılar açılınca rampa hedefine ulaşır
-    store.lifetimePeakMatter = new Decimal('1e65')
-    expect(store.shiftRequirement.tier).toBe(8)
+    store.lifetimeMaxDimensionTier = 7 // D8 açık
+    const tiers: number[] = []
+    for (const shifts of [0, 1, 2, 3, 5, 6, 12]) {
+      store.dimensionShifts = shifts
+      tiers.push(store.shiftRequirement.tier)
+    }
+    expect(new Set(tiers)).toEqual(new Set([8]))
   })
 
-  it('ADR-0072 regresyon: dimensionShifts değişse bile hedef tier değişmez (eski 3+sıçrama davranışı gitti)', () => {
+  it('ADR-0076: D8 açılmadan sıçrama yapılamaz (miktar yeterli olsa bile)', () => {
     const store = useGameStore()
-    store.dimensionCapFloor = 0
-    store.lifetimePeakMatter = new Decimal('1e65') // 8 açık boyut
-
-    // Erken dal rampası (ADR-0033) korunur: 3 → 8
-    const early: number[] = []
-    for (const shifts of [0, 1, 2, 3, 4, 5]) {
-      store.dimensionShifts = shifts
-      early.push(store.shiftRequirement.tier)
-    }
-    expect(early).toEqual([3, 4, 5, 6, 7, 8])
-
-    // Geç dal açık boyut sayısına oturur
-    const late: number[] = []
-    for (const shifts of [6, 7, 12]) {
-      store.dimensionShifts = shifts
-      late.push(store.shiftRequirement.tier)
-    }
-    expect(new Set(late)).toEqual(new Set([8]))
-
-    // Daha az açık boyutta rampa büyüse bile hedef açık sayıyı AŞMAZ (dal geçişi dahil).
-    store.lifetimePeakMatter = new Decimal('1e14') // 5 açık boyut
-    const capped: number[] = []
-    for (const shifts of [0, 1, 2, 3, 5, 6, 9]) {
-      store.dimensionShifts = shifts
-      capped.push(store.shiftRequirement.tier)
-    }
-    expect(capped).toEqual([3, 4, 5, 5, 5, 5, 5])
+    store.lifetimeMaxDimensionTier = 3 // sadece D4 açık
+    const req = store.shiftRequirement
+    expect(req.tier).toBe(8)
+    expect(store.canShift).toBe(false)
+    store.dimensions[7].amount = new Decimal(req.amount)
+    expect(store.canShift).toBe(false)
   })
 
-  it('ADR-0072: shiftRequirement challengeDimensionCap (C7) kırpmasını korur ve C7 miktar formülleri değişmez', () => {
+  it('ADR-0076: D8 açılınca miktar karşılanınca sıçrama kullanılabilir', () => {
     const store = useGameStore()
-    store.dimensionCapFloor = 0
-    store.lifetimePeakMatter = new Decimal('1e65') // kapısız 8 açık boyut
+    store.lifetimeMaxDimensionTier = 7
+    const req = store.shiftRequirement
+    store.dimensions[7].amount = new Decimal(req.amount)
+    expect(store.canShift).toBe(true)
+  })
+
+  it('ADR-0076: shiftRequirement challengeDimensionCap (C7) kırpmasını korur', () => {
+    const store = useGameStore()
+    store.lifetimeMaxDimensionTier = 7
     expect(store.unlockedDimensionsCount).toBe(8)
     store.dimensionShifts = 5
     expect(store.shiftRequirement.tier).toBe(8)
 
     store.activeChallenge = 'c7'
     expect(store.unlockedDimensionsCount).toBe(6) // C7: üst sınır 6
-    // Rampa 8 ister, C7 cap'i 6'ya kırpar
+    // D8 hedefi C7 cap'i ile D6'ya iner
     expect(store.shiftRequirement.tier).toBe(6)
 
     // Geç sıçrama dalı (shifts >= 6): kırpılmış miktar formülü 30 + 15*(s-3).
@@ -320,10 +297,10 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
     // D5 pasifi tetiklenmediği için shiftMult = 1 → 30 + 15*3 = 75
     expect(capped.amount.toNumber()).toBe(75)
 
-    // Erken sıçrama dalı (shifts < 6): rampa 5'e oturur; cap'in ALTINDA kaldığı için kırpılmaz.
+    // Erken sıçrama dalı (shifts < 6): miktar rampa 15'e oturur (C7 telafisi yok).
     store.dimensionShifts = 2
     const earlyCapped = store.shiftRequirement
-    expect(earlyCapped.tier).toBe(5)
+    expect(earlyCapped.tier).toBe(6)
     expect(earlyCapped.amount.toNumber()).toBe(15)
   })
 
@@ -351,19 +328,20 @@ describe('Denge ve Mimari Doğrulama Testleri', () => {
   })
 
   // ---- ADR-0072: boyut açılımı sıçramadan koparıldı ----
-  it('ADR-0072: sıçrama sayacı tek başına boyut açmaz', () => {
+  it('ADR-0076: sıçrama sayacı tek başına boyut açmaz', () => {
     const store = useGameStore()
     store.dimensionShifts = 8
     expect(store.unlockedDimensionsCount).toBe(3)
   })
 
-  it('ADR-0072: açılımı tepe kütle açar; koşu sıfırlanınca geri kilitlenmez', () => {
+  it('ADR-0076: açılımı satın alma açar; koşu sıfırlanınca geri kilitlenmez', () => {
     const store = useGameStore()
-    store.lifetimePeakMatter = new Decimal('1e14')
-    expect(store.unlockedDimensionsCount).toBe(5)
+    store.matter = new Decimal('1e6')
+    expect(store.buyDimension(3, false)).toBe(true)
+    expect(store.unlockedDimensionsCount).toBe(4)
 
     store.resetRunState()
     expect(store.matter.toNumber()).toBe(10)
-    expect(store.unlockedDimensionsCount).toBe(5)
+    expect(store.unlockedDimensionsCount).toBe(4)
   })
 })

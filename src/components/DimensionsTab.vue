@@ -2,9 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
-import { D_0, Decimal } from '../core/math'
-import { DIMENSION_UNLOCK_GATES } from '../game/balance'
-import { log10Safe } from '../game/pacing'
+import { D_0 } from '../core/math'
+import { DIMENSION_UNLOCK_PURCHASE_COUNT, MAX_DIMENSIONS } from '../game/balance'
 import { getTierIdentity, getTierGlyph, getTierAccent } from '../game/dimension_identity'
 import { isMotionOff } from '../composables/useMotion'
 import DimensionRow from './DimensionRow.vue'
@@ -20,17 +19,9 @@ import {
   MousePointerClick
 } from 'lucide-vue-next'
 
-// ADR-0072 §B: kilitli boyut ipucu artık Sıçrama sayısından değil, kütle
-// kapılarından (DIMENSION_UNLOCK_GATES) türetilir. Eşikler burada ÖN-derlenir
-// (sıcak yolda yeni Decimal/log10 ayırmamak için); tek kaynak balance.ts'tir,
-// buradaki değerler ASLA elle yazılmaz.
-const DIMENSION_GATE_BY_TIER = new Map(
-  DIMENSION_UNLOCK_GATES.map((gate) => {
-    const minMatter = new Decimal(gate.minMatter)
-    return [gate.tier, { minMatter, log10: log10Safe(minMatter) }] as const
-  })
-)
-
+// ADR-0076: kilitli boyut ipucu artık SATIN ALMA koşulundan türetilir:
+// bir boyuttan 1 paket (DIMENSION_UNLOCK_PURCHASE_COUNT adet) alındığında bir
+// sonraki boyut açılır. Eşik sabiti balance.ts'ten okunur (elle yazılmaz).
 const store = useGameStore()
 // P2 cila: Vicdan kartı katlanabilir — alt scroll zorunluluğu kalkar, ceza rozeti üstte kalır
 const slackersOpen = ref(false)
@@ -60,29 +51,28 @@ const visibleDimensions = computed(() => {
 })
 
 // ADR-0027: sıradaki kilitli format teaser'ı — unfolding "merak metni" (P1, research §5).
-// ADR-0072 §2: açılış eşiği artık DIMENSION_UNLOCK_GATES'ten okunur (sabit metin yok).
+// ADR-0076: açılış koşulu SATIN ALMA — bir sonraki boyut, kendisinden bir önceki
+// boyuttan 1 paket alındığında açılır. Teaser bu koşulu ve ilerlemeyi anlatır.
 const nextLockedTier = computed(() => {
   const unlocked = store.unlockedDimensionsCount
-  if (unlocked >= 8 || store.activeChallenge) return null
+  if (unlocked >= MAX_DIMENSIONS || store.activeChallenge) return null
   const tier = unlocked + 1
   const identity = getTierIdentity(tier)
-  const gate = DIMENSION_GATE_BY_TIER.get(tier)
-  if (!gate) return null
+  const sourceTier = tier - 1
+  const source = store.dimensions[sourceTier - 1]
   return {
     tier,
+    sourceTier,
     label: identity?.label ?? `D${tier}`,
-    gateText: format(gate.minMatter, 0, store.settings.notation),
-    gateLog10: gate.log10
+    sourceBought: source?.bought ?? 0
   }
 })
 
-// Teaser ilerleme çubuğu: log10(lifetimePeakMatter) / log10(eşik). Monotonik tepe
-// kullanılır ki resetlerde çubuk geri gitmesin; eşik metni ikincildir (çubuk öncelikli).
+// Teaser ilerleme çubuğu: kaynak boyutun paket ilerlemesi (0 → 10 adet).
 const nextLockedTeaserPercent = computed(() => {
   const teaser = nextLockedTier.value
-  if (!teaser || teaser.gateLog10 <= 0) return 0
-  const peakLog10 = log10Safe(store.lifetimePeakMatter)
-  return Math.min(100, Math.max(0, (peakLog10 / teaser.gateLog10) * 100))
+  if (!teaser) return 0
+  return Math.min(100, Math.max(0, (teaser.sourceBought / DIMENSION_UNLOCK_PURCHASE_COUNT) * 100))
 })
 
 const shiftReq = computed(() => store.shiftRequirement)
@@ -97,6 +87,10 @@ const shiftProgressPercent = computed(() => {
   const ratio = currentShiftDimAmount.value.div(shiftReq.value.amount).toNumber()
   return Math.min(100, Math.max(0, ratio * 100))
 })
+
+// ADR-0076 §2: Ölçek Sıçraması bir D8 çağı mekaniğidir — hedef boyut (D8)
+// açılmadan sıçrama kullanılamaz; kart kilit durumunu gösterir.
+const shiftTierLocked = computed(() => shiftReq.value.tier > store.unlockedDimensionsCount)
 
 const galaxyReq = computed(() => store.galaxyRequirement)
 const galaxyTier = computed(() => store.galaxyRequirementTier)
@@ -117,7 +111,7 @@ const galaxyProgressPercent = computed(() => {
 // kısmide ds-ramp-partial, hiç yapılamıyorsa ds-ramp-locked. Rampa yalnız
 // opacity/kenarlık/zemin oynatır; buton kimlik hue'u ezilmez.
 const shiftAffordRampClass = computed(() =>
-  shiftProgressPercent.value > 0 ? 'ds-ramp-partial' : 'ds-ramp-locked'
+  shiftTierLocked.value ? 'ds-ramp-locked' : shiftProgressPercent.value > 0 ? 'ds-ramp-partial' : 'ds-ramp-locked'
 )
 const galaxyAffordRampClass = computed(() => {
   if (isGalaxyTierLocked.value) return 'ds-ramp-locked'
@@ -401,7 +395,7 @@ function handleTouchEnd(e: TouchEvent) {
       </template>
     </div>
 
-    <!-- ADR-0027: sıradaki format teaser'ı -->
+    <!-- ADR-0027: sıradaki format teaser'ı — ADR-0076: açılış koşulu satın alma -->
     <div
       v-if="nextLockedTier"
       class="text-[11px] font-mono text-slate-500 px-1 flex items-start gap-1.5"
@@ -411,10 +405,13 @@ function handleTouchEnd(e: TouchEvent) {
         <span>
           <span class="dim-glyph" :class="getTierAccent(nextLockedTier.tier)">{{ getTierGlyph(nextLockedTier.tier) }}</span>
           D{{ nextLockedTier.tier }} {{ nextLockedTier.label }} —
-          <span class="text-slate-400 tabular-nums">{{ nextLockedTier.gateText }} g kütle ile açılır</span>
+          <span class="text-slate-400 tabular-nums">D{{ nextLockedTier.sourceTier }}'te 1 paket alınca açılır</span>
         </span>
         <div class="progress-track progress-track-mini w-full max-w-[220px] mt-1">
           <div class="progress-fill progress-fill-purple" :style="{ width: `${nextLockedTeaserPercent}%` }"></div>
+        </div>
+        <div class="text-[10px] font-mono text-slate-600 mt-0.5 tabular-nums">
+          D{{ nextLockedTier.sourceTier }} {{ nextLockedTier.sourceBought }} / {{ DIMENSION_UNLOCK_PURCHASE_COUNT }} adet
         </div>
       </div>
     </div>
@@ -446,12 +443,17 @@ function handleTouchEnd(e: TouchEvent) {
                 {{ d5Passive.label }}
               </span>
             </div>
-            <div class="text-[11px] font-mono text-slate-400 tabular-nums">
-              {{ format(currentShiftDimAmount, 0, store.settings.notation) }} / {{ format(shiftReq.amount, 0, store.settings.notation) }} <span class="dim-glyph" :class="getTierAccent(shiftReq.tier)">{{ getTierGlyph(shiftReq.tier) }}</span> D{{ shiftReq.tier }}
+            <div v-if="shiftTierLocked" class="text-[11px] font-sans text-slate-500 leading-tight">
+              <span class="dim-glyph" :class="getTierAccent(shiftReq.tier)">{{ getTierGlyph(shiftReq.tier) }}</span> D{{ shiftReq.tier }} açılınca aktifleşir
             </div>
-            <div class="progress-track progress-track-mini w-20 sm:w-24 mt-1">
-              <div class="progress-fill progress-fill-purple" :style="{ width: `${shiftProgressPercent}%` }"></div>
-            </div>
+            <template v-else>
+              <div class="text-[11px] font-mono text-slate-400 tabular-nums">
+                {{ format(currentShiftDimAmount, 0, store.settings.notation) }} / {{ format(shiftReq.amount, 0, store.settings.notation) }} <span class="dim-glyph" :class="getTierAccent(shiftReq.tier)">{{ getTierGlyph(shiftReq.tier) }}</span> D{{ shiftReq.tier }}
+              </div>
+              <div class="progress-track progress-track-mini w-20 sm:w-24 mt-1">
+                <div class="progress-fill progress-fill-purple" :style="{ width: `${shiftProgressPercent}%` }"></div>
+              </div>
+            </template>
           </div>
         </div>
 

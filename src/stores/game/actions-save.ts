@@ -5,7 +5,7 @@ import { musicEngine } from '../../core/music-engine'
 import { SaveSystem } from '../../core/save'
 import { MIN_SUPPORTED_SAVE_VERSION, SAVE_VERSION, SaveVersionError } from '../../core/save-version'
 import { getAutobuyerInterval } from '../../game/autobuyer-data'
-import { BASE_UNLOCKED_DIMENSIONS, OFFLINE_CAP_SECONDS, SACRIFICE_SHIFT_REQ, resolvedUnlockedDimensionCount } from '../../game/balance'
+import { BASE_UNLOCKED_DIMENSIONS, MAX_DIMENSIONS, OFFLINE_CAP_SECONDS, SACRIFICE_SHIFT_REQ, legacyLifetimeMaxDimensionTier, lifetimeMaxDimensionTierFromBought, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { getChallengeById } from '../../game/challenges'
 import { TIME_CLOCK_MAX_DRAG, TIME_CLOCK_SPAWN_INTERVAL_MIN, createIdleTimeClock } from '../../game/clock-data'
 import { tierOfflineSimMult } from '../../game/dimension_identity'
@@ -186,6 +186,8 @@ export const saveActions = {
         tickspeedBought: this.tickspeedBought,
         dimensionShifts: this.dimensionShifts,
         dimensionCapFloor: this.dimensionCapFloor,
+        // ADR-0076: satın alma tabanlı açılışın kalıcı kaydı.
+        lifetimeMaxDimensionTier: this.lifetimeMaxDimensionTier,
         formatDiscoverSeenCap: this.formatDiscoverSeenCap,
         formatUnlockBuffTier: this.formatUnlockBuffTier,
         formatUnlockBuffUntil: this.formatUnlockBuffUntil,
@@ -384,14 +386,14 @@ export const saveActions = {
           })
           const legacyFloor = Math.max(4, Math.min(8, progressCap))
           this.dimensionCapFloor = legacyFloor
-          // ADR-0072: açılış artık tepe kütleye bağlı. Bu göç bloğu, asıl tepe nokta
+          // ADR-0076: açılış artık satın almaya bağlı. Bu göç bloğu, asıl tepe nokta
           // (lifetimePeakMatter) restore edilmeden ÖNCE çalışır; bu yüzden henüz
           // yüklenmiş olan `matter` geçici tepe kabul edilir. Sonuç `legacyFloor`
           // (>= 4) ile tabanlandığı için eski kayıtların açık tier sayısı düşmez.
           this.formatDiscoverSeenCap = Math.max(
             this.formatDiscoverSeenCap,
             resolvedUnlockedDimensionCount({
-              lifetimePeakMatter: this.matter,
+              lifetimeMaxDimensionTier: legacyLifetimeMaxDimensionTier(this.matter),
               dimensionCapFloor: legacyFloor,
               activeChallenge: null
             })
@@ -956,6 +958,28 @@ export const saveActions = {
           restoredShifts = Math.max(restoredShifts, SACRIFICE_SHIFT_REQ)
         }
         this.lifetimePeakShifts = Math.floor(restoredShifts)
+
+        // ADR-0076 (v19) — SATIN ALMA TABANLI BOYUT AÇILIŞI.
+        //
+        // v19+ kayıtlarda açılışın kaynağı lifetimeMaxDimensionTier'dır
+        // (kayıttan okunur, satın alınmış boyutlarla doğrulanır).
+        // v18 ve öncesi kayıtlarda açılış kütle kapılarından gelirdi
+        // (ADR-0072); oyuncunun açık boyutunu DÜŞÜRMEMEK için legacy kapı
+        // sayısı yeni tabana çevrilir.
+        const boughtTier = lifetimeMaxDimensionTierFromBought(this.dimensions)
+        if (saveVersion >= 19) {
+          const savedTier =
+            typeof data.lifetimeMaxDimensionTier === 'number'
+              ? clampSavedNumber(data.lifetimeMaxDimensionTier, 0, 0, MAX_DIMENSIONS)
+              : 0
+          this.lifetimeMaxDimensionTier = Math.max(savedTier, boughtTier)
+        } else {
+          this.lifetimeMaxDimensionTier = Math.max(
+            boughtTier,
+            legacyLifetimeMaxDimensionTier(this.lifetimePeakMatter)
+          )
+        }
+
         if (!this.hasBreakSingularity && this.matter.gte(D_INFINITY)) {
           this.matter = D_INFINITY
         }
@@ -986,7 +1010,7 @@ export const saveActions = {
         this.activeCrisisDilemma = null
         this.crisisBackfireDebuff = 0
 
-        // ADR-0072 §A: kutlama sayacını yüklenen duruma SESSİZCE hizala. Bu satır,
+        // ADR-0076 §A: kutlama sayacını yüklenen duruma SESSİZCE hizala. Bu satır,
         // restore sonrası ilk canlı tick'in "artış" görüp geçmiş açılışları yeniden
         // kutlamasını engeller. Çevrimdışı simülasyon bu noktadan ÖNCE çalıştığı için
         // sayaç nihai (post-offline) değere hizalanır; dönüşte gecikmeli patlama olmaz.

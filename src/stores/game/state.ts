@@ -17,13 +17,13 @@ import type { FeatureTeaching } from '../../game/feature-teachings'
 import type { ActiveBuff, AutobuyerConfig, CrisisDilemma, DimensionData, FloatingAnomaly, GameSettings, GuiltWrinkler, LabCell, LabMode, LabSeedType, MusicTrackId, OfflineReport, PastSingularityRecord, PlayerStats, ScaleJumpRecord, StanceType } from '../../models/types'
 
 export function buildInitialState() {
-  // ADR-0072 §A: kutlama sayacının başlangıcı, kütle kapılarından türeyen açık
-  // boyut sayısıyla HİZALI doğar (taban 3). Aksi hâlde ilk tick bunu "artış"
-  // sanıp yeni oyunda sahte bir doğum kutlaması ateşlerdi.
+  // ADR-0076: kutlama sayacının başlangıcı, açık boyut sayısıyla HİZALI doğar
+  // (taban 3: henüz hiçbir boyut satın alınmadı). Aksi hâlde ilk tick bunu
+  // "artış" sanıp yeni oyunda sahte bir doğum kutlaması ateşlerdi.
   const initialUnlockedDimensions = resolvedUnlockedDimensionCount({
     dimensionCapFloor: BASE_UNLOCKED_DIMENSIONS,
     activeChallenge: null,
-    lifetimePeakMatter: new Decimal(10)
+    lifetimeMaxDimensionTier: 0
   })
   return {
     // Temel Kaynak: DOPAMİN (Dopamine)
@@ -45,10 +45,14 @@ export function buildInitialState() {
     // ve serialize listesine EKLENMEZ (kayıt şeması/migrasyon yok — spec §2.2).
     speedChipLevel: 0,
     dimensionCapFloor: BASE_UNLOCKED_DIMENSIONS, // Save v12 legacy min açık tier (ADR-0033: taban 3)
-    formatDiscoverSeenCap: 3, // Kutlanmış / tanıtılmış max tier (yeni oyun 3; D4+ kütle kapısıyla açılır — ADR-0072)
+    // ADR-0076 §1: hayat boyu satın alınmış en yüksek boyut tier'ı (0 = hiç
+    // satın alınmadı). Açılışın TEK kaynağıdır ve koşu sıfırlamalarından
+    // (sıçrama / küme / şafak) etkilenmez — açılış bir OLAYdır.
+    lifetimeMaxDimensionTier: 0,
+    formatDiscoverSeenCap: 3, // Kutlanmış / tanıtılmış max tier (yeni oyun 3; D4+ satın almayla açılır — ADR-0076)
     formatUnlockBuffTier: 0,
     formatUnlockBuffUntil: 0,
-    // ADR-0072 §A: kütle kapısı kutlaması için "son kutlanan açık boyut sayısı".
+    // ADR-0076 §A: açılış kutlaması için "son kutlanan açık boyut sayısı".
     // UÇUCUDUR (kayıt edilmez): deserialize sonunda sessizce hizalanır, böylece
     // kayıt yükleme kutlama tetiklemez. Yalnızca canlı update() tick'inde artış
     // olduğunda celebrateDimensionUnlocks() ateşlenir.

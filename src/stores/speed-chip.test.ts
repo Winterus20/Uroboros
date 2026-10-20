@@ -163,7 +163,9 @@ describe("M1 Üretim Çipi — koşu içi sıfırlama", () => {
     const store = createFreshStore()
     store.speedChipLevel = 4
     store.tickspeedBought = 3
-    store.dimensions[2].amount = new Decimal(100) // shift hedefi: D3 × 10
+    // ADR-0076: sıçrama D8 çağı mekaniğidir — D8 açık olmalı, hedef D8 miktarı.
+    store.lifetimeMaxDimensionTier = 7
+    store.dimensions[7].amount = new Decimal(100)
 
     expect(store.dimensionShift(false)).toBe(true)
 

@@ -22,19 +22,22 @@ export const AUTOBUYER_COSTS: Record<string, Decimal> = {
 }
 
 // 3 katmanlı pacing: maliyet + ilerleme kilidi + yavaş tekli hız
-// dim1 tadımlık erken açılır, dim2/tickspeed D3 ister, dim3-4 ilk sıçramayı ister,
-// dim5-8 ikinci sıçramayı ister, shift/galaxy botu ancak ilk sıçrama/kümeden sonra açılır.
+//
+// ADR-0076: bot kademeleri artık SıÇRAMAYA değil BOYUT ZİNCİRİNE bağlıdır.
+// dimN botu, bir altındaki boyuttan (D{N-1}) satın alınmış olmayı ister; böylece
+// bot zinciri kendi kendini besler ve D8'e kadar deadlock'sız ilerler.
+// Sıçrama botu D8 sahibi olmayı ister (Ölçek Sıçraması bir D8 çağı mekaniğidir).
 export const AUTOBUYER_PROGRESS_REQ: Record<string, { shifts?: number; galaxies?: number; needTier?: number; singularities?: number }> = {
   dim1: {},
-  dim2: { needTier: 3 },
-  dim3: { shifts: 1 },
-  dim4: { shifts: 1 },
-  dim5: { shifts: 1 },
-  dim6: { shifts: 2 },
-  dim7: { shifts: 3 },
-  dim8: { shifts: 4 },
+  dim2: { needTier: 1 },
+  dim3: { needTier: 2 },
+  dim4: { needTier: 3 },
+  dim5: { needTier: 4 },
+  dim6: { needTier: 5 },
+  dim7: { needTier: 6 },
+  dim8: { needTier: 7 },
   tickspeed: { needTier: 3 },
-  shift: { shifts: 0 },
+  shift: { needTier: 8 },
   galaxy: { galaxies: 1 },
   singularity: { singularities: 3 }
 }

@@ -246,7 +246,7 @@ describe('Save Roundtrip & Slot Isolation Tests', () => {
 
       const serialized = store1.serialize()
       // timeClock yalnızca canlı yay durumunu taşır; canlı faz kayda girmez.
-      expect(serialized.version).toBe(18)
+      expect(serialized.version).toBe(19)
       expect(serialized.timeClock).toEqual({ drag: 421.5 })
       // Yaşam boyu istatistikler `stats` bloğunda yazılır (prestijden sağ çıkar).
       expect(serialized.stats.clockRewinds).toBe(17)

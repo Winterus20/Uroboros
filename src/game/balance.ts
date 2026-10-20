@@ -68,35 +68,43 @@ export const EARLY_D6_SOFT_BUCKETS = 2
 
 /**
  * Yeni koşuda açık format sayısı tabanı: 3 (D1+D2+D3).
- * ADR-0072: bu taban SABİTTİR; D4–D8 artık sıçramadan değil deterministik kütle
- * eşiklerinden (`DIMENSION_UNLOCK_GATES`) açılır. ADR-0033'ün "D4 1. sıçramada
- * açılır" maddesi bu ADR ile süperseeded edildi.
+ *
+ * ADR-0076: D4–D8 artık SATIN ALMA ile açılır — bir boyuttan 1 paket alındığında
+ * bir sonraki boyut açılır (klasik AD düzeni). Kütle kapıları (legacy tablo) ve
+ * sıçrama açılışı bu ADR ile süperseeded edildi; legacy tablo yalnız kayıt
+ * göçü (v18 → v19) için yaşatılır.
  */
 export const BASE_UNLOCKED_DIMENSIONS = 3
 
+/** Toplam boyut sayısı (D1–D8). */
+export const MAX_DIMENSIONS = 8
+
 /**
- * D4–D8 açılış kapıları — TEK KAYNAK (ADR-0072 §2).
+ * Bir boyutun "alınmış" sayılması için gereken adet (ADR-0076 §1).
  *
- * EŞİK TABLOSU — P3.3 ölçüm kodu E5 (ÖLÇÜLMÜŞ, KİLİTLİ):
- * D4 1e8 · D5 1e14 · D6 1e24 · D7 1e40 · D8 1e65. Sıçrama sayısı bu tabloda YOKTUR.
- *
- * Ölçüm (brain/scratchpad/harness/out/E5.json · active/seed 1/dt 0.5/30 dk):
- * D4 186s · D5 195s · D6 231.5s · D7 353s · D8 1377s → 30 dk'da tepe log10 = 81.7.
- * E5, P0 §8 aday tablosundaki (A / B / C) en sağlıklı yayılımı verir: D4–D7 ilk
- * 6 dakikada açılır (erken üretim çarpanları toplanır), D8 ise 23. dakikaya
- * yayılır — böylece oyuncu ilk yarım saatini 8 boyutla değil 7 boyutla geçirmez
- * ve D8'in üretim katkısı koşunun sonuna doğru gelir.
- *
- * Ölçülen kümeler (E2/E3/E4/E5): 1e8/1e25/1e50/1e75/1e100 · 1e8/1e50/1e75/1e97/1e122
- * · 1e8/1e25/1e50/1e75/1e97 · 1e8/1e14/1e24/1e40/1e65. E5, ilk 600 saniyede
- * açılan özellik kapısı sayısı (5) ve 30 dakikadaki tepe (1e82) dengesini koruyan
- * tek adaydır.
- *
- * P3.3'te bu tablo KORUNDU: ölçülmüş değer bozulmaz. Yatay (özellik) kapıları
- * src/game/unlocks.ts → FEATURE_UNLOCKS'ta; ölçüm tablosu ve kabul ölçütleri
- * brain/scratchpad/p3-final-ladder.md'de.
+ * 10 = bir tam paket (UI'daki "Satın Al" butonu 10 adet alır). Bir boyuttan
+ * 10 adet satın alındığında bir sonraki boyut açılır.
  */
-export const DIMENSION_UNLOCK_GATES: ReadonlyArray<{ tier: number; minMatter: string }> = [
+export const DIMENSION_UNLOCK_PURCHASE_COUNT = 10
+
+/**
+ * Ölçek Sıçraması'nın hedef boyutu (ADR-0076 §2).
+ *
+ * Sıçrama artık bir D8 çağı mekaniğidir: D8 açılmadan sıçrama yapılamaz.
+ * C7 (Hesap Kısıtlaması) challenge'ı boyutları 6'da kırpar → hedef D6 olur.
+ */
+export const SCALE_SHIFT_TARGET_TIER = 8
+
+/**
+ * LEGACY boyut açılış kapıları (ADR-0072 §2) — YALNIZ KAYIT GÖÇÜ İÇİN.
+ *
+ * ADR-0076 ile açılış kaynağı SATIN ALMA oldu; bu tablo artık hiçbir runtime
+ * yolunu beslemez. Tek amacı: v18'den eski kayıtları yeni modele taşırken
+ * oyuncunun açık boyut sayısını düşürmemek (bkz. `legacyDimensionGateUnlockCount`).
+ *
+ * EŞİK TABLOSU (P3.3 ölçüm kodu E5): D4 1e8 · D5 1e14 · D6 1e24 · D7 1e40 · D8 1e65.
+ */
+export const LEGACY_DIMENSION_UNLOCK_GATES: ReadonlyArray<{ tier: number; minMatter: string }> = [
   { tier: 4, minMatter: '1e8' },
   { tier: 5, minMatter: '1e14' },
   { tier: 6, minMatter: '1e24' },
@@ -104,8 +112,8 @@ export const DIMENSION_UNLOCK_GATES: ReadonlyArray<{ tier: number; minMatter: st
   { tier: 8, minMatter: '1e65' }
 ]
 
-/** Kapı eşiklerinin Decimal ön-derlemesi — sıcak yolda yeni Decimal ayırmamak için. */
-const DIMENSION_UNLOCK_GATE_VALUES = DIMENSION_UNLOCK_GATES.map((gate) => ({
+/** Legacy kapı eşiklerinin Decimal ön-derlemesi — sıcak yolda yeni Decimal ayırmamak için. */
+const DIMENSION_UNLOCK_GATE_VALUES = LEGACY_DIMENSION_UNLOCK_GATES.map((gate) => ({
   tier: gate.tier,
   minMatter: new Decimal(gate.minMatter)
 }))
@@ -140,8 +148,14 @@ export function challengeDimensionCap(state: { activeChallenge: string | null })
   return getChallengeById(state.activeChallenge)?.modifiers.maxDimensions
 }
 
-/** Tepe kütlenin aştığı kapı sayısı (0..5). NaN/geçersiz girdi güvenli tarafta 0 döner. */
-export function dimensionGateUnlockCount(lifetimePeakMatter?: Decimal): number {
+/**
+ * LEGACY: tepe kütlenin aştığı kütle kapısı sayısı (0..5).
+ *
+ * ADR-0076 sonrası açılış kaynağı bu tablo DEĞİLDİR; fonksiyon yalnızca
+ * v18'den eski kayıtların yeni modele taşınmasında kullanılır (kayıt göçü).
+ * NaN/geçersiz girdi güvenli tarafta 0 döner.
+ */
+export function legacyDimensionGateUnlockCount(lifetimePeakMatter?: Decimal): number {
   if (!lifetimePeakMatter) return 0
   if (lifetimePeakMatter.isNan() || Number.isNaN(lifetimePeakMatter.mag)) return 0
   let opened = 0
@@ -153,25 +167,61 @@ export function dimensionGateUnlockCount(lifetimePeakMatter?: Decimal): number {
 }
 
 /**
- * Açık boyut sayısı — ADR-0072: taban + deterministik kütle kapıları.
+ * Satın alınmış boyutlardan türetilen en yüksek tier (ADR-0076).
  *
- * - Sıçrama terimi (`dimensionShifts` / `lifetimePeakShifts`) artık kullanılmaz;
- *   o alanlar yalnızca istatistik olarak state'te ve kayıtta kalır.
- * - Açılış kaynağı `lifetimePeakMatter`dır: monotoniktir (ADR-0035 "açılış bir
- *   OLAYdır"), böylece yeni kayıt alanı ve migrasyon gerekmez.
- * - `dimensionCapFloor` (save v12 legacy taban) ve `challengeDimensionCap` (C7)
- *   davranışı korunur.
+ * Bir boyut "alınmış" sayılırsa (bought >= DIMENSION_UNLOCK_PURCHASE_COUNT)
+ * bir sonraki boyut açılır. Kayıt göçünde ve hata düzeltmede kullanılır.
+ */
+export function lifetimeMaxDimensionTierFromBought(dimensions: Array<{ bought: number }>): number {
+  let maxTier = 0
+  for (let i = 0; i < dimensions.length; i++) {
+    if (dimensions[i].bought >= DIMENSION_UNLOCK_PURCHASE_COUNT) maxTier = i + 1
+  }
+  return maxTier
+}
+
+/**
+ * LEGACY açılış modelinden türetilen en yüksek tier (ADR-0076 kayıt göçü).
+ *
+ * v18 ve öncesi kayıtlarda açılış kütle kapılarından gelirdi (ADR-0072).
+ * Bu fonksiyon, eski kaydın açık boyut sayısını yeni modele taşır.
+ */
+export function legacyLifetimeMaxDimensionTier(lifetimePeakMatter?: Decimal): number {
+  const gateCount = legacyDimensionGateUnlockCount(lifetimePeakMatter)
+  return Math.max(0, Math.min(MAX_DIMENSIONS - 1, BASE_UNLOCKED_DIMENSIONS + gateCount - 1))
+}
+
+/**
+ * Satın alma tabanlı açık boyut sayısı (ADR-0076 §1) — TEK KAYNAK.
+ *
+ * Kural: bir boyuttan `DIMENSION_UNLOCK_PURCHASE_COUNT` (10) adet satın alındığında
+ * bir sonraki boyut açılır. `lifetimeMaxDimensionTier`, hayat boyu satın alınmış
+ * en yüksek boyut tier'ıdır: koşu sıfırlamalarından (sıçrama / küme / şafak)
+ * ETKİLENMEZ — açılış bir OLAYdır (ADR-0035 ruhu).
+ *
+ * Taban (BASE_UNLOCKED_DIMENSIONS = 3) her zaman geçerlidir: D1–D3 oyunun
+ * başında açıktır, satın alma kuralı D3 → D4 zincirinden itibaren işler.
+ */
+export function dimensionUnlockCountFromPurchases(lifetimeMaxDimensionTier: number): number {
+  if (!Number.isFinite(lifetimeMaxDimensionTier)) return BASE_UNLOCKED_DIMENSIONS
+  const tier = Math.max(0, Math.min(MAX_DIMENSIONS - 1, Math.floor(lifetimeMaxDimensionTier)))
+  return Math.min(MAX_DIMENSIONS, Math.max(BASE_UNLOCKED_DIMENSIONS, tier + 1))
+}
+
+/**
+ * Açık boyut sayısı — ADR-0076: taban + SATIN ALMA ile açılan boyutlar.
+ *
+ * - Açılış kaynağı `lifetimeMaxDimensionTier`dır (kalıcı; sıçrama onu silmez).
+ * - `dimensionCapFloor` (save v12 legacy taban) ek taban olarak korunur.
+ * - `challengeDimensionCap` (C7) davranışı korunur.
  */
 export function resolvedUnlockedDimensionCount(state: {
   dimensionCapFloor: number
   activeChallenge: string | null
-  lifetimePeakMatter?: Decimal
+  lifetimeMaxDimensionTier: number
 }): number {
-  const gateCap = Math.min(
-    8,
-    BASE_UNLOCKED_DIMENSIONS + dimensionGateUnlockCount(state.lifetimePeakMatter)
-  )
-  const base = Math.max(gateCap, state.dimensionCapFloor)
+  const purchaseCap = dimensionUnlockCountFromPurchases(state.lifetimeMaxDimensionTier)
+  const base = Math.min(MAX_DIMENSIONS, Math.max(purchaseCap, state.dimensionCapFloor))
   const cap = challengeDimensionCap(state)
   return cap === undefined ? base : Math.min(base, cap)
 }

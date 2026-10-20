@@ -23,8 +23,13 @@
  * (`timeClock.drag/totalRewoundSeconds/releases/bestTension`). Canlı faz uçucudur;
  * yüklemede saat her zaman `idle`'a döner (floatingAnomalies muamelesi).
  * v17 kayıtları aynen açılır (asgari sürüm 17'de kalır) — alan yoksa nötr varsayılan.
+ *
+ * v19 — Satın Alma Tabanlı Boyut Açılışı (ADR-0076): yeni alan
+ * `lifetimeMaxDimensionTier` (hayat boyu satın alınmış en yüksek boyut tier'ı).
+ * v18 kayıtları aynen açılır: alan yoksa göç kancası satın alınmış boyutlardan
+ * ve legacy kütle kapılarından türetir — hiçbir oyuncu açık boyutunu kaybetmez.
  */
-export const SAVE_VERSION = 18
+export const SAVE_VERSION = 19
 
 /**
  * Asgari desteklenen kayıt sürümü.

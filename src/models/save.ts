@@ -286,6 +286,12 @@ export interface SerializedPlayerState {
    *  `dimensionShifts`'i 0'a indirdiği için sıçrama sayacına bağlı açılışlar
    *  (Önbellek Temizleme) bu kalıcı tepe noktadan okur. */
   lifetimePeakShifts?: number
+  /** ADR-0076 (v19): hayat boyu satın alınmış en yüksek boyut tier'ı (0 = hiç).
+   *  Boyut açılışının TEK kaynağıdır: bir boyuttan 1 paket (10 adet) alındığında
+   *  bir sonraki boyut açılır ve bu açılış koşu sıfırlamalarından etkilenmez.
+   *  Eski kayıtlarda yok: yükleme sırasında satın alınmış boyutlardan + legacy
+   *  kütle kapılarından türetilir (bkz. deserialize v19 göç kancası). */
+  lifetimeMaxDimensionTier?: number
 }
 
 export type SerializedGameState = SerializedPlayerState

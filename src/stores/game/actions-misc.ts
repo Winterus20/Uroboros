@@ -423,7 +423,7 @@ export const miscActions = {
         this.syncUnlocks()
       }
 
-      // ADR-0072 §A: kütle kapılarından açılan boyutların kutlaması. syncUnlocks()
+      // ADR-0076 §A: satın almayla açılan boyutların kutlaması. syncUnlocks()
       // tepe kütleyi yükselttikten SONRA okunur; aynı tick'te birden çok boyut
       // açılsa bile TEK kutlama (en yüksek tier) yapılır. Çevrimdışı simülasyonda
       // ses/konfeti susar, sayaç sessizce ilerler — ayrıntı action'ın içindedir.

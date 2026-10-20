@@ -4,85 +4,105 @@ import { Decimal } from '../core/math'
 import { createFreshStore } from '../test/helpers'
 
 /**
- * ADR-0072 §A — Kütle kapısı açılış kutlaması.
+ * ADR-0076 - Satin alma tabanli boyut acilisi: kutlama.
  *
- * Açılış artık Ölçek Sıçraması olayından değil, `lifetimePeakMatter` kütle
- * eşiklerinden (DIMENSION_UNLOCK_GATES) gelir. Eski kutlama
- * performScaleJump('shift') dalındaydı ve bu yolla hiç tetiklenmiyordu.
+ * Acilis artik kitle kapilarindan degil, SATIN ALMAdan gelir: bir boyuttan
+ * 1 paket alindiginda bir sonraki boyut acilir. Eski kutlama
+ * performScaleJump('shift') dalindaydi ve bu yolla hic tetiklenmiyordu.
  *
- * Üç garanti:
- *  (a) canlı tick'te açık boyut sayısı ARTINCA BİR kutlama ateşlenir,
- *  (b) aynı tick'te birden çok boyut açılsa bile TEK çağrı, EN YÜKSEK tier ile,
- *  (c) kayıt yükleme (deserialize) kutlama ATEŞLEMEZ — sayaç sessizce hizalanır.
+ * Uc garanti:
+ *  (a) canli tick'te acilan boyut sayisi ARTINCA BIR kutlama ateslenir,
+ *  (b) ayni tick'te birden cok boyut acilsa bile TEK cagri, EN YUKSEK tier ile,
+ *  (c) kayit yukleme (deserialize) kutlama ATESLEMEZ - sayac sessizce hizalanir.
  */
-describe('ADR-0072 kütle kapısı kutlaması', () => {
-  it('tick içinde yeni boyut açılınca kutlamayı ateşler (buff + seen cap)', () => {
+describe('ADR-0076 satin alma acilisi kutlamasi', () => {
+  it('paket satin alinca yeni boyut acilir ve tick icinde kutlanir', () => {
     const store = createFreshStore()
     expect(store.unlockedDimensionsCount).toBe(3)
     expect(store.formatDiscoverSeenCap).toBe(3)
 
-    // D4 kapısı (1e8) aşılır; syncUnlocks bu tick'te çalışsın diye accumulator dolu.
-    store.matter = new Decimal('1e8')
-    store.lifetimePeakMatter = new Decimal('1e8')
+    // D3'un ilk paketi (10 adet) alinir -> D4 acilir.
+    store.matter = new Decimal('1e6')
+    expect(store.buyDimension(3, false)).toBe(true)
+    expect(store.dimensions[2].bought).toBe(10)
+    expect(store.lifetimeMaxDimensionTier).toBe(3)
+    expect(store.unlockedDimensionsCount).toBe(4)
+
+    // Kutlama tick icinde ateslenir (syncUnlocks accumulator'u dolu).
     store.unlockCheckAcc = 0.5
     store.update(0.1)
 
-    expect(store.unlockedDimensionsCount).toBe(4)
     expect(store.formatDiscoverSeenCap).toBe(4)
     expect(store.formatUnlockBuffTier).toBe(4)
     expect(store.formatUnlockBuffUntil).toBeGreaterThan(0)
   })
 
-  it('aynı tick içinde çoklu açılışta TEK çağrı, en yüksek tier ile', () => {
+  it('paket satin alinmadan boyut acilmaz', () => {
+    const store = createFreshStore()
+    store.matter = new Decimal('1e6')
+    // x1 alim (1 adet) tek basina acmaz: acilis 1 paket (10 adet) ile olur.
+    expect(store.buyOneUnit(3, false)).toBe(true)
+    expect(store.dimensions[2].bought).toBe(1)
+    expect(store.unlockedDimensionsCount).toBe(3)
+  })
+
+  it('ayni tick icinde coklu acilista TEK cagri, en yuksek tier ile', () => {
     const store = createFreshStore()
     const spy = vi.spyOn(store, 'celebrateFormatUnlock')
 
-    // 1e41 → D4+D5+D6+D7 kapıları (1e8/1e14/1e24/1e40) aynı tick'te açılır.
-    store.matter = new Decimal('1e41')
-    store.lifetimePeakMatter = new Decimal('1e41')
+    // D3, D4 ve D5 paketleri alinir -> D4, D5, D6 ayni anda acilir.
+    store.matter = new Decimal('1e12')
+    for (const tier of [3, 4, 5]) {
+      expect(store.buyDimension(tier, false)).toBe(true)
+    }
+    expect(store.unlockedDimensionsCount).toBe(6)
+
     store.unlockCheckAcc = 0.5
     store.update(0.1)
 
-    expect(store.unlockedDimensionsCount).toBe(7)
     expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy).toHaveBeenCalledWith(7)
+    expect(spy).toHaveBeenCalledWith(6)
     spy.mockRestore()
   })
 
-  it('kayıt yükleme kutlama ateşlemez, sayaç sessizce hizalanır', () => {
+  it('kayit yukleme kutlama ateslemez, sayac sessizce hizalanir', () => {
     const saver = createFreshStore()
-    saver.matter = new Decimal('1e65')
-    saver.lifetimePeakMatter = new Decimal('1e65')
+    saver.matter = new Decimal('1e12')
+    saver.buyDimension(3, false)
+    saver.buyDimension(4, false)
+    saver.buyDimension(5, false)
     const saved = saver.serialize()
 
     const store = createFreshStore()
     const spy = vi.spyOn(store, 'celebrateFormatUnlock')
     store.deserialize(saved)
 
-    // Geçmiş açılışlar geri kazanıldı ama kutlanmadı.
-    expect(store.unlockedDimensionsCount).toBe(8)
-    expect(store.celebratedDimensionCap).toBe(8)
+    // Gecmis acilislar geri kazanildi ama kutlanmadi.
+    expect(store.unlockedDimensionsCount).toBe(6)
+    expect(store.celebratedDimensionCap).toBe(6)
     expect(spy).not.toHaveBeenCalled()
 
-    // Yükleme sonrası ilk canlı tick de telafi kutlaması üretmez.
+    // Yukleme sonrasi ilk canli tick de telafi kutlamasi uretmez.
     store.update(0.1)
     expect(spy).not.toHaveBeenCalled()
     spy.mockRestore()
   })
 
-  it('çevrimdışı simülasyonda kutlama susar ama sayaç ilerler', () => {
+  it('cevrimdisi simulasyonda kutlama susar ama sayac ilerler', () => {
     const store = createFreshStore()
-    store.matter = new Decimal('1e14')
-    store.lifetimePeakMatter = new Decimal('1e14')
+    store.matter = new Decimal('1e12')
+    store.buyDimension(3, false)
+    store.buyDimension(4, false)
+    store.buyDimension(5, false)
     store.unlockCheckAcc = 0.5
     store.offlineSimActive = true
     store.update(0.1)
 
-    expect(store.unlockedDimensionsCount).toBe(5)
-    expect(store.celebratedDimensionCap).toBe(5)
+    expect(store.unlockedDimensionsCount).toBe(6)
+    expect(store.celebratedDimensionCap).toBe(6)
     expect(store.formatDiscoverSeenCap).toBe(3) // ses/konfeti yok
 
-    // Oyuncu döndüğünde gecikmeli patlama olmaz.
+    // Oyuncu dondugunde gecikmeli patlama olmaz.
     store.offlineSimActive = false
     store.update(0.1)
     expect(store.formatDiscoverSeenCap).toBe(3)

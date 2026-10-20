@@ -4,7 +4,7 @@ import { safeConfetti } from '../../core/celebrate'
 import { format } from '../../core/format'
 import { D_0, Decimal } from '../../core/math'
 import { hasAchievementReward } from '../../game/achievements'
-import { DIMENSION_CHAIN_RATE, PURCHASE_CHAIN_BONUS_SECONDS, PURCHASE_MATTER_TICK_SECONDS, calcDimensionExactTotal, calcMaxDimensionPacks, calcMaxPacks, calcTickspeedExactTotal, challengeCostInflationMult, dimensionCostForBucket, maxBuyPacksCap, resolvedUnlockedDimensionCount } from '../../game/balance'
+import { DIMENSION_CHAIN_RATE, DIMENSION_UNLOCK_PURCHASE_COUNT, MAX_DIMENSIONS, PURCHASE_CHAIN_BONUS_SECONDS, PURCHASE_MATTER_TICK_SECONDS, calcDimensionExactTotal, calcMaxDimensionPacks, calcMaxPacks, calcTickspeedExactTotal, challengeCostInflationMult, dimensionCostForBucket, maxBuyPacksCap, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { FORMAT_UNLOCK_BUFF_SECONDS, getTierIdentity } from '../../game/dimension_identity'
 import { SCALE_LAYERS, applyResetScope, recordJump } from '../../game/layers'
 import { NEURAL_TREE } from '../../game/neural-data'
@@ -40,6 +40,24 @@ export const dimensionActions = {
         )
       }
       sounds.playProductionSurge()
+    },
+
+    /**
+     * ADR-0076 §1 — SATIN ALINAN BOYUT BİR SONRAKİ BOYUTU AÇAR.
+     *
+     * Bir boyuttan `DIMENSION_UNLOCK_PURCHASE_COUNT` (10 = bir paket) adet
+     * satın alındığında o boyut kalıcı olarak "alınmış" sayılır ve bir sonraki
+     * boyut açılır.
+     *
+     * Kalıcılık: `lifetimeMaxDimensionTier` koşu sıfırlamalarından (sıçrama /
+     * küme / şafak) etkilenmez; açılış bir OLAYdır (ADR-0035 ruhu). Sıçrama
+     * sonrası boyutlar yeniden alınır ama AÇIK kalır.
+     */
+    registerDimensionPurchase(this: StoreApi, tier: number, bought: number): void {
+      if (bought < DIMENSION_UNLOCK_PURCHASE_COUNT) return
+      if (tier > this.lifetimeMaxDimensionTier) {
+        this.lifetimeMaxDimensionTier = Math.min(MAX_DIMENSIONS, tier)
+      }
     },
 
     /** Satın alım sonrası zinciri birkaç saniye “hemen” akıtır; D2→D1 Dopamin/s’yi ve sayacı yükseltir. */
@@ -93,6 +111,7 @@ export const dimensionActions = {
         this.matter = this.matter.minus(cost)
         dim.amount = dim.amount.plus(10)
         dim.bought += 10
+        this.registerDimensionPurchase(tier, dim.bought)
         this.registerChallengeBuy(1)
 
         if (playSound) {
@@ -144,6 +163,7 @@ export const dimensionActions = {
         this.matter = this.matter.minus(total)
         dim.amount = dim.amount.plus(10 * packs)
         dim.bought += 10 * packs
+        this.registerDimensionPurchase(tier, dim.bought)
         this.registerChallengeBuy(packs)
       }
       // Kalanla alınabilen tekiller de süpürülür (en fazla 9 adet: sonraki paket zaten karşılanamıyor)
@@ -157,7 +177,10 @@ export const dimensionActions = {
         dim.bought += 1
         swept++
       }
-      if (swept > 0) this.registerChallengeBuy(swept / 10)
+      if (swept > 0) {
+        this.registerDimensionPurchase(tier, dim.bought)
+        this.registerChallengeBuy(swept / 10)
+      }
       if (packs <= 0 && swept <= 0) return false
 
       if (playSound) {
@@ -330,10 +353,10 @@ export const dimensionActions = {
     },
 
     /**
-     * ADR-0072 §A: Kütle kapılarından açılan boyutların TICK kutlaması.
+     * ADR-0076 §A: SATIN ALMAYLA açılan boyutların TICK kutlaması.
      *
-     * Neden ayrı bir yol: açılış artık Sıçrama olayından değil, `lifetimePeakMatter`
-     * eşiklerinden gelir (tick içinde sessizce olur). Eski kutlama
+     * Neden ayrı bir yol: açılış artık Sıçrama olayından değil, SATIN ALMA
+     * kaydından gelir (tick içinde sessizce olur). Eski kutlama
      * `performScaleJump('shift')` dalındaydı ve bu yüzden hiç tetiklenmiyordu.
      *
      * Garantiler:
@@ -390,9 +413,9 @@ export const dimensionActions = {
         // C3 üstel sayaç sıfırlanır, C8 bildirim sayacı %40 temizlenir.
         this.relieveChallengeOnPrestige()
 
-        // ADR-0072: Açılış kutlaması artık burada DEĞİL. Açılışlar kütle
-        // kapılarından geldiği için performScaleJump('shift') çoğu zaman hiç
-        // tetiklenmez; kutlama update() tick'indedir (celebrateDimensionUnlocks).
+        // ADR-0076: Açılış kutlaması artık burada DEĞİL. Açılışlar satın almadan
+        // geldiği için performScaleJump('shift') çoğu zaman hiç tetiklenmez;
+        // kutlama update() tick'indedir (celebrateDimensionUnlocks).
         // Burada bırakılsaydı aynı açılış için İKİ kez kutlama olurdu.
         if (playSound) {
           sounds.playShift()
@@ -503,6 +526,7 @@ export const dimensionActions = {
           this.matter = this.matter.minus(packPrice)
           dim.amount = dim.amount.plus(10)
           dim.bought += 10
+          this.registerDimensionPurchase(tier, dim.bought)
           unitsBought += 10
           continue
         }
@@ -514,6 +538,7 @@ export const dimensionActions = {
         this.matter = this.matter.minus(unitCost.times(affordable))
         dim.amount = dim.amount.plus(affordable)
         dim.bought += affordable
+        this.registerDimensionPurchase(tier, dim.bought)
         unitsBought += affordable
       }
 
@@ -537,6 +562,7 @@ export const dimensionActions = {
       this.matter = this.matter.minus(unitCost)
       dim.amount = dim.amount.plus(1)
       dim.bought += 1
+      this.registerDimensionPurchase(tier, dim.bought)
       this.registerChallengeBuy(0.1)
       if (playSound) sounds.playBuy(tier)
       this.finalizeDimensionPurchase(tier, mpsBefore, playSound)

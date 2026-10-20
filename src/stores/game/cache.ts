@@ -104,7 +104,7 @@ export function dimMultCacheKey(
   dim1Growth: string,
   completedJoin: string,
   capFloor: number,
-  peakMatter: string,
+  maxDimensionTier: number,
   formatBuffTier: number,
   formatBuffUntil: number,
   challengeTimeMult: number,
@@ -117,16 +117,18 @@ export function dimMultCacheKey(
   // formatBuffUntil zaman damgası tek başına yeterli değildir: süre dolduğunda damga
   // değişmez, anahtar değişmez ve bayat (süresiz) çarpan cache'ten geri döner.
   // Sürüm 12'de bu, geçici "Format Keşfi" bonusunun kalıcılaşmasına yol açıyordu.
-  // NOT (ADR-0072): boyut açılışı tepe kütleye bağlıdır; `shifts` sayacı artık
-  // açılışı değiştirmez ama `peakMatter` bir kapıyı aştığında tier pasifi
-  // (tierProductionMult) değişebildiği için anahtarda yer almalı.
+  // NOT (ADR-0076): boyut açılışı SATIN ALMA tabanlıdır; `shifts` sayacı açılışı
+  // değiştirmez ama `maxDimensionTier` (hayat boyu satın alınmış en yüksek tier)
+  // bir boyut açtığında tier pasifi (tierProductionMult) değişebildiği için
+  // anahtarda yer almalı. (Eski `peakMatter` bileşeni kaldırıldı: açılış artık
+  // tepe kütleye bağlı değil, dolayısıyla gereksiz cache invalidation üretiyordu.)
   // NOT (M1 v2): `speedChipLevel` ÜRETİM ÇARPANI'nı değiştirir (1.1^seviye).
   // Anahtarda YER ALMASI ZORUNLU: çip alındıktan sonra çarpan bayat kalırsa
   // üretim sessizce eski değerle çalışır (sessiz hata) — bkz. speed-chip.test.ts.
   return (
     tier + '|' + bought + '|' + shifts + '|' + eyeLvl + '|' + sac + '|' + partnerBought + '|' +
     neuralProd + '|' + offlineBoost + '|' + (activeChallenge || '') + '|' +
-    dim1Growth + '|' + completedJoin + '|' + capFloor + '|' + peakMatter + '|' + formatBuffTier +
+    dim1Growth + '|' + completedJoin + '|' + capFloor + '|' + maxDimensionTier + '|' + formatBuffTier +
     '|' + formatBuffUntil + '|' + challengeTimeMult + '|' + (formatBuffActive ? 'A' : 'X') +
     '|' + relicCount + '|' + matureCellsCount + '|' + speedChipLevel
   )

@@ -19,6 +19,8 @@ function richStore() {
     d.bought = 35
   }
   store.tickspeedBought = 5
+  // ADR-0076: Ölçek Sıçraması D8 çağı mekaniğidir — D8'in açık olması gerekir.
+  store.lifetimeMaxDimensionTier = 7
   return store
 }
 

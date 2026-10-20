@@ -199,6 +199,36 @@ push'landı. Kapı: typecheck 0 · test **512/512** · build 0 · smoke 6/6. `--
 **Sana açık:** ADR-0075 — tempo bandı artık ölçülen gerçeği taşıyor (taban oyun 8–11 sa; yatırımla
 oynayan oyuncu ~4.5 sa). Onaylıyor musun, yoksa 3s30dk hedefi için ayrı denge projesi mi?
 
+### ▶️ Dalga 7 — ADR-0076: Satın Alma Tabanlı Boyut Açılışı + D8 Çağı Ölçek Sıçraması (2026-10-20)
+
+**Kullanıcı kararı (tek mesaj, iki madde):**
+1. "ölçek sıçraması d8'de kullanılmaya başlansın, önceki dimlerde değil"
+2. "her dim aldığımızda sonraki dim açılsın"
+
+**Uygulananlar:**
+- Açılış kaynağı = SATIN ALMA: bir boyuttan 1 paket (10 adet) alınınca bir sonraki boyut
+  açılır. Kalıcı alan `lifetimeMaxDimensionTier` (sıçrama/küme/şafak sıfırlamasından
+  etkilenmez). D1–D3 taban olarak açık.
+- `shiftRequirement` sabit D8 hedefi; `canShift` hedef açık değilse false. C7'de D6.
+- Otobot kademeleri boyut zincirine hizalandı (deadlock kalktı), sıçrama botu D8 ister.
+- Kayıt şeması **v19** (`lifetimeMaxDimensionTier`); v18 ve öncesi kayıtlarda legacy kütle
+  kapıları yeni tabana çevrilir → **açık boyut kaybı yok**.
+- UI: teaser "D3'te 1 paket alınca açılır" + paket çubuğu; sıçrama kartı kilit durumu.
+
+**Ölçüm (smoke 30 dk, active/seed1/dt0.5):** d4 40.5 s · d5 102.5 s · d6 210.5 s ·
+d7 350.5 s · **d8 544.5 s** · ilk sıçrama **760.5 s** · 30 dk'da 3 sıçrama · zirve log10 48.8.
+(Öncesi: d8 1377 s · ilk sıçrama 41 s · 9 sıçrama · log10 97.6.)
+→ **Boyut merdiveni hızlandı** (D8: 23 dk → 9 dk) · **sıçrama döngüye girdi** (41 s → 12.7 dk)
+→ ilk 30 dk'da biriken çarpan 60x → 4.6x, ekonomi ~2 kat yavaşladı. Kasıtlı bedel.
+
+**Kapı:** typecheck 0 · test **514/514** · build 0 · smoke 6/6 (eşikler yeni ölçüme göre
+yeniden kalibre: log10 ≥ 45, shifts ≥ 3).
+
+**Açık (kullanıcı onayı gerekir):** tempo bandı (ADR-0075) bu değişiklikle yukarı iter —
+6 saatlik ölçüm `brain/scratchpad/harness/out/adr0076-6h.json`. Erken oyunu hızlandırmak
+istersen iki kol var: (a) sıçrama miktar rampasını yumuşatmak (D8 miktarı yerine D8 satın
+alımı), (b) sıçrama gücünü artırmak.
+
 **Kalan işler:**
 1. M1 v2 uygulaması (üretim çarpanı + cache anahtarı) + 30 dk ölçüm (çipsiz/cipli tepe karşılaştırması;
    600 sn'deki 4 kapı korunmalı) → AutobuyersTab kartı v2'ye göre.

@@ -8,6 +8,11 @@
 //   active, seed 1, dt=0.5, 0.5 saat). Eşikler 2026-10-10 probe'undan
 //   (log10=89.7, shifts=8, gal=1) bilinçli gevşek tutuldu: amaç hassas
 //   denge değil, "oyun açılıyor ve ekonomi nefes alıyor mu" kapısıdır.
+//   ADR-0076 (2026-10-20): boyut açılışı satın almaya, Ölçek Sıçraması D8'e
+//   bağlandı — ilk sıçrama 41 s -> 12.7 dk, 30 dk zirvesi log10 97.6 -> 48.8,
+//   sıçrama 9 -> 3. Eşikler yeni ölçüme göre YENİDEN KALİBRE EDİLDİ
+//   (log10 >= 45, shifts >= 3). Bunlar denge standardı değil, " ekonomi nefes
+//   alıyor mu" kapısıdır; sıçrama/ekonomi modeli değiştiğinde yeniden ölçülür.
 //   Ölçülen değer koşunun ZİRVESİDİR (`peaks`); `final` reset-sonrası anlık
 //   görüntüdür ve galaksi alımı kütleyi sıfırladığı için tek başına yanıltıcıdır.
 //   `peaks` alanı olmayan eski JSON'larda `final`a düşülür.
@@ -55,11 +60,11 @@ if (mode === "--smoke") {
   check(run.reached === false, "0.5 saatte tekillik henuz YOK (erken bitme regresyonu yakalanir)");
   const logM = metric("logMatter");
   check(
-    Number.isFinite(logM) && logM >= 60,
-    `30 dk aktif oyunda zirve log10 >= 60 (bulunan: ${logM.toFixed(1)}, kaynak: ${source("logMatter")})`
+    Number.isFinite(logM) && logM >= 45,
+    `30 dk aktif oyunda zirve log10 >= 45 (bulunan: ${logM.toFixed(1)}, kaynak: ${source("logMatter")})`
   );
   const shifts = metric("shifts");
-  check(shifts >= 5, `en az 5 shift (zirve, bulunan: ${shifts}, kaynak: ${source("shifts")})`);
+  check(shifts >= 3, `en az 3 shift (zirve, bulunan: ${shifts}, kaynak: ${source("shifts")})`);
   const tickspeedBought = metric("tickspeedBought");
   check(
     tickspeedBought > 0,

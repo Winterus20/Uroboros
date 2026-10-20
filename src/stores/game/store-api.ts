@@ -171,6 +171,8 @@ export interface StoreApi extends GameState {
   getDimensionChainFeedPerSecond(tier: number): Decimal;
   emitProductionSurge(beforeMatterPerSec: Decimal, playSound?: boolean): void;
   applyPurchaseChainPulse(tier: number): void;
+  // ADR-0076 §1 — satın alınan boyut bir sonraki boyutu açar (kalıcı).
+  registerDimensionPurchase(tier: number, bought: number): void;
   finalizeDimensionPurchase(tier: number, mpsBefore: Decimal, playSound?: boolean): void;
   buyDimension(tier: number, playSound?: boolean): boolean;
   buyMaxDimension(tier: number, playSound?: boolean, feedbackSurge?: boolean): boolean;

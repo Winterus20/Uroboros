@@ -1,5 +1,63 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-20] ✔ — Satın Alma Tabanlı Boyut Açılışı ve D8 Çağı Ölçek Sıçraması (ADR-0076)
+
+### Gerekçe (kullanıcı kararı):
+1. **Ölçek Sıçraması D8'de kullanılmaya başlansın**, önceki boyutlarda değil. Sıçrama
+   artık bir "40 saniyede gelen hile" değil, D8'e ulaştığınızda elde edilen kalıcı
+   bir güç olacak.
+2. **Her boyut alındığında bir sonraki boyut açılsın** — boyut merdiveni oyuncunun
+   satın alımına bağlansın (klasik AD düzeni). Kütle kapıları (ADR-0072) kalktı.
+
+### Çözüm & Değişiklikler:
+1. **Açılış modeli (satın alma):** `DIMENSION_UNLOCK_PURCHASE_COUNT = 10` (bir paket).
+   Bir boyuttan 1 paket alınınca bir sonraki boyut açılır. Kaynak: yeni kalıcı alan
+   `lifetimeMaxDimensionTier` (hayat boyu satın alınmış en yüksek tier) — sıçrama /
+   küme / şafak sıfırlamalarından ETKİLENMEZ. D1–D3 taban (3) olarak açık kalır.
+   Yazım yolu: dört satın alma action'ı → `registerDimensionPurchase(tier, bought)`.
+2. **Sıçrama hedefi (D8):** `shiftRequirement` artık sabit D8 hedefini verir
+   (`SCALE_SHIFT_TARGET_TIER`); C7 challenge'ı hedefi D6'ya indirir. `canShift`
+   hedef boyut açık değilse false döner → D8 açılmadan sıçrama yapılamaz.
+   Miktar rampası korundu (10/15/25/26+16×(n−6); C7'de 30+15×(n−3)).
+3. **Otobot kademeleri:** `dimN` botu artık bir altındaki boyuttan satın alınmış olmayı
+   ister (bot zinciri kendini besler, deadlock yok). Sıçrama botu **D8 sahibi olmayı**
+   ister. Eski `shifts` kademeleri D8-gated sıçramayla döngüsel hale gelecekti.
+4. **Kayıt şeması v19:** `lifetimeMaxDimensionTier` eklendi (`SAVE_VERSION` 18→19,
+   asgari sürüm 17). v18 ve öncesi kayıtlarda legacy kütle kapıları yeni tabana
+   çevrilerek **açık boyut kaybı olmaz**; `LEGACY_DIMENSION_UNLOCK_GATES` yalnız
+   göç için yaşar.
+5. **Cache:** `dimMultCacheKey` artık açılış kaynağını taşıyor
+   (`peakMatter` → `maxDimensionTier`); eski bileşen gereksiz invalidation üretiyordu.
+6. **UI (DimensionsTab):** kilitli boyut teaser'ı artık "D3'te 1 paket alınca açılır"
+   + paket ilerleme çubuğu gösterir; sıçrama kartı D8 açılmadan "D8 açılınca
+   aktifleşir" durumuna geçer (Kozmik Kümeler kartıyla aynı desen).
+
+### Ölçüm (harness:smoke — active, seed 1, dt 0.5, 30 dk):
+| Metrik | Yeni | Önceki (ADR-0074/0075) |
+| :--- | ---: | ---: |
+| d4 / d5 / d6 / d7 / d8 açılışı | 40.5 / 102.5 / 210.5 / 350.5 / 544.5 s | 186 / 195 / 231.5 / 353 / 1377 s |
+| ilk sıçrama | 760.5 s (12.7 dk) | 41 s |
+| 30 dk sıçrama | 3 | 9 |
+| 30 dk zirve log10 | 48.8 | 97.6 |
+
+- **Boyut merdiveni hızlandı** (D8: 23 dk → 9 dk): açılış artık oyuncunun eylemine bağlı.
+- **Sıçrama döngüye girdi** (41 s → 12.7 dk): ilk 30 dk'da biriken çarpan 60x → 4.6x;
+  ekonomi ~2 kat yavaşladı. Bu, kararın kasıtlı bedelidir (ADR-0075 tempo bandı
+  yukarı iter; ayrı denge turuna konudur).
+- Smoke eşikleri yeni ölçüme göre yeniden kalibre edildi (log10 ≥ 60 → ≥ 45,
+  shifts ≥ 5 → ≥ 3): smoke kapısı "ekonomi nefes alıyor mu" kontrolüdür, denge
+  standardı değildir.
+
+### Doğrulama:
+- `npm run typecheck` → 0 hata
+- `npm run test` → **514/514** yeşil
+- `npm run build` → 0 hata
+- `npm run harness:smoke` → 6/6 kontrol
+- 6 saatlik ölçüm: `brain/scratchpad/harness/out/adr0076-6h.json` (log10 189.5 · 13 sıçrama)
+- 12 saatlik ölçüm: `brain/scratchpad/harness/out/adr0076-12h.json` → **ilk tekillik 10:12:00**
+  (17 sıçrama, 8 küme) · eski model 9:33:17 → koşu süresi yalnızca **~%7 uzadı**
+  (30 dk penceresindeki 2 kat yavaşlama, sıçrama rampası ilerledikçe telafi ediliyor)
+
 ## [2026-10-20] ✔ — Harness `--dawns N` modu: Şafak (Tekillik) Serisi Ölçümü (P0 §5)
 
 ### Gerekçe:

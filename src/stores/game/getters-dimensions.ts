@@ -1,7 +1,7 @@
 // Boyut/tickspeed/shift/galaxy/uretim getter parcalari. `this`, StoreApi ile tiplenmistir.
 import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
 import { hasAchievementReward } from '../../game/achievements'
-import { BASE_UNLOCKED_DIMENSIONS, BUCKET_CAP_GAIN, BUCKET_CAP_THRESHOLD, CHALLENGE_C7_GALAXY_COST_MULT, CHALLENGE_C7_TIER_COST_STEP, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, SHIFT_CAP_GAIN, SHIFT_CAP_THRESHOLD, TICKSPEED_CAP_GAIN, TICKSPEED_CAP_THRESHOLD, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, diminishingPurchaseCount, resolvedUnlockedDimensionCount } from '../../game/balance'
+import { BUCKET_CAP_GAIN, BUCKET_CAP_THRESHOLD, CHALLENGE_C7_GALAXY_COST_MULT, DIMENSION_CHAIN_RATE, DIM_PER_TEN_MULT, MIRROR_PAIRS, RESOLUTION_MILESTONES, SCALE_SHIFT_TARGET_TIER, SHIFT_CAP_GAIN, SHIFT_CAP_THRESHOLD, TICKSPEED_CAP_GAIN, TICKSPEED_CAP_THRESHOLD, challengeCostInflationMult, challengeDimensionCap, dimensionCostForBucket, diminishingPurchaseCount, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { ALL_CHALLENGES_COMPLETE_MULT, challengeTimeTierMult, getChallengeById, isAllChallengesComplete } from '../../game/challenges'
 import { FORMAT_UNLOCK_BUFF_MULT, FORMAT_UNLOCK_BUFF_SECONDS, formatUnlockBuffMult, getTierIdentity, tierProductionMult, tierShiftReqMult } from '../../game/dimension_identity'
 import { CHIP_MAX_LEVEL, speedChipCost as computeSpeedChipCost, speedChipProductionMult as computeSpeedChipProductionMult } from '../../game/speed-chip'
@@ -16,8 +16,8 @@ export const dimensionGetters = {
       return state.matter
     },
 
-    // Kaç adet istasyonun açık olduğu (ADR-0072: başta 3, D4–D8 deterministik kütle
-    // kapıları; ADR-0025 legacy `dimensionCapFloor` tabanı korunur).
+    // Kaç adet istasyonun açık olduğu (ADR-0076: taban 3 + SATIN ALMA ile açılan
+    // boyutlar; ADR-0025 legacy `dimensionCapFloor` tabanı korunur).
     // C7 (Hesap Kısıtlaması): registry'deki maxDimensions üst sınırı uygulanır.
     unlockedDimensionsCount(this: StoreApi, state: GameState): number {
       return resolvedUnlockedDimensionCount(state)
@@ -234,52 +234,41 @@ export const dimensionGetters = {
       )
     },
 
-    // C7 (Hesap Kısıtlaması): kilitli tier yerine D6 istenir; ADR-0025 erken tier hedefi
+    /**
+     * ADR-0076 §2 — ÖLÇEK SIÇRAMASI BİR D8 ÇAĞI MEKANİĞİDİR.
+     *
+     * Hedef tier HER ZAMAN D8'dir (SCALE_SHIFT_TARGET_TIER). C7 (Hesap
+     * Kısıtlaması) boyutları 6'da kırptığı için hedef D6'ya iner.
+     *
+     * Miktar rampası sıçrama sayısıyla artar:
+     *   1. sıçrama → 10 · 2. → 15 · 3–5. → 25 · 6+. → 26 + 16×(sıçrama−6)
+     * C7'de geç dal telafisi korunur: 30 + 15×(sıçrama−3).
+     * D5 pasifi (×0.97) miktarı ölçekler; sonuç her zaman tam sayıdır.
+     */
     shiftRequirement(this: StoreApi, state: GameState): { tier: number; amount: Decimal } {
       const cap = challengeDimensionCap(state)
       const unlocked = resolvedUnlockedDimensionCount(state)
       const shiftMult = tierShiftReqMult(state.dimensions, unlocked)
+      const capped = cap !== undefined && cap < SCALE_SHIFT_TARGET_TIER
+      const tier = capped ? Math.min(SCALE_SHIFT_TARGET_TIER, cap) : SCALE_SHIFT_TARGET_TIER
+      let base: number
       if (state.dimensionShifts < 6) {
-        // ADR-0072: kilit açma artık KÜTLE KAPILARINDAN gelir; hedef tier gerçek açık boyut
-        // sayısıyla kırpılır (aşağıdaki `Math.min(tier, unlocked)`). Sıçrama sayacının
-        // kademeli yükselişi bir ZORLUK RAMPASIDIR (kilit açma mekanizması DEĞİL) — korunur.
-        let tier = Math.min(8, BASE_UNLOCKED_DIMENSIONS + state.dimensionShifts)
-        if (state.dimensionCapFloor > tier) {
-          tier = Math.min(unlocked, state.dimensionCapFloor)
-        }
-        tier = Math.min(tier, unlocked)
         // Erken sıçramalarda hedef boyuttan tek paket (10 adet) yeterlidir; akışı pürüzsüzleştirir
-        const baseReq = state.dimensionShifts <= 1 ? 10 : (state.dimensionShifts <= 2 ? 15 : 25)
-        let amount = new Decimal(baseReq).times(shiftMult).floor()
-        if (amount.lt(1)) amount = D_1
-        if (cap === undefined || tier <= cap) {
-          return { tier, amount }
-        }
-        let capAmount = new Decimal(25 + CHALLENGE_C7_TIER_COST_STEP * (tier - cap)).times(shiftMult).floor()
-        if (capAmount.lt(1)) capAmount = D_1
-        return {
-          tier: cap,
-          amount: capAmount
-        }
+        base = state.dimensionShifts <= 1 ? 10 : (state.dimensionShifts <= 2 ? 15 : 25)
+      } else {
+        base = capped
+          ? 30 + 15 * (state.dimensionShifts - 3)
+          : 26 + 16 * (state.dimensionShifts - 6)
       }
-      if (cap === undefined || 8 <= cap) {
-        let amount = new Decimal(26 + 16 * (state.dimensionShifts - 6)).times(shiftMult).floor()
-        if (amount.lt(1)) amount = D_1
-        return {
-          tier: unlocked,
-          amount
-        }
-      }
-      let capAmount = new Decimal(30 + 15 * (state.dimensionShifts - 3)).times(shiftMult).floor()
-      if (capAmount.lt(1)) capAmount = D_1
-      return {
-        tier: cap,
-        amount: capAmount
-      }
+      let amount = new Decimal(base).times(shiftMult).floor()
+      if (amount.lt(1)) amount = D_1
+      return { tier, amount }
     },
 
     canShift(this: StoreApi): boolean {
       const req = this.shiftRequirement
+      // ADR-0076 §2: D8 (C7'de D6) açılmadan sıçrama yapılamaz.
+      if (req.tier > this.unlockedDimensionsCount) return false
       const dim = this.dimensions[req.tier - 1]
       return dim ? dim.amount.gte(req.amount) : false
     },
@@ -401,7 +390,7 @@ export const dimensionGetters = {
         tier, dim.bought, state.dimensionShifts, eyeDropsLvl, sacStr,
         partnerBought, neuralProd, 1,
         state.activeChallenge, dim1GrowthStr, completedJoin,
-        state.dimensionCapFloor, state.lifetimePeakMatter.toString(), state.formatUnlockBuffTier,
+        state.dimensionCapFloor, state.lifetimeMaxDimensionTier, state.formatUnlockBuffTier,
         state.formatUnlockBuffUntil, challengeTimeMult, formatBuffActive,
         relicCount, matureCellsCount, state.speedChipLevel
       )
