@@ -1,5 +1,46 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-20] ✔ — Harness `--dawns N` modu: Şafak (Tekillik) Serisi Ölçümü (P0 §5)
+
+### Gerekçe:
+- P0 §5'te spec'lendi ama **uygulanmamıştı** → ADR-0071'in şafak merdiveni hiç uçtan uca ölçülmemişti.
+- Oyun kodu (`src/**`) **değişmedi**; yalnız harness genişledi (ADR-0034 bozulmaz: SP yalnız
+  `singularityReset` anında eklenir).
+
+### Çözüm & Değişiklikler:
+1. `brain/scratchpad/harness/run.ts`:
+   - `DawnRow` / `DawnSummary` şemaları + `buildDawnSummary()` (türev metrikler: zaman-to-break,
+     zaman-to-ilk-10-SP, SP/saat (şafak 1'den + marjinal), log10(matter)/SP, şafak başına yeni
+     açılan kapılar, fastestSingularity).
+   - Şafak döngüsü: `store.canSingularity` → ölçüm satırı → `store.singularityReset(false)` →
+     **SP harcama politikası** (şafak 1: `insomnia_heart`; `break_singularity` görününce; sonra
+     sabit öncelik listesiyle uygun en ucuz nöral düğüm; rastgelelik yok) → koşu **sıfırlanmadan**
+     devam (simTime + şafak sayacı korunur).
+   - **CLI kablolaması:** `--dawns N` ayrıştırması + `--help` metni + worker payload'ı
+     (`WorkerRunPayload.dawns`) + `runJobBatch`/`runOnce` zinciri. (Bayrak ayrıştırılmadan mod
+     sessizce kapalı kalıyordu → ölçüm boş çıkıyordu; düzeltildi.)
+2. `brain/scratchpad/harness/run-worker.ts`: payload'a `dawns` eklendi ve `runOnce`'a geçirildi.
+
+### Ölçüm (aktif, seed 1, dt 0.5, çip açık, `--dawns 3`)
+| Şafak | Koşu | Kümülatif | SP | Banka | Harcanan | Kırılma |
+| ---: | ---: | ---: | ---: | ---: | ---: | :--- |
+| 1 | 268.1 dk | 268.1 dk | 1 | 1 | 1 | — |
+| 2 | **49.1 dk** | 317.2 dk | 3 | 3 | 3 | — |
+| 3 | **13.1 dk** | 330.3 dk | 4 | 4 | 4 | **✓** |
+
+- Toplam 5.51 saat · SP 8/8 · `timeToBreak` = 3. şafak @ 5.51 sa · SP/saat 0.22 → 3.67 → **18.29** ·
+  `log10/SP` 308.3 → 102.8 → 77.1 · `fastestSingularity` 8 dk.
+- **ADR-0071 doğrulandı:** kırılma duvarı 3. şafakta düşüyor; koşu süresi şafaklar arasında
+  6.5× / 3.8× kısalıyor. SP/saat eğrisi üstel → 5. şafaktan sonra SP darboğazı beliriyor.
+
+### Regresyon kanıtı:
+- `--dawns` **verilmezken** çıktı birebir aynı: 0 milestone farkı, tepe 69.097 = 69.097, `dawns`
+  alanı null (mod kapalıyken doldurulmuyor).
+
+### Doğrulama:
+- Harness ölçümleri (yukarıda) + `npm run harness:smoke` **6/6 PASS** · oyun kodu değişmediği için
+  `npm test`/`build` etkilenmez (yine de temiz koşuldu).
+
 ## [2026-10-20] ✔ — Plan §7.3 P4: Sistem Açılışında Bir Kez Anlat (ilk karşılaşmada anlat)
 
 ### Gerekçe:

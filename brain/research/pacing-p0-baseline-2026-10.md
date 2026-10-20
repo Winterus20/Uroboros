@@ -412,6 +412,30 @@ Kapsam dışı bırakılan ilgili plan maddeleri: **M2** (SP ağacında rekabet�
 **`harness --dawns N`** modu (SP telemetri altyapısı, P0 §5'te spec'lendi, uygulanmadı).
 
 ---
+### 11. ÖLÇÜM SONUCU — Şafak serisi (2026-10-20, `--dawns 3`, aktif profil, seed 1, dt 0.5, çip açık)
+
+ADR-0071'in şafak merdiveni (1. şafak 1 SP → 2. şafak 2 → 3. şafak 3) **ilk kez uçtan uca ölçüldü**:
+
+| Şafak | Koşu süresi | Kümülatif | SP kazanç | Banka | Harcanan | Kırılma |
+| ---: | ---: | ---: | ---: | ---: | ---: | :--- |
+| 1 | 268.1 dk | 268.1 dk | 1 | 1 | 1 (`insomnia_heart`) | — |
+| 2 | **49.1 dk** | 317.2 dk | 3 | 3 | 3 | — |
+| 3 | **13.1 dk** | 330.3 dk | 4 | 4 | 4 | **✓ `break_singularity` alındı** |
+
+**Türev metrikler (harness `summary`):** toplam 5.51 saat · toplam SP 8 (kazanılan 8 / harcanan 8) ·
+`timeToBreak` = 3. şafak @ 5.51 saat · SP/saat **0.22 → 3.67 → 18.29** (şafak başına marjinal) ·
+`log10(matter)/SP` = 308.3 → 102.8 → 77.1 (her şafakta kütle/SP derinliği düşüyor = verim artıyor) ·
+`fastestSingularity` = 8 dk.
+
+**1. şafakta açılanlar:** 17 özellik + 11 bot + D4–D8 (boyutların tamamı). 2. şafakta yalnız `time_clock`,
+3. şafakta hiçbir yeni yüzey yok.
+
+**Okuma:** koşu süresi şafaklar arasında **268 → 49 → 13 dk**'ya çöküyor (6.5×, 3.8×). Yani ADR-0071'in
+merdiveni ölçümle doğrulandı: ilk koşu 4s28dk, ikinci 49dk, üçüncü 13dk → **kırılma duvarı 3. şafakta**
+(4 SP) düşüyor. SP/saat eğrisi **hiç düz değil, üstel** (0.22 → 3.67 → 18.3) → 5. şafaktan sonra
+kırılma zorlaşır (SP darboğazı).
+
+**Çıktı:** `brain/scratchpad/harness/out/dawns-3.json`.
 ### 9.4 Açık kararlar (P3.3'ün kapısı)
 
 1. **Tempo:** (a) P1'den önce onarım fazı, (b) ADR-0023 bandını güncel ölçüme revize, (c) ~11 saat

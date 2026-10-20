@@ -1251,6 +1251,7 @@ interface CliArgs {
   lite: boolean;
   jobs: number;
   chips: boolean; // M1 — Otonom Hız Çipi (varsayılan KAPALI)
+  dawns: number; // P0 §5 — Şafak serisi (0 = mod kapalı)
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -1266,6 +1267,7 @@ function parseArgs(argv: string[]): CliArgs {
     lite: false,
     jobs: 1,
     chips: false,
+    dawns: 0,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -1280,6 +1282,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === "--lite") args.lite = true;
     else if (a === "--jobs") args.jobs = Math.max(1, parseInt(argv[++i], 10));
     else if (a === "--chips") args.chips = true;
+    else if (a === "--dawns") args.dawns = Math.max(0, parseInt(argv[++i], 10) || 0);
     else if (a === "--fast") {
       args.lite = true;
       args.jobs = Math.max(1, os.cpus().length);
@@ -1288,7 +1291,7 @@ function parseArgs(argv: string[]): CliArgs {
       console.log(
         "Usage: node out/run.mjs [--all] [--profile active|casual|idle|idle_plus] " +
           "[--seeds 1,2,3] [--dt 0.1] [--capHours 12] [--out results.json] [--withIdlePlus] [--trace] " +
-          "[--lite] [--jobs N] [--fast] [--chips]"
+          "[--lite] [--jobs N] [--fast] [--chips] [--dawns N]"
       );
       process.exit(0);
     }
@@ -1313,6 +1316,7 @@ interface WorkerRunPayload {
   trace: boolean;
   collectSamples: boolean;
   chips: boolean; // M1 — Otonom Hız Çipi bayrağı (worker'a da taşınır)
+  dawns: number; // P0 §5 — Şafak serisi hedefi (worker'a da taşınır)
 }
 
 function runInWorker(payload: WorkerRunPayload): Promise<RunResult> {
@@ -1340,13 +1344,14 @@ async function runJobBatch(
   trace: boolean,
   collectSamples: boolean,
   parallelism: number,
-  chips: boolean
+  chips: boolean,
+  dawns: number
 ): Promise<RunResult[]> {
   if (parallelism <= 1 || jobs.length <= 1) {
     const out: RunResult[] = [];
     for (const job of jobs) {
       out.push(
-        await runOnce(PROFILES[job.profile], job.seed, dt, capHours, trace, collectSamples, chips)
+        await runOnce(PROFILES[job.profile], job.seed, dt, capHours, trace, collectSamples, chips, dawns)
       );
     }
     return out;
@@ -1367,6 +1372,7 @@ async function runJobBatch(
         trace,
         collectSamples,
         chips,
+        dawns,
       });
     }
   };
@@ -1412,7 +1418,8 @@ async function main(): Promise<void> {
     args.trace,
     collectSamples,
     args.jobs,
-    args.chips
+    args.chips,
+    args.dawns
   );
   for (const res of results) console.log(summarize(res, args.dt));
 
