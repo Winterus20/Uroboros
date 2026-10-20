@@ -9,6 +9,7 @@ import type { CorruptionLevel } from '../../game/corruption'
 import { tierAnomalyRateMult, tierClickSyncCapBonus, tierOfflineSimMult, tierShiftReqMult, tierSlackerLeechMult } from '../../game/dimension_identity'
 import { buildUnlockContext, checkUnlock, getFeatureById, meetsDopamineGate } from '../../game/unlocks'
 import { getAchMultCache, memoChallengeEffects, memoNeuralEffects, setAchMultCache } from './cache'
+import type { FeatureTeaching } from '../../game/feature-teachings'
 import type { UnlockContext } from '../../game/unlocks'
 import type { GameState } from './state'
 import type { StoreApi } from './store-api'
@@ -313,6 +314,12 @@ export const miscGetters = {
     dopamineGateReached(this: StoreApi, state: GameState): (amount: string) => boolean {
       return (amount: string) =>
         meetsDopamineGate(state.matter, state.lifetimePeakMatter, amount)
+    },
+
+    // P4a — ekranda gösterilecek öğretim (tek slot). Kaydedilmez; yalnızca
+    // özellik AÇILDIĞI ANDA dolu olur, dismissTeaching() ile boşalır.
+    currentTeaching(this: StoreApi, state: GameState): FeatureTeaching | null {
+      return state.pendingTeaching
     },
 
     isFeatureUnlocked: (state: GameState) => (id: string): boolean => {

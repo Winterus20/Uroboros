@@ -265,6 +265,9 @@ export const saveActions = {
         uselessNewsClicks: this.uselessNewsClicks || 0,
         hasClickedSecretNews: this.hasClickedSecretNews || false,
         unlockedFeatures: [...this.unlockedFeatures],
+        // P4a: anlatılmış özellik id'leri. Kaydedilir ki reload sonrası
+        // aynı özellik "ilk kez karşılaştım" diye tekrar anlatılmasın.
+        taughtFeatures: [...(this.taughtFeatures || [])],
         // ADR-0035 (v15): açılış kalıcılığının asıl kaydı.
         lifetimePeakMatter: this.lifetimePeakMatter.toString(),
         lifetimePeakShifts: this.lifetimePeakShifts,
@@ -831,6 +834,8 @@ export const saveActions = {
           if (this.settings.swipeSensitivity === undefined) this.settings.swipeSensitivity = 'balanced'
           if (this.settings.offlineProgressModal === undefined) this.settings.offlineProgressModal = true
           if (this.settings.hotkeysEnabled === undefined) this.settings.hotkeysEnabled = true
+          // P4b — Sistem açılış ipuçları: eski kayıtlarda alan yoktur → AÇIK kabul edilir.
+          if (this.settings.teachingsEnabled === undefined) this.settings.teachingsEnabled = true
           if (this.settings.activeSlot === undefined) this.settings.activeSlot = SaveSystem.getActiveSlot()
           if (this.settings.customAudioUrl) {
             musicEngine.customUrl = this.settings.customAudioUrl
@@ -916,6 +921,21 @@ export const saveActions = {
             .filter((id): id is string => typeof id === 'string' && FEATURE_IDS.has(id))
             .slice(0, FEATURE_UNLOCKS.length)
         }
+
+        // P4a — öğretim kalıcılığı. Geriye uyumlu varsayılan: alan yoksa (eski
+        // kayıt) liste boştur, yani hiçbir özellik "öğretilmiş" sayılmaz ve
+        // oyuncu o özelliği ilk kez açtığında anlatım yine gösterilir.
+        // Migrasyon GEREKMEZ: eksik alan güvenli biçimde [] ile doldurulur.
+        if (Array.isArray(data.taughtFeatures)) {
+          this.taughtFeatures = data.taughtFeatures
+            .filter((id): id is string => typeof id === 'string' && FEATURE_IDS.has(id))
+            .slice(0, FEATURE_UNLOCKS.length)
+        } else {
+          this.taughtFeatures = []
+        }
+        // pendingTeaching UÇUCUDUR: kaydedilmez, yüklenmez — reload sonrası
+        // ekranda asılı öğretim kutusu olmaz (öğretim yalnızca AÇILIŞ ANINDA).
+        this.pendingTeaching = null
 
         // ADR-0035 (v15) — geriye dönük uyumlu yükleme, veri KAYBI YOK.
         // Alan yoksa (v14 ve öncesi kayıtlar) tepe noktalar mevcut veriden türetilir:

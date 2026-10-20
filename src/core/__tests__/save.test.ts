@@ -81,6 +81,8 @@ function makeMockState(overrides: Partial<SerializedPlayerState> = {}): Serializ
       newsTickerEnabled: true,
       offlineProgressModal: true,
       hotkeysEnabled: true,
+      // P4b — Sistem açılış ipuçları (varsayılan AÇIK)
+      teachingsEnabled: true,
       activeSlot: 1
     },
     stats: {

@@ -1,6 +1,11 @@
 declare module '../../models/types' {
   interface SerializedPlayerState {
     lastViralAt?: number
+    /**
+     * P4a: Bir kez anlatılmış özelliklerin id listesi (öğretim kalıcılığı).
+     * Kaydedilir; eski kayıtlarda alan yoktur → boş liste varsayılanı.
+     */
+    taughtFeatures?: string[]
   }
 }
 
@@ -8,6 +13,7 @@ import { Decimal } from '../../core/math'
 import { BASE_COSTS, BASE_UNLOCKED_DIMENSIONS, COST_MULTS, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { TIME_CLOCK_SPAWN_INTERVAL_MIN, createIdleTimeClock } from '../../game/clock-data'
 import { VIRAL_DROP_COOLDOWN_SECONDS } from '../../game/lab-data'
+import type { FeatureTeaching } from '../../game/feature-teachings'
 import type { ActiveBuff, AutobuyerConfig, CrisisDilemma, DimensionData, FloatingAnomaly, GameSettings, GuiltWrinkler, LabCell, LabMode, LabSeedType, MusicTrackId, OfflineReport, PastSingularityRecord, PlayerStats, ScaleJumpRecord, StanceType } from '../../models/types'
 
 export function buildInitialState() {
@@ -214,6 +220,15 @@ export function buildInitialState() {
     // Özellik Merdiveni (v0.11.0) — yapışkan (sticky) kilitleme listesi
     unlockedFeatures: [] as string[],
 
+    // P4a — Özellik Öğretimi (plan §7.3 "İlk karşılaşmada anlat, sonrasında göster")
+    // `taughtFeatures`: KAYDEDİLİR. Bir özelliğin anlatımı bir kez gösterildiyse
+    //   id buraya yazılır; reload sonrası aynı özellik yeniden anlatılmaz.
+    //   (Kilitli şeyler görünmez; sadece kilidi açıldığında görünür.)
+    taughtFeatures: [] as string[],
+    // `pendingTeaching`: UÇUCU, kaydedilmez. Ekranda gösterilecek TEK öğretim
+    //   kutusu — aynı anda birden fazla öğretim yığılmasın diye tek slot.
+    pendingTeaching: null as FeatureTeaching | null,
+
     // ADR-0035 — "Açılış bir olaydır, kapı değil": hayat boyu yüksek su seviyeleri.
     // `matter` Sıçrama/Küme/şafak ile sıfırlandığı için dopamin kapıları koşu içi
     // sayaca bakamaz; bu iki tepe nokta hiç inmez ve kayıtta saklanır (v15).
@@ -255,6 +270,8 @@ export function buildInitialState() {
       swipeSensitivity: 'balanced' as const,
       offlineProgressModal: true,
       hotkeysEnabled: true,
+      // P4b — Sistem açılış ipuçları (öğretim toastu): varsayılan AÇIK.
+      teachingsEnabled: true,
       activeSlot: 1
     } as GameSettings,
 

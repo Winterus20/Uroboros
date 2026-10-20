@@ -29,6 +29,11 @@
  *   --all                    run active, casual, idle (+ idle_plus with --withIdlePlus)
  *   --trace                  per-tick debug trace once log10(matter) > 200 (endgame forensics)
  *   --chips                  M1 "Otonom Hız Çipi" davranışını AÇ (varsayılan KAPALI)
+ *   --dawns N                Şafak (tekillik) serisi ölçümü: aynı deterministik
+ *                            dünyada arka arkaya N şafak koşar ve SP ekonomisini
+ *                            zaman serisi olarak raporlar. --dawns 0 (veya bayrağın
+ *                            hiç verilmemesi) → mod KAPALI, mevcut davranış BİREBİR
+ *                            korunur. Spec: brain/research/pacing-p0-baseline-2026-10.md §5
  *
  * DETERMINISM:
  *   - Math.random is replaced per run by a seeded mulberry32 LCG.
@@ -79,8 +84,9 @@ import {
   LAB_SEEDS,
 } from "../../../src/stores/game";
 import { FEATURE_UNLOCKS } from "../../../src/game/unlocks";
+import { NEURAL_LEGACY_UPGRADE_IDS, NEURAL_TREE } from "../../../src/game/neural-data";
 import type { Decimal } from "../../../src/core/math";
-import type { LabSeedType } from "../../../src/models/types";
+import type { LabSeedType, NeuralNode } from "../../../src/models/types";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -228,6 +234,89 @@ interface DimUnlock {
   log10: number; // sicramayi tetikleyen log10(kutle) - sifirlama ONCESI deger
 }
 
+// ---------------------------------------------------------------------------
+// --dawns N — Şafak (tekillik) serisi telemetrisi
+// ---------------------------------------------------------------------------
+// Spec: brain/research/pacing-p0-baseline-2026-10.md §5 (Kisa Spec — harness --dawns N)
+
+/** Bir şafakta yapılan TEK bir SP alımının kaydı. */
+interface SpPurchase {
+  id: string; // nöral ağaç düğüm id'si (src/game/neural-data.ts)
+  level: number; // satın alma SONRASI düğüm seviyesi
+  cost: number; // harcanan SP (achievementSpDiscount dahil fiilî bedel)
+}
+
+/** Bir şafak için ölçülen tek satırlık kayıt. */
+interface DawnRow {
+  dawnIndex: number; // 1 tabanlı şafak sırası
+  tSeconds: number; // kümülatif simülasyon saniyesi (şafak anı)
+  runDurationSeconds: number; // BU koşunun süresi (önceki sıfırlamadan bu şafağa)
+  spGain: number; // bu şafakta kazanılan SP
+  spBank: number; // şafak BAŞINDAKİ kasa (taşınan banka + bu şafak kazancı)
+  spSpentThisDawn: number; // bu şafakta harcanan SP
+  spBankEnd: number; // şafak SONU kasa (sonraki şafağa taşınan)
+  logMatterAtDawn: number; // sıfırlama ÖNCESİ log10(kütle)
+  peakLogMatterThisDawn: number; // bu şafak içindeki log10(kütle) zirvesi
+  shifts: number;
+  galaxies: number;
+  tickspeedBought: number;
+  unlockedFeatureCount: number;
+  unlockedBots: number; // açık bot sayısı
+  unlockedBotIds: string[];
+  newFeatures: string[]; // bu şafakta ilk kez açılan özellik kapıları
+  newBots: string[]; // bu şafakta ilk kez açılan botlar
+  newDimensions: string[]; // bu şafakta ilk kez açılan boyutlar
+  purchases: SpPurchase[]; // bu şafaktaki SP harcamaları (sıralı, deterministik)
+  breakSingularityBought: boolean; // bu şafakta break_singularity alındı mı
+}
+
+/** Şafak serisinin türev özet metrikleri. */
+interface DawnSummary {
+  mode: "dawns";
+  dawnsCompleted: number;
+  dawnsTarget: number;
+  stoppedBy: "dawns_target" | "cap_hours" | "nan_guard" | "no_dawn";
+  totalSimSeconds: number;
+  totalSimHours: number;
+  spTotalGained: number;
+  spTotalSpent: number;
+  spBankEnd: number;
+  spGainSeries: number[];
+  spBankSeries: number[];
+  spSpentSeries: number[];
+  spBankEndSeries: number[];
+  /** Zaman-to-break: break_singularity hangi şafakta alındı (kaçıncı şafak + saat). */
+  timeToBreak: { dawnIndex: number; tSeconds: number; hours: number } | null;
+  /** Zaman-to-ilk-10-SP: kümülatif SP 10'a ilk kez ulaştığı şafak. */
+  timeToFirst10Sp: { dawnIndex: number; tSeconds: number; hours: number } | null;
+  /** SP/saat — şafak 1'den itibaren kümülatif. */
+  spPerHourFromDawn1: number | null;
+  /** SP/saat — şafak başına marjinal (bir önceki şafağa göre). */
+  spPerHourMarginal: Array<{
+    dawnIndex: number;
+    spGain: number;
+    hours: number;
+    spPerHour: number;
+  }>;
+  /** log10(matter)/SP derinlik verimi (şafak başına). */
+  logMatterPerSp: Array<{
+    dawnIndex: number;
+    logMatter: number;
+    peakLogMatter: number;
+    spGain: number;
+    log10PerSp: number;
+  }>;
+  /** Şafak başına yeni açılan kapı listesi (koşu-kimliği). */
+  newUnlocksPerDawn: Array<{
+    dawnIndex: number;
+    features: string[];
+    bots: string[];
+    dimensions: string[];
+  }>;
+  fastestSingularity: number | null; // en hızlı tekillik süresi (saniye)
+  firstSingularitySeconds: number | null; // ilk tekilliğe ulaşılan kümülatif süre
+}
+
 interface RunResult {
   profile: ProfileName;
   seed: number;
@@ -259,8 +348,129 @@ interface RunResult {
   };
   final: Record<string, unknown>;
   error: string | null;
+  // --dawns N modunda DOLUDUR. Mod kapalıyken bu alanlar HİÇ ATANMAZ; JSON çıktısı
+  // bu sayede eski koşularla BİREBİR aynı kalır (regresyon yok).
+  dawns?: DawnRow[];
+  summary?: DawnSummary;
 }
 
+/**
+ * Decimal -> JSON güvenli sayı. JS sayı taşmasına giren değerler oyunun kendi
+ * D_INFINITY (1.7976931348623157e308) değerine kırpılır; NaN -> 0.
+ */
+function decToJsonNumber(d: Decimal): number {
+  if (d.isNan()) return 0;
+  const n = d.toNumber();
+  if (!Number.isFinite(n)) return 1.7976931348623157e308;
+  return n;
+}
+
+/**
+ * Şafak serisinin türev özet metrikleri (P0 §5).
+ * - zaman-to-break: break_singularity hangi şafakta alındı (şafak no + saat)
+ * - zaman-to-ilk-10-SP: kümülatif SP 10'a ilk kez ulaştığı şafak
+ * - SP/saat: şafak 1'den itibaren kümülatif VE şafak-başı marjinal
+ * - log10(matter)/SP: derinlik verimi (şafak başına)
+ * - şafak başına yeni açılan kapı listesi: koşu-kimliği
+ * - fastestSingularity: en hızlı tekillik süresi
+ */
+function buildDawnSummary(
+  rows: DawnRow[],
+  dawnsTarget: number,
+  stoppedBy: DawnSummary["stoppedBy"],
+  totalSimSeconds: number,
+  firstSingularitySeconds: number | null,
+  fastestSingularity: number | null
+): DawnSummary {
+  const hours = (sec: number): number => sec / 3600;
+  const spGainSeries = rows.map((r) => r.spGain);
+  const spBankSeries = rows.map((r) => r.spBank);
+  const spSpentSeries = rows.map((r) => r.spSpentThisDawn);
+  const spBankEndSeries = rows.map((r) => r.spBankEnd);
+
+  let cumulativeSp = 0;
+  for (const r of rows) cumulativeSp += r.spGain;
+  const spPerHourFromDawn1 =
+    rows.length > 0 && totalSimSeconds > 0 ? cumulativeSp / hours(totalSimSeconds) : null;
+
+  const spPerHourMarginal = rows.map((r, i) => {
+    const prevT = i === 0 ? 0 : rows[i - 1].tSeconds;
+    const deltaHours = hours(r.tSeconds - prevT);
+    return {
+      dawnIndex: r.dawnIndex,
+      spGain: r.spGain,
+      hours: deltaHours,
+      spPerHour: deltaHours > 0 ? r.spGain / deltaHours : 0,
+    };
+  });
+
+  const breakRow = rows.find((r) => r.breakSingularityBought) ?? null;
+  const timeToBreak = breakRow
+    ? {
+        dawnIndex: breakRow.dawnIndex,
+        tSeconds: breakRow.tSeconds,
+        hours: hours(breakRow.tSeconds),
+      }
+    : null;
+
+  let cum = 0;
+  let first10: DawnRow | null = null;
+  for (const r of rows) {
+    cum += r.spGain;
+    if (cum >= 10) {
+      first10 = r;
+      break;
+    }
+  }
+  const timeToFirst10Sp = first10
+    ? {
+        dawnIndex: first10.dawnIndex,
+        tSeconds: first10.tSeconds,
+        hours: hours(first10.tSeconds),
+      }
+    : null;
+
+  const logMatterPerSp = rows.map((r) => ({
+    dawnIndex: r.dawnIndex,
+    logMatter: r.logMatterAtDawn,
+    peakLogMatter: r.peakLogMatterThisDawn,
+    spGain: r.spGain,
+    log10PerSp: r.spGain > 0 ? r.logMatterAtDawn / r.spGain : 0,
+  }));
+
+  const newUnlocksPerDawn = rows.map((r) => ({
+    dawnIndex: r.dawnIndex,
+    features: r.newFeatures,
+    bots: r.newBots,
+    dimensions: r.newDimensions,
+  }));
+
+  const spTotalSpent = rows.reduce((acc, r) => acc + r.spSpentThisDawn, 0);
+
+  return {
+    mode: "dawns",
+    dawnsCompleted: rows.length,
+    dawnsTarget,
+    stoppedBy,
+    totalSimSeconds,
+    totalSimHours: hours(totalSimSeconds),
+    spTotalGained: cumulativeSp,
+    spTotalSpent,
+    spBankEnd: rows.length > 0 ? rows[rows.length - 1].spBankEnd : 0,
+    spGainSeries,
+    spBankSeries,
+    spSpentSeries,
+    spBankEndSeries,
+    timeToBreak,
+    timeToFirst10Sp,
+    spPerHourFromDawn1,
+    spPerHourMarginal,
+    logMatterPerSp,
+    newUnlocksPerDawn,
+    fastestSingularity,
+    firstSingularitySeconds,
+  };
+}
 function hms(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
   const h = Math.floor(s / 3600);
@@ -318,7 +528,11 @@ export async function runOnce(
   collectSamples: boolean,
   // M1 — Otonom Hz Çipi: false (varsayılan) ise hiçbir çip alınmaz, koşu birebir eski
   // davranışla aynıdır (regresyon yok / ölçüm karşılaştırılabilirlik).
-  chipsEnabled = false
+  chipsEnabled = false,
+  // P0 §5 — Şafak serisi: >0 ise aynı deterministik dünyada arka arkaya N şafak
+  // koşulur (store.singularityReset(false) çağrılır). 0 (varsayılan) → mod KAPALI:
+  // koşu eski davranışla BİREBİR aynıdır.
+  dawnsTarget = 0
 ): Promise<RunResult> {
   // fresh deterministic world
   Math.random = mulberry32(seed);
@@ -507,6 +721,198 @@ export async function runOnce(
     if (store.buySpeedChip(false)) result.speedChipsBought++;
   };
 
+  // -------------------------------------------------------------------------
+  // --dawns N — Şafak (tekillik) serisi (P0 §5)
+  // -------------------------------------------------------------------------
+  // Oyun kodu (src/**) DEĞİŞMEZ; harness yalnız mevcut tick döngüsünü bir "şafak
+  // döngüsü" ile sarar. Şafak akışı:
+  //   canSingularity beklenir → store.singularityReset(false) → SP harcama politikası
+  // simTime ve şafak sayacı KORUNUR (koşu sıfırlanmaz; sıfırlama oyunun kendi
+  // içindedir — ADR-0034: SP yalnız singularityReset anında eklenir).
+  const dawnMode = dawnsTarget > 0;
+  const dawnRows: DawnRow[] = [];
+  let dawnIndex = 0;
+  let dawnStartSimTime = 0; // bu koşunun (şafakın) başlangıç simTime'ı
+  let dawnPeakMatter = store.matter; // bu şafak içindeki kütle zirvesi
+  let dawnStartFeatures = new Set<string>(store.unlockedFeatures);
+  let dawnStartBots = new Set<string>(
+    Object.entries(store.autobuyers)
+      .filter(([, b]) => b.unlocked)
+      .map(([id]) => id)
+  );
+  let dawnStartDimCount = store.unlockedDimensionsCount;
+
+  // Sabit SP öncelik listesi = NÖRAL AĞAÇ düğüm sırası (src/game/neural-data.ts).
+  // `insomnia_heart` (kök) ve `break_singularity` kendi kurallarıyla ele alınır,
+  // bu yüzden listede YOKTUR. id'ler uydurulmaz — koddan okunur.
+  const SP_PRIORITY: string[] = NEURAL_TREE.filter(
+    (n) => n.id !== "insomnia_heart" && n.id !== "break_singularity"
+  ).map((n) => n.id);
+  const NEURAL_NODE_BY_ID = new Map<string, NeuralNode>(NEURAL_TREE.map((n) => [n.id, n]));
+
+  /** Düğümün mevcut seviyesi (eski dükkân id'leri birleşik seviye taşır). */
+  const nodeLevel = (node: NeuralNode): number => {
+    const bought = store.neuralNodesBought || {};
+    const legacy = NEURAL_LEGACY_UPGRADE_IDS.has(node.id)
+      ? store.singularityUpgrades?.[node.id] || 0
+      : 0;
+    return Math.max(bought[node.id] || 0, legacy);
+  };
+
+  /** Maliyet formülü store.buyNeuralNode ile BİREBİR aynıdır (achievementSpDiscount dahil). */
+  const nodeCost = (node: NeuralNode, level: number): number =>
+    Math.floor(node.cost * Math.pow(node.costMult ?? 1, level) * store.achievementSpDiscount);
+
+  /** Kilit/uygunluk denetimi: store.buyNeuralNode ile aynı kapılar. */
+  const nodeAvailable = (node: NeuralNode): boolean => {
+    const bought = store.neuralNodesBought || {};
+    if (nodeLevel(node) >= (node.maxLevel ?? 1)) return false;
+    for (const reqId of node.requires) {
+      if ((bought[reqId] || 0) < 1) return false;
+    }
+    if (node.choiceGroup) {
+      const siblingLocked = NEURAL_TREE.some(
+        (n) =>
+          n.choiceGroup === node.choiceGroup &&
+          n.id !== node.id &&
+          (bought[n.id] || 0) > 0
+      );
+      if (siblingLocked) return false;
+    }
+    return true;
+  };
+
+  /**
+   * SP harcama politikası — deterministik, sıralı (P0 §5):
+   *   1) Şafak 1: `insomnia_heart` (1 SP) — ağacın bütün dallarını açar.
+   *   2) `break_singularity` (4 SP) göründüğü an satın al (koşullar + bütçe sağlanırsa HEMEN).
+   *   3) Kalan SP: sabit öncelik listesinden "en ucuz uygun" düğüm (rastgelelik YOK).
+   *      Eşit maliyette öncelik listesindeki İLK düğüm kazanır.
+   *   4) Hiçbir SP harcanamıyorsa kasa birikir (satın alınmadı → spBankEnd > spBank).
+   */
+  const applySpPolicy = (): SpPurchase[] => {
+    const purchases: SpPurchase[] = [];
+    const buy = (id: string): boolean => {
+      const node = NEURAL_NODE_BY_ID.get(id);
+      if (!node) return false;
+      const before = store.singularityPoints;
+      // Satın alım GERÇEK oyun aksiyonudur (store.buyNeuralNode) — SP, kapı kontrolü
+      // ve legacy senkronu oyunun kendi kodunda kalır.
+      if (!store.buyNeuralNode(id)) return false;
+      const after = store.singularityPoints;
+      const spent = before.minus(after).toNumber();
+      purchases.push({
+        id,
+        level: nodeLevel(node),
+        cost: Number.isFinite(spent) ? spent : 0,
+      });
+      return true;
+    };
+
+    // 1) Şafak 1: insomnia_heart (1 SP).
+    const root = NEURAL_NODE_BY_ID.get("insomnia_heart");
+    if (dawnIndex === 1 && root && nodeLevel(root) < 1) {
+      buy("insomnia_heart");
+    }
+
+    // 2) break_singularity (4 SP) — göründüğü an.
+    const brk = NEURAL_NODE_BY_ID.get("break_singularity");
+    if (brk && nodeLevel(brk) < 1 && nodeAvailable(brk)) {
+      if (store.singularityPoints.gte(nodeCost(brk, nodeLevel(brk)))) {
+        buy("break_singularity");
+      }
+    }
+
+    // 3) Kalan SP: sabit öncelik listesinden en ucuz uygun düğüm.
+    for (;;) {
+      let best: NeuralNode | null = null;
+      let bestCost = Number.POSITIVE_INFINITY;
+      for (const id of SP_PRIORITY) {
+        const node = NEURAL_NODE_BY_ID.get(id);
+        if (!node || !nodeAvailable(node)) continue;
+        const cost = nodeCost(node, nodeLevel(node));
+        if (!store.singularityPoints.gte(cost)) continue;
+        if (cost < bestCost) {
+          bestCost = cost;
+          best = node;
+        }
+      }
+      if (!best) break;
+      if (!buy(best.id)) break;
+    }
+    return purchases;
+  };
+
+  /** Bir şafak kaydı: ölçüm → oyunun sıfırlaması → SP harcaması → yeni şafak başlangıcı. */
+  const performDawn = (): void => {
+    dawnIndex++;
+
+    // 1) Sıfırlama ÖNCESİ anlık görüntü (shift/galaksi/tickspeed reset ile sıfırlanır).
+    const spGainDec = store.singularityGain; // reset ÖNCESİ okunmalı (singularities henüz artmadı)
+    const logMatterAtDawn = store.matter.lte(0) ? 0 : store.matter.log10().toNumber();
+    const shifts = store.dimensionShifts;
+    const galaxies = store.galaxies;
+    const tickspeedBought = store.tickspeedBought;
+    const featureCount = store.unlockedFeatures.length;
+    const botIds = Object.entries(store.autobuyers)
+      .filter(([, b]) => b.unlocked)
+      .map(([id]) => id);
+    const peakLogMatterThisDawn =
+      dawnPeakMatter.lte(0) ? 0 : dawnPeakMatter.log10().toNumber();
+
+    // 2) Sıfırlama — oyunun kendi içinde (ADR-0034: SP yalnız bu anda eklenir).
+    const resetOk = store.singularityReset(false);
+
+    // 3) Şafak BAŞINDAKİ kasa (taşınan banka + bu şafakta kazanılan SP).
+    const spBank = decToJsonNumber(store.singularityPoints);
+
+    // 4) SP harcama politikası.
+    const purchases = applySpPolicy();
+    const spSpentThisDawn = purchases.reduce((acc, p) => acc + p.cost, 0);
+    const spBankEnd = decToJsonNumber(store.singularityPoints);
+
+    // 5) Bu şafakta yeni açılan kapılar (koşu-kimliği).
+    const featuresNow = new Set(store.unlockedFeatures);
+    const newFeatures = [...featuresNow].filter((f) => !dawnStartFeatures.has(f));
+    const newBots = botIds.filter((id) => !dawnStartBots.has(id));
+    const dimCount = store.unlockedDimensionsCount;
+    const newDimensions: string[] = [];
+    for (let d = dawnStartDimCount + 1; d <= dimCount; d++) newDimensions.push(`d${d}`);
+
+    dawnRows.push({
+      dawnIndex,
+      tSeconds: simTime,
+      runDurationSeconds: simTime - dawnStartSimTime,
+      spGain: decToJsonNumber(spGainDec),
+      spBank,
+      spSpentThisDawn,
+      spBankEnd,
+      logMatterAtDawn,
+      peakLogMatterThisDawn,
+      shifts,
+      galaxies,
+      tickspeedBought,
+      unlockedFeatureCount: featureCount,
+      unlockedBots: botIds.length,
+      unlockedBotIds: botIds,
+      newFeatures,
+      newBots,
+      newDimensions,
+      purchases,
+      breakSingularityBought: purchases.some((p) => p.id === "break_singularity"),
+    });
+
+    // 6) Yeni şafak başlangıcı — simTime ve şafak sayacı KORUNUR.
+    dawnStartSimTime = simTime;
+    dawnPeakMatter = store.matter;
+    dawnStartFeatures = featuresNow;
+    dawnStartBots = new Set(botIds);
+    dawnStartDimCount = dimCount;
+    if (!resetOk) {
+      result.error = `singularityReset başarısız (t=${simTime.toFixed(1)}s)`;
+    }
+  };
+
   const takeSample = (): Sample => {
     const logMatter = store.matter.lte(0) ? 0 : store.matter.log10().toNumber();
     const dps = store.matterPerSecond;
@@ -593,9 +999,20 @@ export async function runOnce(
     // 5. stop the clock the moment actions cross the prestige threshold
     if (store.canSingularity) {
       result.reached = true;
-      result.timeSeconds = simTime;
-      finished = true;
-      break;
+      if (dawnMode) {
+        // Şafak modu: koşu SIFIRLANMAZ — ölçüm alınır, oyunun kendi sıfırlaması
+        // çağrılır (simTime + şafak sayacı korunur), sonra SP harcanır.
+        if (result.timeSeconds === null) result.timeSeconds = simTime;
+        performDawn();
+        if (result.error !== null || dawnIndex >= dawnsTarget) {
+          finished = true;
+          break;
+        }
+      } else {
+        result.timeSeconds = simTime;
+        finished = true;
+        break;
+      }
     }
 
     // 5b. M1 — Otonom Hız Çipi (yalnızca --chips; varsayılan KAPALI).
@@ -610,6 +1027,7 @@ export async function runOnce(
     // 6b. zirve takibi (log10 YOK): matter Decimal olarak karsilastirilir,
     // sayaclar duz sayi olarak Math.max ile guncellenir.
     if (store.matter.gt(peakMatter)) peakMatter = store.matter;
+    if (dawnMode && store.matter.gt(dawnPeakMatter)) dawnPeakMatter = store.matter;
     result.peaks.shifts = Math.max(result.peaks.shifts, store.dimensionShifts);
     result.peaks.galaxies = Math.max(result.peaks.galaxies, store.galaxies);
     result.peaks.tickspeedBought = Math.max(result.peaks.tickspeedBought, store.tickspeedBought);
@@ -617,9 +1035,18 @@ export async function runOnce(
 
     if (store.canSingularity) {
       result.reached = true;
-      result.timeSeconds = simTime;
-      finished = true;
-      break;
+      if (dawnMode) {
+        if (result.timeSeconds === null) result.timeSeconds = simTime;
+        performDawn();
+        if (result.error !== null || dawnIndex >= dawnsTarget) {
+          finished = true;
+          break;
+        }
+      } else {
+        result.timeSeconds = simTime;
+        finished = true;
+        break;
+      }
     }
 
     // 7. milestone tracking (cheap, runs every tick)
@@ -781,6 +1208,28 @@ export async function runOnce(
       desc: r.desc,
     })),
   };
+
+  // --dawns N özeti (yalnız mod açıkken atanır; kapalıyken JSON çıktısı aynı kalır).
+  if (dawnMode) {
+    const stoppedBy: DawnSummary["stoppedBy"] =
+      result.error !== null
+        ? "nan_guard"
+        : dawnIndex >= dawnsTarget
+          ? "dawns_target"
+          : simTime >= capSeconds
+            ? "cap_hours"
+            : "no_dawn";
+    const fastest = store.stats.fastestSingularity;
+    result.dawns = dawnRows;
+    result.summary = buildDawnSummary(
+      dawnRows,
+      dawnsTarget,
+      stoppedBy,
+      simTime,
+      result.timeSeconds,
+      Number.isFinite(fastest) ? fastest : null
+    );
+  }
 
   result.timeHms = result.timeSeconds !== null ? hms(result.timeSeconds) : "";
   result.wallMs = Number(process.hrtime.bigint() - wallStart) / 1e6;

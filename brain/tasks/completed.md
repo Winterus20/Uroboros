@@ -1,5 +1,40 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-20] ✔ — Plan §7.3 P4: Sistem Açılışında Bir Kez Anlat (ilk karşılaşmada anlat)
+
+### Gerekçe:
+- Kullanıcı kararı: "Kilitli şeyler görünmesin; sadece kilidi açıldığında görünsün." → bir sistem
+  **açıldığı anda** ne işe yaradığını bir kez söylemek, bu kuralın tamamlayıcısı: içerik gizli
+  kalır, açıldığında anlaşılır.
+- Plan §7.3: "bir sistem oyuncuyla İLK kez karşılaştığında 1-2 cümle öğretir; o andan itibaren
+  yüzey saf görsel+sayısal kalır (T4 → T0-T2 geçişi zamanlanır)."
+
+### Çözüm & Değişiklikler:
+1. `src/game/feature-teachings.ts` (YENİ, saf veri): 16 özellik için `FeatureTeaching`
+   { featureId, title, body, glyph } — `body` **TEK cümle** (90-140 karakter), somut, oyuncuya
+   dogrudan hitap eden dille. **Boş kapılara yazılmadı** (`event_horizon_lens`,
+   `hawking_resonator`, `cosmic_filament` UI'a bağlı değil → oyuncuya var olmayan yüzey anlatılırdı).
+2. State: `taughtFeatures: string[]` (**kaydedilir** → reload sonrası tekrar anlatılmaz) ·
+   `pendingTeaching: FeatureTeaching | null` (uçucu).
+3. Yakalama (`syncUnlocks`): yeni özellik açıldığında öğretimi **kuyruğa alır** ve `taughtFeatures`'e
+   yazar. **Sıra kuralı:** aynı anda birden fazla özellik açılırsa yalnız **ilk** anlatılır (ekran
+   yığılması olmasın) — diğerleri sessizce "öğretilmiş" sayılır.
+4. Getter `currentTeaching` + aksiyon `dismissTeaching()`.
+5. `src/components/TeachingToast.vue` (YENI): üst-ortada, ~7 sn'de otomatik kapanan, tek cümlelik
+   öğretim kartı (glyph + başlık + gövde + kapatma). Mevcut görsel dil sınıfları; yeni CSS/kütüphane yok.
+6. Ayar: `settings.teachingsEnabled` (varsayılan **açık**) → kapatılabilir. Geriye uyum: kayıt
+   yükleyici `{...this.settings, ...data.settings}` ile birleştirdiği için **eski kayıtlarda alan
+   yoksa varsayılan açık kalır** (testle kilitli).
+
+### Testler:
+- `src/stores/feature-teaching.test.ts` (YENİ): içerik bütünlüğü (id'ler gerçek, tek cümle, uzunluk
+  aralığı) · yakalama · tekrar anlatmama · aynı tick'te iki özellik → tek anlatım · kayıt round-trip.
+- `src/components/teaching-toast.test.ts` (YENİ): ayar açık/kapalı gösterim kararı + geriye uyum.
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **512/512** (34 dosya) · `npm run build** **0** ·
+  `npm run harness:smoke` **6/6 PASS**
+
 ## [2026-10-20] ✔ — Plan §10.1 O3: Başarım Aile Kademeleri SP Kazancını da Güçlendirir
 
 ### Gerekçe:

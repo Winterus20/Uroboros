@@ -6,6 +6,7 @@ import type { Decimal } from '../../core/math'
 import type { ChallengeDef, ChallengeRewardEffects } from '../../game/challenges'
 import type { CorruptionLevel } from '../../game/corruption'
 import type { ScaleLayerId } from '../../game/layers'
+import type { FeatureTeaching } from '../../game/feature-teachings'
 import type { UnlockContext } from '../../game/unlocks'
 import type { AutobuyerMode, CrisisInterventionType, CrisisSpellType, LabMode, LabSeedType, MusicTrackId, NeuralEffects, OfflineReport, ReactorPhase, ResolutionMilestone, SerializedPlayerState, StanceType, StrikeStage } from '../../models/types'
 import type { GameState } from './state'
@@ -86,6 +87,8 @@ export interface StoreApi extends GameState {
   unlockContext: UnlockContext
   dopamineGateReached: (amount: string) => boolean
   isFeatureUnlocked: (id: string) => boolean
+  // P4a — ekrandaki tek öğretim kutusu (nil = şu an gösterilecek anlatım yok).
+  currentTeaching: FeatureTeaching | null
   labUnlocked: boolean
   crisisUnlocked: boolean
   reactorPhase: ReactorPhase
@@ -223,6 +226,10 @@ export interface StoreApi extends GameState {
   dismissAchievementToast(id: string): void;
   setActiveGameTab(tab: string): void;
   syncUnlocks(): void;
+  // P4a — yeni açılan özelliğin öğretimini yakalar (syncUnlocks çağırır).
+  captureFeatureTeaching(featureId: string): void;
+  // P4a — ekrandaki öğretim kutusunu kapatır.
+  dismissTeaching(): void;
   spawnTimeClock(): boolean;
   windTimeClock(dragDeltaRadians: number): void;
   releaseTimeClock(): boolean;

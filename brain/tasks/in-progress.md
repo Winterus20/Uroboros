@@ -163,6 +163,38 @@ Tam kapı: typecheck 0 · test **484/484** · build 0 · harness:smoke 6/6.
 P0 raporuna §10 olarak yazıldı (2. saat yüzeysiz; `event_horizon_lens`/`hawking_resonator`/
 `cosmic_filament` kapıları **hiçbir UI'a bağlı değil** → içerik eksik).
 
+
+### Dalga 6 — Faz 4 / 5 kapanışı (2026-10-20 14:30)
+
+**Tamamlanan ve push'lanan (bu dal):**
+| Commit | İçerik |
+| :--- | :--- |
+| `a2786b3` | P3.3 ölçülmüş merdiven (ADR-0074) + kilitli içerik gizleme + M1 v2 üretim çipi (ADR-0075) |
+| `c3c6c33` | M1 ölçüm sonuçları (iki denge noktası kayda geçti) |
+| `294db32` | vitest zaman aşımı 60s → 120s (duman testi paralel yükte timeout oluyordu) |
+| `4ca6c51` | **O3**: aile kademeleri SP kazancını da güçlendirir (plan §10.1) |
+
+**M1 v2'nin ölçülen denge noktaları (taban 1e40 sabit):**
+| Seviye başına | 30 dk tepe | 600 sn kapı | 12 sa ilk tekillik | Kriz→Koloni vadi | Karar |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| — (çipsiz) | 1e69.1 | 4 | 9:33:17 | 621.5 sn | taban |
+| **+%3** | **1e81.25** | **4** | **4:28:09** | 461 sn | ✅ seçildi |
+| +%10 | 1e98.19 | 4 | 1:14:14 | 166.5 sn | ❌ vadi kırık |
+
+**Çalışan dallar:**
+- `70eb19e6` — **harness `--dawns N`** modu (P0 §5 spec'i): SP/şafak ekonomisi ölçümü —
+  şafak merdiveni (ADR-0071) hiç uçtan uca ölçülmemişti. Oyun kodu değişmez.
+- `d5b99e0f` — **P4a**: sistem açılış öğretim içeriği + durum (taughtFeatures / pendingTeaching).
+- `e0c269c9` — **P4b**: öğretim toast'u + ayar (kullanıcı kararı: kilitli şeyler görünmesin →
+  sistem **açıldığı anda** bir kez anlatılır, sonra bir daha asla).
+
+**Ertelendi (kullanıcı kararı):** dikey çölün içerikle doldurulması (Faz 5) → P0 §10'a ölçümü
+yazıldı; ilk aday: `event_horizon_lens`/`hawking_resonator`/`cosmic_filament` kapıları **hiçbir
+UI'a bağlı değil** (içeriksiz) → ya gerçek sistem yapılacak ya da 1e160 bandı öne alınacak.
+
+**Sana açık:** ADR-0075 — tempo bandı artık ölçülen gerçeği taşıyor (taban oyun 8–11 sa; yatırımla
+oynayan oyuncu ~4.5 sa). Onaylıyor musun, yoksa 3s30dk hedefi için ayrı denge projesi mi?
+
 **Kalan işler:**
 1. M1 v2 uygulaması (üretim çarpanı + cache anahtarı) + 30 dk ölçüm (çipsiz/cipli tepe karşılaştırması;
    600 sn'deki 4 kapı korunmalı) → AutobuyersTab kartı v2'ye göre.

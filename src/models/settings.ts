@@ -36,5 +36,8 @@ export interface GameSettings {
   swipeSensitivity?: 'balanced' | 'low' | 'off' // Mobil ekran kaydırma / fiske jesti hassasiyeti
   offlineProgressModal: boolean // Çevrimdışı rapor modalı
   hotkeysEnabled: boolean // Klavye kısayolları (1-9, M vb.)
+  // P4b — Sistem açılış ipuçları: yeni bir sistem ilk kez açıldığında gösterilen
+  // TEK cümlelik tanıtım (öğretim toastu). Varsayılan AÇIK; oyuncu kapatabilir.
+  teachingsEnabled: boolean
   activeSlot: number // 1, 2 veya 3
 }

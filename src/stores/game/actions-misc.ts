@@ -7,6 +7,7 @@ import { ACHIEVEMENTS } from '../../game/achievements'
 import { AUTOBUYER_BULK_COST, AUTOBUYER_COSTS, AUTOBUYER_MAX_COST, getAutobuyerInterval } from '../../game/autobuyer-data'
 import { ACH_CHECK_INTERVAL, CHALLENGE_DOOM_GALAXY_ACCEL, CHALLENGE_DOOM_SHIFT_ACCEL, DIMENSION_CHAIN_RATE, NIGHT_WATCH_THRESHOLD, UNLOCK_CHECK_INTERVAL } from '../../game/balance'
 import { getChallengeById } from '../../game/challenges'
+import { getFeatureTeaching } from '../../game/feature-teachings'
 import { applyTensionDecay, dragFromTension, durationFromPeakSpeed, releaseSpeedAt } from '../../game/clock-data'
 import { LAB_RECIPES, LAB_SEEDS } from '../../game/lab-data'
 import { COMBO_DECAY_MS } from '../../game/neural-data'
@@ -350,8 +351,58 @@ export const miscActions = {
         if (this.unlockedFeatures.includes(feature.id)) continue
         if (checkUnlock(this.unlockContext, feature)) {
           this.unlockedFeatures.push(feature.id)
+          // P4a — "ilk karşılaşmada anlat, sonrasında göster" (plan §7.3).
+          // Özellik AZ ÖNCE açıldı: anlatımı bir kez göster, sonra bir daha asla.
+          this.captureFeatureTeaching(feature.id)
         }
       }
+    },
+
+    /**
+     * P4a — yeni açılan özelliğin öğretimini yakalar.
+     *
+     * Kurallar:
+     *  1) Öğretim metni yoksa (boş kapılar: mercek / rezonatör / iplikçik)
+     *     hiçbir şey olmaz — oyuncu var olmayan bir yüzeyi duymaz.
+     *  2) Özellik daha önce anlatıldıysa (`taughtFeatures`) tekrar anlatılmaz.
+     *  3) SIRA KURALI: aynı anda (aynı tick'te) birden fazla özellik açılırsa
+     *     YALNIZCA İLK öğretim kuyruğa alınır; diğerleri `taughtFeatures`'a
+     *     işlenir ama GÖSTERİLMEZ.
+     *
+     * Neden yalnızca ilk gösteriliyor (ekran yığılması):
+     * Merdivenin basamakları birbirine çok yakın dekadlarda oturur; aynı
+     * tick'te iki-üç özellik birden açılabilir. Her biri için ayrı bir öğretim
+     * kartı açılırsa oyuncu aynı anda birden fazla metin kutusuyla karşılaşır
+     * (üst üste binen modal yığını) ve hiçbirini okuyamaz. Tek slot + "ilk
+     * açılan kazanır" kuralı, öğretimi bir OLAY gibi tutar: ekranda aynı anda
+     * yalnızca bir anlatım vardır, sıradaki özellik açıldığında sıradaki
+     * anlatım gösterilir.
+     */
+    captureFeatureTeaching(this: StoreApi, featureId: string): void {
+      // P4b ayarı ile uyum (sert import bağımlılığı YOK): "Sistem açılış
+      // ipuçları" kapalıysa hiçbir öğretim kuyruğa alınmaz. Aksi halde toast
+      // hiç gösterilmez ve hiç dismiss edilmez; TEK öğretim slotu kalıcı olarak
+      // dolu kalır ve sonraki özelliklerin öğretimi de bir daha gösterilmez
+      // (sessiz softlock). Alan yoksa (P4b olmadan) undefined → AÇIK sayılır.
+      const teachingsEnabled = (this.settings as { teachingsEnabled?: boolean }).teachingsEnabled
+      if (teachingsEnabled === false) return
+      const teaching = getFeatureTeaching(featureId)
+      if (!teaching) return
+      if (this.taughtFeatures.includes(featureId)) return
+      // Kayda geç: bu özellik bir daha anlatılmayacak (reload sonrası da).
+      this.taughtFeatures.push(featureId)
+      // Ekranda zaten bir öğretim varsa yenisi yığılır — gösterilmez.
+      if (this.pendingTeaching) return
+      this.pendingTeaching = teaching
+    },
+
+    /**
+     * P4a — ekrandaki öğretim kutusunu kapatır.
+     * Kilitli şeyler görünmez; öğretim yalnızca kilidi açıldığı ANDA ve bir kez
+     * gösterilir. Kapatmak bir sonraki öğretimin önünü açar.
+     */
+    dismissTeaching(this: StoreApi): void {
+      this.pendingTeaching = null
     },
 
     // Çekirdek Simülasyon Döngüsü
