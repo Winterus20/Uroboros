@@ -156,6 +156,13 @@ ADR-0073 aile kademe çarpanı), fiyat değil. Gerekçe: E1 ölçümü P1'in fiy
   → **v2**: çip *boyut üretim çarpanını* 1.1^seviye yükseltir (kovaya denk değerde fayda → ikilem gerçek).
 - ADR-0074 + ADR-0075 + indeks satırları + completed.md kayıtları + `_run-head.ts` temizliği.
 
+**Kapanış (2026-10-20 13:55):** tüm dal commit'lendi (`a2786b3` · `c3c6c33` · `294db32`) ve push'landı.
+Tam kapı: typecheck 0 · test **484/484** · build 0 · harness:smoke 6/6.
+
+**Çöl kararı (kullanıcı):** "Şimdilik dokunma" → Faz 5 (içerik) ertelendi; ölçüm + mekanizma denetimi
+P0 raporuna §10 olarak yazıldı (2. saat yüzeysiz; `event_horizon_lens`/`hawking_resonator`/
+`cosmic_filament` kapıları **hiçbir UI'a bağlı değil** → içerik eksik).
+
 **Kalan işler:**
 1. M1 v2 uygulaması (üretim çarpanı + cache anahtarı) + 30 dk ölçüm (çipsiz/cipli tepe karşılaştırması;
    600 sn'deki 4 kapı korunmalı) → AutobuyersTab kartı v2'ye göre.

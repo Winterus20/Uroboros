@@ -1,7 +1,7 @@
 // Koloni, bot, basarim, kilit, tekillik ve diger getter parcalari. `this`, StoreApi ile tiplenmistir.
 import { calculateCosmicPreyLadder, calculateEventHorizon, calculateWritingParadox } from '../../core/cosmic-scale'
 import { D_0, D_1, D_INFINITY, Decimal } from '../../core/math'
-import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, calcAchievementMultiplier, hasAchievementReward } from '../../game/achievements'
+import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, achievementSpMult, calcAchievementMultiplier, hasAchievementReward } from '../../game/achievements'
 import { AUTOBUYER_BULK_COST, AUTOBUYER_BULK_SHIFT_REQ, AUTOBUYER_COSTS, AUTOBUYER_MAX_COST, AUTOBUYER_MAX_GALAXY_REQ, AUTOBUYER_PROGRESS_REQ } from '../../game/autobuyer-data'
 import { COLONY_BREED_RATE, COLONY_PASSIVE_LOG_FACTOR, SACRIFICE_SHIFT_REQ, resolvedUnlockedDimensionCount } from '../../game/balance'
 import { deriveCorruptionLevel } from '../../game/corruption'
@@ -12,6 +12,29 @@ import { getAchMultCache, memoChallengeEffects, memoNeuralEffects, setAchMultCac
 import type { UnlockContext } from '../../game/unlocks'
 import type { GameState } from './state'
 import type { StoreApi } from './store-api'
+
+/**
+ * SP (şöhret puanı) kazancının çarpan zinciri — TEK KAYNAK.
+ *
+ * Hem `singularityGain` (GERÇEK kazanç) hem `nextSingularityPointAt` (hedef
+ * kütle GÖSTERGESİ) bu zinciri kullanır. İki yol farklı çarpanlar kullanırsa
+ * göstereğin gerektirdiği kütle gerçek kazançla tutmaz: oyuncu hedefini yanlış
+ * okur (kazanç büyüdüğü için hedef gereksiz yere yukarı kayar).
+ *
+ * Bileşenler:
+ * - `dawnSpeedMult`: Nöral Ağaç "Şafak Habercisi" (şafak hızı),
+ * - `spMult`: tamamlanmış challenge'ların SP ödülleri,
+ * - `relicSpMult`: Kozmik Relik / Reaktör Çöküşü SP kazancı,
+ * - `achSpMult`: başarım AILE KADEMELERİ (plan §10.1 O3) → +%3/kademe,
+ *   tavan 1.96×. Üretim çarpanı (achievementMultiplier) burada YOK: kütle
+ *   üretimini SP'ye bağlamak dengeyi uçurur (bkz. ADR-0029 notu).
+ */
+function spGainMultChain(state: GameState, relicSpMult: number): number {
+  const dawnSpeedMult = memoNeuralEffects(state.neuralNodesBought || {}).dawnSpeedMult
+  const spMult = memoChallengeEffects(state.completedChallenges).spMult
+  const achSpMult = achievementSpMult(state.achievements)
+  return dawnSpeedMult * spMult * relicSpMult * achSpMult
+}
 
 export const miscGetters = {
     // Planck Duvarı kırıldı mı? (Break Singularity yükseltmesi veya Nöral Ağaç düğümü)
@@ -172,10 +195,20 @@ export const miscGetters = {
       if (state.matter.lt(D_INFINITY)) return D_0
 
       const hasBreak = this.hasBreakSingularity
-      const dawnSpeedMult = memoNeuralEffects(state.neuralNodesBought || {}).dawnSpeedMult
-      const spMult = memoChallengeEffects(state.completedChallenges).spMult
       const relicSpMult = this.reactorRelicBonuses.spGainMult
-      const totalMult = dawnSpeedMult * spMult * relicSpMult
+
+      // Başarım aile kademeleri SP kazancını da güçlendirir (plan §10.1 O3).
+      //
+      // Neden burada: SP kazancının TÜM çarpanları tek bir zincirde toplanır
+      // (spGainMultChain: şafak hızı × challenge × relik × achievement);
+      // başarım kademeleri de aynı zincirin son halkası olarak devreye girer.
+      //
+      // Neden SABİT (kademe) çarpanı: achievementMultiplier (üretim çarpanı)
+      // bilinçli olarak SP'ye uygulanmaz — aksi halde kütle üretimi SP döngüsünü
+      // geri besleyip dengeyi uçururdu. Buradaki çarpan yalnızca başarım AILE
+      // KADEMELERİNE bağlıdır (0..32) ve +%3/kademe'dir: tavan 1.96×. Kademe
+      // sayısı başarım ilerlemesiyle monoton artar, koşu içi sayaçla dalgalanmaz.
+      const totalMult = spGainMultChain(state, relicSpMult)
 
       // Planck Duvarı kırılmadıysa kütle D_INFINITY eşiğinde kilitlidir. Plan
       // bölüm 8A "Şafak Merdiveni" (ADR-0071): taban sabit 1 kalırken
@@ -183,6 +216,10 @@ export const miscGetters = {
       // artık 1 + singularities: 1. şafak 1 SP (kasa 1), 2. şafak 2 SP (kasa 3),
       // 3. şafak 3 SP (kasa 6) → kırılma duvarı 3 koşuya iner. Taban yine
       // totalMult ile çarpılır ve min 1 korunur.
+      //
+      // Başarım SP çarpanı da bu dalda devrede: 1. şafak 1 SP × 1.96 = 1.96
+      // → taban 1'in ÜSTÜNDE kalır; Math.floor + "min 1" koruması yerinde
+      // olduğu için kazanç asla 1 SP'nin altına düşmez.
       if (!hasBreak) {
         const baseDawn = 1 + state.singularities
         const baseGain = Decimal.floor(new Decimal(baseDawn).times(totalMult))
@@ -213,10 +250,16 @@ export const miscGetters = {
         return D_INFINITY
       }
 
-      const dawnSpeedMult = memoNeuralEffects(state.neuralNodesBought || {}).dawnSpeedMult
-      const spMult = memoChallengeEffects(state.completedChallenges).spMult
       const relicSpMult = this.reactorRelicBonuses.spGainMult
-      const totalMult = Math.max(0.001, dawnSpeedMult * spMult * relicSpMult)
+      // Hedef kütle GÖSTERGESİ gerçek kazançla AYNI çarpan zincirini kullanır
+      // (tek kaynak — bkz. spGainMultChain). Aksi halde gösterge, kazancın
+      // kullandığı çarpandan farklı bir çarpanla hesaplanır ve hedef kayar:
+      // achievementSpMult eklenmeden önce bu gösterge, SP çarpanı büyüdüğü için
+      // gereken kütlenin 1,14 DEKAD (≈ ×13,8) ÜSTÜNÜ tahmin ediyordu
+      // (2 kademe örneğinde 10^579,14 → 10^578,00).
+      // Math.max(0.001, ...) yalnızca bölme güvenliği içindir (çarpan zincirinin
+      // kendisi kazançla birebir aynıdır).
+      const totalMult = Math.max(0.001, spGainMultChain(state, relicSpMult))
 
       const divisor = 45
       const basePoints = 3

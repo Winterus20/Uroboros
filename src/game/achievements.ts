@@ -21,6 +21,18 @@ export const FAMILY_TIER_STEPS = [0.25, 0.5, 0.75, 1] as const
 /** Aile kademesi başına ek küresel üretim çarpanı (8 aile × 4 kademe = 32). */
 export const FAMILY_TIER_MULT = 1.015
 
+/**
+ * Aile kademesi başına ek SP (şöhret puanı) çarpanı — plan §10.1 O3.
+ *
+ * Tavan: 1 + 0.03 × 32 kademe = 1.96× (tüm aileleri tamamlayan oyuncu SP'yi
+ * ~2 katına yakın kazanır).
+ *
+ * Bu çarpan ÜRETİM çarpanından (PER_ACHIEVEMENT_MULT / FAMILY_TIER_MULT)
+ * BİLEREK AYRIDIR: biri kütle üretimini güçlendirir, diğeri prestij puanı
+ * kazancını. İkisi aynı anda devrede olabilir, birbirinin yerine geçmez.
+ */
+export const SP_PER_FAMILY_TIER = 0.03
+
 export interface AchievementCategoryMeta {
   id: AchievementCategoryId
   name: string
@@ -255,6 +267,21 @@ export function countFamilyTiers(unlockedIds: readonly string[]): number {
     (sum, c) => sum + familyTierCount(c.id, unlockedIds),
     0
   )
+}
+
+/**
+ * Başarım aile kademelerinden üretilen SP (şöhret puanı) çarpanı — plan §10.1 O3.
+ *
+ * Yeni bir reward türü açmadan mevcut kademe sayacını (countFamilyTiers)
+ * yeniden kullanır: kayıttan gelen id listesinden YALNIZCA gerçekten var olan
+ * başarımlar sayılır, bilinmeyen id hiçbir kademeyi artırmaz (ADR-0031 beyaz
+ * liste koruması — bozuk kayıt SP çarpanını şişiremez).
+ *
+ * Kademe başına SP_PER_FAMILY_TIER (0.03) kademe SABİTTİR: oyuncu ilerledikçe
+ * çarpan artar, hiçbir koşu içi sayaçla (üretim gibi) dalgalanmaz.
+ */
+export function achievementSpMult(unlockedIds: readonly string[]): number {
+  return 1 + SP_PER_FAMILY_TIER * countFamilyTiers(unlockedIds)
 }
 
 // Global kalıcı çarpan: 1.012^(başarım) × 1.015^(aile kademesi). SP kazancına uygulanmaz.

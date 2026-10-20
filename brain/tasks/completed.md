@@ -1,5 +1,38 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-20] ✔ — Plan §10.1 O3: Başarım Aile Kademeleri SP Kazancını da Güçlendirir
+
+### Gerekçe:
+- ADR-0073 aile kademe çarpanı **üretimi** güçlendiriyor; prestij döngüsünün ikinci ekseni (SP)
+  yalnız nöral ağaç + challenge + relik çarpanlarına bağlıydı. Plan §10.1 O3 bunu kapatır.
+
+### Çözüm & Değişiklikler:
+1. `src/game/achievements.ts`: `SP_PER_FAMILY_TIER = 0.03` + `achievementSpMult(unlockedIds)`
+   = `1 + 0.03 × countFamilyTiers(...)` → tavan 1.96× (32 kademe). **Yeni reward türü açılmadı**,
+   mevcut kademe sayacı yeniden kullanıldı → yeni state/kayıt alanı **yok**, migrasyon **yok**.
+2. `src/stores/game/getters-misc.ts`: **TEK KAYNAK** `spGainMultChain(state, relicSpMult)`
+   = şafak hızı × challenge × relik × achievement. Hem `singularityGain` (kazanç) hem
+   `nextSingularityPointAt` (UI hedef göstergesi) bu zinciri kullanır.
+   *Tutarlılık kanıtı:* eski zincirle (achievement çarpanı olmadan) gösterge gereken kütlenin
+   **1.14 dekad (≈×13.8) ÜSTÜNÜ** tahmin ediyordu → yeni test bunu kırmızıya düşürüp düzeltiyor.
+3. `calcAchievementMultiplier` (üretim çarpanı) **değişmedi** → iki çarpan ayrı: üretim ve SP.
+
+### Testler:
+- `src/game/achievements.test.ts` → 41 test (+8): SP_PER_FAMILY_TIER kilidi · boş liste 1 · %25→1.03 ·
+  %100→1.12 · tam set 1.96 · bilinmeyen id artırmaz (ADR-0031) · üretim çarpanıyla karışmaz.
+- `src/stores/sp-gain.test.ts` (YENİ, 7 test): post-break dalda kazanç oranı kademe oranıyla birebir
+  (0→2 kademe: 3.000.000 → 3.180.000) · 32 kademe → 1.96 · pre-break dal da uygular (101→107) ·
+  kazanç zinciri ile hedef göstergesi aynı çarpanları kullanır.
+
+### Doğrulama:
+- `npm run typecheck` **0** · `npm test` **499/499** (33 dosya) · `npm run build` **0** ·
+  `npm run harness:smoke` **6/6 PASS**
+
+### Not (denge):
+Pre-break dalda kazanç `Math.floor` ile alındığı için küçük çarpanlar 1 SP'yi değiştirmez; asıl etki
+post-break üstel kazançta ve prestij döngüsündedir. İlk koşu ölçümü harness'te SP telemetrisi
+olmadığı için yapılamadı — `harness --dawns N` modu (P0 §5) bu ölçümü açacak.
+
 ## [2026-10-20] ✔ — Kilitli İçerik Gizleme (kullanıcı kararı) + M1 v2 Otonom Yatırım Çipi
 
 ### Gerekçe (kullanıcı):

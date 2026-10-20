@@ -6,6 +6,8 @@ import {
   FAMILY_TIER_MULT,
   FAMILY_TIER_STEPS,
   PER_ACHIEVEMENT_MULT,
+  SP_PER_FAMILY_TIER,
+  achievementSpMult,
   calcAchievementMultiplier,
   categoryDefs,
   countCompletedRows,
@@ -505,5 +507,76 @@ describe('hasAchievementReward', () => {
     for (const kind of Object.keys(DECLARED_REWARD_KINDS) as AchievementRewardKind[]) {
       expect(hasAchievementReward(ALL_IDS, kind)).toBe(true)
     }
+  })
+})
+
+/**
+ * Plan §10.1 O3 — başarım AILE KADEMELERİ SP (şöhret puanı) kazancını da
+ * güçlendirir: +%3/kademe, tavan 1 + 0.03 × 32 = 1.96×.
+ *
+ * Üretim çarpanı (calcAchievementMultiplier) bundan BAĞIMSIZ kalır: biri kütle
+ * üretimini güçlendirir, diğeri prestij puanı kazancını.
+ */
+describe("achievement SP multiplier (plan §10.1 O3)", () => {
+  const DOC_SP_PER_FAMILY_TIER = 0.03
+  const DOC_MAX_FAMILY_TIERS = 32
+  const DOC_MAX_SP_MULT = 1.96
+
+  /** Bir aileden, hedeflenen kademe sayısını verecek kadar plaket seçer. */
+  function idsWithTiers(categoryId: AchievementCategoryId, tiers: number): string[] {
+    const ids = categoryDefs(categoryId).map((a) => a.id)
+    const threshold = FAMILY_TIER_STEPS[tiers - 1]
+    const chosen = ids.slice(0, Math.ceil(ids.length * threshold))
+    expect(familyTierCount(categoryId, chosen)).toBe(tiers)
+    return chosen
+  }
+
+  it("pins the documented constant", () => {
+    expect(SP_PER_FAMILY_TIER).toBe(DOC_SP_PER_FAMILY_TIER)
+  })
+
+  it("is exactly ×1 with nothing unlocked", () => {
+    expect(achievementSpMult([])).toBe(1)
+  })
+
+  it("pays +3% per family tier (one family at %25 → ×1.03)", () => {
+    const ids = idsWithTiers("dopamine", 1)
+    expect(countFamilyTiers(ids)).toBe(1)
+    expect(achievementSpMult(ids)).toBeCloseTo(1.03, 10)
+  })
+
+  it("pays +3% per tier for a fully completed family (4 tiers → ×1.12)", () => {
+    const ids = idsWithTiers("dopamine", 4)
+    expect(countFamilyTiers(ids)).toBe(4)
+    expect(achievementSpMult(ids)).toBeCloseTo(1.12, 10)
+  })
+
+  it("caps at ×1.96 for the complete registry (32 tiers)", () => {
+    expect(countFamilyTiers(ALL_IDS)).toBe(DOC_MAX_FAMILY_TIERS)
+    expect(achievementSpMult(ALL_IDS)).toBeCloseTo(DOC_MAX_SP_MULT, 10)
+  })
+
+  it("grows strictly with the tier count", () => {
+    let previous = 1
+    for (let tiers = 1; tiers <= FAMILY_TIER_STEPS.length; tiers++) {
+      const value = achievementSpMult(idsWithTiers("dopamine", tiers))
+      expect(value).toBeGreaterThan(previous)
+      previous = value
+    }
+  })
+
+  it("never raises a tier for unknown ids (ADR-0031 whitelist guard)", () => {
+    expect(achievementSpMult(["not_a_real_id", "also_fake"])).toBe(1)
+    const known = idsWithTiers("dopamine", 2)
+    expect(countFamilyTiers([...known, "ghost_id"])).toBe(countFamilyTiers(known))
+    expect(achievementSpMult([...known, "ghost_id"])).toBe(achievementSpMult(known))
+  })
+
+  it("keeps the production multiplier untouched (two separate multipliers)", () => {
+    // Üretim çarpanı yalnızca 1.012^başarım × 1.015^kademe bilir; SP çarpanı (1.12) içinde değil.
+    const ids = idsWithTiers("dopamine", 4)
+    const expected =
+      Math.pow(DOC_PER_ACHIEVEMENT_MULT, ids.length) * Math.pow(DOC_FAMILY_TIER_MULT, 4)
+    expect(calcAchievementMultiplier(ids).toNumber()).toBeCloseTo(expected, 9)
   })
 })
