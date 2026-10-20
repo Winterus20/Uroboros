@@ -367,6 +367,51 @@ COST_ACCEL_DECADES_PER_STEP 0.011 → **0.025**. Patch saklandı: `brain/scratch
 **Sonuç:** Faz 4'te P1, M1 ile birlikte uygulanmalı (M1 olmadan P1 tek başına işlevsiz);
 P1'in sayıları ölçümle yumuşatılmalı. Bu, tempo kararını da netleştirir: onarım kolu **üretim**.
 
+### 10. DİKEY ÇÖL — ÖLÇÜLDÜ, İÇERİK İŞİ ERTELENDİ (2026-10-20)
+
+**Ölçüm** (aktif profil, çip açık, 12 saatlik koşu: `v2c-chips-12h.json`, ilk tekillik 4s28dk):
+
+| dk | yüzey |
+| ---: | :--- |
+| 0.4 | `crisis_spawn` (anomali) |
+| 3.2 | `autobuyers` (Botlar) |
+| 3.4 | `stance_spam` |
+| 4.3 | `stance_private` |
+| 13.5 | `crisis` (Kriz) + `spell_espresso` |
+| 21.2 | `colony` (Koloni) |
+| 28.9 | `lab` (Lab) + `seed_nucleon` (29.7) + `seed_gluon` (34.2) |
+| 54.4 | `seed_graviton` |
+| 60.4 / 64.5 | `spell_noise` / `spell_sleep` |
+| **121.9** | `guilt_slackers` (Kozmik Parazitler) |
+| **202.2** | `event_horizon_lens` |
+
+**Boşluklar:** 2. saat (64 → 122 dk) **hiç yeni yüzey yok**; 3. saat (122 → 202 dk) yalnız bir tane.
+
+**Mekanizma denetimi — boşluk neden var?** `event_horizon_lens`, `hawking_resonator`,
+`cosmic_filament` **FEATURE_UNLOCKS'te tanımlı ama hiçbir UI'a bağlı değil** (grep: 0 referans) →
+içeriksiz merdiven kapıları; "açılış" ölçümü onlar için oyuncuya hiçbir şey vermiyor.
+`guilt_slackers` ise gerçek bir mekanik (parazitler) ama bir **yüzey değil** (kilit açan düğme).
+Yani 64. dakikadan tekilliğe (268 dk) kadar oyuncunun elinde **tek bir yeni karar** var (çip seviyesi)
+ve gerisi sayı büyümesi → plan §1'in "uzun dikey çöl" teşhisi **ölçümle doğrulandı**.
+
+**Karar (kullanıcı, 2026-10-20):** "Şimdilik dokunma." → Faz 5 (içerik) **ertelendi**; bu dal yalnız
+ölçüm + kayıt.
+
+**Erteleme notu — ilk iş yapılacak aday.** Çölü doldurmanın iki yolu var, ikisi de **içerik**
+gerektirir (kapı kaydırmak tek başına oyuncuya bir şey vermiyor):
+
+1. **Mevcut boş kapıları gerçek sistem yapmak:** `event_horizon_lens` (1e175 bandı, 3. saat),
+   `hawking_resonator` (1e215), `cosmic_filament` (1e250) → merdiven zaten bu saatleri ayırmış,
+   **içerik** eksik.
+2. **Guilt bandını öne almak** (1e160 → ~1e140): gerçek bir mekanik (parazitler) 2. saati doldurur;
+   sıfır yeni sistem.
+
+Kapsam dışı bırakılan ilgili plan maddeleri: **M2** (SP ağacında rekabetçi dallar), **O3**
+(başarım → SP çarpanı), **O1** (prestij ritüeli), **O4** (haber bandı önsezdirme — kullanıcının
+"kilitli şeyler görünmesin" kuralıyla çatışıyor, dikkat gerektirir), **P4** (öğretim anları),
+**`harness --dawns N`** modu (SP telemetri altyapısı, P0 §5'te spec'lendi, uygulanmadı).
+
+---
 ### 9.4 Açık kararlar (P3.3'ün kapısı)
 
 1. **Tempo:** (a) P1'den önce onarım fazı, (b) ADR-0023 bandını güncel ölçüme revize, (c) ~11 saat
