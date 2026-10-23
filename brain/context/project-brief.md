@@ -1,5 +1,13 @@
 # Project Brief: UROBOROS (The Cosmic Feast)
 
+> ⚠️ **TEMA PİVOTU ÖNERİLİYOR — bu brief HENÜZ güncellenmedi.**
+> ADR-0077: "Kozmik Oburluk" → **"Sayı Avcısı"** (mizahi sistem sesi `SİCİL`,
+> `1.79e308` → LNGN 11 basamaklı merdiven, iki motorlu ilerleme).
+> Aşağıdaki metin mevcut uygulamanın gerçeğidir. Karar ve gerekçe:
+> [`../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md`](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md)
+> · Ses sözleşmesi: [`narrative-voice.md`](./narrative-voice.md)
+> · Senaryo: [`../research/number-ladder-script-2026-10.md`](../research/number-ladder-script-2026-10.md)
+
 ## 1. Vizyon ve İronik Konu
 *UROBOROS*, laboratuvarda çevre kirliliğini ve karbon salınımını sıfırlamak isteyen masum bir bilim insanının atomaltı parçacıkları ayrıştıran mikroskobik bir kuantum filtresi tasarlamasıyla başlayan; ancak Planck ölçeğinde ($10^{-35}$ m) uzay-zaman dokusunun yırtılarak mikro-karadelik oluşması ve odadaki nesneleri, şehri, Dünya'yı, Güneş'i ve nihayetinde tüm Samanyolu Galaksisi'ni yutan sonsuz bir kozmik tekilliğe (Uroboros) dönüşmesini konu alan hibrit bir incremental/idle oyunudur.
 

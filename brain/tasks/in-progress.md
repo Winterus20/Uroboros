@@ -336,6 +336,36 @@ hızlı kazanalım yutulan kütleyi"* → *"gerçek fizik gibi bir şey yapacağ
 
 ---
 
+## 🎭 YENİ ÖNERİ — Tema Pivotu: "Sayı Avcısı" + Mizahi Sistem Sesi
+**Durum:** ⏸️ **kullanıcı onayı bekliyor** (doküman aşaması tamam, kod yazılmadı)
+- **ADR:** [`brain/decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md`](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md)
+- **Ses sözleşmesi (bağlayıcı):** [`brain/context/narrative-voice.md`](../context/narrative-voice.md)
+- **Tam senaryo:** [`brain/research/number-ladder-script-2026-10.md`](../research/number-ladder-script-2026-10.md)
+- **Açık sorular / boşluk listesi:** [`brain/research/theme-pivot-open-questions-2026-10.md`](../research/theme-pivot-open-questions-2026-10.md)
+- **Özet:** Kozmik oburluk → *en büyük sayıyı merak eden insan*; `Kütle (g)` → `Sayı`;
+  sistem karakteri `SİCİL` oyuncuyla dalga geçer; `1.79e308`'den LNGN'ye 11 basamak
+  (Akt I sayısal motor, Akt II tanımlama motoru).
+- **Üretim modeli (K7):** iki çark (üretim ~5 dk / notasyon ~2 saat), 13 jeneratör
+  (`Parmaklar` → `Teorisyen`), her basamakta **harcanan para birimi değişir**
+  (Sayı → Üs → Kat → Ok → İsim → Tutarlılık), orta sayı = `En Büyük Sayı` rekoru,
+  manuel buton `+1`. Detay: senaryo dosyası §6.
+- **Motor + tetikleme (K8):** **hibrit** — tier 1-3 `break_eternity` gerçek aritmetik,
+  tier 4+ kadran (`rank` + `mag ∈ [2,10)`, asla büyümez; süreklilik `a ↑ⁿ 2 = a ↑ⁿ⁻¹ a`).
+  Karışık tetikleme: `mag` sürekli · ok otomatik · **çapa manuel** (+ `Birikim`) ·
+  ilk sefer zorunlu sahne, sonra "otomatik yükselt" seçeneği. Detay: senaryo §6.11-6.13.
+- **Doküman çıktıları (tamam):** ADR-0077 · `narrative-voice.md` · `number-ladder-script-2026-10.md`
+  · `theme-pivot-open-questions-2026-10.md` · `GAME_DESIGN.md` + `project-brief.md` üstüne uyarı bandı.
+- **Açık sorular:** 19 madde (S1-S19). **Kapandı:** S1 (hücre modeli), S2 (fraksiyonel kule).
+  **Bloklayıcı:** S3 prestij reset · S4 save göçü · S5 görsel dil çakışması · S6 `Tanım`
+  çakışması · S7 ticker hacmi. Ayrıntı: `theme-pivot-open-questions-2026-10.md`.
+- **Onay bekleyen açık kararlar:** O1 oyun adı · O2 sistem adı · O3 uygulama sırası ·
+  O4 mizah yoğunluğu ayarı · O5 eski temanın arşiv statüsü · **D1-D5** (süre, save, dil,
+  kapsam, görsel dil) — `theme-pivot-open-questions-2026-10.md`.
+- **Onay sonrası sıra:** (1) gösterim katmanı (çapa/ok/büyüklük) → (2) `script.ts` +
+  `news.ts` → (3) UI metinleri → (4) Eski Kayıtlar arşivi → (5) iç isimlendirme (opsiyonel).
+
+---
+
 ## ✅ Geç Oyun Tick Performansı (2026-10-15) — TAMAMLANDI
 **Sonuç kaydı:** `brain/tasks/completed.md` (2026-10-15 girişi) · **ADR:** `brain/decisions/0059-late-game-tick-performance.md`
 - A/B kanıtı (git stash, 3 koşu): churn mean **~20.5 ms → ~5.9 ms (~3.5×)**, p95 62 → 13.8 ms; wall ~1.35 → ~0.79 ms. İki derlemede durum zinciri birebir (fingerprint + iş yükü sayaçları eşit).

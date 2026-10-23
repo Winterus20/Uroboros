@@ -1,4 +1,13 @@
 # UROBOROS (THE COSMIC FEAST)
+> ⚠️ **TEMA PİVOTU ÖNERİLİYOR — bu belge HENÜZ güncellenmedi.**
+> ADR-0077 ile "Kozmik Oburluk" → **"Sayı Avcısı"** temasına geçiş önerildi
+> (ana kaynak `Kütle (g)` → `Sayı`, mizahi sistem sesi, `1.79e308`'den LNGN'ye uzanan
+> 11 basamaklı merdiven). Aşağıdaki içerik **mevcut uygulamayı** yansıtır ve geçerlidir;
+> pivot onaylanana kadar referans olarak kullanılır.
+> Karar: [`brain/decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md`](brain/decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
+> Ses sözleşmesi: [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) ·
+> Senaryo: [`brain/research/number-ladder-script-2026-10.md`](brain/research/number-ladder-script-2026-10.md)
+
 > **DURUM İNDEKSİ (Eki 2026)** — güncel durum: `brain/tasks/todo.md` · mimari: ADR-0031
 > - Faz0 (Kuantumdan Galaksiye, 0→1.79e308 g): ✅ çalışıyor
 > - D1-D8 boyutlar + Çekim Hızı (Hz): ✅
