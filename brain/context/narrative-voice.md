@@ -1,146 +1,308 @@
-# ANLATI SESİ SÖZLEŞMESİ — "SİCİL" VE MİZAH KURALLARI
+# ANLATI SESİ SÖZLEŞMESİ — `Hold That Number`
 
 > **BAĞLAYICI BELGE — HER AGENT METİN/İÇERİK İŞİNE BAŞLAMADAN ÖNCE OKUR.**
-> Bu belge, ADR-0077 tema pivotunun **yazım ve ton sözleşmesidir**.
-> Tam senaryo: [`brain/research/number-ladder-script-2026-10.md`](../research/number-ladder-script-2026-10.md)
-> Görsel taraf için ayrı ve bağımsız sözleşme geçerlidir:
-> [`visual-language.md`](./visual-language.md) (ADR-0060) — bu belge onu **ezmez**.
+> Kaynak kararlar: 2026-10-23 grilling oturumu §2.2 (`V1`–`V6`), `A4`, `A8`
+> → [`../research/theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md)
+> · ADR: [`../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md`](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md),
+> [`../decisions/0079-number-economy-vertical-slice.md`](../decisions/0079-number-economy-vertical-slice.md)
+> · Görsel taraf ayrı sözleşme: [`visual-language.md`](./visual-language.md) (ADR-0078) — bu belge onu **ezmez**.
+
+**Bu belge 2026-10-23'te BAŞTAN YAZILDI.** Önceki sürüm "SİCİL" (Sayı Sicili) karakterinin
+ses sözleşmesiydi: bürokratik bir kurum, 11 basamaklık karakter yayı, memur ağzı. `V1` ile
+**SİCİL iptal edildi** — kurum yok, karakter yok, karakter yayı yok. O belgedeki SİCİL tablosu
+ve yay tablosu bu sürümde **yoktur** ve geri getirilmemelidir.
 
 ---
 
-## 1. Oyuncu ve SİCİL
+## 1. Ses = oyunun kendisi (`V1`)
 
-### Oyuncu
-**İkinci tekil şahıs ("SEN").** Adı yok, yüzü yok, geçmişi yok. Elinde bir defter var.
-Motivasyonu tek ve saf: **en büyük sayıyı görmek.** Açgözlü değil, meraklı. Oyuncunun
-tek karakteristik özelliği, her eşikte "bu sefer gerçekten bitti" diye inanmasıdır.
+Konuşan tek şey **oyun**. Bir kurum, bir tanrı, bir anlatıcı, bir dosyalama memuru değil.
+"Oyun" derken kastedilen somut olarak şudur: kural motoru, sayaç ve ekran. Kişiliği vardır,
+**biyografisi yoktur**.
 
-> Oyuncu asla aptal değildir. **Saftır.** Fark net: aptallıkla dalga geçilir, saflıkla
-> dalga geçilir ama sevilir. Her şaka oyuncunun *çabasına* değil, *beklentisine* yönelir.
-
-### SİCİL (Sayı Sicili)
-Evrenin sayıları kaydeden bürokratik kurumu. Tek karakter, tek ses.
-
-| Özellik | Değer |
+| Var | Yok |
 | :--- | :--- |
-| **Biliş** | Kendisine kaydedilmiş her sayıyı bilir. Kaydedilmemişi bilmez ve **bilmediğini söyler**. |
-| **Motivasyon** | Düzen. Dosyalama. Protokol. Sayıların kayıt altında olması. |
-| **Duygu** | Hiçbir şeyi beğenmez. Beğendiğini asla kabul etmez. |
-| **Zayıflık** | Oyuncunun ısrarı. 11 basamak boyunca kırılır. |
-| **Yalan** | Mekanik hakkında **asla**. Hikâye hakkında **her zaman**. |
-| **Ses tonu** | Kısa cümle. Kuru. Memur ağzı. Noktalama disiplinli. Ünlem yok (bir kez hariç). |
+| Bir bakış (alaycı, ironik, sabırlı) | Ad, unvan, köken, gövde |
+| Oyuncuya dair hafıza (sayaçlar) | Oyuncuya dair dosya, sicil, kayıt |
+| Kural bilgisi (ve kurala sadakat) | Hikâye anlatma isteği |
 
-**Karakter yayı (11 basamak):**
+**Yazım testi — taşınabilirlik:** Bir replik başka bir oyunun ekranına yapıştırıldığında hâlâ
+doğru okunuyorsa, o replik **süstür**; bu oyuna ait değildir. İyi replik, ancak *bu* sayının,
+*bu* basamağın ve *bu* oyuncunun basışının yanında doğrudur.
 
-| Basamak | SİCİL'in hâli | Örnek ton |
+```
+✅ Press the plus. The plus is honest.
+✅ You are near the end of the only numbers you were ever taught.
+❌ Welcome, traveller. Your journey begins here.
+❌ The universe is full of mysteries, and you must uncover them.
+```
+
+İlk ikisi `src/game/voice/lines-rung1.ts` içinde duruyor; son ikisi hiçbir oyuna ait değil.
+
+---
+
+## 2. Sessiz meta (`V2`)
+
+Oyun **kendisinin oyun olduğunu bilir** ve bunu **asla söylemez**.
+
+Absürtlük dünyada değil, **ilişkide**dir: oyun oyuncunun ne yapacağını, ne kadar bekleyeceğini,
+`+1`'e yine bastığını bilir. Bunu bilmek ile söylemek arasındaki mesafe, bu sesin tamamıdır.
+
+| ✅ Sessiz meta | ❌ Söylenmiş meta |
+| :--- | :--- |
+| "You know this does nothing now. You keep going. Good." | "This is a game, so clicking does nothing." |
+| "The plus button has not moved." | "The developer left the plus button here." |
+| "Waiting is also a mechanic. It is just a bad one." | "Idle games are all about waiting, right?" |
+
+**Yasak:** yama notu şakası, geliştirici şakası, "kaydını kaydettim" şakası, oyuncunun
+klavyesini/faresini/ekranını bilme iddiası, başka oyunlara gönderme. Hepsi dördüncü duvarı
+**yıkar**; sessiz meta onu **kullanır** ve yerinde bırakır.
+
+Tek istisna `V6`'dır (§6) — orada bile oyun "ben bir oyunum" demez; yalnızca **ciddileşir**.
+
+---
+
+## 3. Muhatap: gerçek "sen" (`V3`) + veri sınırı
+
+Muhatap kurgusal bir karakter değil, **ekranın karşısındaki kişi**dir. İkinci tekil şahıs,
+aracısız. "Sen" bir kahraman değil, bir **sayaç komşusu**dur.
+
+### 3.1 Veri sınırı (bağlayıcı)
+
+Ses **yalnızca oyunun kendi ürettiği veriyi** görebilir. Tek kaynak:
+[`src/game/voice/types.ts`](../../src/game/voice/types.ts) → `VoiceContext`.
+
+| Alan | Anlamı | Nereden |
 | :--- | :--- | :--- |
-| 1-3 | Kendinden emin büro. Oyuncuyu prosedür sanıyor. | "Kayıt tamamlandı. Sıradaki." |
-| 4-5 | İlk kez şaşırır, şaşırdığını inkâr eder. | "Bu… kayıt dışı. Şimdilik." |
-| 6-7 | Yorgun memur. Oyuncudan bıkmış ama işini yapıyor. | "Yine mi. Tamam. Otur." |
-| 8-9 | Prosedürü bırakır, insan gibi konuşur. | "Bunu ben de merak ediyorum. Söylemem." |
-| 10 | Sessizlik. Tek kelime. | "…" |
-| 11 | Protokolü bozar. Tek ünlem. Oyunun tek ünlemi. | "Tamam." |
+| `rung` | basamak (1–11) | oyun durumu |
+| `number`, `peak`, `perSecond` | sayı, zirve, üretim | ekonomi |
+| `tanim`, `prestiges`, `boosts` | prestij para birimi ve sayaçlar | ekonomi |
+| `taps`, `uselessTaps` | `+1` basışları, gösterimi değiştirmeyenler | store |
+| `idleSeconds` | son etkileşimden bu yana geçen süre | store |
+| `hour` | yerel saat (0–23) | **tek dış veri**, bilinçli istisna |
+| `tab` | açık sekme | UI |
 
-**Kritik kural:** SİCİL hiçbir zaman "vay canına" demez. Hayranlığı **kısalma** ile
-gösterir. Ne kadar etkilenirse o kadar az konuşur. `LNGN`'de tek kelime konuşması,
-11 basamağın duygusal ödemesidir.
+**Yasak:** oyun dışı hayata dair her çıkarım — iş, okul, uyku, konum, cihaz, yaş, isim, başka
+uygulamalar, "bu saatte neden buradasın" türü gözlemler. `hour` alanı bunun tek istisnasıdır ve
+yalnızca **saat dilimi** bilgisi olarak kullanılır ("It is late."), hayat hakkında yorum olarak değil.
+
+**Gerekçe:** ironi, oyuncunun oyunla ilişkisinde tatlıdır; oyuncunun hayatında **gözetlemedir**.
+Sınır keyfi değil, türün ahlaki sınırıdır.
+
+**Kural:** bir replik `VoiceContext`'te olmayan bir olguyu gerektiriyorsa, o replik yazılmaz.
+Yeni alan eklemek **tipte bilinçli bir karar** ister (ADR + bu belge güncellemesi), sessizce
+alan eklenmez.
 
 ---
 
-## 2. Üç Dokunulmaz Kural
+## 4. Kanallar (`V4`) ve tooltip yasağı
 
-### Kural 1 — Şaka oyuncuya, sayıya değil
-Sayının büyüklüğü **kutsaldır**. SİCİL sayıyla dalga geçmez; oyuncunun *sayı hakkındaki
-yanılgısıyla* dalga geçer.
+| Kanal | Nerede yaşıyor | Ritim | Durum |
+| :--- | :--- | :--- | :--- |
+| **Sahne** (`scene`) | `RungScene.vue` + `voice/index.ts` sahne seçicisi | 2,5 sn (`G8`), **mandallı** (`S3`) | ⚠️ havuz (11 satır) + seçici hazır; `RungScene` henüz havuzu göstermiyor, `humor` kapısı yok |
+| **Ticker** (`ticker`) | `TickerBar.vue` → `src/game/voice/` | 20 sn (`measured`) / 12 sn (`full`); %22 sessizlik | ✅ çalışıyor |
+| **Başarım** (`achievement`) | başarım adı + açıklaması | olay başına bir kez | içerik yok — `A6` |
+| **Açıklama** (`description`) | yükseltme/halka açıklamaları | kalıcı metin | kısmi |
 
-| ✅ Doğru | ❌ Yanlış |
+### 4.1 Tooltip ve sayısal etiket: mutlak yasak
+
+Tooltip, rozet, buton etiketi ve sayısal etiket **asla şaka yapmaz**. Bunlar sözleşmedir:
+"Deeper breath — boost exponent 0.20" yazan bir yerde 0,20 gerçekten 0,20'dir. Buradaki tek bir
+şaka, oyuncunun *tüm* sayılara güvenini siler ve oyun okunamaz hâle gelir.
+
+- ✅ Etiket: `×3.20`, `buys every 5s`, `Start at 1e4`
+- ❌ Etiket: `×3.20 (roughly)`, `buys every 5s (maybe)`, `Start at 1e4, good luck`
+
+Bu kural `V4`'ün sınırıdır ve **mizah seviyesinden bağımsızdır**: `off` seçilse de `full`
+seçilse de etiket aynı kalır.
+
+---
+
+## 5. Tek ses, çift ritim (`V5`)
+
+Sahnede oyuncu **konuşmaz**. Ama oyuncunun düşüncesi kaybolmaz: oyun onu da kendi ağzından
+söyler. İki vuruş, tek ses:
+
+```
+It is over. 1.79e308. There is nothing after this.
+There is.
+```
+
+(`src/game/voice/lines-rung1.ts` → `r1_scene_gate`.)
+
+**Ritim kuralları:**
+
+1. **İki vuruş üst sınırdır.** Ticker'da tek satır; sahnede en fazla iki vuruş.
+2. **İkinci vuruş kısadır.** Cevap, iddiadan kısa olur — kısalık bu sesin en güçlü hareketidir.
+3. **Vuruşlar aynı ağızdan çıkar.** "SEN:" etiketi, alıntı işareti, iki karakter yok. Eski
+   senaryodaki `SEN:` replikleri **oyunun ağzına devredildi** (`V5`).
+4. **Cevap her zaman bir bilgi taşır.** Sadece havalı görünen cevap yazılmaz; ikinci vuruş ya
+   mekaniği düzeltir ya da oyuncunun sandığı şeyi tersine çevirir.
+
+---
+
+## 6. `V6` — 11. basamakta ton kırılması
+
+On basamak boyunca ses ironiktir. **11. basamakta bir kez düz konuşur.** Oyunun tek ciddi anı
+burasıdır ve **bir kez** olur.
+
+- `A5` (LNGN final sahnesi) bu kuralın tek uygulamasıdır; **en son yazılır** (risk `R4`).
+- Final sahnesi `G8` motorunu kullanır (2,5 sn sahne) — ikinci bir sahne motoru yazılmaz.
+- Finalde: ironi yok, açıklama yok, ünlem yok, espri yok, "devamı var" vaadi yok (`S4`: kuyruk yok).
+- Kural simetrik: **11'den önce hiçbir replik ironisiz olamaz**, 11'de hiçbir replik ironik olamaz.
+
+---
+
+## 7. Üç dokunulmaz kural (ADR-0077 `K4` — korunuyor)
+
+### Kural 1 — Şaka oyuncunun beklentisine, sayıya değil
+
+Sayının büyüklüğü kutsaldır. Oyun sayıyla dalga geçmez; oyuncunun **sayı hakkındaki
+yanılgısıyla** dalga geçer.
+
+| ✅ | ❌ |
 | :--- | :--- |
-| "O bir duvar değildi. Bir yazı tipiydi." | "Bu sayı zaten hiçbir anlam ifade etmiyordu." |
-| "Kütüphane bitmedi. Sen onun ne kadarını gördüğünü biliyorsun." | "Sayılar sonunda hep aynı. Hepsi büyük işte." |
-| "Yazmadı. Gösterdi." | "Graham sayısı aslında sadece bir gösterim." |
+| "You thought this was the end. It was a threshold." | "This number is meaningless anyway." |
+| "The number is longer than the sentence about it." | "Numbers are all the same, just bigger." |
 
-Sayının büyüklüğüne gülünürse oyuncunun ulaşma motivasyonu ölür. **Sayı her zaman
-gerçekten büyüktür.** Şaka, oyuncunun onu *kavrayamaması* üzerinedir.
+### Kural 2 — Mekanik hakkında yalan yok
 
-### Kural 2 — Sistem mekanik olarak yalan söylemez
-SİCİL alay eder, yanlış yönlendirmez.
-
-- ❌ "Evet, gerçekten bitti." (yalan — oyun devam ediyor)
-- ❌ "O butona basma." (yalan — basılabilir ve faydalı)
-- ✅ "Hayır." (doğru ve yeterince sinir bozucu)
-
-**Sebep:** Oyuncu bilgiye güvenmek zorundadır. SİCİL'in söylediği her mekanik bilgi
-doğru olmalı; aksi halde oyuncu tooltip'lere de güvenmez ve oyun okunamaz hale gelir.
-Mizah **hikâye katmanında** yaşar, **kural katmanında** asla.
+Ses alay eder, yanlış yönlendirmez. Tooltip, etiket, ticker: hangi kanal olursa olsun, **mekanik
+bilgi doğrudur**. `+1` gerçekten 1 ekler; "bu butona basma" denmez; "gerçekten bitti" denmez.
 
 ### Kural 3 — Tekrar şakayı öldürür
-Her eşik sahnesi 4 kademeli seyreltmeyle sunulur:
 
-| Karşılaşma | Sunum |
-| :--- | :--- |
-| 1. | Tam sahne: diyalog + ekran efekti + duraklama + ses |
-| 2-4. | Havuzdan tek satır (her eşik için **en az 5 varyant**), ticker'da |
-| 5+ | Tek kısa cümle, ticker'da, varyant havuzundan |
-| Ayarlar | **"Sistem konuşsun mu?"** → `kapalı / ölçülü / tam` |
-
-Ayrıca: aynı eşikte art arda **iki kez aynı varyant gösterilmez** (son 3 kayıt hatırlanır).
-
----
-
-## 3. Tükenmeyen Şaka Motoru: "Sanmıştım Ki" Döngüsü
-
-Tek tek espri yazmak tükenir. Tükenmeyen yapı şudur:
-
-1. Oyuncu bir eşiğe **güvenle** varır ("bu sefer gerçekten bitti").
-2. SİCİL reddeder (tek kelime, kuru).
-3. Yeni ölçek **görünür** olur (gösterim sıçraması).
-4. Oyuncu bir sonraki eşiğe güvenmeye başlar.
-
-Aynı gag 11 kez tekrarlanır ama **değişken oyuncunun güvenidir**: ilk seferde saf, son
-seferde alaycı. Bu, karakter gelişimidir — tekrarı affettiren tek şey. 11. basamakta
-oyuncu artık "bitti" demez; **SİCİL der**. Yapı tersine döner ve kapanır.
-
-> **Yazım kuralı:** her yeni eşik yazılırken önce şu cümle doldurulur:
-> *"Oyuncu bu sefer neye inanıyor?"* Cevap yoksa sahne yazılmaz.
+- **Sessizlik bir repliktir** (`T4`): bant her turda konuşmak zorunda değil. Kodda sessizlik
+  olasılığı **0,22** (`SILENCE_CHANCE`).
+- **Bağlama duyarlı seçim**: satırlar basamak, sayı aralığı, bekleme, tıklama, saat ve sekmeye
+  göre filtrelenir (`when(ctx)`), rastgele değil.
+- **Tekrar önleme**: son **8** satır kimliği hatırlanır (`SEEN_VOICE_LIMIT`); aynı satır geri
+  gelmez.
+- **Nadirlik ağırlığı**: `rare: true` satırlar ~**10×** seyrek seçilir (ağırlık 0,1).
+- **Hacim**: hedef ~**400** satır (`T3`: 220 basamak + 100 durum + 40 nadir + 40 başarım).
+  250 satır ÷ 20 sn = 83 dakikada başa döner; oyun 85 saat → tekrar kaçınılmazdır, bu yüzden
+  bağlam ve sessizlik zorunludur.
 
 ---
 
-## 4. Yazım Kuralları (biçim)
+## 8. Yasak listesi (hızlı kontrol)
 
-1. **Kısa cümle.** SİCİL'in replikleri ortalama 6 kelime. Oyuncunun replikleri 12 kelimeye kadar.
-2. **Ünlem yok.** Tüm oyunda tek ünlem: 11. basamak. (`TAMAM.` — ünlem bile değil, sadece büyük harf.)
-3. **Ansiklopedi esprisi serbest, çeviri esprisi yasak.** Kelime oyunu Türkçe'nin kendi
-   yapısından doğar; İngilizce'den taşınmış pun yok.
-4. **Gerçek matematik şakadır.** En iyi espriler doğru olanlardır: `TREE(3)`'ün değeri
-   gerçekten bilinmiyor. Graham gerçekten "yazılmadı, gösterildi". Bu gerçekler
-   değiştirilmez — yanlış bilgi mizahı da öldürür.
-5. **Sessizlik bir repliktir.** `…` tam bir cevaptır. Kullan.
-6. **Ekran metni ≠ ticker metni.** Sahne diyalogları tam cümle; ticker girdileri
-   manşet üslubu (kısa, üçüncü şahıs, gazete dili).
-
----
-
-## 5. Kanallar
-
-| Kanal | Dosya | Rol |
-| :--- | :--- | :--- |
-| **Sahne diyalogları** | `src/game/script.ts` *(yeni, sonra)* | 11 eşik, tam sahne + varyant havuzları |
-| **Haber bandı** | `src/game/news.ts` | SİCİL'in sürekli sesi — mizahın ana kanalı (~250 satıra çıkar) |
-| **Eski Kayıtlar** | *(arşiv)* | Eski kozmik oburluk lore'u, hikâye içi arşiv (ADR-0077 K5) |
-| **Başarımlar** | `src/game/achievements.ts` | Başarım adları SİCİL'in dosyalama diliyle |
-| **Tooltip'ler** | bileşenler | **Kural 2 burada mutlaktır** — tooltip asla şaka yapmaz |
-
-`CommentTicker.vue` bu yüzden projenin en değerli mizah yüzeyidir: tek dosya, tüm oyuna
-kişilik. `news.ts` yeniden yazımı, pivotun en yüksek getirili/emek oranlı işidir.
-
----
-
-## 6. Yasaklar (hızlı kontrol listesi)
-
-- [ ] Sayının büyüklüğüyle dalga geçilmiyor mu?
-- [ ] Mekanik hakkında yanlış bilgi verilmiyor mu?
-- [ ] Aynı eşikte tekrar eden varyant var mı?
-- [ ] Ünlem kullanıldı mı? (11. basamak dışında yasak)
+- [ ] Sayının büyüklüğüyle dalga geçiliyor mu?
+- [ ] Mekanik hakkında yanlış bilgi var mı? (tooltip/etiket dâhil)
+- [ ] Oyuncunun oyun dışı hayatına dair bir çıkarım var mı? (`hour` dışında dış veri yasak)
+- [ ] "Bu bir oyun" deniyor mu? (sessiz meta ihlali)
+- [ ] Kurum/karakter/lore/isim uydurulmuş mu? (SİCİL'in kalıntısı)
+- [ ] Ünlem var mı? (**yasak** — final sahnesi dâhil)
+- [ ] İkiden fazla vuruş var mı? Cevap iddiadan uzun mu?
+- [ ] Aynı satır son 8 içinde göründü mü?
+- [ ] Şaka İngilizce'den çeviri mi kokuyor? (bkz. §11)
+- [ ] Replik başka bir oyuna yapıştırılınca da doğru mu okunuyor? (öyleyse süs)
 - [ ] Oyuncu "aptal" değil "saf" konumunda mı?
-- [ ] Şaka İngilizce'den çeviri mi kokuyor?
-- [ ] Matematiksel iddia doğru mu? (yanlışsa ya düzelt ya sil)
+
+---
+
+## 9. Mizah seviyeleri (`A4`)
+
+Ayar: `settings.humor` → `off` / `measured` / `full` (`src/models/settings.ts`).
+Varsayılan: **`measured`**.
+
+| Kanal | `off` | `measured` (varsayılan) | `full` |
+| :--- | :--- | :--- | :--- |
+| **Ticker** | ❌ susar (başlık gizlenir) | ✅ 20 sn'de bir, %22 sessizlik | ✅ 12 sn'de bir |
+| **Sahne** | ❌ susar | ✅ | ✅ |
+| **Başarım** | ❌ susar | ✅ | ✅ |
+| **Açıklama** | ⚠️ **kalır** — yalnız nötr bilgi | ✅ | ✅ |
+| **Tooltip / sayısal etiket** | değişmez | değişmez | değişmez |
+
+**Açıklama neden susmaz:** o kanal mekanik bilgi taşır ("boost exponent 0.20"). Susarsa oyun
+okunamaz olur. `off` bu kanalda yalnız **süsü** keser; bilgi cümlesi kalır.
+
+**Kod durumu (2026-10-23):** ticker kapısı uygulandı (`TickerBar.vue`: `humor === 'off'` → render
+yok; `store.humorSuspended`). Sahne tarafında hem havuz (11 satır) hem seçici (`pickSceneLine`,
+mandal + `when` koşulu) hazır; `RungScene.vue` (`G8`) motoru **var** ama (a) basamak ilerlemediği
+ve havuz ona bağlanmadığı için hiç tetiklenmiyor, (b) `humor` kapısı **bağlı değil** — yani `off`
+seçilse de sahne oynardı. Başarım kanalı yok (`A6`). Bu boşluklar kapanmadan `A4` **tamamlanmış
+sayılmaz**.
+
+---
+
+## 10. `A8` — ortak yazım: ajan yazar, sahip redakte eder
+
+Ses bu oyunun ana varlığıdır (`P3`): İngilizce metin "çeviri kokarsa" pivot anlamsızlaşır.
+Bu yüzden yazım **tek elden çıkmaz**:
+
+| Rol | Kim | Ne yapar |
+| :--- | :--- | :--- |
+| **Yazar** | Ajan | Taslak satırları `src/game/voice/lines-rungN.ts` içine, kararlı `id` ile yazar |
+| **Redaktör** | Proje sahibi | Son söz. Şüpheli satırı **siler**; düzeltmesini ajandan istemez, kendisi yazar |
+| **Kâtip** | Ajan | Redaksiyonu `completed.md` + oturum kaydına işler |
+
+**Süreç kuralları:**
+
+1. **Satır silinir, tartışılmaz.** Sahip bir satırı beğenmediyse gerekçe yazmak zorunda değil;
+   ajan aynı şakayı ikinci kez denemez (tekrar = `Kural 3` ihlali).
+2. **Kimlik sabittir.** `id` değişmez; silinen satırın kimliği yeniden kullanılmaz.
+3. **Hacim bütçesi**: 1. basamak için hedef ~**120** satır; havuz 2026-10-23'te **110 ticker +
+   11 sahne** satırına ulaştı. 400 satırlık genel hedef (`T3`) dalga dalga doldurulur
+   (`R2`: önce ~120 satırlık çekirdek, sonra genişleme).
+4. **Redaksiyon ölçütü** §11'dir. "Çeviri kokan" satır **derhal atılır** (`R3`).
+
+---
+
+## 11. İngilizce metin kalitesi ölçütleri
+
+Metin **doğrudan İngilizce yazılır, çevrilmez** (`P3`). Aşağıdaki ölçütler redaksiyonun
+kontrol listesidir.
+
+### 11.1 Dilbilgisi ve ses
+
+1. **Yüksek sesle okunur.** Bir kelimede takılıyorsan o kelime kesilir.
+2. **Kısa cümle.** Ticker satırı tek nefeste okunur; iki fikir varsa iki satırdır.
+3. **Somut isim, az sıfat.** "Massive", "incredible", "insane" bir olgu değil, bir tembelliktir.
+4. **Kısaltma serbest.** Oyun konuşuyor, kılavuz değil: "It's", "You're", "doesn't" doğaldır —
+   ama nazik-konuşma ("please", "congratulations") bu sesin dışındadır.
+5. **Sayı ekrandaki gibi yazılır.** `1.79e308`, `+1`, `10`, `TREE(3)` — biçim değiştirilmez.
+6. **Ünlem yok.** Nokta ve soru işareti yeter; bu ses bağırmaz.
+
+### 11.2 Çeviri kokusu testleri
+
+| Test | Kural |
+| :--- | :--- |
+| **Sözlük testi** | Cümle kelime kelime başka bir dile çevrilip geri getirildiğinde bozuluyorsa, cümle İngilizce değil, kalıptır |
+| **Deyim testi** | Deyim varsa İngilizce'nin kendi deyimi olmalı; Türkçe deyimin karşılığı uydurulmaz |
+| **Açıklama testi** | Şaka bir açıklama gerektiriyorsa şaka değildir |
+| **Bağlam testi** | Satır oyuncunun o anki durumuyla (basamak/sayı/bekleme/tıklama) açıklanabiliyor mu? |
+
+### 11.3 Yıpranmış kelime listesi (kullanma)
+
+`epic` · `awesome` · `amazing` · `journey` · `unleash` · `delve` · `madness` · `insane` ·
+`literally` (ölçü olarak) · `secret` (vaat olarak) · `legendary` · `ultimate`.
+
+Bu kelimeler oyunun değil, janranın kliseleridir; bir satırda göründüklerinde satır
+**genellikle** boştur — istisna varsa sahip onaylar.
+
+### 11.4 Uzunluk ve yerleşim
+
+Ticker satırı tek satırda okunmalıdır; mobil dizgi kuralı (`G13`) hâlâ açık olduğu için bugünkü
+geçici sınır: **390 px'te satır iki satıra inebilir, üçe inmez.** Kural yazıldığında bu madde
+güncellenir — sayı uydurulmaz.
+
+---
+
+## 12. Uygulama durumu (kod haritası)
+
+| Dosya | Rol | Durum |
+| :--- | :--- | :--- |
+| `src/game/voice/types.ts` | `VoiceChannel` + `VoiceContext` (`V3` veri sınırı) | ✅ |
+| `src/game/voice/index.ts` | havuz, sessizlik 0,22, nadir ağırlık 0,1, tekrar önleme | ✅ |
+| `src/game/voice/lines-rung1.ts` | 1. basamak havuzu (İngilizce) | ✅ 110 ticker + 11 sahne satırı |
+| `src/components/TickerBar.vue` | 20/12 sn kadans, `humor` kapısı | ✅ |
+| 2–11. basamak havuzları | — | ⛔ boş (`E5`: her basamak kendi turunda) |
+| `src/components/RungScene.vue` | `G8` sahne motoru (2.500 ms, mandallı) | ⚠️ var; yalnız basamak adını gösteriyor, havuz bağlı değil, `humor` kapısı yok |
+| Başarım kanalı | ad + metin | ⛔ yok (`A6`) |
+
+---
+
+## 13. Tek cümlelik özet
+
+> Oyun, oyuncuya **bildiği şeyi** söyler — ama asla **bildiğini söylediğini** söylemez.

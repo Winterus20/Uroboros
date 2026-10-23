@@ -1,7 +1,7 @@
 {
-  "name": "uroboros-cosmic-feast",
+  "name": "hold-that-number",
   "private": true,
-  "version": "0.38.1",
+  "version": "0.40.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
@@ -11,15 +11,7 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "harness:build": "node brain/scratchpad/harness/build.mjs",
-    "harness:sim": "node brain/scratchpad/harness/build-sim.mjs",
-    "harness:sim:verify": "npm run harness:sim && node brain/scratchpad/harness/out/verify-sim-constants.mjs",
-    "harness:smoke": "npm run harness:build && node brain/scratchpad/harness/out/run.mjs --profile active --seed 1 --dt 0.5 --capHours 0.5 --lite --out brain/scratchpad/harness/smoke.json && node brain/scratchpad/harness/assert-results.mjs brain/scratchpad/harness/smoke.json --smoke",
-    "harness:perf": "node brain/scratchpad/harness/build-perf.mjs && node brain/scratchpad/harness/out/perf-tick.mjs churn && node brain/scratchpad/harness/out/perf-tick.mjs wall",
-    "harness:contrast": "node brain/scratchpad/harness/contrast.mjs",
-    "harness:assert": "node brain/scratchpad/harness/assert-results.mjs",
-    "harness:full": "npm run harness:build && node brain/scratchpad/harness/out/run.mjs --all --seeds 1,2,3 --dt 0.1 --lite --jobs 4 --out brain/scratchpad/harness/results-full.json && node brain/scratchpad/harness/assert-results.mjs brain/scratchpad/harness/results-full.json --full",
-    "verify": "npm run typecheck && npm run test && npm run harness:smoke"
+    "verify": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "break_eternity.js": "^2.1.0",

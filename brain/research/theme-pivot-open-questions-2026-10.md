@@ -5,7 +5,14 @@
 > **İlişkili:** [ADR-0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 > [Ses sözleşmesi](../context/narrative-voice.md) ·
 > [Senaryo](../research/number-ladder-script-2026-10.md)
-> **Tarih:** 2026-10-23 · **Durum:** açık
+> **Tarih:** 2026-10-23 · **Durum:** ⚠️ **TARİHSEL** — okuma kaydı, güncel değil
+>
+> **Bu belge AŞILDI (2026-10-23).** Aynı gün yapılan grilling oturumu maddelerin çoğunu
+> kapattı ya da iptal etti (`SİCİL` iptal, kuyruk yok, 1. basamak dikey dilim uygulandı).
+> **Güncel tek gerçek:** [`theme-pivot-grilling-2026-10-23.md`](theme-pivot-grilling-2026-10-23.md)
+> · ses: [`../context/narrative-voice.md`](../context/narrative-voice.md) ·
+> uygulama: [ADR-0079](../decisions/0079-number-economy-vertical-slice.md).
+> Aşağıdaki `S#` listesi **karar girdisi** olarak saklanır; mevcut durumu anlatmaz.
 
 ## Nasıl kullanılır
 
@@ -92,8 +99,9 @@ Klasik norm, sorun değil — ama Akt II `Tutarlılık` çöküşü getirince oy
 kaybetmeyi öğrenmek zorunda. Öğretilmemiş mekanik = şok.
 
 ### S13 — İsim değişikliğinin teknik maliyeti ❌ AÇIK
-`package.json` = `uroboros-cosmic-feast`, `<title>UROBOROS</title>`, Firestore projesi,
-auth uygulama adı, cloud save anahtarları. O1 kararı ADR-0030 güvenlik kurallarına dokunuyor.
+`package.json` = `uroboros-cosmic-feast` (**2026-10-23: `hold-that-number` · 0.40.0 yapıldı**),
+`<title>UROBOROS</title>` (**→ `Hold That Number`**), Firestore projesi, auth uygulama adı,
+cloud save anahtarları. O1 kararı ADR-0030 güvenlik kurallarına dokunuyor.
 
 ### S14 — 13 meydan okuma + 88 başarım ❌ AÇIK
 `challenges.ts` (13 kayıt) ve `achievements.ts` (88 kayıt) yeniden yazılacak. İçerik

@@ -1,5 +1,81 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — Sayı Ekonomisi Dikey Dilimi · 1. basamak oynanabilir (ADR-0079)
+
+### Ne yapıldı
+"Kozmik Oburluk" oyun çekirdeği koddan **silindi**; yerine `Hold That Number` oyununun 1. basamağı
+uçtan uca yazıldı. Commit: `013c4b2` — `feat(number): sayi ekonomisi dikey dilimi — eski tema
+silindi, 1. basamak oynanabilir`.
+
+- **Ekonomi (saf, Pinia'sız):** 8 halka (Fingers → Mathematician), aşağıdan yukarı besleme,
+  sınırsız alım (fiyat ×1,4), 10 birim → sonraki halka kilidi (mandallı), tek havuz.
+- **Prestij:** `1,79e308` kapısı, `Tanım = log10(1+A)`, `Birikim` verimi `0,9^log10 A`.
+- **Mini boost:** 8. halka koşulu, tam sıfırlama (halkalar 1 birime), `(zirve/başlangıç)^0,2`
+  kalıcı basamak içi çarpan; `Tanım` vermez.
+- **4 `Tanım` yükseltmesi:** `start` (10 → 1e7), `chain` (+%25/seviye), `boost` (üs 0,20 → 0,40),
+  `autobuy` (kapalı / 5 / 2 / 1 sn).
+- **`+1`:** gerçekten 1 ekler; gösterim değişmediyse `uselessTaps` sayılır (`S9`).
+- **Ses:** `src/game/voice/` — kanal tipleri, `VoiceContext` (`V3` veri sınırı), tekrar önleme,
+  sessizlik 0,22, nadir ağırlık 0,1; 1. basamak İngilizce ticker havuzu; `humor` kapısı.
+- **UI:** yeni `App.vue` + 9 bileşen (`HeroNumber`, `TapButton`, `ChainList`, `TelemetryLine`,
+  `TickerBar`, `UpgradeList`, `StatsPanel`, `SettingsModal`, `OfflineModal`).
+- **Kayıt şeması v20:** `MIN_SUPPORTED_SAVE_VERSION = 20` → v19 ve altı açılmaz (`P5`).
+
+### Silinen dosyalar (154 dosya · 34 987 satır)
+- ~30 bileşen: `DimensionsTab`, `DimensionRow`, `LabTab`, `CrisisTab`, `NeuralTreeTab`,
+  `ColonyTab`, `SingularityTab`, `AutobuyersTab`, `ChallengesTab`, `AchievementsTab`,
+  `TimeClockOverlay`, `AnomalyOverlay`, `MotifBand`, `ScreenOverlay`, `JuiceLayer`,
+  `SequentialStrikeLayer`, `HeartBurstLayer`, `SideSnapHands`, `Header`, `TabHero`,
+  `AdminPanel`, `WelcomeBackModal`, `TeachingToast`, `FloatingThumbBar` + alt klasörler.
+- Oyun verisi: `achievements`, `challenges`, `unlocks`, `pacing`, `balance`, `layers`,
+  `branches`, `corruption`, `clock-data`, `crisis-data`, `lab-data`, `neural-data`,
+  `dimension_identity`, `news` + `news-early/mid/late` (~1 300 satır metin), `motifs`.
+- Store dilimleri: `src/stores/game/` altındaki 17 dosya.
+- Çekirdek: `cosmic-scale`, `particles`, `screen-shake`, `tilt`, `hold`, `celebrate`,
+  `card-physics`, `teaching-display`.
+- ~25 test (`unlocks.test` tek başına 1 050 satır) + `tests/*.spec.ts`.
+- Varlıklar: `src/assets/motifs/*.svg` (17), `public/assets/hands/*`.
+
+### Eklenen dosyalar (22 dosya · 1 657 satır)
+`src/game/number/` (tuning · economy · upgrades · rungs + test), `src/game/voice/`
+(types · index · lines-rung1), `src/models/number.ts`, 9 yeni bileşen, yeni `App.vue`,
+`index.html` (başlık + Space Grotesk/Space Mono), yeni `style.css` (`--pn-*` tokenları).
+
+### Belgeler
+- [`GAME_DESIGN.md`](../../GAME_DESIGN.md) baştan yazıldı (11 basamak, 8 halka, formüller, v20).
+- [`brain/context/narrative-voice.md`](../context/narrative-voice.md) baştan yazıldı —
+  SİCİL ve 11 basamaklık karakter yayı silindi (`V1`–`V6`, `A4`, `A8`).
+- [`project-brief.md`](../context/project-brief.md) · [`tech-context.md`](../context/tech-context.md)
+  yeni oyun yönünde güncellendi ("Saf Sayı", ADR-0078).
+- [ADR-0079](../decisions/0079-number-economy-vertical-slice.md) yazıldı + indekse eklendi.
+- `README.md` (kök) ve `package.json` (`hold-that-number` · `0.40.0`; ölü `harness:*`
+  script'leri kaldırıldı, `verify` = `typecheck && test`).
+
+### Doğrulama
+- `npm run typecheck` (`vue-tsc --noEmit`) → **0 hata**
+- `npm run build` (`vue-tsc && vite build`) → **başarılı** (87 modül)
+- `npm test` (`vitest run`) → **50 test geçti** (3 dosya: `math`, `economy`, `cloud-conflict`)
+
+> **Not (belge dalgası, aynı gün):** Yukarıdaki üç satır **commit `013c4b2` anına** aittir.
+> Denge dalgası (`K5`) aynı gün `src/game/number/` üzerinde çalışmaya devam etti ve test sayısını
+> büyüttü. Belge dalgası sonunda yeniden koşuldu: `npm run verify` → **0** (typecheck 0 hata +
+> **86 test** / 5 dosya) · `npm run build` → **başarılı**. Yani "50 test" bugünün değil,
+> o commit'in sayısıdır.
+
+### İlgili ikinci commit — `07c45b3` (denge dalgası)
+Aynı gün, ayrı bir dalga ölçümü koda geçirdi:
+- `tuning.ts` **ölçülmüş** sabitlere geçti: `c_i = 25 · 10^{0,5(i-1)}`, `p_i = 0,071 · 1,05^{i-1}`, `g = 1,4`.
+- Yapısal üç düzeltme: `D1` (boost yalnız sayı üretimine), `D3` (boost sonrası halkalar 1 birim),
+  `D6` (kilitler mandallı).
+- `src/game/number/balance.test.ts` → **6 regresyon testi**; `src/game/voice/voice.test.ts`;
+  ses havuzu **110 ticker + 11 sahne** satırına çıktı (~120 hedefi).
+- Gerçek motor (20 TPS) ölçümü: kapı **119,6 dk** · 23 boost · 121 alım · ilk 10 dk 9 alım.
+- `brain/scratchpad/balance-2026-10-23/report.md` (ölçüm raporu + §11 motor doğrulaması).
+
+### Açılan maddeler
+Hedef 4b revizyonunun yazılı kaydı (ölçüm "8 halka <45 dk" diyor) · 2. basamak tasarımı ·
+`A4`/`A5`/`A6`/`A7`/`A8` · `G13`/`G14` · `G8` sahne bağlantısı · `G11` boost nefesi.
+
 ## [2026-10-23] ✔ — Görsel Dil: "Saf Sayı" (ADR-0078 · `G1`–`G12`)
 
 ### Ne yapıldı
