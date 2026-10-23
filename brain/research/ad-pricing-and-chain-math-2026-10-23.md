@@ -137,3 +137,36 @@ Hiçbiri "1/sn + 2 saat + 10'lu blok + küçük sayaçlar" dördünü birden ver
 politikalı ilk deneme), `k5-sim.mjs` (K5 politikasının aynası — kalibrasyon: 120,6 dk),
 `k5-run*.mjs` (yukarıdaki tabloların tamamı), `ad-run*.mjs` (AD tablosu ve boost üssü
 taraması).
+
+---
+
+## 6. EK ÖLÇÜM — blok ritmi A'ya bedava ekleniyor (2026-10-23, aynı gün)
+
+"10'lu blok mu, A mı" sorusu yanlış bir ikilem çıktı: **halka başına kaç birim alındığı**
+merdiven oranı ile birim başına büyümenin oranıdır, kapı süresi ise bunlardan neredeyse
+bağımsız. A tabanında (`p = [1, 0,12×7]`, merdiven ×8) yalnız büyümeyi düşürmek yeterli:
+
+| Birim başına büyüme | Halka başına birim | Kapı | Boost | 8. halka | 10. dk parmak |
+| --: | --: | --: | --: | --: | --: |
+| 1,20 | **11,4** | 117,8 dk | 20 | 12,7 dk | 94 455 |
+| 1,25 | 9,3 | 119,9 dk | 20 | 12,8 dk | 90 257 |
+| 1,30 | 7,9 | 118,1 dk | 20 | 12,9 dk | 86 830 |
+| 1,40 | 6,2 | 118,0 dk | 20 | 13,0 dk | 80 919 |
+
+Yani `g = 1,20` seçildiğinde bir halka tam **11,4 birim** alıyor: **10'lu blok = bir halka**.
+"Buy 10" AD'deki ritmi birebir yakalıyor, kilit eşiği (10 birim) zaten tek blok, kapı süresi
+ve sayaç mertebesi A'nınkiyle aynı kalıyor. B'ye (p=1) göre parmak sayısı 10. dakikada
+**1,3e10 yerine 9,4e4** — beş mertebe daha okunur.
+
+### Önerilen sabitler (A+)
+```
+p        = [1, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12]      # parmak 1 sayı/sn, zincir 0.12/sn
+c        = 25 · 200 · 1 600 · 12 800 · 102 400 · 819 200 · 6 553 600 · 52 428 800   # ×8
+growth   = 1.20        # halka başına 11,4 birim → 10'lu blok = bir halka
+blok     = 10 birim, fiyat = c_i · g^bought · (g^10 − 1)/(g − 1)   # AD formülü
+unlock   = 10 birim (tek blok) — mevcut mandal aynen kalır
+```
+Ölçüm: **kapı 117,8 dk · 20 boost · 8. halka 12,7 dk**.
+
+Not: birim başına büyüme 1,4 → 1,2 düşünce tek birim fiyatları da düşer (25 → 25·1,2^b),
+yani ilk parmak hâlâ 25 ve açılış 15 tık — `P1` kararı etkilenmiyor.
