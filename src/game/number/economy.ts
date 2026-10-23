@@ -1,7 +1,7 @@
 import { Decimal, D_0, D_1, D_10 } from '../../core/math'
 import { NUMBER_TUNING, RING_COUNT, ringCostAt } from './tuning'
 
-/** Tek halka: kaç birim var, kaç kez satın alındı (maliyet için). */
+/** Tek halka: kaç birim var, bu koşuda kaç kez satın alındı (maliyet için). */
 export interface RingState {
   amount: Decimal
   bought: number
@@ -12,13 +12,15 @@ export interface RingState {
  * böylece hem store hem saf testler aynı fonksiyonları kullanır.
  *
  * Kural (S3): `peak` mandallıdır, alım düşürse de geri gitmez; `number` serbest
- * inip çıkar (E2). `bestNumber` hayat boyu rekor.
+ * inip çıkar (E2). `bestNumber` hayat boyu rekor. `unlocked` de mandallıdır (D6).
  */
 export interface NumberState {
   number: Decimal
   /** Bu koşudaki en yüksek sayı — boost çarpanının girdisi (E14). */
   peak: Decimal
   rings: RingState[]
+  /** Halka kilitleri — bir kez açılır, boost/prestij kapatmaz (D6/S3). */
+  unlocked: boolean[]
   /** Mini boost'ların biriktirdiği kalıcı çarpan (basamak içi). */
   boostMult: Decimal
   boosts: number
@@ -47,6 +49,7 @@ export function createNumberState(): NumberState {
     number: D_10,
     peak: D_10,
     rings: Array.from({ length: RING_COUNT }, () => ({ amount: D_0, bought: 0 })),
+    unlocked: Array.from({ length: RING_COUNT }, (_, i) => i === 0),
     boostMult: D_1,
     boosts: 0,
     rung: 1,
@@ -63,19 +66,16 @@ export function createNumberState(): NumberState {
   }
 }
 
-/** Halka açık mı? Halka 1 daima açık; halka n, n-1'den 10 birim alınınca açılır (E11). */
+/** Halka açık mı? Kilitler mandallıdır (D6). */
 export function ringUnlocked(state: NumberState, index: number): boolean {
   if (index <= 0) return true
   if (index >= RING_COUNT) return false
-  return state.rings[index - 1].bought >= NUMBER_TUNING.unlockThreshold
+  return state.unlocked[index] === true
 }
 
 export function unlockedRingCount(state: NumberState): number {
-  let count = 1
-  for (let i = 1; i < RING_COUNT; i++) {
-    if (!ringUnlocked(state, i)) break
-    count++
-  }
+  let count = 0
+  for (let i = 0; i < RING_COUNT; i++) if (state.unlocked[i]) count++
   return count
 }
 
@@ -89,7 +89,7 @@ export function canBuyRing(state: NumberState, index: number): boolean {
 
 /**
  * Tek havuz: maliyet sayıdan düşülür (E2). Alım sayıyı düşürebilir —
- * `peak` ve `bestNumber` mandallı olduğu için hiçbir eşik geri gitmez (S3).
+ * `peak`, `bestNumber` ve kilitler mandallı olduğu için hiçbir eşik geri gitmez (S3).
  *
  * @returns gerçekten alınan birim sayısı (0 = yetersiz sayı / kilitli halka)
  */
@@ -103,13 +103,17 @@ export function buyRing(state: NumberState, index: number, count = 1): number {
     state.rings[index].bought += 1
     state.totalBuys += 1
     bought++
+    // E11 + D6: eşik aşılınca sonraki halka KALICI olarak açılır
+    if (state.rings[index].bought >= NUMBER_TUNING.unlockThreshold && index + 1 < RING_COUNT) {
+      state.unlocked[index + 1] = true
+    }
   }
   return bought
 }
 
 /**
- * Sayı üretimi: yalnızca halka 1 (Parmaklar) sayı üretir (E6).
- * `Birikim` cezası (E7) tüm üretime uygulanır.
+ * `Birikim` cezası (E7): kapı aşımı arttıkça üretim verimi düşer.
+ * Yalnız SAYI üretimine uygulanır (D1 ile aynı gerekçe).
  */
 export function productionEfficiency(state: NumberState): Decimal {
   const ratio = state.number.div(NUMBER_TUNING.gate)
@@ -117,19 +121,25 @@ export function productionEfficiency(state: NumberState): Decimal {
   return new Decimal(NUMBER_TUNING.efficiencyBase).pow(ratio.log10())
 }
 
-/** Tüm üretime uygulanan ortak çarpan: boost × zincir yükseltmesi × verim. */
-export function productionMultiplier(state: NumberState): Decimal {
-  return state.boostMult.times(state.chainMult).times(productionEfficiency(state))
-}
-
+/**
+ * Sayı üretimi: yalnızca halka 1 (Fingers) sayı üretir (E6).
+ * Çarpanlar: boost (D1) × zincir yükseltmesi × Birikim verimi.
+ */
 export function numberPerSecond(state: NumberState): Decimal {
-  return state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate).times(productionMultiplier(state))
+  return state.rings[0].amount
+    .times(NUMBER_TUNING.rings[0].baseRate)
+    .times(state.boostMult)
+    .times(state.chainMult)
+    .times(productionEfficiency(state))
 }
 
-/** Halka n'in saniyede ürettiği miktar (indeks 0 için: sayı/sn). */
+/**
+ * Halka n'in saniyede ürettiği miktar (indeks 0 için: sayı/sn).
+ * D1: boost çarpanı halka beslemesine UYGULANMAZ — zincir kendi hızında akar.
+ */
 export function ringGainPerSecond(state: NumberState, index: number): Decimal {
   if (index === 0) return numberPerSecond(state)
-  return state.rings[index].amount.times(NUMBER_TUNING.rings[index].baseRate).times(productionMultiplier(state))
+  return state.rings[index].amount.times(NUMBER_TUNING.rings[index].baseRate).times(state.chainMult)
 }
 
 /** Mini boost açık mı? Zincirin son halkası alınmış olmalı (E13). */
@@ -144,8 +154,9 @@ export function boostMultiplier(state: NumberState): Decimal {
 }
 
 /**
- * Mini boost: 8 halka da, sayı da sıfırlanır (başlangıç sayısına); karşılığında
- * basamak içi KALICI üretim çarpanı verilir (E12). Tanım VERMEZ.
+ * Mini boost: sayı başlangıca döner, her halka 1 birime iner (D3 — zincir canlı kalır),
+ * kilitler AÇIK kalır (D6). Karşılığında basamak içi KALICI üretim çarpanı (E12).
+ * Tanım VERMEZ.
  *
  * @returns uygulanan çarpan (uygulanamadıysa 1)
  */
@@ -201,7 +212,7 @@ function resetRun(state: NumberState): void {
   state.number = state.startNumber
   state.peak = state.startNumber
   for (const ring of state.rings) {
-    ring.amount = D_0
+    ring.amount = D_1
     ring.bought = 0
   }
   state.gateReached = false
@@ -209,22 +220,21 @@ function resetRun(state: NumberState): void {
 
 /**
  * Bir tick ilerlet (20 TPS → dt = 0,05 sn).
- * Üretim zinciri: halka i+1 → halka i, halka 1 → sayı (E6).
+ * Önce zincir beslenir (halka i+1 → halka i), sonra halka 1 sayıyı üretir (E6).
  */
 export function advance(state: NumberState, dt: number): void {
   if (!Number.isFinite(dt) || dt <= 0) return
-  const mult = productionMultiplier(state)
   for (let i = 0; i < RING_COUNT - 1; i++) {
-    const ring = state.rings[i]
     const feeder = state.rings[i + 1]
-    if (feeder.amount.lte(0)) continue
-    const gain = feeder.amount.times(NUMBER_TUNING.rings[i + 1].baseRate).times(mult).times(dt)
-    ring.amount = ring.amount.plus(gain)
+    const gain = feeder.amount.times(NUMBER_TUNING.rings[i + 1].baseRate).times(state.chainMult).times(dt)
+    state.rings[i].amount = state.rings[i].amount.plus(gain)
   }
-  const perSecond = state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate).times(mult)
-  if (perSecond.gt(0)) {
-    state.number = state.number.plus(perSecond.times(dt))
-  }
+  const perSecond = state.rings[0].amount
+    .times(NUMBER_TUNING.rings[0].baseRate)
+    .times(state.boostMult)
+    .times(state.chainMult)
+    .times(productionEfficiency(state))
+  if (perSecond.gt(0)) state.number = state.number.plus(perSecond.times(dt))
   if (state.number.gt(state.peak)) state.peak = state.number
   if (state.number.gt(state.bestNumber)) state.bestNumber = state.number
   if (!state.gateReached && state.number.gte(NUMBER_TUNING.gate)) state.gateReached = true

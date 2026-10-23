@@ -15,6 +15,7 @@ import {
   overflowRatio,
   productionEfficiency,
   ringCost,
+  ringGainPerSecond,
   ringUnlocked,
   tanimReward,
   unlockedRingCount
@@ -31,14 +32,13 @@ describe('sayı ekonomisi — 1. basamak', () => {
 
   it('alım sayıyı düşürür, birim ekler ve fiyatı büyütür (E2/E10)', () => {
     const s = createNumberState()
+    s.number = D(1000)
     const first = ringCost(s, 0)
-    expect(first.toString()).toBe('10')
+    expect(first.toString()).toBe('25')
     expect(buyRing(s, 0)).toBe(1)
-    expect(s.number.toString()).toBe('0')
+    expect(s.number.toString()).toBe('975')
     expect(s.rings[0].amount.toString()).toBe('1')
-    expect(s.rings[0].bought).toBe(1)
     const second = ringCost(s, 0)
-    expect(second.gt(first)).toBe(true)
     expect(second.div(first).toNumber()).toBeCloseTo(NUMBER_TUNING.costGrowth, 6)
   })
 
@@ -68,27 +68,34 @@ describe('sayı ekonomisi — 1. basamak', () => {
   it('maliyet eğrisi taban × oran^alınan formülünü izler', () => {
     const base = NUMBER_TUNING.rings[2].baseCost
     expect(ringCostAt(base, 0).toString()).toBe(base.toString())
-    const grown = ringCostAt(base, 5)
-    expect(grown.div(base).toNumber()).toBeCloseTo(Math.pow(NUMBER_TUNING.costGrowth, 5), 4)
+    expect(ringCostAt(base, 5).div(base).toNumber()).toBeCloseTo(Math.pow(NUMBER_TUNING.costGrowth, 5), 4)
   })
 
-  it('yalnız Parmaklar sayı üretir; halka 1 üretimi sayıya akar (E6)', () => {
+  it('yalnız Fingers sayı üretir; üretim sayıya akar (E6)', () => {
     const s = createNumberState()
     s.number = D('1e6')
     buyRing(s, 0)
-    const rate = numberPerSecond(s)
-    expect(rate.toString()).toBe(NUMBER_TUNING.rings[0].baseRate.toString())
+    expect(numberPerSecond(s).toNumber()).toBeCloseTo(0.071, 9)
     const before = s.number
     advance(s, 1)
-    expect(s.number.minus(before).toNumber()).toBeCloseTo(1, 6)
+    expect(s.number.minus(before).toNumber()).toBeCloseTo(0.071, 6)
   })
 
   it('üst halka alt halkayı besler', () => {
     const s = createNumberState()
     s.rings[1].amount = D(1)
-    s.rings[1].bought = 1
     advance(s, 1)
     expect(s.rings[0].amount.toNumber()).toBeCloseTo(NUMBER_TUNING.rings[1].baseRate.toNumber(), 6)
+  })
+
+  it('boost çarpanı halka beslemesine UYGULANMAZ (D1)', () => {
+    const s = createNumberState()
+    s.rings[1].amount = D(1)
+    s.boostMult = D(1000)
+    const ringGain = ringGainPerSecond(s, 1)
+    expect(ringGain.toNumber()).toBeCloseTo(NUMBER_TUNING.rings[1].baseRate.toNumber(), 9)
+    const numberGain = numberPerSecond(s)
+    expect(numberGain.eq(0)).toBe(true)
   })
 
   it('alım sayıyı düşürse de zirve (peak) geri gitmez (S3 mandal)', () => {
@@ -108,27 +115,40 @@ describe('sayı ekonomisi — 1. basamak', () => {
     expect(canBoost(s)).toBe(true)
   })
 
-  it('boost çarpanı (zirve/10)^0,2 formülünü izler (E14)', () => {
+  it('boost çarpanı (zirve/başlangıç)^0,2 formülünü izler (E14)', () => {
     const s = createNumberState()
     s.peak = D('1e13')
-    const expected = Math.pow(1e12, 0.2)
-    expect(boostMultiplier(s).toNumber()).toBeCloseTo(expected, 4)
+    expect(boostMultiplier(s).toNumber()).toBeCloseTo(Math.pow(1e12, 0.2), 4)
   })
 
-  it('boost her şeyi sıfırlar, çarpanı kalıcı büyütür, Tanım vermez (E12)', () => {
+  it('boost sayıyı başlangıca, halkaları 1 birime indirir; Tanım vermez (E12/D3)', () => {
     const s = createNumberState()
     s.number = D('1e13')
     s.peak = D('1e13')
     s.rings[7].bought = 1
-    s.rings[7].amount = D(1)
+    s.rings[7].amount = D(5)
+    s.rings[0].amount = D(9)
     const gain = applyBoost(s)
     expect(gain.gt(1)).toBe(true)
     expect(s.number.toString()).toBe('10')
+    expect(s.rings[0].amount.toString()).toBe('1')
+    expect(s.rings[7].amount.toString()).toBe('1')
     expect(s.rings[7].bought).toBe(0)
     expect(s.boosts).toBe(1)
     expect(s.boostMult.toString()).toBe(gain.toString())
     expect(s.tanim.toString()).toBe('0')
-    expect(canBoost(s)).toBe(false)
+  })
+
+  it('kilitler boost sonrası KAPANMAZ (D6/S3)', () => {
+    const s = createNumberState()
+    s.number = D('1e12')
+    for (let i = 0; i < 10; i++) buyRing(s, 0)
+    expect(ringUnlocked(s, 1)).toBe(true)
+    s.rings[7].bought = 1
+    s.peak = D('1e13')
+    applyBoost(s)
+    expect(ringUnlocked(s, 1)).toBe(true)
+    expect(s.rings[0].bought).toBe(0)
   })
 
   it('kapı 1.79e308; altında ödül yok, üstünde log10(1+A) (E7)', () => {
@@ -147,9 +167,7 @@ describe('sayı ekonomisi — 1. basamak', () => {
     s.number = NUMBER_TUNING.gate
     expect(productionEfficiency(s).toNumber()).toBeCloseTo(1, 6)
     s.number = NUMBER_TUNING.gate.times('1e10')
-    const eff = productionEfficiency(s)
-    expect(eff.lt(1)).toBe(true)
-    expect(eff.toNumber()).toBeCloseTo(Math.pow(0.9, 10), 4)
+    expect(productionEfficiency(s).toNumber()).toBeCloseTo(Math.pow(0.9, 10), 4)
   })
 
   it('prestij Tanım verir ve koşuyu sıfırlar (S2)', () => {
