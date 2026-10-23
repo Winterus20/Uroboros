@@ -1,0 +1,137 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060608;color:#f6f3ec;font-family:"Space Grotesk",sans-serif;padding:24px 28px}
+h2{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#5b5b66;font-weight:400;margin:0 0 4px}
+p.d{font-size:12.5px;color:#8d8a80;margin-bottom:12px;letter-spacing:.01em}
+p.d b{color:#e8e4d8;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(11,1fr);gap:8px;margin-bottom:8px}
+.c .no{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;margin-bottom:5px}
+.c .bar{height:52px;border-radius:2px}
+.c .lbl{font-family:"Space Mono",monospace;font-size:9px;color:#5b5b66;margin-top:6px;letter-spacing:.04em;height:22px}
+.sep{height:1px;background:rgba(255,255,255,.08);margin:22px 0}
+.note{font-size:11px;color:#5b5b66;font-family:"Space Mono",monospace;letter-spacing:.04em}
+.note .bad{color:#ff8080}
+</style></head><body>
+<h2>A — tek eksen, 11 durak</h2>
+<p class="d">Tek bir sürekli yol: <b>soğuk mor → magenta → amber → beyaz</b>. Komşu basamaklar komşu renk. Renk <b>nerede olduğunu</b> söyler.</p>
+<div class="grid">
+<div class="c">
+  <div class="no" style="color:#8b6cf0">01</div>
+  <div class="bar" style="background:#8b6cf0;box-shadow:0 0 26px #8b6cf055"></div>
+  <div class="lbl">1.79e308</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#9670ee">02</div>
+  <div class="bar" style="background:#9670ee;box-shadow:0 0 26px #9670ee55"></div>
+  <div class="lbl">1e(9e15)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#a673ea">03</div>
+  <div class="bar" style="background:#a673ea;box-shadow:0 0 26px #a673ea55"></div>
+  <div class="lbl">10^^1.79e308</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#b878e2">04</div>
+  <div class="bar" style="background:#b878e2;box-shadow:0 0 26px #b878e255"></div>
+  <div class="lbl">6 arrows</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#c87ed6">05</div>
+  <div class="bar" style="background:#c87ed6;box-shadow:0 0 26px #c87ed655"></div>
+  <div class="lbl">G</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#d986c4">06</div>
+  <div class="bar" style="background:#d986c4;box-shadow:0 0 26px #d986c455"></div>
+  <div class="lbl">TREE(3)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#e491ad">07</div>
+  <div class="bar" style="background:#e491ad;box-shadow:0 0 26px #e491ad55"></div>
+  <div class="lbl">SSCG(3)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#eda08f">08</div>
+  <div class="bar" style="background:#eda08f;box-shadow:0 0 26px #eda08f55"></div>
+  <div class="lbl">Rayo</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#f3b47a">09</div>
+  <div class="bar" style="background:#f3b47a;box-shadow:0 0 26px #f3b47a55"></div>
+  <div class="lbl">Fish 7</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#f7cb70">10</div>
+  <div class="bar" style="background:#f7cb70;box-shadow:0 0 26px #f7cb7055"></div>
+  <div class="lbl">BIG FOOT</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#fdf6e8">11</div>
+  <div class="bar" style="background:#fdf6e8;box-shadow:0 0 26px #fdf6e855"></div>
+  <div class="lbl">LNGN</div>
+</div></div>
+<div class="note">renk körlüğü: yol parlaklık da taşıdığı için ayakta kalır · rezerve renkler: yol amber'e değer ama <b>prestij amberinin tonuna girmez</b></div>
+
+<div class="sep"></div>
+<h2>B — 11 ayrı hue</h2>
+<p class="d">Her basamak kendi kimliği. Komşu basamaklar akraba değil. Renk <b>hangi bölümde olduğunu</b> söyler.</p>
+<div class="grid">
+<div class="c">
+  <div class="no" style="color:#8b6cf0">01</div>
+  <div class="bar" style="background:#8b6cf0;box-shadow:0 0 26px #8b6cf055"></div>
+  <div class="lbl">1.79e308</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#4f8ef7">02</div>
+  <div class="bar" style="background:#4f8ef7;box-shadow:0 0 26px #4f8ef755"></div>
+  <div class="lbl">1e(9e15)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#2fb8d6">03</div>
+  <div class="bar" style="background:#2fb8d6;box-shadow:0 0 26px #2fb8d655"></div>
+  <div class="lbl">10^^1.79e308</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#3ecf8e">04</div>
+  <div class="bar" style="background:#3ecf8e;box-shadow:0 0 26px #3ecf8e55"></div>
+  <div class="lbl">6 arrows</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#9ad63a">05</div>
+  <div class="bar" style="background:#9ad63a;box-shadow:0 0 26px #9ad63a55"></div>
+  <div class="lbl">G</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#e8d33a">06</div>
+  <div class="bar" style="background:#e8d33a;box-shadow:0 0 26px #e8d33a55"></div>
+  <div class="lbl">TREE(3)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#f5a524">07</div>
+  <div class="bar" style="background:#f5a524;box-shadow:0 0 26px #f5a52455"></div>
+  <div class="lbl">SSCG(3)</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#f97316">08</div>
+  <div class="bar" style="background:#f97316;box-shadow:0 0 26px #f9731655"></div>
+  <div class="lbl">Rayo</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#ef4444">09</div>
+  <div class="bar" style="background:#ef4444;box-shadow:0 0 26px #ef444455"></div>
+  <div class="lbl">Fish 7</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#e11d78">10</div>
+  <div class="bar" style="background:#e11d78;box-shadow:0 0 26px #e11d7855"></div>
+  <div class="lbl">BIG FOOT</div>
+</div>
+<div class="c">
+  <div class="no" style="color:#c084fc">11</div>
+  <div class="bar" style="background:#c084fc;box-shadow:0 0 26px #c084fc55"></div>
+  <div class="lbl">LNGN</div>
+</div></div>
+<div class="note"><span class="bad">çakışma:</span> 07 amber'e, 09 rose'a, 03 cyan'a, 10 magenta'ya yakın — rezerve anlamlar basamak renkleriyle karışır</div>
+</body></html>

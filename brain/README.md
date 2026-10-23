@@ -19,7 +19,7 @@ brain/
 ├── context/                # Projenin değişmez ve yaşayan bağlamı
 │   ├── project-brief.md    # Vizyon, oyun felsefesi, hedef
 │   ├── narrative-voice.md  # Ses sözleşmesi (sessiz meta, gerçek "sen", tek ses çift ritim)
-│   ├── visual-language.md  # Görsel dil sözleşmesi (A1 kapanınca yeniden yazılacak)
+│   ├── visual-language.md  # Görsel dil sözleşmesi — "Saf Sayı" (ADR-0078, 2026-10-23'te baştan yazıldı)
 │   ├── system-patterns.md  # Mimari desenler, döngüler, bileşen yapısı
 │   └── tech-context.md     # Kütüphaneler, sürümler, kısıtlar
 │
@@ -28,10 +28,11 @@ brain/
 │   ├── in-progress.md      # Aktif iş: 1. basamak dikey dilimi
 │   └── completed.md        # Tarihçe (eski tema dönemi dahil, silinmedi)
 │
-├── decisions/              # ADR'ler — 0077 pivot kararı dahil, hiçbiri silinmez
+├── decisions/              # ADR'ler — 0077 pivot + 0078 görsel dil dahil, hiçbiri silinmez
 │
 └── research/               # Yaşayan araştırma
-    ├── theme-pivot-grilling-2026-10-23.md      # TEK GERÇEK: 38 karar, 1. basamak spec'i
+    ├── theme-pivot-grilling-2026-10-23.md      # TEK GERÇEK: 50 karar, 1. basamak spec'i, §12 görsel dil
+    ├── mockups/2026-10-23/                     # Görsel dil kararının render artefaktları (HTML + PNG)
     ├── number-ladder-script-2026-10.md         # 11 basamak senaryosu (SEN: satırları devredilecek)
     ├── theme-pivot-open-questions-2026-10.md   # Açık sorular
     ├── incremental-genre-synthesis.md          # Janra sentezi

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><title>Pure Number — option B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+html, body { height:100%; }
+body { background:#060608; color:#f6f3ec; font-family:"Space Grotesk",sans-serif; overflow:hidden; }
+#swirl { position:fixed; inset:0; width:100%; height:100%; z-index:0; filter: saturate(1.05); }
+.stage { position:relative; z-index:2; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; padding:20px; }
+.wrap { width:100%; max-width:1000px; }
+
+.scrim { position: fixed; inset:0; z-index:1; background: radial-gradient(ellipse 60% 46% at 50% 34%, rgba(6,6,9,.94) 0%, rgba(6,6,9,.62) 55%, rgba(6,6,9,.30) 100%); }
+.hero { padding: 8px 4px 0; }
+.hero .eyebrow { display:flex; justify-content:space-between; align-items:baseline; font-family:"Space Mono",monospace;
+  font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#5b5b66; border-bottom:1px solid rgba(255,255,255,.07); padding-bottom:9px; }
+.hero .eyebrow b { color:#c9c4b6; font-weight:400; letter-spacing:.18em; }
+.hero .num { font-family:"Space Grotesk",sans-serif; font-weight:300; font-size:118px; line-height:.94; letter-spacing:-.035em;
+  font-variant-numeric: tabular-nums; color:#f6f3ec; margin: 20px 0 2px; }
+.hero .num span { font-size:.34em; color:#7a7a86; letter-spacing:0; vertical-align: .32em; margin-left:.1em; }
+.hero .rate { display:flex; gap:26px; font-family:"Space Mono",monospace; font-size:11.5px; color:#6d6d79; letter-spacing:.06em; }
+.hero .rate b { color:#b9b4a7; font-weight:400; }
+.press { display:inline-flex; align-items:center; gap:12px; margin-top:22px; }
+.press .key { font-family:"Space Mono",monospace; font-size:13px; letter-spacing:.16em; color:#f6f3ec; padding:13px 26px;
+  border:1px solid rgba(246,243,236,.24); background:rgba(246,243,236,.04); }
+.press .hint { font-family:"Space Mono",monospace; font-size:10.5px; color:#4e4e58; letter-spacing:.1em; }
+.chain { margin-top: 34px; }
+.chain .h { font-family:"Space Mono",monospace; font-size:9.5px; letter-spacing:.3em; color:#4e4e58; text-transform:uppercase;
+  display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.07); }
+.line { display:grid; grid-template-columns: 30px 1fr 60px 96px 104px 84px; align-items:baseline; gap:14px;
+  padding: 11px 2px; border-bottom:1px solid rgba(255,255,255,.045); font-family:"Space Mono",monospace; font-size:11.5px; }
+.line.off { color:#33333a; }
+.line .i { color:#3d3d45; font-size:10px; }
+.line .n { color:#dcd8ce; letter-spacing:.1em; font-size:12px; }
+.line.off .n { color:#41414a; }
+.line .c { text-align:right; color:#9d988c; font-variant-numeric:tabular-nums; }
+.line .m { text-align:right; color:#5f5f6b; font-variant-numeric:tabular-nums; }
+.line .p { text-align:right; color:#8a8578; font-variant-numeric:tabular-nums; }
+.line .b { text-align:right; font-size:10px; letter-spacing:.14em; color:#5e5e52; }
+.line .b.act { color:#f6f3ec; }
+.ticker { margin-top: 12px; padding-top:14px; border-top:1px solid rgba(255,255,255,.07);
+  font-family:"Space Grotesk",sans-serif; font-size:14.5px; color:#8d8a80; letter-spacing:.005em; }
+.ticker em { font-style:normal; color:#e8e4d8; }
+.nav { display:flex; gap:30px; margin-top:22px; font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.26em; color:#45454e; }
+.nav .on { color:#f6f3ec; }
+.foot { display:flex; justify-content:space-between; margin-top:16px; font-family:"Space Mono",monospace; font-size:9px; letter-spacing:.24em; color:#33333a; }
+
+</style></head>
+<body><canvas id="swirl"></canvas><div class="stage"><div class="wrap">
+<div class="scrim"></div>
+<div class="hero">
+  <div class="eyebrow"><span>Rung 01 · <b>1.79e308 — the wall</b></span><span>10 tps · log 14.09</span></div>
+  <div class="num">1.2437e14<span>n</span></div>
+  <div class="rate"><span>per second <b>8.41e6</b></span><span>chain <b>8 of 8</b></span><span>boost <b>×3.14</b> in 2:41</span></div>
+  <div class="press"><span class="key">+1</span><span class="hint">IT DOES ADD ONE. YOU WILL NOT SEE IT.</span></div>
+</div>
+<div class="chain">
+  <div class="h"><span>the chain — fingers at the top</span><span>60 owned</span></div>
+  <div class="line ">
+      <span class="i">01</span><span class="n">FINGERS</span>
+      <span class="c">24</span><span class="m">+8.41e6 /s</span><span class="p">2.19e9</span>
+      <span class="b act">+1</span>
+    </div><div class="line ">
+      <span class="i">02</span><span class="n">NOTCH</span>
+      <span class="c">12</span><span class="m">×1.42</span><span class="p">8.14e10</span>
+      <span class="b act">BUY ×10</span>
+    </div><div class="line ">
+      <span class="i">03</span><span class="n">ABACUS</span>
+      <span class="c">10</span><span class="m">×1.31</span><span class="p">3.90e11</span>
+      <span class="b act">BUY ×10</span>
+    </div><div class="line ">
+      <span class="i">04</span><span class="n">PENCIL</span>
+      <span class="c">4</span><span class="m">×1.24</span><span class="p">1.02e13</span>
+      <span class="b ">LOCKED</span>
+    </div><div class="line off">
+      <span class="i">05</span><span class="n">CALCULATOR</span>
+      <span class="c">0</span><span class="m">—</span><span class="p">—</span>
+      <span class="b ">LOCKED</span>
+    </div><div class="line off">
+      <span class="i">06</span><span class="n">COMPUTER</span>
+      <span class="c">0</span><span class="m">—</span><span class="p">—</span>
+      <span class="b ">LOCKED</span>
+    </div><div class="line off">
+      <span class="i">07</span><span class="n">SUPERCOMPUTER</span>
+      <span class="c">0</span><span class="m">—</span><span class="p">—</span>
+      <span class="b ">LOCKED</span>
+    </div><div class="line off">
+      <span class="i">08</span><span class="n">MATHEMATICIAN</span>
+      <span class="c">0</span><span class="m">—</span><span class="p">—</span>
+      <span class="b ">LOCKED</span>
+    </div>
+</div>
+<div class="ticker">You have pressed <em>+1</em> four thousand one hundred and twelve times.</div>
+<div class="nav"><span class="on">DIMENSIONS</span><span>LAB</span><span>STATS</span><span>SETTINGS</span></div>
+<div class="foot"><span>HOLD THAT NUMBER</span><span>0.0.1</span></div>
+</div></div>
+<script>
+const FS = `
+precision mediump float;
+uniform vec2 u_resolution; uniform float u_time;
+uniform vec4 u_color1; uniform vec4 u_color2; uniform vec4 u_color3;
+uniform float u_speed; uniform float u_contrast; uniform float u_lighting;
+void main() {
+  float pixel_filter = 480.0;
+  float pixel_size = length(u_resolution) / pixel_filter;
+  vec2 uv = floor(gl_FragCoord.xy / pixel_size) * pixel_size;
+  uv = (uv - 0.5 * u_resolution) / length(u_resolution);
+  float uv_len = length(uv);
+  float speed = (-2.0 * 0.2) + 302.2;
+  float new_angle = atan(uv.y, uv.x) + speed - 20.0 * (0.25 * uv_len + 0.75);
+  vec2 mid = (u_resolution / length(u_resolution)) / 2.0;
+  uv = vec2(uv_len * cos(new_angle) + mid.x, uv_len * sin(new_angle) + mid.y) - mid;
+  uv *= 28.0;
+  float loop_speed = u_time * u_speed;
+  vec2 uv2 = vec2(uv.x + uv.y, 0.0);
+  for (int i = 0; i < 5; i++) {
+    uv2 += sin(max(uv.x, uv.y)) + uv;
+    uv += 0.5 * vec2(cos(5.1123 + 0.353 * uv2.y + loop_speed * 0.1311), sin(uv2.x - 0.113 * loop_speed));
+    uv -= 1.0 * cos(uv.x + uv.y) - 1.0 * sin(uv.x * 0.711 - uv.y);
+  }
+  float contrast_mod = (0.25 * u_contrast + 0.5 * 0.25 + 1.2);
+  float paint_res = min(2.0, max(0.0, length(uv) * 0.035 * contrast_mod));
+  float c1 = max(0.0, 1.0 - contrast_mod * abs(1.0 - paint_res));
+  float c2 = max(0.0, 1.0 - contrast_mod * abs(paint_res));
+  float c3 = 1.0 - min(1.0, c1 + c2);
+  float light = (u_lighting - 0.2) * max(c1 * 5.0 - 4.0, 0.0) + u_lighting * max(c2 * 5.0 - 4.0, 0.0);
+  vec4 final_color = (0.3 / u_contrast) * u_color1 + (1.0 - 0.3 / u_contrast) * (u_color1 * c1 + u_color2 * c2 + u_color3 * c3) + light;
+  gl_FragColor = vec4(final_color.rgb, 1.0);
+}`;
+function initSwirl(c1, c2, c3, contrast, lighting) {
+  const canvas = document.getElementById('swirl');
+  const gl = canvas.getContext('webgl', { antialias: false, depth: false });
+  if (!gl) return;
+  const vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.0,1.0); }'); gl.compileShader(vs);
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, FS); gl.compileShader(fs);
+  const prog = gl.createProgram(); gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  function u(n, ...v) { const l = gl.getUniformLocation(prog, n); if (!l) return; v.length === 2 ? gl.uniform2f(l, ...v) : gl.uniform4f(l, ...v); }
+  function frame(t) {
+    const w = canvas.width = canvas.clientWidth, h = canvas.height = canvas.clientHeight;
+    gl.viewport(0, 0, w, h);
+    u('u_resolution', w, h); gl.uniform1f(gl.getUniformLocation(prog,'u_time'), t);
+    u('u_color1', ...c1); u('u_color2', ...c2); u('u_color3', ...c3);
+    gl.uniform1f(gl.getUniformLocation(prog,'u_speed'), 1.0);
+    gl.uniform1f(gl.getUniformLocation(prog,'u_contrast'), contrast);
+    gl.uniform1f(gl.getUniformLocation(prog,'u_lighting'), lighting);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+initSwirl([0.04,0.05,0.09,1.0], [0.30,0.11,0.58,1.0], [0.02,0.02,0.03,1.0], 2.6, 0.30);
+</script></body></html>

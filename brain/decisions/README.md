@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0077**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0078**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -93,3 +93,4 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0075 | Tempo Bandının Yeniden Tanımlanması ve P1'in Ölçümle Reddi | 2026-10-20 | Kabul edildi (kullanıcı onayı bekliyor) — ADR-0023'ün 150–300 dk bandını ölçülen 8–11 saat bandıyla değiştirir | [0075-tempo-band-revision-and-p1-rejection.md](0075-tempo-band-revision-and-p1-rejection.md) |
 | 0076 | Satın Alma Tabanlı Boyut Açılışı ve D8 Çağı Ölçek Sıçraması | 2026-10-20 | Kabul edildi & uygulandı (kullanıcı kararı) — ADR-0072'nin kütle kapısı açılışını ve sıçrama tier rampasını geçersiz kılar | [0076-purchase-based-dimension-unlocks-and-d8-scale-shift.md](0076-purchase-based-dimension-unlocks-and-d8-scale-shift.md) |
 | 0077 | Tema Pivotu — "Kozmik Oburluk" → `Hold That Number` (oyunun kendi sesi) | 2026-10-23 | **Kabul edildi** — grilling oturumunda kısmen değiştirildi/iptal edildi; bağlayıcı kayıt: [`research/theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md). 11 basamak, ~85 saat, kadran 5+ | [0077-theme-pivot-number-hunter-and-comedic-voice.md](0077-theme-pivot-number-hunter-and-comedic-voice.md) |
+| 0078 | Görsel Dil — "Saf Sayı" (Pure Number) | 2026-10-23 | **Kabul edildi** — ADR-0060'ın K0–K5 merdivenini ve ADR-0066'nın `m6x11plus`/Caveat tipografisini iptal eder; ADR-0067'yi genişletir (Space Grotesk = hero). Sözleşme baştan yazıldı | [0078-pure-number-visual-language.md](0078-pure-number-visual-language.md) |

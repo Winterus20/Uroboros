@@ -2,7 +2,8 @@
 
 > **Amaç:** "Kozmik Oburluk" → `Hold That Number` pivotunun soru-cevap oturumunda kilitlenen
 > kararlarını, gerekçelerini, açık maddelerini ve **devam edilecek soruyu** tek yerde tutmak.
-> **Durum:** ▶️ oturum açık (2026-10-23 · **38 karar kilitli**) — **devam noktası §6** (sıra kodda).
+> **Durum:** ▶️ oturum açık (2026-10-23 · **50 karar kilitli**) — **devam noktası §6** (sıra kodda).
+> **§12 (2026-10-23):** görsel dil oturumu — 12 karar (`G1`–`G12`), `A1` kapandı → [ADR-0078](../decisions/0078-pure-number-visual-language.md).
 > **İlgili:** [ADR-0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 > [narrative-voice.md](../context/narrative-voice.md) ·
 > [number-ladder-script-2026-10.md](number-ladder-script-2026-10.md) ·
@@ -476,7 +477,10 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 - **Seçenekler:** (A) bürokratik/kâğıt, (B) **saf sayı** (karanlık tuval + basamak başına vurgu rengi),
   (C) retro terminal.
 - **Öneri:** B. Oyunun tek kahramanı sayı; ne kadar az şey varsa sayı o kadar büyük görünür.
-- **Durum:** 🔴 Kullanıcı ayrı konuşma istedi. Karar verilmeden UI yazılmamalı.
+- **Durum:** ✅ **kapandı** → §12 · `G1`–`G12` · [ADR-0078](../decisions/0078-pure-number-visual-language.md).
+  `B` seçildi. `A` reddedildi (kâğıt/form/damga = kurum → `V1` ihlali); `C` reddedildi
+  (ADR-0069'u geri alır + bir dönem vaat eder). Bağlayıcı sözleşme baştan yazıldı:
+  [`../context/visual-language.md`](../context/visual-language.md).
 
 ### A2 — 13 jeneratörün listesi ve zincir yönü
 - **Soru:** Zincir hangi yöne akıyor, her basamakta kaç jeneratör var?
@@ -533,11 +537,11 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 uçtan uca çalışan hâli — ve `E9` uyarınca **proje sahibi "bitti" diyene kadar** sürer.
 
 **Kod sırası:** (1) sayı ekonomisi (8 halka · 10 birim kilidi · sınırsız alım) → (2) prestij +
-`Birikim` → (3) mini boost → (4) `+1` + 1. basamak ticker satırları. Görsel dil (`A1`) ve metin
-sahipliği (`A8`) hâlâ açık; ilk iki adım bunlara bağlı değil.
+`Birikim` → (3) mini boost → (4) `+1` + 1. basamak ticker satırları. Görsel dil (`A1`) **kapandı**
+(ADR-0078) — UI artık yazılabilir. Metin sahipliği (`A8`) hâlâ açık; ilk iki adım buna bağlı değil.
 
-**Açık maddeler:** `A1` görsel dil (ayrı konuşma) · `A4` mizah ayarı · `A5` LNGN finali ·
-`A6` başarımlar/meydan okumalar · `A7` müzik · `A8` İngilizce metni kim yazıyor.
+**Açık maddeler:** `A4` mizah ayarı · `A5` LNGN finali · `A6` başarımlar/meydan okumalar ·
+`A7` müzik · `A8` İngilizce metni kim yazıyor · `G13` mobil dizgi · `G14` ticker yeri/boyu.
 
 ### 6.1 Janra taraması (A3 için, 2026-10-23) — kayıt
 
@@ -734,7 +738,8 @@ Bu, oturumun en öğretici anı: *"çok uzun"* bazen *"çok boş"* demektir.
 | `A13` | Halka kilidi | ✅ `E11` |
 | `A14` | Mini boost ne sıfırlar | ✅ `E12` |
 | `A15` | Boost koşulu ve ödülü | ✅ `E13` + `E14` |
-| `A1` `A4` `A5` `A6` `A7` `A8` | Görsel dil · mizah ayarı · final · başarımlar · müzik · metin sahipliği | 🟡 açık |
+| `A1` | Görsel dil | ✅ `G1`–`G12` (ADR-0078) |
+| `A4` `A5` `A6` `A7` `A8` | Mizah ayarı · final · başarımlar · müzik · metin sahipliği | 🟡 açık |
 
 ### 11.5 Kronoloji (devam)
 
@@ -748,4 +753,85 @@ Bu, oturumun en öğretici anı: *"çok uzun"* bazen *"çok boş"* demektir.
 | 36 | Mini boost (A14) | A | `E12` |
 | 37 | Boost koşulu (A15) | A | `E13` |
 | 38 | Boost ödülü (A15b) | A (sabit çarpan ölçümle çürüdü) | `E14` |
+
+---
+
+## 12. Oturum III — görsel dil (2026-10-23, aynı gün devam)
+
+> `A1`'in kapandığı oturum. **12 karar** (`G1`–`G12`) → [ADR-0078](../decisions/0078-pure-number-visual-language.md) ·
+> bağlayıcı sözleşme [`../context/visual-language.md`](../context/visual-language.md) **baştan yazıldı**.
+> **Kod yazılmadı**; hiçbir `.ts` / `.vue` değişmedi. Üretilen tek şey karar + ölçüm + mockup.
+
+### 12.1 Neden ayrı oturum gerekti
+
+Tema pivotu (ADR-0077) oburluk temasını sildi, ama görsel sözleşmenin **tamamı** o temanın üstüne
+kuruluydu: `--feast` (10 dosyada **40 referans**), GIC kolaj substratı, faz-temelli bozulma
+(7 dosyada **22 referans**), Balatro piksel fontu, 32 `.vue` bileşeni. Yani `A1` "yeni palet seçelim"
+değil, **sahibi ölmüş bir sözleşmenin mirasçısını seçmekti.**
+
+### 12.2 Kararlar
+
+| # | Soru | Seçilen | Sonuç |
+| :-- | :--- | :--- | :--- |
+| `G1` | Ekranın baş karakteri kim? | **B — saf sayı** | `A` (kâğıt=kurum, `V1` ihlali) ve `C` (retro terminal, ADR-0069 ihlali) reddedildi |
+| `G2` | Swirl kalıyor mu? | **Kalır** | Oyunun tek ortamı; basamak rengini taşıyan yüzey |
+| `G3` | Sayı dışında ne var? | **Kemik kalır, süs gider** | Kart/blur/yuvarlak köşe/ikon-only sekme ölür; 1px hairline + tipografi + boşluk |
+| `G4` | Hangi font? | **Space Grotesk (hero+UI) + Space Mono (veri)** | 9 aday ölçüldü: hepsi tabular + glif tam → eleme estetikti. `m6x11plus` ölür |
+| `G5` | Basamak rengi nasıl? | **11 hue, amber+rose yayları boş** | Tek formül (OKLCH, parlaklık zarfı); kontrast 5,4–13,4:1, komşu fark 25,1° |
+| `G6` | Cyan ne oluyor? | **Emekli** | Bonus = beyaz + kıvılcım; renk çemberi basamakların |
+| `G7` | `K0–K5` merdiveni? | **Tamamen ölür** | 85 saatte görsel birikim yok; yay yalnız renkte ve anlarda |
+| `G8` | Basamak geçişi? | **2,5 sn sahne** | Ekran söner → isim yazılır → sayı `10` yeni renkte doğar (11 × 2,5 sn = 27 sn) |
+| `G9` | Uzun notasyon nasıl sığar? | **Yapısal dizgi** | Taban büyük, notasyon küçük; auto-fit yasak (sayı en büyük olduğu yerde küçülmesin) |
+| `G10` | `+1` butonu? | **Hiç değişmez** | 84. saatteki basış 1. saattekiyle birebir aynı; etiket asla sayıya dönüşmez |
+| `G11` | Mini boost (250×)? | **Tek nefes, 400 ms** | Sayı içeri çöker, swirl nefes alır, çarpan oturur; sahne diliyle karışmaz |
+| `G12` | Hangi katmanlar sağ? | **Yalnız swirl** | Ticker + toast **düz metin** olarak yaşar (`V4`/`T3` korunur); canvas juice ve 6 katman ölür |
+
+### 12.3 Ölçümler (uydurma değil, hesaplanmış)
+
+| Ne | Sonuç | Nerede |
+| :--- | :--- | :--- |
+| 9 font adayı | hepsi tabular + `↑ ³ ^ ( ) e G` tam → teknik eleme yok | `mockups/2026-10-23/typecast.png` |
+| 11 basamak kontrastı | **5,4:1 – 13,4:1** (`#060608` üzerinde); en düşük 8. basamak `#5a78ff` | hesaplandı |
+| Komşu basamak hue farkı | **25,1°** | hesaplandı |
+| Amber / rose hue | 70,1° / 16,4° → yayların dışında | hesaplandı |
+| Palet denemeleri | 3 deneme çöpe gitti (pastel → neon → soluk mavi); 4.'sünde parlaklık zarfı bulundu | `mockups/2026-10-23/rung-arcs*.png` |
+
+**Öğretici an:** ilk 11 renk önerisi pastel çıktı ve 1. basamak altın gibi göründü — amber'e 15° kalmıştı.
+"11 hue rezerve renklerle yaşayamaz" demiştim, sonra ölçüp **kendi sözümü geri aldım**: 300° / 11 ≈ 27°,
+yani çakışma kader değil palet hatasıydı. Protokolün 6. kuralı ("öneri geri alınabilir") ikinci kez çalıştı.
+
+### 12.4 Açılan maddeler
+
+| # | Konu | Durum |
+| :-- | :--- | :--- |
+| `G13` | Mobil dizgi (390px'te uzun notasyon) | 🟡 kural yazılmadı — geçici: iki satır, punto küçültülmez |
+| `G14` | Ticker'ın yeri ve boyu | 🟡 açık |
+| `A5` | LNGN final sahnesi | 🟡 `G8` motorunu kullanacak |
+
+### 12.5 Risk (kayda geçiyor)
+
+`R1` **artık korumasız.** Bozulma merdiveni (`G7`) ve canvas juice (`G12`) öldüğü için 85 saatte
+ekranda biriken hiçbir şey yok. Yoğunluk tamamen ticker metnine (`T3`, ~400 satır) ve iki ana
+(`G8` basamak sahnesi, `G11` boost) bağlı. Bilinçli tercih; bedeli gerçek.
+
+### 12.6 Kronoloji (devam)
+
+| # | Soru | Cevap | Sonuç |
+| :-- | :--- | :--- | :--- |
+| 39 | Görsel dil yönü (`A1`) | B + "swirl kalsın" | `G1` `G2` |
+| 40 | Retro terminal örneği | görsel istendi → prompt + iki render verildi | (artefakt) |
+| 41 | Retro terminal | reddedildi, B ile devam | `G1` |
+| 42 | Ekran anatomisi | B (kemik kalır) | `G3` |
+| 43 | Font | "en iyisi hangisiyse" → ölçüm + öneri | `G4` |
+| 44 | Renk şeması | C (yasak yaylar) | `G5` |
+| 45 | A/B farkı | ölçümle gösterildi | — |
+| 46 | 11 renk | B (11 ayrı hue) | `G5` |
+| 47 | Çakışma çözümü | C (amber+rose yayları boş) | `G5` |
+| 48 | Cyan | A (emekli) | `G6` |
+| 49 | `K0–K5` merdiveni | A (tamamen ölür) | `G7` |
+| 50 | Basamak geçişi | C (2,5 sn sahne) | `G8` |
+| 51 | Uzun notasyon | C (yapısal dizgi) | `G9` |
+| 52 | `+1` butonu | A (değişmez) | `G10` |
+| 53 | Mini boost | B (400 ms nefes) | `G11` |
+| 54 | Katmanlar | "sadece swirl" → Okuma 2 (ticker/toast metin olarak yaşar) | `G12` |
 

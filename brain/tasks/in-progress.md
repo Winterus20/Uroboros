@@ -2,12 +2,13 @@
 
 ## 🎭 AKTİF — `Hold That Number` · 1. basamak dikey dilimi (2026-10-23)
 
-**Durum:** tasarım kapandı (**38 karar**), sıra **kodda**. Dikey dilim, proje sahibi "bitti" diyene kadar sürer (`E9`).
+**Durum:** tasarım kapandı (**50 karar**), sıra **kodda**. Dikey dilim, proje sahibi "bitti" diyene kadar sürer (`E9`).
 
 **Tek gerçek kayıt:** [`theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md)
 — §2 karar günlüğü · §11 1. basamak spec + `E7`–`E14` · §6 devam noktası.
 **ADR:** [0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 **Ses sözleşmesi:** [narrative-voice.md](../context/narrative-voice.md) ·
+**Görsel sözleşme:** [visual-language.md](../context/visual-language.md) (ADR-0078, "Saf Sayı") ·
 **Senaryo:** [number-ladder-script-2026-10.md](../research/number-ladder-script-2026-10.md)
 
 ### 1. basamak spec (kilitli)
@@ -34,7 +35,9 @@ Görsel dil (`A1`) ve İngilizce metin sahipliği (`A8`) hâlâ açık; 1-2. ad�
 
 | # | Konu | Durum |
 | :-- | :--- | :--- |
-| `A1` | Görsel dil (palet/tipografi/estetik) | 🔴 ayrı konuşma — UI yazılmadan önce kapılmalı |
+| `A1` | Görsel dil (palet/tipografi/estetik) | ✅ **kapandı** → ADR-0078 (`G1`–`G12`) |
+| `G13` | Mobil dizgi (390px'te uzun notasyon) | 🟡 UI yazılırken netleşmeli |
+| `G14` | Ticker'ın yeri ve boyu | 🟡 UI yazılırken netleşmeli |
 | `A4` | Mizah yoğunluğu ayarı (kapalı/ölçülü/tam) | 🟡 yayından önce |
 | `A5` | `LNGN` final sahnesi | 🟡 en son |
 | `A6` | Başarımlar (86) + meydan okumalar (13) metinleri | 🟡 hacim büyük |

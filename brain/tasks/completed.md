@@ -1,5 +1,49 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — Görsel Dil: "Saf Sayı" (ADR-0078 · `G1`–`G12`)
+
+### Ne yapıldı
+Görsel dil oturumu (grilling, 12 soru) kapandı; `A1` maddesi — pivot sonrası kalan son tasarım
+engeli — çözüldü. **Hiçbir kod dosyası değişmedi**; üretilen şey karar + ölçüm + mockup.
+
+### Kilitlenen kararlar
+| # | Karar |
+| :-- | :--- |
+| `G1` | Yön **saf sayı** (karanlık tuval + basamak rengi). Kâğıt/kurum ve retro terminal reddedildi |
+| `G2` | `AlgorithmicSwirl` kalır — oyunun tek ortamı |
+| `G3` | Kemik kalır, süs gider: kart/blur/yuvarlak köşe ölür, 1px hairline + tipografi kalır |
+| `G4` | Space Grotesk (hero+UI) + Space Mono (veri); **`m6x11plus` ve Caveat ölür** |
+| `G5` | 11 basamak rengi tek OKLCH formülü; amber ve rose yayları boş bırakıldı |
+| `G6` | Cyan emekli (bonus = beyaz + kıvılcım) |
+| `G7` | `K0–K5` bozulma merdiveni tamamen ölür |
+| `G8` | Basamak geçişi 2,5 sn sahne (11 × 2,5 sn = 27 sn / 85 saat) |
+| `G9` | Yapısal dizgi: taban büyük, notasyon küçük; auto-fit yasak |
+| `G10` | `+1` butonu hiç değişmez (aynı boyut, aynı etiket, aynı his) |
+| `G11` | Mini boost = tek nefes, 400 ms; sahne diliyle karışmaz |
+| `G12` | Yalnız swirl katman olarak kalır; ticker + toast düz metin olarak yaşar |
+
+### Üretilen dosyalar
+- [`brain/decisions/0078-pure-number-visual-language.md`](../decisions/0078-pure-number-visual-language.md) — yeni ADR
+- [`brain/context/visual-language.md`](../context/visual-language.md) — sözleşme **baştan yazıldı** (219 satır)
+- [`brain/research/theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md) §12 — oturum kaydı
+- `brain/research/mockups/2026-10-23/` — 6 render (tipografi karşılaştırması, 3 renk yayı, 2 tam ekran mockup)
+
+### Ölçümler
+- 9 font adayı: hepsi tabular + `↑ ³ ^ ( ) e G` glifleri tam → teknik eleme yoktu, karar estetikti
+- 11 basamak kontrastı `#060608` üzerinde **5,4:1 – 13,4:1** (en düşük 8. basamak)
+- Komşu basamak hue farkı **25,1°**; amber (70,1°) ve rose (16,4°) yayların dışında
+
+### Doğrulama
+Kod değişmediği için `npm run build` gerekmedi; `brain/` bağlantıları ve ADR indeksi güncellendi.
+
+### Açılan maddeler
+`G13` mobil dizgi · `G14` ticker yeri/boyu · `A5` LNGN final sahnesi (`G8` motorunu kullanacak).
+
+### Risk
+`R1` (85 saatte yoğunluk düşer) artık **korumasız**: bozulma merdiveni ve canvas juice öldü.
+Yoğunluk ticker metnine ve iki ana bağlı.
+
+
 ## [2026-10-20] ✔ — Satın Alma Tabanlı Boyut Açılışı ve D8 Çağı Ölçek Sıçraması (ADR-0076)
 
 ### Gerekçe (kullanıcı kararı):

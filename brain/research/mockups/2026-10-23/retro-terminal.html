@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Retro Terminal — option C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: "m6x11plus"; src: url("../../../../public/fonts/m6x11plus.ttf") format("truetype"); font-weight: 400; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: #04100a; color: #a9ffcc; font-family: "IBM Plex Mono", monospace; overflow: hidden; }
+#swirl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.no-gl { background: radial-gradient(circle at 50% 40%, #141018, #050507 70%); }
+.stage { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 18px; }
+.wrap { width: 100%; max-width: 1040px; display: flex; flex-direction: column; gap: 10px; }
+
+body { letter-spacing: .02em; }
+body::after { content:""; position:fixed; inset:0; z-index:6; pointer-events:none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.42) 0 1px, rgba(0,0,0,0) 1px 3px); mix-blend-mode: multiply; }
+body::before { content:""; position:fixed; inset:0; z-index:7; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,10,4,.72) 100%); }
+.panel { border: 1px solid rgba(110,255,170,.22); background: rgba(2,14,8,.62); box-shadow: inset 0 0 40px rgba(0,40,20,.55); }
+.tick { display:flex; align-items:center; gap:10px; padding: 8px 12px; font-size: 15px; color: #86ffb9; }
+.tick .prompt { color: #2bff7f; font-weight: 700; }
+.tick .cursor { width: 9px; height: 15px; background: #2bff7f; display:inline-block; animation: blink 1.1s steps(1) infinite; box-shadow: 0 0 10px #2bff7f; }
+@keyframes blink { 50% { opacity: 0 } }
+.hero { padding: 18px 16px 14px; position: relative; }
+.hero .label { font-size: 12px; letter-spacing:.28em; color:#3f9f6b; text-transform: uppercase; display:flex; justify-content:space-between; }
+.hero .num { font-family: "VT323", monospace; font-size: 92px; line-height: .92; color:#b6ffd4; letter-spacing: .01em;
+  text-shadow: 0 0 18px rgba(45,255,140,.55), 0 0 60px rgba(20,180,95,.35); margin: 6px 0 4px; display:flex; align-items:baseline; gap:14px; }
+.hero .num .unit { font-size: 18px; color:#3f9f6b; letter-spacing:.2em; }
+.hero .sub { display:flex; gap:22px; font-size:13px; color:#4fbf85; flex-wrap:wrap; }
+.hero .sub b { color:#a9ffcc; font-weight:600; }
+.key { font-family:"IBM Plex Mono",monospace; font-size:13px; padding: 8px 14px; border:1px solid rgba(110,255,170,.45); color:#04120a; background:#3dff92;
+  box-shadow: 0 0 18px rgba(45,255,140,.45), inset 0 -2px 0 rgba(0,0,0,.35); letter-spacing:.08em; }
+.key.ghost { background:transparent; color:#7dffb4; box-shadow:none; border-color: rgba(110,255,170,.35); }
+.row { display:grid; grid-template-columns: 34px 1fr 74px 132px 92px 96px; align-items:center; gap:10px; padding: 9px 12px;
+  border-bottom: 1px dashed rgba(110,255,170,.14); font-family:"IBM Plex Mono", monospace; font-size: 13px; }
+.row:last-child { border-bottom:none; }
+.row.locked { opacity: .38; }
+.idx { color:#2f7d55; }
+.name { color:#c9ffe0; letter-spacing:.06em; }
+.name small { display:block; color:#3f9f6b; font-size:10.5px; letter-spacing:.12em; }
+.count { text-align:right; color:#8effc0; font-weight:600; font-variant-numeric: tabular-nums; }
+.prod { color:#4fbf85; font-size:12px; text-align:right; font-variant-numeric: tabular-nums; }
+.cost { text-align:right; color:#d7ffe9; font-variant-numeric: tabular-nums; }
+.buy { font-family:"IBM Plex Mono",monospace; font-size:12px; padding:5px 0; text-align:center; border:1px solid rgba(110,255,170,.4); background:rgba(20,120,70,.28); color:#9dffc9; letter-spacing:.1em; }
+.buy.off { border-color: rgba(110,255,170,.15); color:#2f7d55; background:transparent; }
+.nav { display:flex; gap:0; font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.1em; }
+.nav .t { padding: 7px 14px; border:1px solid rgba(110,255,170,.22); border-right:none; color:#3f9f6b; }
+.nav .t:last-child { border-right:1px solid rgba(110,255,170,.22); }
+.nav .t.on { background:#3dff92; color:#04120a; box-shadow: 0 0 20px rgba(45,255,140,.4); }
+.rail { display:flex; align-items:center; gap:10px; padding: 8px 12px; font-size:12.5px; color:#4fbf85; }
+.bar { flex:1; height:9px; border:1px solid rgba(110,255,170,.3); position:relative; background: rgba(0,30,15,.6); }
+.bar i { position:absolute; inset:1px auto 1px 1px; width: 22%; background: repeating-linear-gradient(90deg,#3dff92 0 6px, rgba(0,0,0,.85) 6px 8px); }
+.hdr { display:flex; justify-content:space-between; align-items:center; padding: 6px 12px 8px; border-bottom:1px solid rgba(110,255,170,.22); font-size:11.5px; letter-spacing:.22em; color:#2f9d66; }
+.foot { display:flex; justify-content:space-between; font-size:11px; color:#2f7d55; letter-spacing:.16em; padding-top:2px; }
+
+</style>
+</head>
+<body>
+<canvas id="swirl"></canvas>
+<div class="stage"><div class="wrap">
+
+<div class="panel tick"><span class="prompt">&gt;</span><span>You have pressed <b>+1</b> 4,112 times. Four thousand one hundred and twelve.</span><span class="cursor"></span></div>
+<div class="panel hero">
+  <div class="label"><span>Rung 01 — 1.79e308 · The Wall</span><span>10 TPS · LOG 14.09</span></div>
+  <div class="num">1.2437e14<span class="unit">NUMBER</span></div>
+  <div class="sub"><span>per second <b>8.41e6</b></span><span>chain <b>8 / 8</b></span><span>boost <b>×<span style="color:#ffc043">3.14</span></b> in 02:41</span></div>
+</div>
+<div class="panel">
+  <div class="hdr"><span>CHAIN — FINGERS AT TOP</span><span>OWNED 60 · SPENT 100%</span></div>
+  <div class="row ">
+      <span class="idx">01</span>
+      <span class="name">FINGERS<small>PRODUCES THE NUMBER</small></span>
+      <span class="count">24</span>
+      <span class="prod">+8.41e6/s</span>
+      <span class="cost">2.19e9</span>
+      <span class="buy ">+1</span>
+    </div><div class="row ">
+      <span class="idx">02</span>
+      <span class="name">NOTCH<small>FEEDS FINGERS</small></span>
+      <span class="count">12</span>
+      <span class="prod">×1.42</span>
+      <span class="cost">8.14e10</span>
+      <span class="buy ">BUY ×10</span>
+    </div><div class="row ">
+      <span class="idx">03</span>
+      <span class="name">ABACUS<small>FEEDS NOTCH</small></span>
+      <span class="count">10</span>
+      <span class="prod">×1.31</span>
+      <span class="cost">3.90e11</span>
+      <span class="buy ">BUY ×10</span>
+    </div><div class="row ">
+      <span class="idx">04</span>
+      <span class="name">PENCIL<small>FEEDS ABACUS</small></span>
+      <span class="count">4</span>
+      <span class="prod">×1.24</span>
+      <span class="cost">1.02e13</span>
+      <span class="buy off">LOCKED</span>
+    </div><div class="row locked">
+      <span class="idx">05</span>
+      <span class="name">CALCULATOR<small>FEEDS PENCIL</small></span>
+      <span class="count">0</span>
+      <span class="prod">—</span>
+      <span class="cost">—</span>
+      <span class="buy off">LOCKED</span>
+    </div><div class="row locked">
+      <span class="idx">06</span>
+      <span class="name">COMPUTER<small>FEEDS CALCULATOR</small></span>
+      <span class="count">0</span>
+      <span class="prod">—</span>
+      <span class="cost">—</span>
+      <span class="buy off">LOCKED</span>
+    </div><div class="row locked">
+      <span class="idx">07</span>
+      <span class="name">SUPERCOMPUTER<small>FEEDS COMPUTER</small></span>
+      <span class="count">0</span>
+      <span class="prod">—</span>
+      <span class="cost">—</span>
+      <span class="buy off">LOCKED</span>
+    </div><div class="row locked">
+      <span class="idx">08</span>
+      <span class="name">MATHEMATICIAN<small>FEEDS SUPERCOMPUTER</small></span>
+      <span class="count">0</span>
+      <span class="prod">—</span>
+      <span class="cost">—</span>
+      <span class="buy off">LOCKED</span>
+    </div>
+</div>
+<div class="panel rail"><span>HORIZON</span><div class="bar"><i></i></div><span style="font-variant-numeric:tabular-nums">0.02% of 1.79e308</span></div>
+<div class="nav"><span class="t on">F1 DIMENSIONS</span><span class="t">F2 LAB</span><span class="t">F3 STATS</span><span class="t">F4 SETTINGS</span></div>
+<div class="foot"><span>HOLD THAT NUMBER · BUILD 0.0.1</span><span>TICKER: 20s GATE · SILENT BY DEFAULT</span></div>
+
+</div></div>
+<script>
+const FS = `
+precision mediump float;
+uniform vec2 u_resolution; uniform float u_time;
+uniform vec4 u_color1; uniform vec4 u_color2; uniform vec4 u_color3;
+uniform float u_speed; uniform float u_contrast; uniform float u_lighting;
+void main() {
+  float pixel_filter = 480.0;
+  float pixel_size = length(u_resolution) / pixel_filter;
+  vec2 uv = floor(gl_FragCoord.xy / pixel_size) * pixel_size;
+  uv = (uv - 0.5 * u_resolution) / length(u_resolution);
+  float uv_len = length(uv);
+  float speed = (-2.0 * 0.2) + 302.2;
+  float new_angle = atan(uv.y, uv.x) + speed - 20.0 * (0.25 * uv_len + 0.75);
+  vec2 mid = (u_resolution / length(u_resolution)) / 2.0;
+  uv = vec2(uv_len * cos(new_angle) + mid.x, uv_len * sin(new_angle) + mid.y) - mid;
+  uv *= 28.0;
+  float loop_speed = u_time * u_speed;
+  vec2 uv2 = vec2(uv.x + uv.y, 0.0);
+  for (int i = 0; i < 5; i++) {
+    uv2 += sin(max(uv.x, uv.y)) + uv;
+    uv += 0.5 * vec2(cos(5.1123 + 0.353 * uv2.y + loop_speed * 0.1311), sin(uv2.x - 0.113 * loop_speed));
+    uv -= 1.0 * cos(uv.x + uv.y) - 1.0 * sin(uv.x * 0.711 - uv.y);
+  }
+  float contrast_mod = (0.25 * u_contrast + 0.5 * 0.25 + 1.2);
+  float paint_res = min(2.0, max(0.0, length(uv) * 0.035 * contrast_mod));
+  float c1 = max(0.0, 1.0 - contrast_mod * abs(1.0 - paint_res));
+  float c2 = max(0.0, 1.0 - contrast_mod * abs(paint_res));
+  float c3 = 1.0 - min(1.0, c1 + c2);
+  float light = (u_lighting - 0.2) * max(c1 * 5.0 - 4.0, 0.0) + u_lighting * max(c2 * 5.0 - 4.0, 0.0);
+  vec4 final_color = (0.3 / u_contrast) * u_color1 + (1.0 - 0.3 / u_contrast) * (u_color1 * c1 + u_color2 * c2 + u_color3 * c3) + light;
+  gl_FragColor = vec4(final_color.rgb, 1.0);
+}`;
+
+function initSwirl(c1, c2, c3, contrast, lighting) {
+  const canvas = document.getElementById('swirl');
+  const gl = canvas.getContext('webgl', { antialias: false, depth: false });
+  if (!gl) { document.body.classList.add('no-gl'); return; }
+  const vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.0,1.0); }');
+  gl.compileShader(vs);
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, FS); gl.compileShader(fs);
+  if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(fs)); }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  function u(n, ...v) { const l = gl.getUniformLocation(prog, n); if (!l) return; v.length === 1 ? gl.uniform1f(l, v[0]) : v.length === 2 ? gl.uniform2f(l, ...v) : gl.uniform4f(l, ...v); }
+  function frame(t) {
+    const w = canvas.width = canvas.clientWidth * 1;
+    const h = canvas.height = canvas.clientHeight * 1;
+    gl.viewport(0, 0, w, h);
+    u('u_resolution', w, h);
+    u('u_time', t);
+    u('u_color1', ...c1); u('u_color2', ...c2); u('u_color3', ...c3);
+    u('u_speed', 1.0); u('u_contrast', contrast); u('u_lighting', lighting);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+initSwirl([0.02,0.07,0.04,1.0], [0.05,0.55,0.28,1.0], [0.01,0.02,0.01,1.0], 2.9, 0.18);
+</script>
+</body>
+</html>
