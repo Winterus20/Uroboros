@@ -23,8 +23,8 @@ import type { CloudSaveMeta, CloudSavePayload } from '../../models/auth-types'
 
 function meta(overrides: Partial<CloudSaveMeta> = {}): CloudSaveMeta {
   return {
-    matter: '1e50',
-    singularities: 2,
+    number: '1e50',
+    prestiges: 2,
     playtime: 3600,
     version: 1,
     activeSlot: 1,
@@ -82,7 +82,7 @@ describe('isSameSave', () => {
   })
 
   it('dopamin farklıysa çakışmadır', () => {
-    expect(isSameSave(meta(), meta({ matter: '1e51' }))).toBe(false)
+    expect(isSameSave(meta(), meta({ number: '1e51' }))).toBe(false)
   })
 
   it('oynama süresi farklıysa çakışmadır', () => {
@@ -142,7 +142,7 @@ describe('evaluateWriteGuard', () => {
 })
 
 describe('decideSyncAction', () => {
-  const localMeta = meta({ clientTimestamp: 5000, matter: '1e60', playtime: 7200 })
+  const localMeta = meta({ clientTimestamp: 5000, number: '1e60', playtime: 7200 })
 
   it('bulutta kayıt yoksa ilk yedek', () => {
     expect(decideSyncAction({ cloudPayload: null, localMeta, baseline: null })).toBe('first-backup')
@@ -151,12 +151,12 @@ describe('decideSyncAction', () => {
   // ADR-0070'in ana regresyonu: 5 dakika oynayıp senkron isteyen oyuncu artık
   // çakışma ekranı görmüyor.
   it('normal oynanış çakışma üretmez, yalnızca push üretir', () => {
-    const cloud = payload(meta({ clientTimestamp: 1000, matter: '1e50', playtime: 3600 }))
+    const cloud = payload(meta({ clientTimestamp: 1000, number: '1e50', playtime: 3600 }))
     expect(decideSyncAction({ cloudPayload: cloud, localMeta, baseline: 1000 })).toBe('push')
   })
 
   it('başka cihaz bulutu değiştirdiyse çakışma üretir', () => {
-    const cloud = payload(meta({ clientTimestamp: 1001, matter: '1e70' }))
+    const cloud = payload(meta({ clientTimestamp: 1001, number: '1e70' }))
     expect(decideSyncAction({ cloudPayload: cloud, localMeta, baseline: 1000 })).toBe('conflict')
   })
 
@@ -167,14 +167,14 @@ describe('decideSyncAction', () => {
   })
 
   it('referans yokken farklı kayıt çakışmadır (ADR-0029 koruması yaşar)', () => {
-    const cloud = payload({ ...localMeta, clientTimestamp: localMeta.clientTimestamp + 9000, matter: '1e999' })
+    const cloud = payload({ ...localMeta, clientTimestamp: localMeta.clientTimestamp + 9000, number: '1e999' })
     expect(decideSyncAction({ cloudPayload: cloud, localMeta, baseline: null })).toBe('conflict')
   })
 
   it('referans yokken YENİ cihazdaki boş oyun iyi bulut kaydını ezmez', () => {
     // Yeni cihaz: yerelde taze oyun (matter 10, süre 0). Bulutta ilerleme var.
-    const freshLocal = meta({ matter: '10', playtime: 0, singularities: 0, clientTimestamp: 9000 })
-    const goodCloud = payload(meta({ matter: '1e80', playtime: 99999, singularities: 9, clientTimestamp: 8000 }))
+    const freshLocal = meta({ number: '10', playtime: 0, prestiges: 0, clientTimestamp: 9000 })
+    const goodCloud = payload(meta({ number: '1e80', playtime: 99999, prestiges: 9, clientTimestamp: 8000 }))
     expect(decideSyncAction({ cloudPayload: goodCloud, localMeta: freshLocal, baseline: null })).toBe('conflict')
   })
 
@@ -183,7 +183,7 @@ describe('decideSyncAction', () => {
       decideSyncAction({ cloudPayload: null, localMeta, baseline: null }),
       decideSyncAction({ cloudPayload: payload(meta({ clientTimestamp: 1000 })), localMeta, baseline: 1000 }),
       decideSyncAction({ cloudPayload: payload(meta({ clientTimestamp: 1000 })), localMeta, baseline: 999 }),
-      decideSyncAction({ cloudPayload: payload(meta({ clientTimestamp: 1000, matter: '1e999' })), localMeta, baseline: null })
+      decideSyncAction({ cloudPayload: payload(meta({ clientTimestamp: 1000, number: '1e999' })), localMeta, baseline: null })
     ]
     expect(new Set(decisions)).toEqual(new Set(['first-backup', 'push', 'conflict']))
     expect(decisions.length).toBe(4)
@@ -205,7 +205,7 @@ describe('isCloudSavePayload', () => {
     expect(isCloudSavePayload(null)).toBe(false)
     expect(isCloudSavePayload({ compressedData: 'abcdefgh' })).toBe(false)
     expect(isCloudSavePayload({ compressedData: 'kısa', meta: meta() })).toBe(false)
-    expect(isCloudSavePayload({ compressedData: 'abcdefgh', meta: { matter: '1' } })).toBe(false)
+    expect(isCloudSavePayload({ compressedData: 'abcdefgh', meta: { number: '1' } })).toBe(false)
     expect(isCloudSavePayload({ compressedData: 'abcdefgh', meta: meta({ clientTimestamp: 'x' as unknown as number }) })).toBe(false)
   })
 })

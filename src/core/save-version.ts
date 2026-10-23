@@ -1,56 +1,23 @@
 /**
  * Kayıt şeması sürümü — TEK kaynak (ADR-0029).
  *
- * Neden ayrı bir dosya: `src/stores/game.ts`, `src/core/save.ts`'yi import ediyor.
- * Sürüm sabiti core katmanında da gerekiyor (yükleme sırasında "daha yeni sürüm"
- * tespiti). game.ts'ten import edersek döngüsel bağımlılık oluşur.
- *
- * Yeni bir kayıt alanı eklendiğinde:
- *   1. Buradaki sayıyı BUMP et.
- *   2. game.ts içindeki deserialize() fonksiyonuna sıralı
- *      "if (saveVersion < N) { ... }" göç kancası ekle.
- *   3. types.ts içindeki SerializedPlayerState'e alanı opsiyonel olarak ekle.
- *
- * v16 — Global Wipe / Temiz Sıfırlama: Kullanıcı talebiyle tüm eski kayıtlar
- * sıfırlandı. Asgari desteklenen sürüm 16'ya çekildi; v15 ve öncesi tüm kayıtlar
- * temizlenerek sıfırdan başlatılır.
- *
- * v17 — Ölçek Sıçrama Motoru (ADR-0052): shift/galaxy/singularity tek motor +
- * katman kayıt defteri; ölü `singularityHoldActive` kaldırıldı, `jumpLog` eklendi.
- * Geriye dönük uyumluluk YOK: v16 ve öncesi kayıtlar açılmaz, sıfırdan başlanır.
- *
- * v18 — Zaman Yayı (Time Clock): yalnızca KALICI sayaçlar kaydedilir
- * (`timeClock.drag/totalRewoundSeconds/releases/bestTension`). Canlı faz uçucudur;
- * yüklemede saat her zaman `idle`'a döner (floatingAnomalies muamelesi).
- * v17 kayıtları aynen açılır (asgari sürüm 17'de kalır) — alan yoksa nötr varsayılan.
- *
- * v19 — Satın Alma Tabanlı Boyut Açılışı (ADR-0076): yeni alan
- * `lifetimeMaxDimensionTier` (hayat boyu satın alınmış en yüksek boyut tier'ı).
- * v18 kayıtları aynen açılır: alan yoksa göç kancası satın alınmış boyutlardan
- * ve legacy kütle kapılarından türetir — hiçbir oyuncu açık boyutunu kaybetmez.
+ * v20 — TEMA PİVOTU (ADR-0077/0079): "Kozmik Oburluk" kütle ekonomisi tamamen
+ * silindi; yerine sayı ekonomisi geldi (8 halka, prestij/`Tanım`, mini boost).
+ * P5 gereği GERİYE DÖNÜK UYUMLULUK YOK: v19 ve altı kayıtlar açılmaz, oyuncu
+ * sıfırdan başlar (temaya da, ekonominin kendisine de yabancı).
  */
-export const SAVE_VERSION = 19
+export const SAVE_VERSION = 20
 
-/**
- * Asgari desteklenen kayıt sürümü.
- * Bunun altındaki kayıtlar otomatik olarak sıfırlanır (Global Reset / Wipe).
- */
-export const MIN_SUPPORTED_SAVE_VERSION = 17
+/** Bunun altındaki kayıtlar sıfırlanır (P5: sert temizlik). */
+export const MIN_SUPPORTED_SAVE_VERSION = 20
 
-/**
- * Daha yeni bir build'in kaydı — eski build'de açılmamalı.
- *
- * Aksi halde yeni build'in eklediği alanlar sessizce düşer ve kayıt geriye
- * doğru yeniden damgalanır; oyuncu ilerlemesini sessizce kaybeder.
- */
+/** Daha yeni bir build'in kaydı — eski build'de açılmamalı. */
 export class SaveVersionError extends Error {
   constructor(
     public readonly foundVersion: number,
     public readonly supportedVersion: number
   ) {
-    super(
-      `Kayıt sürümü ${foundVersion}, bu build yalnızca ${supportedVersion} sürümünü destekliyor.`
-    )
+    super('Kayıt sürümü ' + foundVersion + ', bu build yalnızca ' + supportedVersion + ' sürümünü destekliyor.')
     this.name = 'SaveVersionError'
   }
 }

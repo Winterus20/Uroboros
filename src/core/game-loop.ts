@@ -37,7 +37,7 @@ export class GameLoop {
       } else if (rawDelta >= 1000) {
         // 1 saniye ve üzeri duraklamalar / sekme değişimi: offline simülasyona devret
         // (24 saat ile sınırlıdır; Welcome Back raporu store.offlineReport'a yazılır)
-        store.simulateOfflineProgress(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
+        store.simulateOffline(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
         this.accumulator = 0
       } else {
         this.accumulator += rawDelta
@@ -71,7 +71,7 @@ export class GameLoop {
         const now = performance.now()
         const rawDelta = now - this.lastTime
         if (rawDelta > BACKGROUND_CATCHUP_THRESHOLD * 1000) {
-          useGameStore().simulateOfflineProgress(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
+          useGameStore().simulateOffline(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
           this.accumulator = 0
         }
         this.lastTime = now

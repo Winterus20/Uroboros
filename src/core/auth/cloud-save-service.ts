@@ -51,12 +51,12 @@ function getDeviceName(): string {
 
 function extractMeta(state: SerializedPlayerState, slot: number): CloudSaveMeta {
   return {
-    matter: typeof state.matter === 'string' ? state.matter : '10',
-    singularities: typeof state.singularities === 'number' ? state.singularities : state.stats?.singularityCount || 0,
-    playtime: state.stats?.totalPlaytime || 0,
+    number: typeof state.number === 'string' ? state.number : '10',
+    prestiges: typeof state.prestiges === 'number' ? state.prestiges : 0,
+    playtime: typeof state.playTime === 'number' ? state.playTime : 0,
     version: typeof state.version === 'number' ? state.version : 1,
     activeSlot: slot,
-    clientTimestamp: state.lastUpdate || Date.now(),
+    clientTimestamp: state.lastSeenAt || Date.now(),
     deviceName: getDeviceName()
   }
 }

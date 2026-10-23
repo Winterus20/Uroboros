@@ -56,14 +56,14 @@ export function cloudRevision(payload: Pick<CloudSavePayload, 'meta'>): number {
  */
 export function isSameSave(localMeta: CloudSaveMeta, cloudMeta: CloudSaveMeta): boolean {
   const timeDiff = Math.abs(localMeta.clientTimestamp - cloudMeta.clientTimestamp)
-  const sameMatter = decimalsEqual(localMeta.matter, cloudMeta.matter)
+  const sameNumber = decimalsEqual(localMeta.number, cloudMeta.number)
   const samePlaytime = Math.abs(localMeta.playtime - cloudMeta.playtime) < 2
   const sameVersion = localMeta.version === cloudMeta.version
-  const sameSingularities = localMeta.singularities === cloudMeta.singularities
+  const samePrestiges = localMeta.prestiges === cloudMeta.prestiges
 
   // 15 sn zaman penceresi TEK başına ayırt edici değildir; tüm sinyaller
   // tutarlı olmalıdır.
-  return sameMatter && samePlaytime && sameVersion && sameSingularities && timeDiff < 15000
+  return sameNumber && samePlaytime && sameVersion && samePrestiges && timeDiff < 15000
 }
 
 export interface WriteGuardInput {
@@ -129,9 +129,9 @@ export function isCloudSavePayload(value: unknown): value is CloudSavePayload {
   const meta = doc.meta as CloudSaveMeta | undefined
   if (!meta || typeof meta !== 'object') return false
   return (
-    typeof meta.matter === 'string' &&
-    meta.matter.length > 0 &&
-    typeof meta.singularities === 'number' &&
+    typeof meta.number === 'string' &&
+    meta.number.length > 0 &&
+    typeof meta.prestiges === 'number' &&
     typeof meta.playtime === 'number' &&
     typeof meta.version === 'number' &&
     typeof meta.activeSlot === 'number' &&

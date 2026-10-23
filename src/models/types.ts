@@ -1,14 +1,5 @@
-/**
- * Deduplicated model exports.
- * Re-exports all domain models from modular domain files.
- */
+/** Tek giriş noktası: tüm model tipleri. */
 export * from './auth-types'
-export * from './autobuyers'
-export type { TimeClockPhase, TimeClockState } from './clock'
-export * from './crisis'
-export * from './dimensions'
-export * from './lab'
-export * from './neural'
+export * from './number'
 export * from './save'
 export * from './settings'
-

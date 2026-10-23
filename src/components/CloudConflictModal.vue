@@ -30,9 +30,9 @@ function formatDate(ts: number): string {
 const isCloudAhead = computed(() => {
   if (!conflict.value) return false
   try {
-    const localDop = new Decimal(conflict.value.localMeta.matter)
-    const cloudDop = new Decimal(conflict.value.cloudMeta.matter)
-    return cloudDop.gt(localDop) || conflict.value.cloudMeta.singularities > conflict.value.localMeta.singularities
+    const localDop = new Decimal(conflict.value.localMeta.number)
+    const cloudDop = new Decimal(conflict.value.cloudMeta.number)
+    return cloudDop.gt(localDop) || conflict.value.cloudMeta.prestiges > conflict.value.localMeta.prestiges
   } catch {
     return false
   }
@@ -96,13 +96,13 @@ const { dialogRef } = useFocusTrap(
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kütle:</span>
                 <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatMatter(conflict.localMeta.matter) }}
+                  {{ formatMatter(conflict.localMeta.number) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kozmik Çöküş:</span>
                 <span class="font-mono tabular-nums text-amber-300">
-                  {{ conflict.localMeta.singularities }} kez
+                  {{ conflict.localMeta.prestiges }} kez
                 </span>
               </div>
               <div class="flex justify-between items-center">
@@ -155,13 +155,13 @@ const { dialogRef } = useFocusTrap(
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kütle:</span>
                 <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatMatter(conflict.cloudMeta.matter) }}
+                  {{ formatMatter(conflict.cloudMeta.number) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-slate-400">Kozmik Çöküş:</span>
                 <span class="font-mono tabular-nums text-amber-300">
-                  {{ conflict.cloudMeta.singularities }} kez
+                  {{ conflict.cloudMeta.prestiges }} kez
                 </span>
               </div>
               <div class="flex justify-between items-center">

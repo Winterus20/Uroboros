@@ -103,9 +103,9 @@ async function handleLoadFromCloud() {
 const formattedCloudMatter = computed(() => {
   if (!authStore.cloudMeta) return '-'
   try {
-    return format(new Decimal(authStore.cloudMeta.matter), 2, gameStore.settings.notation)
+    return format(new Decimal(authStore.cloudMeta.number), 2, gameStore.settings.notation)
   } catch {
-    return authStore.cloudMeta.matter
+    return authStore.cloudMeta.number
   }
 })
 
@@ -240,7 +240,7 @@ const { dialogRef } = useFocusTrap(
               <div class="p-2.5 rounded-lg bg-[var(--ds-panel-strong)] border border-slate-800">
                 <span class="text-slate-500 text-[10px] block">KOZMİK ÇÖKÜŞ</span>
                 <span class="font-mono font-bold tabular-nums text-amber-300 text-sm">
-                  {{ authStore.cloudMeta ? authStore.cloudMeta.singularities + ' kez' : '-' }}
+                  {{ authStore.cloudMeta ? authStore.cloudMeta.prestiges + ' kez' : '-' }}
                 </span>
               </div>
             </div>

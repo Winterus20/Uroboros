@@ -17,8 +17,6 @@ let positionBuffer: WebGLBuffer | null = null
 let animId: number | null = null
 let lastTime = 0
 let totalShaderTime = 0
-let cachedHzLog = 0
-let lastHzCheckTime = 0
 const isSupported = ref(true)
 
 // Shader Uniform Lokasyonları
@@ -260,91 +258,27 @@ function resizeCanvas() {
   }
 }
 
-// Hedef parametreleri oyun durumundan hesaplar
+// Hedef parametreleri oyun durumundan hesaplar (G2/G5: swirl basamak rengini taşır)
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '')
+  return [
+    parseInt(clean.slice(0, 2), 16) / 255,
+    parseInt(clean.slice(2, 4), 16) / 255,
+    parseInt(clean.slice(4, 6), 16) / 255
+  ]
+}
+
 function getTargetParams(): SwirlParams {
-  // 1. Şafak (06:00) / Tekillik Eşiği hazır
-  if (store.canSingularity) {
-    return {
-      c1: [0.11, 0.10, 0.09, 1.0], // Şafak sıcağı
-      c2: [0.96, 0.62, 0.07, 1.0], // Güneş Altını
-      c3: [0.05, 0.04, 0.04, 1.0], // Karanlık Ufuk
-      speed: 1.2,
-      contrast: 3.2,
-      lighting: 0.52
-    }
-  }
-
-  // 2. Gece Krizi / Meydan Okuma / Ters Tepme
-  if (store.activeChallenge || store.crisisBackfireDebuff > 0) {
-    return {
-      c1: [0.11, 0.03, 0.05, 1.0], // Karanlık Kızıl
-      c2: [0.88, 0.11, 0.28, 1.0], // Kan Kırmızısı
-      c3: [0.02, 0.005, 0.01, 1.0], // Abis
-      speed: 2.8,
-      contrast: 4.2,
-      lighting: 0.45
-    }
-  }
-
-  // 3. Kombo Hipnozu
-  if (store.isComboActive) {
-    return {
-      c1: [0.12, 0.11, 0.29, 1.0], // Elektrik İndigo
-      c2: [0.02, 0.71, 0.83, 1.0], // Neon Camgöbeği
-      c3: [0.48, 0.23, 0.93, 1.0], // Canlı Mor
-      speed: 2.0,
-      contrast: 3.8,
-      lighting: 0.42
-    }
-  }
-
-  // 3.5 Şafak öncesi (gece %75+): zemin şafağa ısınır — tekillik altını değil, uykusuz şafak
-  // Header saati + ScreenOverlay ufkuyla aynı ilerleme (log10/308.25).
-  try {
-    const m = store.matter
-    if (m && !m.isNan() && m.isFinite() && m.gte(10)) {
-      const logVal = m.log10().toNumber()
-      if (Number.isFinite(logVal)) {
-        const p = Math.min(1, Math.max(0, logVal / 308.25))
-        if (p >= 0.75) {
-          const k = (p - 0.75) / 0.25
-          return {
-            c1: [0.04 + k * 0.05, 0.05 + k * 0.02, 0.09, 1.0],
-            c2: [0.3 + k * 0.35, 0.11 + k * 0.25, 0.58 - k * 0.3, 1.0],
-            c3: [0.02 + k * 0.03, 0.02, 0.03, 1.0],
-            speed: 0.9 + k * 0.3,
-            contrast: 2.6 + k * 0.5,
-            lighting: 0.35 + k * 0.1
-          }
-        }
-      }
-    }
-  } catch { /* yoksay — dingin geceye düş */ }
-
-  // 4. Normal Dingin Gece (Çekim Hızı / Hz ile ivmelenir — 500ms throttle ile hafifletilmiştir)
-  const nowMs = performance.now()
-  if (nowMs - lastHzCheckTime > 500) {
-    lastHzCheckTime = nowMs
-    try {
-      const mult = store.tickspeedMultiplier
-      if (mult && mult.gt(1)) {
-        cachedHzLog = Math.min(6, Math.max(0, mult.log10().toNumber()))
-      } else {
-        cachedHzLog = 0
-      }
-    } catch {
-      cachedHzLog = 0
-    }
-  }
-  const speed = 0.8 + 0.28 * cachedHzLog
-
+  const [r, g, b] = hexToRgb(store.rungInfo.color)
+  // Mini boost sayısı arttıkça ortam nefes alır (G11: 400 ms'lik anın kalıcı izi)
+  const breath = Math.min(1, Math.log10(1 + store.boosts) / 1.4)
   return {
-    c1: [0.04, 0.05, 0.09, 1.0], // Koyu Gece Mavisi
-    c2: [0.30, 0.11, 0.58, 1.0], // Karanlık Mor
-    c3: [0.02, 0.02, 0.03, 1.0], // Zifiri Boşluk
-    speed,
-    contrast: 2.6,
-    lighting: 0.35
+    c1: [r * 0.09, g * 0.09, b * 0.09, 1.0],
+    c2: [r * 0.42, g * 0.42, b * 0.42, 1.0],
+    c3: [0.02, 0.02, 0.03, 1.0],
+    speed: 0.72 + 0.3 * breath,
+    contrast: 2.3 + 0.5 * breath,
+    lighting: 0.3 + 0.06 * breath
   }
 }
 

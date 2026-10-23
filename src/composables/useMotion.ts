@@ -22,7 +22,7 @@ export function useMotionMode(): ComputedRef<MotionMode> {
   return computed<MotionMode>(() => {
     const m = store.settings.motionMode
     if (m === 'full' || m === 'reduced' || m === 'off') return m
-    return store.settings.reduceAnimations ? 'reduced' : 'full'
+    return 'full'
   })
 }
 

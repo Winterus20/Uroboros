@@ -44,8 +44,8 @@ export interface InspectResult {
   valid: boolean
   error?: string
   summary?: {
-    matter: string
-    singularities: number
+    number: string
+    prestiges: number
     version: number
     playtime: number
     stats?: {
@@ -170,13 +170,13 @@ export const SaveSystem = {
 
     try {
       const main = tryParseRaw(rawMain)
-      if (main && typeof main.matter === 'string') {
+      if (main && typeof main.number === 'string') {
         return { state: main, fromBackup: false, corrupted: false, quarantined: false, futureVersion: null }
       }
 
       // Fallback zinciri — ARTIK TÜM SLOTLAR için yedekten kurtarma yapılır.
       const backup = tryParseRaw(localStorage.getItem(resolveBackupKey(slot)))
-      if (backup && typeof backup.matter === 'string') {
+      if (backup && typeof backup.number === 'string') {
         const found = readSaveVersion(backup)
         if (found < MIN_SUPPORTED_SAVE_VERSION) {
           console.warn(`Slot ${slot} yedeği eski sürüm (v${found}). Sıfırlanıyor.`)
@@ -195,7 +195,7 @@ export const SaveSystem = {
 
       if (slot === 1) {
         const legacy = tryParseRaw(localStorage.getItem(LEGACY_OLD_KEY))
-        if (legacy && typeof legacy.matter === 'string') {
+        if (legacy && typeof legacy.number === 'string') {
           const found = readSaveVersion(legacy)
           if (found < MIN_SUPPORTED_SAVE_VERSION) {
             clearSingleSlot(slot)
@@ -253,7 +253,7 @@ export const SaveSystem = {
     const slot = targetSlot ?? this.getActiveSlot()
     try {
       const backup = tryParseRaw(localStorage.getItem(resolveBackupKey(slot)))
-      if (backup && typeof backup.matter === 'string') {
+      if (backup && typeof backup.number === 'string') {
         // Ana slota da yaz
         this.save(backup, slot)
         return backup
@@ -281,16 +281,16 @@ export const SaveSystem = {
       return { slot, exists: false }
     }
     const state = tryParseRaw(raw)
-    if (!state || typeof state.matter !== 'string') {
+    if (!state || typeof state.number !== 'string') {
       return { slot, exists: false }
     }
     return {
       slot,
       exists: true,
-      matter: state.matter,
-      singularities: typeof state.singularities === 'number' ? state.singularities : state.stats?.singularityCount || 0,
-      playtime: state.stats?.totalPlaytime || 0,
-      timestamp: state.lastUpdate || 0
+      number: state.number,
+      prestiges: typeof state.prestiges === 'number' ? state.prestiges : 0,
+      playtime: typeof state.playTime === 'number' ? state.playTime : 0,
+      timestamp: typeof state.lastSeenAt === 'number' ? state.lastSeenAt : 0
     }
   },
 
@@ -309,13 +309,13 @@ export const SaveSystem = {
     if (!raw) return false
     try {
       const parsed = tryParseRaw(raw)
-      if (!parsed || typeof parsed.matter !== 'string') return false
+      if (!parsed || typeof parsed.number !== 'string') return false
       if (!isShapeSane(parsed)) return false
       const found = readSaveVersion(parsed)
       if (found > SAVE_VERSION || found < MIN_SUPPORTED_SAVE_VERSION) return false
       let probe: Decimal
       try {
-        probe = new Decimal(parsed.matter)
+        probe = new Decimal(parsed.number)
       } catch {
         return false
       }
@@ -368,7 +368,7 @@ export const SaveSystem = {
       if (!isShapeSane(parsed)) {
         throw new Error('Kayıt şekli sınır dışı')
       }
-      if (!parsed || typeof parsed.matter !== 'string') {
+      if (!parsed || typeof parsed.number !== 'string') {
         throw new Error('Geçersiz kayıt formatı')
       }
       const found = readSaveVersion(parsed)
@@ -407,19 +407,19 @@ export const SaveSystem = {
       if (!isShapeSane(parsed)) {
         return { valid: false, error: 'Kayıt şekli sınır dışı.' }
       }
-      if (!parsed || typeof parsed.matter !== 'string') {
-        return { valid: false, error: 'Geçersiz kayıt formatı (dopamin verisi bulunamadı).' }
+      if (!parsed || typeof parsed.number !== 'string') {
+        return { valid: false, error: 'Geçersiz kayıt formatı (sayı verisi bulunamadı).' }
       }
       return {
         valid: true,
         summary: {
-          matter: parsed.matter,
-          singularities: typeof parsed.singularities === 'number' ? parsed.singularities : parsed.stats?.singularityCount || 0,
+          number: parsed.number,
+          prestiges: typeof parsed.prestiges === 'number' ? parsed.prestiges : 0,
           version: typeof parsed.version === 'number' ? parsed.version : 1,
-          playtime: parsed.stats?.totalPlaytime || 0,
+          playtime: typeof parsed.playTime === 'number' ? parsed.playTime : 0,
           stats: {
-            clicks: parsed.stats?.manualClicks || 0,
-            challenges: parsed.stats?.challengesCompleted || 0
+            clicks: typeof parsed.taps === 'number' ? parsed.taps : 0,
+            challenges: 0
           }
         }
       }

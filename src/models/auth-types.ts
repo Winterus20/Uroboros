@@ -10,8 +10,8 @@ export interface AuthUser {
 }
 
 export interface CloudSaveMeta {
-  matter: string
-  singularities: number
+  number: string
+  prestiges: number
   playtime: number
   version: number
   activeSlot: number
