@@ -492,7 +492,9 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 
 ### A3 — `Birikim` formülü
 - **Soru:** Verim düşüş eğrisi ve ödül çarpanı ne?
-- **Öneri:** Her 10 kat aşımda %20 verim düşüşü (çarpımsal); ödül `log10(1 + aşım)` ile büyür.
+- **Öneri:** Her 10 kat aşımda %10 verim düşüşü (çarpımsal); ödül `log10(1 + aşım)` ile büyür.
+- **Araştırma:** Janra taraması §6.1'de (Cookie Clicker 1/3 · Prestige Tree 1/2 · Egg Inc 0,15 + tavan ·
+  Clicker Heroes 1,5 · AD duvar tabanlı). Hiçbirinde bekleme cezası yok; fren eğri veya tavan.
 - **Durum:** 🔴 **Sıradaki soru** (§6). Şekil kararı şimdi, katsayılar simülasyonla.
 
 ### A4 — Mizah yoğunluğu ayarı
@@ -536,19 +538,44 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 > kapı aşıldıktan sonra o basamakta **ne kadar kalınacağını** belirler — yani `S5`'in eğrisine
 > doğrudan dokunur.
 
+### 6.1 Janra taraması (2026-10-23) — prestij ödülü nasıl hesaplanıyor?
+
+| Oyun | Eşik | Ödül | Bekleme cezası | Not |
+| :--- | :--- | :--- | :--- | :--- |
+| Cookie Clicker | 1e12 kurabiye | `⌊(N/1e12)^(1/3)⌋` cennet çipi | yok | her çip kalıcı +%1 CpS |
+| The Prestige Tree | 10 puan | `(x/10)^0,5` (mastered `^0,75`) | yok | ağaç çarpanları |
+| Egg, Inc. | prestij kazancı | `∝ (min(x,1e12)/1e6)^0,15` | **tavan** (1e12'de kırpılır) | wiki: "sık prestiji teşvik eder" |
+| Clicker Heroes | boss 100+ | `⌊(((lvl−100)/5+1)/3)^1,5⌋` | yok | üs 1,5 |
+| Antimatter Dimensions | 1,79e308 | duvara göre kuvvet yasası (duvarda IP ≈ 1) | yok | "Break Infinity" eşiği yükseltir |
+| Synergism | 1e16 coin | elmas (wiki'de formül verilmemiş) | yok | — |
+
+**Üç bulgu:**
+1. **Ortak reçete eşik + kuvvet yasası.** Üs 0,15 – 1,5 bandında; düşük üs uzun beklemeye cömert,
+   yüksek üs "hemen prestij et" der.
+2. **Bekleme cezası janrada yok.** Fren iki yerden geliyor: (a) üretim büyümesinin kendiliğinden
+   yavaşlaması, (b) **tavan** — Egg Inc'in 1e12 kırpması, sürekli cezanın sınır hâli.
+3. **Bizde farklı olan iki şey:** sıfırlama pahalı (basamak 2-18,6 saat; AD/CC'de dakikalar) ve
+   temamız cezayı **açıklıyor** — notasyon sayıyı taşımıyor. Ceza bizde süs değil, mekaniğin adı.
+
+### 6.2 Seçenekler (araştırmaya göre revize)
+
 | # | Seçenek | Sonuç |
 | :-- | :--- | :--- |
-| **A** *(öneri)* | **Üstel ceza + log ödül** | Verim `0,8^log10(A)`: 10× → %80 · 100× → %64 · 1.000× → %51 · 1e6× → %26. Ödül `log10(1+A)`: 10× → 1,04 · 100× → 2,0 · 1e6× → 6,0. **Keskin bir tatlı nokta** (~10-100×): o noktadan sonra beklemek net zarar; prestij kararı gerçek olur. |
-| **B** | **Doğrusal ceza + log ödül** | Verim `1 − 0,05·log10(A)`: 10× → %95 · 1e6× → %70. Ödül aynı. Beklemek neredeyse bedava → `E4`'ün "aşırı bekleyen cezalanır" amacı boşalır, karar zayıflar. |
-| **C** | **Ceza yok, ödül tavanlı** | Verim sabit; ödül `T·A/(A+k)` ile tavana yaklaşır. Oyuncu tavanı bir kez öğrenir, hep aynı yerde prestij yapar → karar çözülür ve mekanik ölür. |
+| **A** *(öneri)* | **Log ödül + çarpımsal verim cezası** | `Tanım = log10(1+A)`, verim `0,9^log10(A)`: 10× → %90 · 100× → %81 · 1e3× → %73 · 1e6× → %53. Ödül: 10× → 1,04 · 100× → 2,0 · 1e6× → 6,0. Marjinal kazanç oranı sürekli düşer → **kesin bir tatlı nokta**; Egg Inc tavanının yumuşak hâli. |
+| **B** | **Kuvvet yasası, cezasız (janra kanonu)** | `Tanım = A^(1/3)` (Cookie Clicker). Tanıdık ve cömert; ama bizde sıfırlama 2-18,6 saat olduğu için ödül üssü cezayı ezer, marjinal oran uzun süre **artar** → prestij kararı ancak üretim çöktüğünde, çok geç doğar. |
+| **C** | **Sert tavan (Egg Inc)** | `Tanım = min(A, C)^p`; tavanın ötesinde ödül durur. Basit ve okunur; bedeli **herkesin aynı noktada** prestij yapması — karar bir kez çözülür. |
 
-**A'nın gerekçesi:** `E4`'ün varlık sebebi "şimdi mi, biraz daha mı?" sorusunun **gerçek** olması.
-A'da ceza çarpımsal olduğu için her 10 kat, ödülün kazandırdığından fazlasını götürür ve oyuncu
-**kendi tatlı noktasını** arar. B'de ceza o kadar hafif ki beklemenin maliyeti yok; C'de tek doğru
-cevap (tavan) var, yani karar bir kez çözülür — ikisi de kararı mekanik olmaktan çıkarır.
+**A'nın gerekçesi:** Taramadan çıkan kural şu: *tatlı nokta, **marjinal kazanç oranı** düştüğünde
+doğar.* Log ödülde bu oran `k·P(A)` kadardır ve ceza `P` onu sürekli aşağı çeker → oyuncu kendi
+noktasını bulur. B'de ödül üssü (1/3) cezayı (0) ezdiği için oran uzun süre **artar**; prestij kararı
+ancak üretim çöktüğünde, çok geç doğar. C'de oran tavana kadar sabit, sonra sıfır: karar tek noktaya
+çöker, mekanik bir kez öğrenilir ve biter.
 
-**Sayılar kilitlenmiyor, şekil kilitleniyor:** 0,8 / %20 / `log10(1+A)` **başlangıç değerleri**;
-kesin katsayılar `A9` sonrası `harness` simülasyonuyla (`Birikim` eğrisi ölçülerek) kilitlenecek.
+**Kural (kayda geçsin):** kuvvet yasası kullanılırsa **ceza üssü > ödül üssü** olmalı, yoksa bekleme
+her zaman kazanır. Log ödülde `p ≈ 0` olduğu için her ceza yeterli — bu yüzden A en dayanıklı seçenek.
+
+**Sayılar kilitlenmiyor, şekil kilitleniyor:** `%10 / 0,9` başlangıç değerleri; kesin katsayılar
+`A9` sonrası `harness` simülasyonuyla (`Birikim` eğrisi ölçülerek) kilitlenecek.
 
 **Cevaplandığında** `E7` olarak eklenecek, `A3` kapanacak, sıradaki soru `A9` (uygulama sırası).
 
