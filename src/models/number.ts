@@ -51,5 +51,8 @@ export interface RingRow {
   affordable: boolean
   affordable10: boolean
   unlockedNextAt: number
+  /** Bir altındaki halkaya (halka 1 için: sayıya) saniyede verdiği miktar. */
   producesPerSecond: Decimal
+  /** Sayıya DOĞRUDAN kattığı miktar (halka 1 için 0 — o zaten sayının kendisi). */
+  addsPerSecond: Decimal
 }

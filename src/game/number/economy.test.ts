@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { D, Decimal } from '../../core/math'
-import { BLOCK_SIZE, NUMBER_TUNING, ringBlockCost, ringCostAt } from './tuning'
+import { BLOCK_SIZE, NUMBER_TUNING, RING_DIRECT_SHARE, ringBlockCost, ringCostAt } from './tuning'
 import {
   advance,
   applyBoost,
@@ -15,6 +15,7 @@ import {
   maxAffordableRing,
   numberPerSecond,
   overflowRatio,
+  ringDirectRate,
   productionEfficiency,
   ringBlockPrice,
   ringCost,
@@ -74,7 +75,7 @@ describe('sayı ekonomisi — 1. basamak', () => {
     expect(ringCostAt(base, 5).div(base).toNumber()).toBeCloseTo(Math.pow(NUMBER_TUNING.costGrowth, 5), 4)
   })
 
-  it('yalnız Fingers sayı üretir; üretim sayıya akar (E6)', () => {
+  it('Fingers sayıyı üretir; tek başına /s = 1 (E6)', () => {
     const s = createNumberState()
     s.number = D('1e6')
     buyRing(s, 0)
@@ -84,6 +85,29 @@ describe('sayı ekonomisi — 1. basamak', () => {
     expect(s.number.minus(before).toNumber()).toBeCloseTo(NUMBER_TUNING.rings[0].baseRate.toNumber(), 6)
   })
 
+  it('halka 1 doğrudan katkı almaz — sayının kendisi odur', () => {
+    expect(ringDirectRate(0).toString()).toBe('0')
+    expect(ringDirectRate(1).toNumber()).toBeCloseTo(
+      NUMBER_TUNING.rings[1].baseRate.toNumber() * RING_DIRECT_SHARE,
+      12
+    )
+  })
+
+  it('satın alınan halka /s okumasını ANINDA büyütür (zinciri beklemez)', () => {
+    const s = createNumberState()
+    s.number = D('1e6')
+    buyRing(s, 0, BLOCK_SIZE)
+    expect(ringUnlocked(s, 1)).toBe(true)
+    const before = numberPerSecond(s)
+    expect(buyRing(s, 1)).toBe(1)
+    const after = numberPerSecond(s)
+    expect(after.minus(before).toNumber()).toBeCloseTo(
+      NUMBER_TUNING.rings[1].baseRate.toNumber() * RING_DIRECT_SHARE,
+      12
+    )
+    expect(ringGainPerSecond(s, 1).toNumber()).toBeCloseTo(NUMBER_TUNING.rings[1].baseRate.toNumber(), 12)
+  })
+
   it('üst halka alt halkayı besler', () => {
     const s = createNumberState()
     s.rings[1].amount = D(1)
@@ -91,14 +115,16 @@ describe('sayı ekonomisi — 1. basamak', () => {
     expect(s.rings[0].amount.toNumber()).toBeCloseTo(NUMBER_TUNING.rings[1].baseRate.toNumber(), 6)
   })
 
-  it('boost çarpanı halka beslemesine UYGULANMAZ (D1)', () => {
+  it('boost çarpanı halka beslemesine UYGULANMAZ, sayı üretimine uygulanır (D1)', () => {
     const s = createNumberState()
     s.rings[1].amount = D(1)
     s.boostMult = D(1000)
+    // Besleme: boost yok — zincir kendi hızında akar.
     const ringGain = ringGainPerSecond(s, 1)
     expect(ringGain.toNumber()).toBeCloseTo(NUMBER_TUNING.rings[1].baseRate.toNumber(), 9)
-    const numberGain = numberPerSecond(s)
-    expect(numberGain.eq(0)).toBe(true)
+    // Sayı: doğrudan katkı SAYI üretimidir, boost'u alır (Fingers 0 birim).
+    const direct = ringDirectRate(1)
+    expect(numberPerSecond(s).div(direct).toNumber()).toBeCloseTo(1000, 6)
   })
 
   it('alım sayıyı düşürse de zirve (peak) geri gitmez (S3 mandal)', () => {

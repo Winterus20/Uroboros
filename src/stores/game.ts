@@ -20,6 +20,7 @@ import {
   ringBlockPrice,
   ringCost,
   ringGainPerSecond,
+  ringNumberRate,
   ringUnlocked,
   tanimReward as tanimRewardRaw,
   unlockedRingCount
@@ -119,7 +120,8 @@ export const useGameStore = defineStore('game', {
         affordable10:
           ringUnlocked(state, index) && state.number.gte(ringBlockPrice(state, index, BLOCK_SIZE)),
         unlockedNextAt: Math.max(0, NUMBER_TUNING.unlockThreshold - state.rings[index].bought),
-        producesPerSecond: ringGainPerSecond(state, index)
+        producesPerSecond: ringGainPerSecond(state, index),
+        addsPerSecond: ringNumberRate(state, index)
       }))
     },
 

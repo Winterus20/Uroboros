@@ -73,6 +73,11 @@ Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 73,6 saa
 Ekranda liste **yukarıdan aşağı** `Fingers → … → Mathematician` okunur; üretim **aşağıdan
 yukarı** akar. Yani halka 8 (en pahalı) halka 7'yi besler; **halka 1 sayının kendisini üretir**.
 
+**Halka 2–8 ayrıca sayıya doğrudan yazar** (2026-10-23): bir altındakine verdiği miktarı
+(`0,11/sn`) sayının kendisine de ekler (`RING_DIRECT_SHARE = 1`). Böylece satın alınan her halka
+`/s` okumasını **anında** büyütür — zincirin integralini beklemez. Halka 1 bu katkıyı almaz:
+o zaten sayının kendisidir, "1 parmak = 1 sayı/sn" bozulmaz.
+
 | # | Halka | Taban maliyet | Taban üretim | 10 birimlik blok (kilit) | Geri ödeme | İlk açılış |
 | --: | :--- | ---: | ---: | ---: | ---: | ---: |
 | 1 | **Fingers** | **25** | **1 /sn** (sayı) | 649 | **25 sn** | 0,0 dk |
@@ -132,13 +137,15 @@ blok_i(b, 10) = c_i · g^b · (g^10 − 1)/(g − 1)     AD'nin "Buy 10" formül
 ### 5.2 Üretim
 
 ```
-sayı/sn      = A₁ · p₁ · M            M = boostMult · chainMult · verim
-halka_i/sn   = A_{i+1} · p_{i+1} · chainMult      (i = 1..6)
-halka_8/sn   = 0                                  (zincirin tepesi)
+sayı/sn      = (A₁ · p₁ + Σ_{i≥2} A_i · d_i) · M      M = boostMult · chainMult · verim
+halka_i/sn   = A_{i+1} · p_{i+1} · chainMult          (i = 1..6)
+halka_8/sn   = 0                                      (zincirin tepesi)
 ```
 
 `A_i` = halkadaki birim sayısı, `p_i` = halkanın taban üretimi (`p_1 = 1`,
-`p_i = 0,11` için `i ≥ 2`).
+`p_i = 0,11` için `i ≥ 2`), `d_i = p_i · RING_DIRECT_SHARE` = halkanın sayıya **doğrudan**
+katkısı (`i ≥ 2`, `RING_DIRECT_SHARE = 1` → `0,11/sn`). `d_i` sayı üretimidir: `M`yi alır.
+Zincir satırındaki `+x/s` okuması bu katkıdır.
 
 **`D1` (ölçümün zorunlu kıldığı düzeltme):** boost çarpanı **yalnız sayı üretimine** uygulanır,
 halka beslemesine **uygulanmaz**. Her halkaya uygulandığında `N ∝ M⁸` olur ve döngüler 2 saniyeye
@@ -238,6 +245,14 @@ halka 2–8 `CHAIN_RATE = 0,11`, fiyat ×8 (25 → 52 428 800), birim büyümesi
 tartışması **0,08/sn · ×1,4** ekonomisine aittir, tarihseldir. Yürürlükteki regresyon bantları
 `balance.test.ts`'te: kapı 110–130 dk · 18–24 boost · ilk 10 dk ≥ 6 karar · 8 halka < 45 dk ·
 halka başına en az bir blok.
+
+**Halkanın sayıya doğrudan katkısı (2026-10-23, ölçüldü):** `RING_DIRECT_SHARE = 1` ile aynı
+motor ve aynı politika yeniden koşuldu — kapı **118,85 dk** · **21** boost · **371** alım ·
+halka açılışları **0 · 1,6 · 4,1 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk**. Yani katkı dengeye
+**~0,15 dk** maliyetle giriyor (bant 110–130 dk içinde). Katkının `/s` içindeki payı koşu
+boyunca ölçüldü: tırmanışta **%1,4–3,6**, boost sonrası ilk saniyede **%52** (halkalar 1 birime
+indiği için taban okuma oradadır). Şerh: pay üst sınırda büyüyor — `RING_DIRECT_SHARE = 2` →
+kapı 117,9 dk / pay %3–7; `= 4` → 116,7 dk / pay %6–13.
 
 **Belge borcu:** hedef 4b'nin bu revizyonu henüz yazılı karar kaydına (grilling §6.2 / ADR) işlenmedi.
 `todo.md` → `K5` bunu "kalan belge borcu" olarak tutuyor; denge tarafında açık bir iş yok.

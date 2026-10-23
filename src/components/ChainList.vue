@@ -94,6 +94,11 @@ function lockHint(row: RingRow): string {
           <span>{{ format(row.amount, 0, store.settings.notation) }}</span>
           <span class="dot" aria-hidden="true">·</span>
           <span>{{ format(row.producesPerSecond, 2, store.settings.notation) }}/s</span>
+          <!-- Doğrudan katkı: halka bir altındakini beslerken sayıya da yazar (V4: süs değil, veri). -->
+          <template v-if="row.addsPerSecond.gt(0)">
+            <span class="dot" aria-hidden="true">·</span>
+            <span class="row__direct">+{{ format(row.addsPerSecond, 2, store.settings.notation) }}/s</span>
+          </template>
         </p>
       </div>
 
@@ -189,6 +194,8 @@ function lockHint(row: RingRow): string {
   color: var(--pn-text-dim);
 }
 .dot { opacity: 0.55; margin: 0 6px; }
+/* Doğrudan katkı: aynı veri, bir ton geride — hiyerarşi punto/kontrast ile (G-bölüm 8). */
+.row__direct { color: var(--pn-text-faint); }
 
 /* Kilitli = gri (rezerve renk değil, ton). Gerekçe metni okunur tonda kalır. */
 .row--locked .row__name { color: var(--pn-locked); }

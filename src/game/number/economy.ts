@@ -1,5 +1,12 @@
 import { Decimal, D_0, D_1, D_10 } from '../../core/math'
-import { NUMBER_TUNING, RING_COUNT, maxAffordableCount, ringBlockCost, ringCostAt } from './tuning'
+import {
+  NUMBER_TUNING,
+  RING_COUNT,
+  RING_DIRECT_SHARE,
+  maxAffordableCount,
+  ringBlockCost,
+  ringCostAt
+} from './tuning'
 
 /** Tek halka: kaç birim var, bu koşuda kaç kez satın alındı (maliyet için). */
 export interface RingState {
@@ -138,24 +145,62 @@ export function productionEfficiency(state: NumberState): Decimal {
 }
 
 /**
- * Sayı üretimi: yalnızca halka 1 (Fingers) sayı üretir (E6).
- * Çarpanlar: boost (D1) × zincir yükseltmesi × Birikim verimi.
+ * Halka `index`in SAYIYA doğrudan katkısı (birim başına /sn).
+ * Halka 1 zaten sayının kendisidir (`p₀ = 1`), ona ikinci bir katkı eklenmez (E6).
  */
-export function numberPerSecond(state: NumberState): Decimal {
-  return state.rings[0].amount
-    .times(NUMBER_TUNING.rings[0].baseRate)
-    .times(state.boostMult)
-    .times(state.chainMult)
-    .times(productionEfficiency(state))
+export function ringDirectRate(index: number): Decimal {
+  if (index <= 0 || index >= RING_COUNT) return D_0
+  return NUMBER_TUNING.rings[index].baseRate.times(RING_DIRECT_SHARE)
+}
+
+/** Halka 2–8'in sayıya doğrudan katkılarının toplamı — çarpanlar ve verim hariç. */
+export function directNumberPerSecond(state: NumberState): Decimal {
+  let total = D_0
+  for (let i = 1; i < RING_COUNT; i++) {
+    total = total.plus(state.rings[i].amount.times(ringDirectRate(i)))
+  }
+  return total
 }
 
 /**
- * Halka n'in saniyede ürettiği miktar (indeks 0 için: sayı/sn).
+ * Sayı üretimi: halka 1 (Fingers) sayıyı üretir (E6); halka 2–8 de sayıya doğrudan
+ * yazar (`RING_DIRECT_SHARE`). Çarpanlar: boost (D1) × zincir yükseltmesi × Birikim verimi.
+ */
+export function numberPerSecond(state: NumberState): Decimal {
+  const base = state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate).plus(directNumberPerSecond(state))
+  return base.times(state.boostMult).times(state.chainMult).times(productionEfficiency(state))
+}
+
+/**
+ * Halka n'in saniyede ürettiği miktar — BESLEME (indeks 0 için: Fingers'ın sayıya kattığı).
  * D1: boost çarpanı halka beslemesine UYGULANMAZ — zincir kendi hızında akar.
+ *
+ * Halka 1 kendi başına `/s`nin tamamı DEĞİLDİR: halka 2–8 de sayıya doğrudan yazar
+ * (`ringNumberRate`). Toplam okuma `numberPerSecond`.
  */
 export function ringGainPerSecond(state: NumberState, index: number): Decimal {
-  if (index === 0) return numberPerSecond(state)
+  if (index === 0) {
+    return state.rings[0].amount
+      .times(NUMBER_TUNING.rings[0].baseRate)
+      .times(state.boostMult)
+      .times(state.chainMult)
+      .times(productionEfficiency(state))
+  }
   return state.rings[index].amount.times(NUMBER_TUNING.rings[index].baseRate).times(state.chainMult)
+}
+
+/**
+ * Halka `index`in sayıya DOĞRUDAN kattığı miktar (çarpanlar dahil). Halka 1 için 0 —
+ * onun katkısı zaten `ringGainPerSecond(state, 0)`.
+ */
+export function ringNumberRate(state: NumberState, index: number): Decimal {
+  const rate = ringDirectRate(index)
+  if (rate.lte(0)) return D_0
+  return state.rings[index].amount
+    .times(rate)
+    .times(state.boostMult)
+    .times(state.chainMult)
+    .times(productionEfficiency(state))
 }
 
 /** Mini boost açık mı? Zincirin son halkası alınmış olmalı (E13). */
@@ -236,7 +281,8 @@ function resetRun(state: NumberState): void {
 
 /**
  * Bir tick ilerlet (20 TPS → dt = 0,05 sn).
- * Önce zincir beslenir (halka i+1 → halka i), sonra halka 1 sayıyı üretir (E6).
+ * Önce zincir beslenir (halka i+1 → halka i), sonra sayı üretilir: halka 1 (E6) + halka 2–8'in
+ * doğrudan katkısı (`RING_DIRECT_SHARE`).
  */
 export function advance(state: NumberState, dt: number): void {
   if (!Number.isFinite(dt) || dt <= 0) return
@@ -245,11 +291,8 @@ export function advance(state: NumberState, dt: number): void {
     const gain = feeder.amount.times(NUMBER_TUNING.rings[i + 1].baseRate).times(state.chainMult).times(dt)
     state.rings[i].amount = state.rings[i].amount.plus(gain)
   }
-  const perSecond = state.rings[0].amount
-    .times(NUMBER_TUNING.rings[0].baseRate)
-    .times(state.boostMult)
-    .times(state.chainMult)
-    .times(productionEfficiency(state))
+  // Tek kaynak: `/s` okuması ile tick aynı formülü kullanır (Fingers + doğrudan katkı).
+  const perSecond = numberPerSecond(state)
   if (perSecond.gt(0)) state.number = state.number.plus(perSecond.times(dt))
   if (state.number.gt(state.peak)) state.peak = state.number
   if (state.number.gt(state.bestNumber)) state.bestNumber = state.number

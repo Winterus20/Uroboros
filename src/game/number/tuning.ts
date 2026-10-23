@@ -11,6 +11,12 @@ import { Decimal, D } from '../../core/math'
  * Bir parmak saniyede TAM 1 sayı üretir; her halka kendinden bir aşağıdakini
  * saniyede `CHAIN_RATE` adet üretir. `+1` bu yüzden gerçek bir birimdir.
  *
+ * ── HALKANIN SAYIYA DOĞRUDAN KATKISI (2026-10-23) ────────────────────────
+ * Halka 2–8, bir altındakine verdiği miktarı sayının kendisine de yazar
+ * (`RING_DIRECT_SHARE = 1` → birim başına 0,11/sn). Zincir integrali artık tek
+ * yol değil: alınan halka `/s` okumasını ANINDA büyütür. Denge ölçümü:
+ * `src/game/number/balance.test.ts` (bant 110–130 dk) bu katkıyla birlikte koşar.
+ *
  * ── FİYAT KURALI (tek cümle) ─────────────────────────────────────────────
  * Her halka bir öncekinin 8 katı eder, birim başına fiyat 1,20 ile artar:
  *     c_i = 25 · 8^i          g = 1,20
@@ -52,6 +58,18 @@ export const NUMBER_RATE = 1
 
 /** Halka i+1 → halka i: saniyede 0,11 birim. ∏p'yi iki saate kalibre eden sayı. */
 export const CHAIN_RATE = 0.11
+
+/**
+ * Halka i (i ≥ 1) birim başına sayıya DOĞRUDAN kattığı miktar, kendi zincir hızının katı:
+ * 0,11 × 1 = 0,11/sn. Yani halka hem bir altındakini besler hem de sayının kendisine yazar;
+ * böylece satın alınan her halka `/s` okumasında ANINDA görünür (zincirin integralini beklemez).
+ *
+ * - Halka 1 (Fingers) hariç: o zaten sayının kendisidir, "1 parmak = 1 sayı/sn" bozulmaz.
+ * - `0` yazılırsa özellik kapanır (eski davranış: yalnız Fingers sayı üretir).
+ * - Boost çarpanı bu katkıya UYGULANIR: `D1` "boost yalnız SAYI üretimine" der, bu katkı sayı
+ *   üretimidir; zincir beslemesi (`ringGainPerSecond`) yine boost almaz.
+ */
+export const RING_DIRECT_SHARE = 1
 
 /** AD'nin "Buy 10"ı: tek blok = bir halka (11,4 birim) = kilit eşiği. */
 export const BLOCK_SIZE = 10

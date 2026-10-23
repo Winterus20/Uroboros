@@ -38,6 +38,17 @@ bir halka**. Ölçüm `balance.test.ts` ile regresyon altında. Kalan iş **2. b
 | Regresyon | `balance.test.ts` (6 test) + `economy.test.ts` blok testleri (6 test) |
 | Yapısal düzeltmeler | `D1` boost yalnız sayıya · `D3` boost sonrası halkalar 1 birim · `D6` kilitler mandallı |
 
+### Kapanan iş — halka → sayı doğrudan katkısı (ADR-0081, 2026-10-23)
+
+| Konu | Sonuç |
+| :--- | :--- |
+| Kural | Halka 2–8 bir altındakine verdiği `0,11/sn`yi sayıya da yazar (`RING_DIRECT_SHARE = 1`) |
+| Sınır | Halka 1 katkı almaz — "1 parmak = 1 sayı/sn" (`S9`) korunur |
+| Çarpan | Katkı sayı üretimidir: `boostMult × chainMult × verim` alır (`D1` aynen geçerli) |
+| Ölçüm | kapı **118,85 dk** (taban 119,0) · 21 boost · 371 alım · açılışlar 0 · 1,6 · 4,1 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk |
+| Arayüz | Satır: `miktar · x/s · +x/s`; `/s` telemetrisi toplamı gösterir |
+| Kayıt | [ADR-0081](../decisions/0081-ring-direct-number-contribution.md) |
+
 ### Neden 1/sn her yerde değil
 
 Zincir 7 katlı bir integraldir: `N(t) ≈ M·(∏p)·t⁸/8!`. Sekiz halka da 1/sn olsaydı `∏p = 1`

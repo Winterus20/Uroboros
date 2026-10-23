@@ -1,5 +1,40 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — Halkalar sayıya doğrudan katkı veriyor (`RING_DIRECT_SHARE`)
+
+### Ne yapıldı
+Proje sahibinin geri bildirimi (*"halkalar sadece kendinden bir öncekini üretiyor; satın alınan her
+halka belli bir miktar K/s'ye de eklese"*) [ADR-0081](../decisions/0081-ring-direct-number-contribution.md)
+olarak kayda geçti ve uygulandı.
+
+- **Kural:** halka 2–8, bir altındakine verdiği miktarı (`CHAIN_RATE = 0,11/sn`) sayının kendisine
+  de yazar: `d_i = p_i · RING_DIRECT_SHARE`, `RING_DIRECT_SHARE = 1`. Halka 1 katkı almaz (o zaten
+  sayının kendisi; "1 parmak = 1 sayı/sn" korunur).
+- **`D1` korunur:** katkı sayı üretimidir, `boostMult × chainMult × verim` alır; zincir beslemesi
+  almaz.
+- **Arayüz:** zincir satırı `miktar · x/s` + `+x/s` (faint) okur; `/s` telemetrisi toplamı gösterir.
+  Fingers satırı artık toplam `/s`yi değil kendi payını gösterir.
+- **Ölçüm (gerçek motor, 20 TPS, K5 politikası):** kapı **118,85 dk** (taban 119,0) · 21 boost ·
+  371 alım · halka açılışları 0 · 1,6 · 4,1 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk. Katkının `/s`
+  payı tırmanışta %1,4–3,6, boost sonrası ilk saniyede %52. Şerh: `= 2` → 117,9 dk, `= 4` → 116,7 dk.
+- **Test:** `economy.test.ts` — iki yeni test (halka 1 katkısız; alım `/s`yi anında büyütür) ve
+  `D1` testi yeniden yazıldı (besleme boost almaz, katkı alır). Toplam **104 test**.
+
+### Dosyalar
+`src/game/number/tuning.ts` (`RING_DIRECT_SHARE`) · `src/game/number/economy.ts` (`ringDirectRate`,
+`directNumberPerSecond`, `ringNumberRate`, `numberPerSecond`, `advance`) · `src/game/number/economy.test.ts` ·
+`src/stores/game.ts` (`ringRows.addsPerSecond`) · `src/models/number.ts` (`RingRow.addsPerSecond`) ·
+`src/components/ChainList.vue` (`+x/s` okuması) · `GAME_DESIGN.md` §4 + §5.2 + §7 ·
+[ADR-0081](../decisions/0081-ring-direct-number-contribution.md) · `brain/decisions/README.md` ·
+`brain/tasks/in-progress.md` · bu kayıt.
+
+### Doğrulama
+`npm run typecheck` temiz · `npm run test` → **104 test / 6 dosya geçti** · `npm run build` başarılı.
+Tarayıcı (Playwright, gerçek dev build, kayıt içe aktarılarak): satırlar `52 · 6/s · +6/s` okudu;
+telemetri `1.17 K/s` = Fingers `1.14 K/s` + satır katkıları (`23 + 3 + 0,22`). Ekran görüntüleri:
+`brain/scratchpad/direct-rate-probe/chain-rows.png`.
+
+
 ## [2026-10-23] ✔ — Sayı gösterimi: K/M/B/T kısaltmaları, 1000 altında tam sayı, sonra e
 
 ### Ne yapıldı
