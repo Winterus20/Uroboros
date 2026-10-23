@@ -2,7 +2,7 @@
 
 > **Amaç:** "Kozmik Oburluk" → `Hold That Number` pivotunun soru-cevap oturumunda kilitlenen
 > kararlarını, gerekçelerini, açık maddelerini ve **devam edilecek soruyu** tek yerde tutmak.
-> **Durum:** ▶️ oturum açık (2026-10-23 · **30 karar kilitli**) — **devam noktası §6**.
+> **Durum:** ▶️ oturum açık (2026-10-23 · **31 karar kilitli**) — **devam noktası §6**.
 > **İlgili:** [ADR-0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 > [narrative-voice.md](../context/narrative-voice.md) ·
 > [number-ladder-script-2026-10.md](number-ladder-script-2026-10.md) ·
@@ -321,6 +321,37 @@ Her karar: **ne soruldu → ne seçildi → neden → neyi değiştirir.**
   kasıtlı 3-4× yavaşlama — `S5`).
 - **Etki:** `A2` kapandı; 8. halkanın kimliği `A10` olarak açıldı; `A3` hâlâ sırada.
 
+#### E6 — Zincir yönü: Parmaklar tepede, her halka bir üsttekini üretir
+- **Soru:** (`A10`) 8. halka `Matematikçi` mi, ve zincir hangi yöne akıyor?
+- **Kullanıcının cevabı:** *"A olacak ama en tepedeki jeneratör Parmaklar olacak; diğer jeneratörler
+  kendinden bir öncekini üretecek — işte AD'deki mantık."*
+- **Seçilen:** ✅ **A + yön düzeltmesi.** `Matematikçi` 1. basamağın 8. halkası. Zincir **aşağıdan
+  yukarı** besler: halka *n+1*, halka *n*'i üretir; **halka 1 (`Parmaklar`) sayının kendisini üretir**.
+  Ekranda liste yukarıdan aşağı `Parmaklar → … → Matematikçi` okunur, üretim **aşağıdan yukarı** akar.
+
+- **Gerekçe:** AD kanonu (D8→D7→…→D1→antimadde) ve senaryo §6.8 zaten böyle yazılmış
+  (*"Çentik → Parmaklar'ı besliyor"*, *"Süperbilgisayar → Kule Vinci'yi besliyor"*).
+- **✏️ Düzeltme (önceki tur):** sohbette verdiğim dağıtım tablosunda oku ters yazmıştım
+  (`Parmaklar → Çentik`); doğrusu budur. `E5`'in "alt halka üsttekini besler" ifadesi doğruydu ama
+  numaralandırma belirsizdi — artık **halka 1 = ekranın en üstü = `Parmaklar`**.
+
+  | Halka | Jeneratör | Ne üretir |
+  | --: | :--- | :--- |
+  | 1 | Parmaklar | **sayı** (`+1` bunun el versiyonu) |
+  | 2 | Çentik | Parmaklar |
+  | 3 | Abaküs | Çentik |
+  | 4 | Kalem | Abaküs |
+  | 5 | Hesap Makinesi | Kalem |
+  | 6 | Bilgisayar | Hesap Makinesi |
+  | 7 | Süperbilgisayar | Bilgisayar |
+  | 8 | Matematikçi | Süperbilgisayar |
+
+- **Sonuç:** sayı üretimi zincirin **en altındaki** (en pahalı) halkadan gelir; üst halkalar
+  alttakilerin çıktısını çarpar. `+1` = elle `Parmaklar` — `S9` ile tutarlı (gerçekten 1 ekler,
+  üst basamakta gösterim çözünürlüğünün altında kalır).
+- **Varsayım (yanlışsa düzelt):** "Parmaklar tepede" kuralı **1. basamak zinciri** için kaydedildi;
+  2+ basamakların tepesi `E5` uyarınca kendi turunda belirlenir.
+
 ### 2.5 T — Teknik
 
 #### T1 — 1-4 gerçek aritmetik, 5-11 kadran
@@ -457,12 +488,12 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
   (C) 8 halka ama 8. halka yeni bir jeneratör, `Matematikçi` köprü olarak kalır.
 - **Öneri:** A — 1. basamak "hesaplamayı bıraktım, tanımlamaya geçtim" anıyla biter; 2. basamağın
   log-uzayı kuralı bu geçişin doğal devamı olur.
-- **Durum:** 🔴 **Sıradaki soru** (§6).
+- **Durum:** ✅ **kapandı** → `E6` (A + "Parmaklar tepede, her halka üsttekini üretir").
 
 ### A3 — `Birikim` formülü
 - **Soru:** Verim düşüş eğrisi ve ödül çarpanı ne?
-- **Öneri:** Her 10 kat aşımda %20 verim düşüşü; ödül `log(1 + aşım)` ile büyür. Dengede ölçülmeli.
-- **Durum:** 🟡 `E4`'ün detayı; ekonomi yazılmadan önce gerekli.
+- **Öneri:** Her 10 kat aşımda %20 verim düşüşü (çarpımsal); ödül `log10(1 + aşım)` ile büyür.
+- **Durum:** 🔴 **Sıradaki soru** (§6). Şekil kararı şimdi, katsayılar simülasyonla.
 
 ### A4 — Mizah yoğunluğu ayarı
 - **Soru:** Oyuncu sistemi susturabilmeli mi?
@@ -496,28 +527,30 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 
 ## 6. DEVAM NOKTASI — sıradaki soru
 
-> **A10 — 1. basamağın 8. halkası kim?**
+> **A3 — `Birikim` formülü**
 >
-> Zincir topolojisi kapandı (`E5`): zincir **basamak içinde** akar ve 1. basamak **7 veya 8** halka.
-> Kalan tek ayrıntı: 8. halka var mı, varsa kim?
+> `E4` kapıdan sonra biriktirmeyi seçti; şimdi **ceza ve ödülün şekli**. Kapı eşiği `X`,
+> aşım `A = sayı / X`. `A` büyüdükçe üretim verimi nasıl düşer, `Tanım` ödülü nasıl büyür?
 >
-> 1. basamağın bugünkü 7 adayı (senaryo §6.3): **Parmaklar · Çentik · Abaküs · Kalem ·
-> Hesap Makinesi · Bilgisayar · Süperbilgisayar**. 8. aday: **Matematikçi** (senaryoda "1 → 5" olarak
-> yazılmış, yani köprü rolünde bırakılmış).
+> Bugünkü çerçeve: 11 basamak / 85 saat, bir basamağın kendi süresi 2 → 18,6 saat. `Birikim`,
+> kapı aşıldıktan sonra o basamakta **ne kadar kalınacağını** belirler — yani `S5`'in eğrisine
+> doğrudan dokunur.
 
 | # | Seçenek | Sonuç |
 | :-- | :--- | :--- |
-| **A** *(öneri)* | **8 halka, tepede `Matematikçi`** | Zincir "makine hesaplar → insan tanımlar" ile biter. 1. basamak *"hesaplamayı bıraktım"* anında kapanır; 2. basamağın **log-uzayı** kuralı bu geçişin devamı olarak motive olur. 2 sa ÷ 8 = **15 dk/halka**. `Matematikçi` bir daha 1. basamakta kullanılmaz, 4/5'te tekrar edilmez. |
-| **B** | **7 halka, `Matematikçi` 4. veya 5. basamağa kalır** | 1. basamak `Süperbilgisayar`da biter ("hesaplanabilirin sınırı"). 2 sa ÷ 7 = **17 dk/halka**. `Matematikçi` 4. basamakta `Ok Dökümcüsü`nün yanında ya da 5. basamakta `Adlandırıcı`nın yanında köprü olur — Akt I/II geçişi 5. basamağa taşınır. |
-| **C** | **8 halka, 8. halka yeni bir jeneratör** | `Matematikçi` köprü olarak 4/5'te kalır; 1. basamağa yeni bir isim yazılır (ör. `Defter`, `Soru`, `Kanıt`). En pahalı seçenek: yeni jeneratörün kimliği + lezzet metni + denge eğrisi sıfırdan yazılır. |
+| **A** *(öneri)* | **Üstel ceza + log ödül** | Verim `0,8^log10(A)`: 10× → %80 · 100× → %64 · 1.000× → %51 · 1e6× → %26. Ödül `log10(1+A)`: 10× → 1,04 · 100× → 2,0 · 1e6× → 6,0. **Keskin bir tatlı nokta** (~10-100×): o noktadan sonra beklemek net zarar; prestij kararı gerçek olur. |
+| **B** | **Doğrusal ceza + log ödül** | Verim `1 − 0,05·log10(A)`: 10× → %95 · 1e6× → %70. Ödül aynı. Beklemek neredeyse bedava → `E4`'ün "aşırı bekleyen cezalanır" amacı boşalır, karar zayıflar. |
+| **C** | **Ceza yok, ödül tavanlı** | Verim sabit; ödül `T·A/(A+k)` ile tavana yaklaşır. Oyuncu tavanı bir kez öğrenir, hep aynı yerde prestij yapar → karar çözülür ve mekanik ölür. |
 
-**A'nın gerekçesi:** `Matematikçi` senaryoda zaten "hesaplamaz, tanımlar" diye tanımlanmış — bu cümle
-1. basamağın **finali** olarak yazılmış bir cümle. Onu 4. basamağa taşımak, ok kıtlığı kuralının
-ortasına bir insan halkası sokmak olur. Ayrıca 2. basamağın kuralı (log-uzayı: "sayıyı bıraktım, üssü
-tutuyorum") tam olarak matematikçinin yaptığı şey; zincir bunu kendi kendine açıklıyor.
+**A'nın gerekçesi:** `E4`'ün varlık sebebi "şimdi mi, biraz daha mı?" sorusunun **gerçek** olması.
+A'da ceza çarpımsal olduğu için her 10 kat, ödülün kazandırdığından fazlasını götürür ve oyuncu
+**kendi tatlı noktasını** arar. B'de ceza o kadar hafif ki beklemenin maliyeti yok; C'de tek doğru
+cevap (tavan) var, yani karar bir kez çözülür — ikisi de kararı mekanik olmaktan çıkarır.
 
-**Cevaplandığında** `E6` olarak eklenecek, `A10` kapanacak, sıradaki soru `A3` (`Birikim` formülü)
-veya `A9` (uygulama sırası) olacak.
+**Sayılar kilitlenmiyor, şekil kilitleniyor:** 0,8 / %20 / `log10(1+A)` **başlangıç değerleri**;
+kesin katsayılar `A9` sonrası `harness` simülasyonuyla (`Birikim` eğrisi ölçülerek) kilitlenecek.
+
+**Cevaplandığında** `E7` olarak eklenecek, `A3` kapanacak, sıradaki soru `A9` (uygulama sırası).
 
 ---
 
@@ -584,6 +617,7 @@ veya `A9` (uygulama sırası) olacak.
 | 27 | %5 kuralı | iptal, mandal | `E2`/`S3` |
 | 28 | Offline | 12 saat tavan | `S6` |
 | 29 | Zincir topolojisi (A2) | "ilk basamak planlandı; diğerleri sırası gelince; şu an 1. basamak 7-8" | `E5` |
+| 30 | Zincir yönü (A10) | "A; ama tepede Parmaklar, her jeneratör kendinden öncekini üretir — AD mantığı" | `E6` |
 
 **Çelişki notu (12-14):** Kullanıcı "20-25 çok uzun" → "6-8 az" → "20-25 bile az" dedi. Ajan
 çelişkiyi masaya koydu; gerçek isteğin **uzun ama boş olmayan** bir oyun olduğu ortaya çıktı.
