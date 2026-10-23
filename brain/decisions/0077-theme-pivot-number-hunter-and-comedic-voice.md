@@ -1,9 +1,26 @@
 # ADR-0077: Tema Pivotu — "Kozmik Oburluk" → "Sayı Avcısı" + Mizahi Sistem Sesi
 
 ## Durum
-**Önerildi (Proposed)** — kullanıcı onayı bekliyor. Karar kesinleştiğinde "Kabul Edildi"ye
-çekilir ve uygulama dalgaları `brain/tasks/in-progress.md` altında açılır.
-Bu ADR **yalnızca doküman** üretir; hiçbir `.ts` / `.vue` dosyası değişmemiştir.
+**Kabul edildi (2026-10-23)** — pivot onaylandı; "Kozmik Oburluk" bırakıldı.
+Ancak bu ADR'nin bir bölümü aynı gün yapılan grilling oturumunda **değiştirildi veya iptal edildi**.
+Bağlayıcı hâli: [`../research/theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md).
+Kod hâlâ değişmedi; bu ADR **yalnızca doküman** üretir; hiçbir `.ts` / `.vue` dosyası değişmemiştir.
+
+### Grilling sonrası geçersiz kalanlar (özet)
+
+| Bölüm | Durum | Yerine ne geldi |
+| :--- | :--- | :--- |
+| K1 — `SİCİL` / sistem karakteri | ❌ iptal | Konuşan = **oyunun kendisi** (sessiz meta, gerçek oyuncu) |
+| K1 — oyun adı "Sayı Avcısı" | ✏️ değişti | **`Hold That Number`**, tamamen İngilizce |
+| K3 — "orta sayı her zaman artar" | ✏️ değişti | Koşu **içinde** artar; prestijde `10`'a döner; çapa asla düşmez |
+| K4 — mizah kuralları | ✅ korunuyor | Kanal listesi değişti (sahne/ticker/başarım/açıklama; tooltip susar) |
+| K5 — "Eski Kayıtlar" arşivi | ❌ iptal | Eski içerik **silinir** |
+| K7 — para birimi değişimi | ❌ iptal | Cüzdan her basamakta **sayının kendisi** |
+| K7 — "iki çark ~5 dk / ~2 saat" | ✏️ değişti | Toplam **~85 saat**, ×1,25 eğri, 1. basamak 2 saat |
+| K8 — kadran tier 4+ | ✏️ değişti | Kadran **tier 5+**; 1-4 gerçek aritmetik (`break_eternity` + `OmegaNum`) |
+| §Etki — kuyruk / NG+ | ❌ iptal | `LNGN` = **oyunun sonu** |
+
+> Yeni kararlar `P#`/`V#`/`S#`/`E#`/`T#` kimlikleriyle oturum kaydında tutulur.
 
 ## Bağlam ve Problem
 

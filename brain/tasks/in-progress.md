@@ -336,8 +336,15 @@ hızlı kazanalım yutulan kütleyi"* → *"gerçek fizik gibi bir şey yapacağ
 
 ---
 
-## 🎭 YENİ ÖNERİ — Tema Pivotu: "Sayı Avcısı" + Mizahi Sistem Sesi
-**Durum:** ⏸️ **kullanıcı onayı bekliyor** (doküman aşaması tamam, kod yazılmadı)
+## 🎭 AKTİF — Tema Pivotu: `Hold That Number` (2026-10-23)
+**Durum:** ✅ onaylandı · 🟡 tasarım oturumu duraklatıldı (28 karar kilitli, 9 madde açık)
+**Oturum kaydı (tek gerçek):** [`theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md) — kararlar, açık maddeler, **devam noktası §6**
+**Kısa özet:** "Kozmik Oburluk" silindi; konuşan artık **oyunun kendisi** (sessiz meta, gerçek oyuncu, tek ses çift ritim);
+`SİCİL` iptal; 11 basamak = 11 prestij katmanı; **~85 saat**; kadran 5. basamakta başlar (`OmegaNum` ile 1-4 gerçek);
+`LNGN` = oyunun sonu (kuyruk yok); cüzdan = sayının kendisi; jeneratörler zincir; eski save'ler silinir.
+**Sıradaki soru:** 13 jeneratörün listesi + zincir yönü (A2) — kayıt §6'da.
+
+> ⚠️ Aşağıdaki eski öneri bloğu (SİCİL, kuyruk, para birimi değişimi, arşiv) **geçersizdir**; yalnız tarihsel kayıt olarak duruyor.
 - **ADR:** [`brain/decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md`](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md)
 - **Ses sözleşmesi (bağlayıcı):** [`brain/context/narrative-voice.md`](../context/narrative-voice.md)
 - **Tam senaryo:** [`brain/research/number-ladder-script-2026-10.md`](../research/number-ladder-script-2026-10.md)
