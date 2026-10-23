@@ -2,7 +2,7 @@
 
 > **Amaç:** "Kozmik Oburluk" → `Hold That Number` pivotunun soru-cevap oturumunda kilitlenen
 > kararlarını, gerekçelerini, açık maddelerini ve **devam edilecek soruyu** tek yerde tutmak.
-> **Durum:** ⏸️ oturum duraklatıldı — **devam noktası §6**.
+> **Durum:** ▶️ oturum açık (2026-10-23 · **30 karar kilitli**) — **devam noktası §6**.
 > **İlgili:** [ADR-0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 > [narrative-voice.md](../context/narrative-voice.md) ·
 > [number-ladder-script-2026-10.md](number-ladder-script-2026-10.md) ·
@@ -302,6 +302,25 @@ Her karar: **ne soruldu → ne seçildi → neden → neyi değiştirir.**
 - **Gerekçe:** "Şimdi mi, biraz daha mı?" janranın en tatmin edici kararı; aşırı bekleyen cezalanır.
 - **Açık:** Verim düşüş eğrisi ve ödül çarpanı (`A3`).
 
+#### E5 — Zincir basamak içinde akar; 1. basamak 7-8 halka
+- **Soru:** Zincir hangi yöne akıyor ve basamak başına kaç jeneratör var? (`A2`)
+- **Araştırma (olgu, karar değil):** Senaryo §6.3'ün dağılımı dengesiz — 1. basamağa **7**
+  (Parmaklar · Çentik · Abaküs · Kalem · Hesap Makinesi · Bilgisayar · Süperbilgisayar), 2/3/4/5'e
+  **birer**, 6-11'e bir (`Teorisyen`). Ayrıca kodda "1 paket al → sonraki boyut açılır" zinciri zaten
+  var (`ADR-0076`), yani **A'nın motoru kurulu**; B, bu zinciri 8'den 13'e uzatmak olurdu.
+- **Kullanıcının cevabı:** *"daha ilk basamak doğru düzgün planlandı, diğer basamaklar sırası gelince
+  daha fazla jeneratör veya farklı şeylerle ilerleyecek; şu an ilk basamak için 7 veya 8"*
+- **Seçilen:** ✅ **A — zincir basamak içinde akar.** Alt halka üsttekini besler, **en üst halka sayıyı
+  üretir**, `+1` zincirin köküdür; basamak geçişinde zincir **yeniden kurulur**, biten zincir "temel"
+  olarak kalıcı çarpan verir.
+- **Denge itirazı reddedildi:** basamakların eşit dolması gerekmiyor. Her basamak **kendi turunda**
+  tasarlanır; 2-11'in listelerinin bugün boş olması bir eksik değil, **bilinçli sıralama** (1. basamak
+  oynanabilir olduğunda geri kalanı ölçümle yazılır). Bu, `S7`'nin "5 sistem + 4 kural" kesimiyle aynı
+  yönde.
+- **1. basamak:** **7-8 halka**. 2 saat ÷ 8 halka ≈ **15 dk/halka** (bugünkü ölçülen ~4 dk/halkaya karşı
+  kasıtlı 3-4× yavaşlama — `S5`).
+- **Etki:** `A2` kapandı; 8. halkanın kimliği `A10` olarak açıldı; `A3` hâlâ sırada.
+
 ### 2.5 T — Teknik
 
 #### T1 — 1-4 gerçek aritmetik, 5-11 kadran
@@ -413,6 +432,7 @@ tüm projenin en pahalı kararı.
 | 250 satır ticker | senaryo §7 | ✏️ ~400 satır | `T3` |
 | `1.79e308` = oyunun sonu | GAME_DESIGN, ADR-0075 | ✏️ 1. basamak | `S1`, `S5` |
 | "%5 harcama kuralı" | ajanın önerisi (geçici) | ❌ iptal | Mandal kuralı (`S3`) |
+| "13 jeneratör basamaklara dengeli dağılır" | senaryo §6.3 + ajan itirazı | ✏️ değişti | 1. basamak 7-8; diğerleri kendi turunda (`E5`) |
 
 ---
 
@@ -429,6 +449,14 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 
 ### A2 — 13 jeneratörün listesi ve zincir yönü
 - **Soru:** Zincir hangi yöne akıyor, her basamakta kaç jeneratör var?
+- **Durum:** ✅ **kapandı** → `E5` (zincir basamak içinde; 1. basamak 7-8 halka; 2-11 kendi turunda).
+
+### A10 — 1. basamağın 8. halkası kim?
+- **Soru:** 1. basamak 7 halka mı, 8 halka mı? 8 ise 8. halka `Matematikçi` mi, başka biri mi?
+- **Seçenekler:** (A) 8 halka, tepede `Matematikçi` · (B) 7 halka, `Matematikçi` 4/5. basamağa kalır ·
+  (C) 8 halka ama 8. halka yeni bir jeneratör, `Matematikçi` köprü olarak kalır.
+- **Öneri:** A — 1. basamak "hesaplamayı bıraktım, tanımlamaya geçtim" anıyla biter; 2. basamağın
+  log-uzayı kuralı bu geçişin doğal devamı olur.
 - **Durum:** 🔴 **Sıradaki soru** (§6).
 
 ### A3 — `Birikim` formülü
@@ -468,26 +496,27 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 
 ## 6. DEVAM NOKTASI — sıradaki soru
 
-> **A2 — 13 jeneratörün listesi ve zincir yönü**
+> **A10 — 1. basamağın 8. halkası kim?**
 >
-> Zincir kararı (`E3`) alındı. Şimdi: zincir **hangi yöne akıyor** ve her basamakta **kaç jeneratör** var?
+> Zincir topolojisi kapandı (`E5`): zincir **basamak içinde** akar ve 1. basamak **7 veya 8** halka.
+> Kalan tek ayrıntı: 8. halka var mı, varsa kim?
 >
-> Dokümanın listesi (senaryo §6.3): Parmaklar · Çentik · Abaküs · Kalem · Hesap Makinesi ·
-> Bilgisayar · Süperbilgisayar · Matematikçi · Logaritma Makinesi · Kule Vinci · Ok Dökümcüsü ·
-> Adlandırıcı · Teorisyen.
+> 1. basamağın bugünkü 7 adayı (senaryo §6.3): **Parmaklar · Çentik · Abaküs · Kalem ·
+> Hesap Makinesi · Bilgisayar · Süperbilgisayar**. 8. aday: **Matematikçi** (senaryoda "1 → 5" olarak
+> yazılmış, yani köprü rolünde bırakılmış).
 
 | # | Seçenek | Sonuç |
 | :-- | :--- | :--- |
-| **A** *(öneri)* | Zincir **basamak içinde** akar | Her basamak kendi 3-4 jeneratörünü getirir; en üstteki sayıyı üretir, alttakiler onu besler. Basamak geçişinde zincir **yeniden kurulur**; eski jeneratörler "temel" olup çarpan verir |
-| **B** | Zincir **oyun boyunca tek** ve uzar | Her basamak zincirin başına bir halka ekler; 13 jeneratör = 13 halkalı tek zincir |
-| **C** | Hibrit | 1-4 tek zincir (8→11 halka), 5+ koleksiyon/teorisyen sistemine devreder |
+| **A** *(öneri)* | **8 halka, tepede `Matematikçi`** | Zincir "makine hesaplar → insan tanımlar" ile biter. 1. basamak *"hesaplamayı bıraktım"* anında kapanır; 2. basamağın **log-uzayı** kuralı bu geçişin devamı olarak motive olur. 2 sa ÷ 8 = **15 dk/halka**. `Matematikçi` bir daha 1. basamakta kullanılmaz, 4/5'te tekrar edilmez. |
+| **B** | **7 halka, `Matematikçi` 4. veya 5. basamağa kalır** | 1. basamak `Süperbilgisayar`da biter ("hesaplanabilirin sınırı"). 2 sa ÷ 7 = **17 dk/halka**. `Matematikçi` 4. basamakta `Ok Dökümcüsü`nün yanında ya da 5. basamakta `Adlandırıcı`nın yanında köprü olur — Akt I/II geçişi 5. basamağa taşınır. |
+| **C** | **8 halka, 8. halka yeni bir jeneratör** | `Matematikçi` köprü olarak 4/5'te kalır; 1. basamağa yeni bir isim yazılır (ör. `Defter`, `Soru`, `Kanıt`). En pahalı seçenek: yeni jeneratörün kimliği + lezzet metni + denge eğrisi sıfırdan yazılır. |
 
-**A'nın gerekçesi:** Prestij sayıyı sıfırlıyor (`S2`) ama jeneratörleri de sıfırlıyor. Eğer zincir
-tek ve oyun boyu sürerse, her prestijde 13 halkalı zinciri baştan kurmak gerekir — 11 kez. Basamak
-içinde akan zincir, her prestijde "temiz sayfa" hissini korurken eski jeneratörleri çarpan olarak
-tutmaya izin verir.
+**A'nın gerekçesi:** `Matematikçi` senaryoda zaten "hesaplamaz, tanımlar" diye tanımlanmış — bu cümle
+1. basamağın **finali** olarak yazılmış bir cümle. Onu 4. basamağa taşımak, ok kıtlığı kuralının
+ortasına bir insan halkası sokmak olur. Ayrıca 2. basamağın kuralı (log-uzayı: "sayıyı bıraktım, üssü
+tutuyorum") tam olarak matematikçinin yaptığı şey; zincir bunu kendi kendine açıklıyor.
 
-**Cevaplandığında** bu belgeye `E5` olarak eklenecek, `A2` kapanacak, sıradaki soru `A3` (`Birikim`)
+**Cevaplandığında** `E6` olarak eklenecek, `A10` kapanacak, sıradaki soru `A3` (`Birikim` formülü)
 veya `A9` (uygulama sırası) olacak.
 
 ---
@@ -554,6 +583,7 @@ veya `A9` (uygulama sırası) olacak.
 | 26 | Ok sayısı | 3→6 | `S8` |
 | 27 | %5 kuralı | iptal, mandal | `E2`/`S3` |
 | 28 | Offline | 12 saat tavan | `S6` |
+| 29 | Zincir topolojisi (A2) | "ilk basamak planlandı; diğerleri sırası gelince; şu an 1. basamak 7-8" | `E5` |
 
 **Çelişki notu (12-14):** Kullanıcı "20-25 çok uzun" → "6-8 az" → "20-25 bile az" dedi. Ajan
 çelişkiyi masaya koydu; gerçek isteğin **uzun ama boş olmayan** bir oyun olduğu ortaya çıktı.
