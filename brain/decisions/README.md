@@ -5,10 +5,13 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0074**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0077**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
+- **Kırık araştırma bağlantıları (2026-10-23):** tema pivotu sonrası eski temanın araştırma ve ölçüm
+  dosyaları silindi. Bazı ADR'lerdeki `../research/...` bağlantıları bu yüzden kırıktır; dosyalar git
+  geçmişinde durur (`git log --diff-filter=D -- brain/research`). ADR'lerin kendisi silinmez.
 - **Numara çakışması notu (2026-10-19):** 0033 numarası iki dosyada birden kullanılıyordu (cloud-sync 2026-10-03 · üç boyutlu başlangıç 2026-10-04). Çakışma cloud-sync dosyasının **0070**'e yeniden numaralandırılmasıyla çözüldü; 0033 artık yalnızca üç boyutlu başlangıç ADR'ine aittir.
 
 | # | Başlık | Tarih | Durum | Dosya |

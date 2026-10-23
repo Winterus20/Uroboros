@@ -2,7 +2,7 @@
 
 > **Amaç:** "Kozmik Oburluk" → `Hold That Number` pivotunun soru-cevap oturumunda kilitlenen
 > kararlarını, gerekçelerini, açık maddelerini ve **devam edilecek soruyu** tek yerde tutmak.
-> **Durum:** ▶️ oturum açık (2026-10-23 · **31 karar kilitli**) — **devam noktası §6**.
+> **Durum:** ▶️ oturum açık (2026-10-23 · **38 karar kilitli**) — **devam noktası §6** (sıra kodda).
 > **İlgili:** [ADR-0077](../decisions/0077-theme-pivot-number-hunter-and-comedic-voice.md) ·
 > [narrative-voice.md](../context/narrative-voice.md) ·
 > [number-ladder-script-2026-10.md](number-ladder-script-2026-10.md) ·
@@ -495,7 +495,7 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 - **Öneri:** Her 10 kat aşımda %10 verim düşüşü (çarpımsal); ödül `log10(1 + aşım)` ile büyür.
 - **Araştırma:** Janra taraması §6.1'de (Cookie Clicker 1/3 · Prestige Tree 1/2 · Egg Inc 0,15 + tavan ·
   Clicker Heroes 1,5 · AD duvar tabanlı). Hiçbirinde bekleme cezası yok; fren eğri veya tavan.
-- **Durum:** 🔴 **Sıradaki soru** (§6). Şekil kararı şimdi, katsayılar simülasyonla.
+- **Durum:** ✅ **kapandı** → `E7` (log ödül + %10/10× çarpımsal ceza; katsayılar simülasyonla).
 
 ### A4 — Mizah yoğunluğu ayarı
 - **Soru:** Oyuncu sistemi susturabilmeli mi?
@@ -523,63 +523,42 @@ Her madde: **soru → seçenekler → ajanın önerisi → bloklayıcı mı.**
 ### A9 — Uygulama sırası
 - **Öneri:** (1) gösterim katmanı (çapa/ok/büyüklük) → (2) iskelet ekonomi (13 jeneratör, prestij)
   → (3) metin dalgası (`script.ts` + `news.ts`) → (4) UI metinleri → (5) final sahnesi.
-- **Durum:** 🟡 Karar verilmedi.
+- **Durum:** ✅ **kapandı** → `E8` (dikey dilim: 1. basamak uçtan uca, sonra 2-11).
 
 ---
 
-## 6. DEVAM NOKTASI — sıradaki soru
+## 6. DEVAM NOKTASI — ▶️ tasarım kapandı, sıra kodda
 
-> **A3 — `Birikim` formülü**
->
-> `E4` kapıdan sonra biriktirmeyi seçti; şimdi **ceza ve ödülün şekli**. Kapı eşiği `X`,
-> aşım `A = sayı / X`. `A` büyüdükçe üretim verimi nasıl düşer, `Tanım` ödülü nasıl büyür?
->
-> Bugünkü çerçeve: 11 basamak / 85 saat, bir basamağın kendi süresi 2 → 18,6 saat. `Birikim`,
-> kapı aşıldıktan sonra o basamakta **ne kadar kalınacağını** belirler — yani `S5`'in eğrisine
-> doğrudan dokunur.
+**1. basamak spec'i tamam** (§11, `E7`–`E14`). Sıradaki adım **dikey dilim** (`E8`): 1. basamağın
+uçtan uca çalışan hâli — ve `E9` uyarınca **proje sahibi "bitti" diyene kadar** sürer.
 
-### 6.1 Janra taraması (2026-10-23) — prestij ödülü nasıl hesaplanıyor?
+**Kod sırası:** (1) sayı ekonomisi (8 halka · 10 birim kilidi · sınırsız alım) → (2) prestij +
+`Birikim` → (3) mini boost → (4) `+1` + 1. basamak ticker satırları. Görsel dil (`A1`) ve metin
+sahipliği (`A8`) hâlâ açık; ilk iki adım bunlara bağlı değil.
+
+**Açık maddeler:** `A1` görsel dil (ayrı konuşma) · `A4` mizah ayarı · `A5` LNGN finali ·
+`A6` başarımlar/meydan okumalar · `A7` müzik · `A8` İngilizce metni kim yazıyor.
+
+### 6.1 Janra taraması (A3 için, 2026-10-23) — kayıt
 
 | Oyun | Eşik | Ödül | Bekleme cezası | Not |
 | :--- | :--- | :--- | :--- | :--- |
 | Cookie Clicker | 1e12 kurabiye | `⌊(N/1e12)^(1/3)⌋` cennet çipi | yok | her çip kalıcı +%1 CpS |
-| The Prestige Tree | 10 puan | `(x/10)^0,5` (mastered `^0,75`) | yok | ağaç çarpanları |
-| Egg, Inc. | prestij kazancı | `∝ (min(x,1e12)/1e6)^0,15` | **tavan** (1e12'de kırpılır) | wiki: "sık prestiji teşvik eder" |
+| The Prestige Tree | 10 puan | `(x/10)^0,5` | yok | ağaç çarpanları |
+| Egg, Inc. | prestij kazancı | `∝ (min(x,1e12)/1e6)^0,15` | **tavan** (1e12) | "sık prestiji teşvik eder" |
 | Clicker Heroes | boss 100+ | `⌊(((lvl−100)/5+1)/3)^1,5⌋` | yok | üs 1,5 |
-| Antimatter Dimensions | 1,79e308 | duvara göre kuvvet yasası (duvarda IP ≈ 1) | yok | "Break Infinity" eşiği yükseltir |
-| Synergism | 1e16 coin | elmas (wiki'de formül verilmemiş) | yok | — |
+| Antimatter Dimensions | 1,79e308 | duvara göre kuvvet yasası | yok | "Break Infinity" eşiği yükseltir |
+| Synergism | 1e16 coin | elmas | yok | — |
 
-**Üç bulgu:**
-1. **Ortak reçete eşik + kuvvet yasası.** Üs 0,15 – 1,5 bandında; düşük üs uzun beklemeye cömert,
-   yüksek üs "hemen prestij et" der.
-2. **Bekleme cezası janrada yok.** Fren iki yerden geliyor: (a) üretim büyümesinin kendiliğinden
-   yavaşlaması, (b) **tavan** — Egg Inc'in 1e12 kırpması, sürekli cezanın sınır hâli.
-3. **Bizde farklı olan iki şey:** sıfırlama pahalı (basamak 2-18,6 saat; AD/CC'de dakikalar) ve
-   temamız cezayı **açıklıyor** — notasyon sayıyı taşımıyor. Ceza bizde süs değil, mekaniğin adı.
+**Üç bulgu:** (1) ortak reçete eşik + kuvvet yasası, üs 0,15–1,5; (2) bekleme cezası janrada yok —
+fren eğriden veya tavandan geliyor; (3) bizde sıfırlama pahalı ve tema cezayı **açıklıyor**
+(notasyon sayıyı taşımıyor) → ceza bizde süs değil, mekaniğin adı.
 
-### 6.2 Seçenekler (araştırmaya göre revize)
-
-| # | Seçenek | Sonuç |
-| :-- | :--- | :--- |
-| **A** *(öneri)* | **Log ödül + çarpımsal verim cezası** | `Tanım = log10(1+A)`, verim `0,9^log10(A)`: 10× → %90 · 100× → %81 · 1e3× → %73 · 1e6× → %53. Ödül: 10× → 1,04 · 100× → 2,0 · 1e6× → 6,0. Marjinal kazanç oranı sürekli düşer → **kesin bir tatlı nokta**; Egg Inc tavanının yumuşak hâli. |
-| **B** | **Kuvvet yasası, cezasız (janra kanonu)** | `Tanım = A^(1/3)` (Cookie Clicker). Tanıdık ve cömert; ama bizde sıfırlama 2-18,6 saat olduğu için ödül üssü cezayı ezer, marjinal oran uzun süre **artar** → prestij kararı ancak üretim çöktüğünde, çok geç doğar. |
-| **C** | **Sert tavan (Egg Inc)** | `Tanım = min(A, C)^p`; tavanın ötesinde ödül durur. Basit ve okunur; bedeli **herkesin aynı noktada** prestij yapması — karar bir kez çözülür. |
-
-**A'nın gerekçesi:** Taramadan çıkan kural şu: *tatlı nokta, **marjinal kazanç oranı** düştüğünde
-doğar.* Log ödülde bu oran `k·P(A)` kadardır ve ceza `P` onu sürekli aşağı çeker → oyuncu kendi
-noktasını bulur. B'de ödül üssü (1/3) cezayı (0) ezdiği için oran uzun süre **artar**; prestij kararı
-ancak üretim çöktüğünde, çok geç doğar. C'de oran tavana kadar sabit, sonra sıfır: karar tek noktaya
-çöker, mekanik bir kez öğrenilir ve biter.
-
-**Kural (kayda geçsin):** kuvvet yasası kullanılırsa **ceza üssü > ödül üssü** olmalı, yoksa bekleme
-her zaman kazanır. Log ödülde `p ≈ 0` olduğu için her ceza yeterli — bu yüzden A en dayanıklı seçenek.
-
-**Sayılar kilitlenmiyor, şekil kilitleniyor:** `%10 / 0,9` başlangıç değerleri; kesin katsayılar
-`A9` sonrası `harness` simülasyonuyla (`Birikim` eğrisi ölçülerek) kilitlenecek.
-
-**Cevaplandığında** `E7` olarak eklenecek, `A3` kapanacak, sıradaki soru `A9` (uygulama sırası).
+**Kural (kalıcı):** kuvvet yasası kullanılırsa **ceza üssü > ödül üssü** olmalı; log ödülde `p ≈ 0`
+olduğu için her ceza yeterli. → Seçilen: `E7`.
 
 ---
+
 
 ## 7. Belge etkileri (uygulamada yapılacaklar)
 
@@ -668,3 +647,105 @@ Bu, oturumun en öğretici anı: *"çok uzun"* bazen *"çok boş"* demektir.
 | **Bağlama duyarlı bant** | Ticker satırlarının rastgele değil, oyuncunun durumuna göre seçilmesi |
 | **Sessiz meta** | Oyun olduğunu bilen ama bunu asla söylemeyen anlatı sesi |
 | **Tek ses, çift ritim** | Oyuncunun düşüncesinin de oyunun ağzından söylenmesi |
+
+## 11. Oturum II — basamak içi döngü (2026-10-23, aynı gün devam)
+
+> §1–§10'daki oturumun devamı. Karar kimlikleri sabit; `E7`–`E14` burada. Bu oturumda **kod
+> yazılmadı**; yalnız bir prototip simülasyon denemesi yapıldı (başarısız, sayı üretmedi).
+
+### 11.1 Kararlar
+
+#### E7 — `Birikim`: log ödül + çarpımsal verim cezası
+- **Seçilen:** ✅ `Tanım = log10(1+A)`, verim `0,9^log10(A)`, `A = sayı / kapı eşiği`. Ödül yalnız
+  prestijde; katsayılar simülasyonla kilitlenecek.
+- **Gerekçe:** janra taraması (§6.1) → bekleme cezası yok, fren eğri veya tavan. Log ödül + çarpımsal
+  ceza, Egg Inc tavanının **yumuşak** hâli: marjinal kazanç oranı düşer, oyuncu kendi noktasını arar.
+- **Etki:** `E4` tamamlandı; ekranda aşım / verim / vaat edilen `Tanım` üçlüsü gösterilmeli.
+
+#### E8 — Uygulama sırası: dikey dilim (✏️ A → B)
+- **Seçilen:** ✅ **B — dikey dilim.** 1. basamak uçtan uca; 2-11 sonra.
+- **Gerekçe (kullanıcı):** "her katman üstünde düşünmek istiyorum iyice, ona göre diğer katmanları
+  yaparız". Yani tasarım, çalışan bir basamağın **üstüne** yazılacak.
+- **Yan etki:** `OmegaNum` 2. basamağa ertelendi (1. basamak `1,79e308`'de bitiyor, `break_eternity`
+  yeterli) → `R5` riski ötelendi.
+
+#### E9 — "Bitti" tanımı: proje sahibi
+- **Kullanıcının cevabı:** *"Benim bitti demem."*
+- **Seçilen:** Formel kabul ölçütü **yok**. Dikey dilim, proje sahibi "bitti" diyene kadar sürer;
+  ajan ilerlemeyi ölçmez, gösterir.
+
+#### E10 — Tıklama yoğunluğu: AD / Cookie Clicker
+- **Seçilen:** ✅ Halka başına **sınırsız alım**, fiyat `×1,3-1,5`; 2 saatte ~100-150 alım.
+- **Gerekçe:** 85 saatte oyuncuyu ekrana kilitlemeden "sayı hızlanıyor" hissi.
+- **Yan etki:** paket modeli düştü → `ADR-0076`'nın "1 paket → sonraki boyut" kilidi yeniden
+  tanımlandı (`E11`).
+
+#### E11 — Halka kilidi: 10 birim
+- **Seçilen:** ✅ Bir halkadan **10 birim** alınınca sonraki halka açılır.
+- **Gerekçe:** `ADR-0076`'nın ruhu korunur ("aldıkça aç"), yalnız tetikleyici 10'luk paketten
+  10 birime iner. `E10` ile aritmetiği tutar (7 geçiş × 10 alım).
+
+#### E12 — Mini boost: tam sıfırlama + basamak içi çarpan
+- **Seçilen:** ✅ 8 halka da, sayı da sıfırlanır (`10`'a). Karşılığında **basamak içi kalıcı** üretim
+  çarpanı. **`Tanım` vermez** (o yalnız basamak geçişinde).
+- **Gerekçe:** 2 saatlik basamağa ritim verir; prestij tek ödül kapısı olarak kalır.
+
+#### E13 — Boost koşulu: 8. halka
+- **Seçilen:** ✅ Boost, zincirin son halkası (`Matematikçi`) alındığında açılır.
+- **Gerekçe:** koşulsuz boost, "en kısa turda bas" der ve döngüyü 20 saniyeye indirir.
+
+#### E14 — Boost ödülü: zirveye bağlı (`E13`'ün sabit çarpanı ölçümle çürüdü)
+- **Ölçüm:** sabit `×1,5` → kapıya **1.717 boost** (86 saat); sabit `×10` → **303 boost** (909 dk).
+  Yani sabit çarpan 2 saatlik basamağa sığmaz.
+- **Seçilen:** ✅ `çarpan = (zirve / 10)^0,2` → **23 döngü** ≈ 2 saat.
+- **Yan kazanç:** her tur "2 dakika daha tırmansam çarpan daha büyük olur" mikro-kararı doğar;
+  `E7`'nin küçük kardeşi.
+
+### 11.2 Boost matematiği (hesaplanmış)
+
+| Model | Kapıya (`1,79e308`) ulaşmak için |
+| :--- | :--- |
+| Sabit `×1,5` | 1.717 boost → 3 dk/tur ile **86 saat** ❌ |
+| Sabit `×10` | 303 boost → **909 dakika** ❌ |
+| `(zirve/10)^0,15` | 30 döngü ✅ |
+| **`(zirve/10)^0,2`** | **23 döngü ✅** (~5 dk/tur = 2 saat) |
+| `(zirve/10)^0,25` | 19 döngü ✅ (biraz hızlı) |
+
+### 11.3 1. basamak spec (kilitli)
+
+| Alan | Karar |
+| :--- | :--- |
+| Zincir | Parmaklar → Çentik → Abaküs → Kalem → Hesap Makinesi → Bilgisayar → Süperbilgisayar → Matematikçi (`E6`) |
+| Yön | Aşağıdan yukarı; **Parmaklar sayıyı üretir**; `+1` = elle Parmaklar |
+| Alım | Sınırsız, fiyat `×1,3-1,5`, 2 saatte ~100-150 alım (`E10`) |
+| Kilit | Bir halkadan 10 birim → sonraki (`E11`) |
+| Döngü | 8. halkada mini boost: tam sıfırlama + `(zirve/10)^0,2` çarpan (`E12`–`E14`) |
+| Kapı | `1,79e308` → prestij: sayı `10`, `Tanım = log10(1+A)`, verim `0,9^log10 A` (`E7`) |
+| Ses | Bu basamakta ticker konuşur (`V4`); tooltip asla şaka yapmaz |
+
+### 11.4 Bu oturumda açılan/kapanan maddeler
+
+| # | Konu | Durum |
+| :-- | :--- | :--- |
+| `A3` | `Birikim` formülü | ✅ `E7` |
+| `A9` | Uygulama sırası | ✅ `E8` (dikey dilim) |
+| `A11` | Dilimin kapsamı | ✅ `E9` (kullanıcı kararı) |
+| `A12` | Tıklama yoğunluğu | ✅ `E10` |
+| `A13` | Halka kilidi | ✅ `E11` |
+| `A14` | Mini boost ne sıfırlar | ✅ `E12` |
+| `A15` | Boost koşulu ve ödülü | ✅ `E13` + `E14` |
+| `A1` `A4` `A5` `A6` `A7` `A8` | Görsel dil · mizah ayarı · final · başarımlar · müzik · metin sahipliği | 🟡 açık |
+
+### 11.5 Kronoloji (devam)
+
+| # | Soru | Cevap | Sonuç |
+| :-- | :--- | :--- | :--- |
+| 31 | `Birikim` (A3) | "diğer oyunlara bak" → tarama → A | `E7` |
+| 32 | Uygulama sırası (A9) | A → sonra "fikrimi değiştirdim, B" | `E8` |
+| 33 | Dilim kapsamı (A11) | "benim bitti demem" | `E9` |
+| 34 | Tıklama yoğunluğu (A12) | A | `E10` |
+| 35 | Halka kilidi (A13) | A | `E11` |
+| 36 | Mini boost (A14) | A | `E12` |
+| 37 | Boost koşulu (A15) | A | `E13` |
+| 38 | Boost ödülü (A15b) | A (sabit çarpan ölçümle çürüdü) | `E14` |
+

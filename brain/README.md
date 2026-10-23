@@ -1,7 +1,12 @@
 # AI & DEVELOPER SECOND BRAIN (İKİNCİ BEYİN)
-## UROBOROS (The Cosmic Feast) Geliştirme Yönetim Merkezi
+## `Hold That Number` Geliştirme Yönetim Merkezi
 
-Bu klasör, **UROBOROS (The Cosmic Feast)** projesinin yaşayan hafıza bankasıdır (Living Memory Bank). Yapılan araştırmalar, mimari kararlar (ADR), aktif görevler, yol haritası ve geçici düşünce notları burada tek bir standart altında tutulur.
+Bu klasör, **`Hold That Number`** projesinin yaşayan hafıza bankasıdır (Living Memory Bank). Araştırmalar,
+mimari kararlar (ADR), aktif görevler ve yol haritası burada tek bir standart altında tutulur.
+
+> **Kimlik notu:** Proje 2026-10-23'te "Kozmik Oburluk / UROBOROS" temasından **`Hold That Number`**'a
+> pivot etti. Eski temanın içerik dokümanları ve ölçüm artefaktları silindi (git geçmişinde duruyor);
+> ADR'ler silinmedi — ADR karar kaydıdır, içerik değil.
 
 ---
 
@@ -12,32 +17,33 @@ brain/
 ├── README.md               # Bu kılavuz ve klasör haritası
 │
 ├── context/                # Projenin değişmez ve yaşayan bağlamı
-│   ├── project-brief.md    # Vizyon, oyun felsefesi, hedef ve ana hedefler
-│   ├── system-patterns.md  # Mimari desenler, döngüler ve bileşen yapısı
-│   └── tech-context.md     # Kullanılan kütüphaneler, sürümler ve kısıtlar
+│   ├── project-brief.md    # Vizyon, oyun felsefesi, hedef
+│   ├── narrative-voice.md  # Ses sözleşmesi (sessiz meta, gerçek "sen", tek ses çift ritim)
+│   ├── visual-language.md  # Görsel dil sözleşmesi (A1 kapanınca yeniden yazılacak)
+│   ├── system-patterns.md  # Mimari desenler, döngüler, bileşen yapısı
+│   └── tech-context.md     # Kütüphaneler, sürümler, kısıtlar
 │
-├── tasks/                  # Görev ve İlerleme Yönetimi
-│   ├── todo.md             # Sıradaki özellikler, backlog ve fazlar
-│   ├── in-progress.md      # Şu an aktif üzerinde çalışılan sprint/görev
-│   └── completed.md        # Tamamlanan işler, çözülen hatalar ve tarihçe
+├── tasks/                  # Görev ve ilerleme yönetimi
+│   ├── todo.md             # Backlog (1. basamak dikey dilimi + açık maddeler)
+│   ├── in-progress.md      # Aktif iş: 1. basamak dikey dilimi
+│   └── completed.md        # Tarihçe (eski tema dönemi dahil, silinmedi)
 │
-├── decisions/              # Mimari Karar Kayıtları (ADR - Architecture Decision Records)
-│   ├── 0001-vue3-vite-pinia.md
-│   ├── 0002-break-eternity-number-engine.md
-│   └── 0003-accumulator-gameloop.md
+├── decisions/              # ADR'ler — 0077 pivot kararı dahil, hiçbiri silinmez
 │
-├── research/               # Kapsamlı Araştırma Notları ve Benchmarklar
-│   ├── antimatter-dimensions-pacing-mechanics.md
-│   └── idle-game-math-and-scaling.md
-│
-└── scratchpad/             # Geçici Düşünce Alanı & Karalamalar
-    └── active-scratch.md   # Hızlı denemeler, geçici formüller ve taslaklar
+└── research/               # Yaşayan araştırma
+    ├── theme-pivot-grilling-2026-10-23.md      # TEK GERÇEK: 38 karar, 1. basamak spec'i
+    ├── number-ladder-script-2026-10.md         # 11 basamak senaryosu (SEN: satırları devredilecek)
+    ├── theme-pivot-open-questions-2026-10.md   # Açık sorular
+    ├── incremental-genre-synthesis.md          # Janra sentezi
+    ├── antimatter-dimensions-pacing-mechanics.md
+    └── idle-game-math-and-scaling.md
 ```
 
 ---
 
 ## 📌 Çalışma Kuralları
-1. **Her Yeni Özellikte:** Önce `tasks/todo.md`'den `in-progress.md`'ye taşınır; tamamlanınca `completed.md`'ye işlenir.
-2. **Kritik Mimari Kararlarda:** Neden o kütüphanenin veya yöntemin seçildiği `decisions/` altında ADR formatında kaydedilir.
-3. **Yeni Araştırmalarda:** Sektörel veya matematiksel derin analizler `research/` altına eklenir.
-4. **Hafıza Teyidi:** Yeni bir oturuma veya aşamaya başlarken ilk olarak `brain/` taranarak bağlam tazelenir.
+
+1. **Her yeni işte:** önce `tasks/todo.md` → `in-progress.md`, bitince `completed.md`.
+2. **Kritik mimari kararlarda:** `decisions/` altına ADR.
+3. **Yeni araştırmalarda:** `research/` altına; eskimiş araştırma **silinir**, arşivlenmez.
+4. **Hafıza teyidi:** yeni oturumda önce `research/theme-pivot-grilling-2026-10-23.md` §6 (devam noktası).
