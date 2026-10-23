@@ -1,5 +1,5 @@
 import { Decimal, D_0, D_1, D_10 } from '../../core/math'
-import { NUMBER_TUNING, RING_COUNT, ringCostAt } from './tuning'
+import { NUMBER_TUNING, RING_COUNT, maxAffordableCount, ringBlockCost, ringCostAt } from './tuning'
 
 /** Tek halka: kaç birim var, bu koşuda kaç kez satın alındı (maliyet için). */
 export interface RingState {
@@ -83,6 +83,17 @@ export function ringCost(state: NumberState, index: number): Decimal {
   return ringCostAt(NUMBER_TUNING.rings[index].baseCost, state.rings[index].bought)
 }
 
+/** `count` birimin toplam fiyatı — AD'nin "Buy 10"ı: geometrik toplam. */
+export function ringBlockPrice(state: NumberState, index: number, count: number): Decimal {
+  return ringBlockCost(NUMBER_TUNING.rings[index].baseCost, state.rings[index].bought, count)
+}
+
+/** "Max" modunda bütçenin alabileceği birim sayısı (0 = alamaz). */
+export function maxAffordableRing(state: NumberState, index: number): number {
+  if (!ringUnlocked(state, index)) return 0
+  return maxAffordableCount(NUMBER_TUNING.rings[index].baseCost, state.rings[index].bought, state.number)
+}
+
 export function canBuyRing(state: NumberState, index: number): boolean {
   return ringUnlocked(state, index) && state.number.gte(ringCost(state, index))
 }
@@ -109,6 +120,11 @@ export function buyRing(state: NumberState, index: number, count = 1): number {
     }
   }
   return bought
+}
+
+/** "Max" modu: bütçenin alabildiği kadar birim (tek tıkta, üst sınır 1000). */
+export function buyRingMax(state: NumberState, index: number): number {
+  return buyRing(state, index, maxAffordableRing(state, index))
 }
 
 /**

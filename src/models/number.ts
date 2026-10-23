@@ -22,11 +22,16 @@ export interface GameState extends NumberState {
   seenVoice: string[]
   /** Bir kez tetiklenen sahne/başarım kimlikleri (S3 mandal). */
   latched: string[]
+  /** Seçili satın alma modu — uçucu, kayda yazılmaz. */
+  buyMode: BuyMode
   /** Otomasyon sayacı (sn) — uçucu, kayda yazılmaz. */
   autobuyTimer: number
   /** Son çevrimdışı rapor (uçucu — kayda yazılmaz). */
   offlineReport: OfflineReport | null
 }
+
+/** Satın alma modu — AD'nin ×1 / ×10 / Max düğmeleri (uçucu, kayda yazılmaz). */
+export type BuyMode = 1 | 10 | 'max'
 
 /** Halkanın ekranda okunması için hazır satır (UI türetimi). */
 export interface RingRow {
@@ -35,8 +40,16 @@ export interface RingRow {
   amount: Decimal
   bought: number
   unlocked: boolean
+  /** Tek birim fiyatı (×1 modu). */
   cost: Decimal
+  /** 10'lu blok toplam fiyatı — AD'nin "Buy 10"ı (×10 modu). */
+  cost10: Decimal
+  /** "Max" modunda alınabilecek birim sayısı (0 = alamaz). */
+  maxCount: number
+  /** "Max" modunun toplam fiyatı. */
+  costMax: Decimal
   affordable: boolean
+  affordable10: boolean
   unlockedNextAt: number
   producesPerSecond: Decimal
 }

@@ -2,19 +2,22 @@ import { defineStore } from 'pinia'
 import { Decimal, D, D_0 } from '../core/math'
 import { format, heroParts, type NotationType } from '../core/format'
 import { SAVE_VERSION } from '../core/save-version'
-import { NUMBER_TUNING, RING_COUNT } from '../game/number/tuning'
+import { BLOCK_SIZE, NUMBER_TUNING, RING_COUNT } from '../game/number/tuning'
 import {
   advance,
   applyBoost,
   applyPrestige,
   boostMultiplier,
   buyRing as buyRingRaw,
+  buyRingMax,
   canBoost,
   createNumberState,
   gateReady as gateReadyRaw,
   manualTap,
+  maxAffordableRing,
   numberPerSecond,
   productionEfficiency,
+  ringBlockPrice,
   ringCost,
   ringGainPerSecond,
   ringUnlocked,
@@ -31,7 +34,7 @@ import {
   type UpgradeId
 } from '../game/number/upgrades'
 import type { GameSettings, MusicTrackId } from '../models/settings'
-import type { GameState, RingRow } from '../models/number'
+import type { BuyMode, GameState, RingRow } from '../models/number'
 import type { SerializedPlayerState } from '../models/save'
 
 /** S6 — çevrimdışı ilerleme 12 saatte tavan yapar. */
@@ -72,6 +75,7 @@ export function buildInitialState(): GameState {
     settings: defaultSettings(),
     seenVoice: [],
     latched: [],
+    buyMode: 10,
     autobuyTimer: 0,
     offlineReport: null
   }
@@ -108,7 +112,12 @@ export const useGameStore = defineStore('game', {
         bought: state.rings[index].bought,
         unlocked: ringUnlocked(state, index),
         cost: ringCost(state, index),
+        cost10: ringBlockPrice(state, index, BLOCK_SIZE),
+        maxCount: maxAffordableRing(state, index),
+        costMax: ringBlockPrice(state, index, Math.max(1, maxAffordableRing(state, index))),
         affordable: ringUnlocked(state, index) && state.number.gte(ringCost(state, index)),
+        affordable10:
+          ringUnlocked(state, index) && state.number.gte(ringBlockPrice(state, index, BLOCK_SIZE)),
         unlockedNextAt: Math.max(0, NUMBER_TUNING.unlockThreshold - state.rings[index].bought),
         producesPerSecond: ringGainPerSecond(state, index)
       }))
@@ -195,7 +204,10 @@ export const useGameStore = defineStore('game', {
       if (this.number.gte(NUMBER_TUNING.gate) && !this.gateReached) this.gateReached = true
     },
 
-    /** Otomasyon: en ucuz alınabilir halkayı periyodik olarak alır (Tanım yükseltmesi). */
+    /**
+     * Otomasyon: en ucuz alınabilir halkadan bir BLOK alır (Tanım yükseltmesi).
+     * Tek birim almak 1,20 büyümesinde anlamsız kalıyordu; blok = bir halka (11,4 birim).
+     */
     runAutobuy(dt: number): void {
       const interval = autobuyIntervalFor(this.upgrades.autobuy)
       if (interval <= 0) return
@@ -206,13 +218,13 @@ export const useGameStore = defineStore('game', {
       let best = -1
       let bestCost: Decimal | null = null
       for (const row of rows) {
-        if (!row.affordable) continue
-        if (bestCost === null || row.cost.lt(bestCost)) {
-          bestCost = row.cost
+        if (!row.affordable10) continue
+        if (bestCost === null || row.cost10.lt(bestCost)) {
+          bestCost = row.cost10
           best = row.index
         }
       }
-      if (best >= 0) this.buyRing(best)
+      if (best >= 0) this.buyRing(best, BLOCK_SIZE)
     },
 
     /** `+1` — gerçekten 1 ekler (S9); gösterim değişmediyse anlamsız basış sayılır. */
@@ -229,12 +241,33 @@ export const useGameStore = defineStore('game', {
       buyRingRaw(this, index, count)
     },
 
-    /** Satın alınabilir en ucuz halkayı al (klavye kısayolu). */
+    /** "Max" modu: bütçenin alabildiği kadar al. */
+    buyMax(index: number): void {
+      buyRingMax(this, index)
+    },
+
+    /** Satın alma modu (×1 / ×10 / Max) — uçucu, kayda yazılmaz. */
+    setBuyMode(mode: BuyMode): void {
+      this.buyMode = mode
+    },
+
+    /** Seçili modun fiyatı kadar alım yapar (satır düğmesi ve M kısayolu aynı yolu kullanır). */
+    buyWithMode(index: number): void {
+      if (this.buyMode === 'max') this.buyMax(index)
+      else this.buyRing(index, this.buyMode)
+    },
+
+    /** Satın alınabilir en ucuz halkayı seçili modda al (klavye kısayolu). */
     buyCheapest(): void {
-      const affordable = this.ringRows.filter((row) => row.affordable)
-      if (affordable.length === 0) return
-      affordable.sort((a, b) => (a.cost.lt(b.cost) ? -1 : 1))
-      this.buyRing(affordable[0].index)
+      const rows =
+        this.buyMode === 'max'
+          ? this.ringRows.filter((row) => row.maxCount > 0)
+          : this.buyMode === 10
+            ? this.ringRows.filter((row) => row.affordable10)
+            : this.ringRows.filter((row) => row.affordable)
+      if (rows.length === 0) return
+      rows.sort((a, b) => (a.cost.lt(b.cost) ? -1 : 1))
+      this.buyWithMode(rows[0].index)
     },
 
     /** Mini boost (E12–E14). */

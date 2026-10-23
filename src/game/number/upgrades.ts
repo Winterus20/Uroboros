@@ -53,7 +53,7 @@ export const UPGRADES: readonly UpgradeDef[] = [
     cost: (level) => D(2).times(new Decimal(5).pow(level)),
     describe: (level) => {
       const interval = AUTOBUY_INTERVALS[level] ?? 0
-      return interval > 0 ? 'buys every ' + interval + 's' : 'off'
+      return interval > 0 ? '10 units every ' + interval + 's' : 'off'
     }
   }
 ] as const

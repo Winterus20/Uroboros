@@ -247,3 +247,61 @@ Yumuşak alternatif `c_1 = 20` (10 tık, 113,3 dk) ölçüldü ama uygulanmadı 
 
 Tam çalışma, elenen adaylar ve ölçüm tablosu:
 [`../research/ring-pricing-2026-10-23.md`](../research/ring-pricing-2026-10-23.md).
+
+---
+
+## Ek — A+ revizyonu (2026-10-23, üçüncü tur)
+
+**Bu ek, §2'deki maliyet satırını (`c_i · 1,4^b`), "Ek — Fiyat revizyonu" bölümünün tamamını ve
+§9'daki `K5` satırının sayılarını geçersiz kılar.** Yürürlükteki ekonomi aşağıdadır.
+
+### Ne değişti
+
+| | İkinci tur (geçersiz) | **A+ (yürürlükte)** |
+| :--- | :--- | :--- |
+| Halka 1 üretimi | `0,08`/sn | **`NUMBER_RATE = 1`** sayı/sn |
+| Halka 2–8 üretimi | `0,08`/sn | **`CHAIN_RATE = 0,11`** birim/sn (alttaki halkadan) |
+| Fiyat merdiveni | 25 · 80 · … · 80 000 (×3,2) | **25 · 200 · 1 600 · 12 800 · 102 400 · 819 200 · 6 553 600 · 52 428 800** (×8, `ladderRatio`) |
+| Birim büyümesi `g` | `1,4` | **`1,20`** |
+| Halka başına birim | 6,2 | **11,4** (`log(8)/log(1,20)`) |
+| Alım ritmi | tek birim | **10'lu blok** (`BLOCK_SIZE = 10`) |
+| Blok fiyatı | — | `c · g^bought · (g^10 − 1)/(g − 1)` (AD'nin "Buy 10"ı) |
+| Geri ödeme | 40 sn (kural) | **73 sn** (`8/0,11`); halka 1: **25 sn** |
+| Kilit | 10 birim | 10 birim = **tek blok** (mandallı, `D6`) |
+
+### Gerekçe
+
+1. **Zincir 7 katlı bir integraldir:** `N(t) ≈ M·(∏p)·t⁸/8!`. Sekiz halka da 1/sn üretseydi
+   `∏p = 1` olur ve zincir bugünkünün `(1/0,11)⁷ ≈ 5,1e6` katı güçlenirdi; ölçümde kapı
+   **43 dakikaya** iniyor ve 10. dakikada **1,3e10** parmak oluyor. `CHAIN_RATE = 0,11` iki
+   saatlik koşuyu koruyan sayıdır.
+2. **"10'lu blok" bir fiyat sistemi değil, ritimdir.** Merdiven ×8 sabitken birim büyümesini
+   `1,4 → 1,20` yapmak halka başına birim sayısını **6,2 → 11,4**'e çıkarır; kapı süresi
+   değişmez (ölçüldü), böylece tek blok tam bir halkayı satın alır.
+3. **`unlockThreshold = 10 = BLOCK_SIZE`** olduğu için yeni mekanik yok: bloğu tamamlayan oyuncu
+   kilidi kendiliğinden açar; mandal (`D6`) aynen kalır.
+
+### Ölçüm (gerçek motor, 20 TPS, 2 tık/sn, K5 politikası)
+
+- kapı **119,0 dk** · **21** boost · **371** birim alımı · ilk 10 dk **42** alım kararı
+- halka açılışları: **0 · 1,6 · 4,2 · 6,8 · 9,4 · 12,0 · 14,5 · 17,1 dk**
+- regresyon bantları (`src/game/number/balance.test.ts`): kapı 110–130 dk · 18–24 boost ·
+  ilk 10 dk ≥ 6 karar · 8 halka < 45 dk · halka başına en az bir blok (8 × 10 birim)
+
+### AD araştırması (özet)
+
+Antimatter Dimensions'ta üretim **1/sn**'dir ve fiyat "10 alımda kaç kat" diye yazılır
+(1. boyut `1e3` … 8. boyut `1e15`; birim çarpanı bunun 10. köküdür). AD bu dikliği *Dimension
+Boost* (her boyuta kalıcı ×2, boyut sayıları sıfırlanmaz) ve *Tickspeed* ile dengeler; bizim
+boost'umuz ise halka sayılarını **sıfırlar** (`D3`). Bu yüzden AD tablosu birebir alınamaz —
+ölçüldü: birebir alındığında oyun 240 dakikada `1e19`'da tıkanıyor, 7. ve 8. halka hiç açılmıyor.
+A+ yalnız AD'nin **ritmini** alır (parmak 1/sn, 10'lu blok, ×8 merdiven); üst halkaların frenini
+`CHAIN_RATE = 0,11` kurar.
+
+Kaynak: [`../research/ad-pricing-and-chain-math-2026-10-23.md`](../research/ad-pricing-and-chain-math-2026-10-23.md)
+§6 · [`../research/ring-pricing-2026-10-23.md`](../research/ring-pricing-2026-10-23.md).
+
+### Açık kalan
+
+- 2. basamak tasarımı (§9) bu ekten etkilenmez; `rung` hâlâ ilerlemiyor.
+- `P1` (`c_1 = 25` → 15 tık) **değişmedi**: birim fiyatı 1,20 ile artıyor, ilk parmak yine 25.

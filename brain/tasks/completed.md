@@ -1,5 +1,48 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — A+ ekonomi revizyonu: parmak 1/sn, 10'lu blok, ×8 merdiven
+
+### Ne yapıldı
+Ekonomi **A+** turunda yeniden ölçüldü; sabitler değişti ve belgeler yeni sayılara çekildi.
+Bu kayıt **belge dalgasıdır** — kod sabitleri aynı gün ayrı dalgada `tuning.ts` · `economy.ts` ·
+`upgrades.ts` · `balance.test.ts` içine işlendi (henüz commit edilmedi).
+
+- **Üretim:** halka 1 `NUMBER_RATE = 1` sayı/sn; halka 2–8 `CHAIN_RATE = 0,11` birim/sn
+  (alttaki halkadan).
+- **Fiyat:** `c_i = 25 · 8^i` → **25 · 200 · 1 600 · 12 800 · 102 400 · 819 200 · 6 553 600 ·
+  52 428 800** (`ladderRatio = 8`).
+- **Büyüme:** `g = 1,20` → halka başına `log(8)/log(1,20) = 11,4` birim; tek 10'lu blok bir halka.
+- **Blok:** `BLOCK_SIZE = 10`, blok fiyatı `c · g^bought · (g^10 − 1)/(g − 1)` (AD'nin "Buy 10"ı);
+  kilit eşiği = tek blok (`D6` mandalı korunur).
+- **Geri ödeme:** `c_i/(p_i·c_{i-1}) = 8/0,11 ≈ 73 sn` (halka 1: **25 sn**) — eski "40 sn" kuralı
+  ve "tüm halkalar 0,08/sn" varsayımı geçersiz.
+- **Ölçüm (gerçek motor, 20 TPS, 2 tık/sn, K5 politikası):** kapı **119,0 dk** · **21** boost ·
+  **371** birim alımı · ilk 10 dk **42** alım kararı · halka açılışları
+  0 · 1,6 · 4,2 · 6,8 · 9,4 · 12,0 · 14,5 · **17,1** dk.
+- **Gerekçe:** zincir 7 katlı bir integraldir, `N(t) ≈ M·(∏p)·t⁸/8!`. Sekiz halka da 1/sn olsaydı
+  `∏p = 1` olur ve zincir `(1/0,11)⁷ ≈ 5,1e6` kat güçlenirdi; ölçümde kapı 43 dakikaya iniyor,
+  10. dakikada 1,3e10 parmak oluyor. `0,11` iki saatlik koşuyu korur. "10'lu blok" bir fiyat
+  sistemi değil ritimdir: merdiven ×8 sabitken büyümeyi 1,4 → 1,20 yapmak halka başına birimi
+  6,2 → 11,4 yapar; kapı süresi değişmez (ölçüldü).
+- **AD:** orada üretim 1/sn'dir ve fiyat "10 alımda kaç kat" diye yazılır (1. boyut `1e3` …
+  8. boyut `1e15`). AD bu dikliği *Dimension Boost* (boyut sayıları sıfırlanmaz) ile dengeler;
+  bizim boost'umuz halka sayılarını sıfırlar (`D3`) — bu yüzden AD tablosu birebir alınamaz.
+
+### Dosyalar
+`GAME_DESIGN.md` §4 (tablo + fiyat kuralı + blok) · §5.1 (blok formülü, `g = 1,20`) · §5.2
+(`p` değerleri) · §7 (A+ ölçümü; Set A tarihsel) · §8 (alım ritmi) ·
+[ADR-0079](../decisions/0079-number-economy-vertical-slice.md) "A+ revizyonu" eki ·
+[`todo.md`](todo.md) (`K1`/`K5` sayıları, A+ maddesi `[x]`, `P1` notu) · bu kayıt.
+Kod (ayrı dalga, commit edilmedi): `src/game/number/tuning.ts` · `economy.ts` ·
+`balance.test.ts` · `upgrades.ts` · `src/models/number.ts` · `src/stores/game.ts`.
+
+### Doğrulama
+`npx vitest run` → **86 test / 5 dosya geçti** (denge kilidi 6 test dahil) ·
+`npx vue-tsc --noEmit` → 0 hata. Eşzamanlı kod dalgası aynı gün 6 test daha ekledi; belge
+dalgasının son koşusu **92 test / 5 dosya** ile de yeşil.
+
+---
+
 ## [2026-10-23] ✔ — Halka fiyatlandırması: 8 halkanın tam fiyat çalışması
 
 ### Ne yapıldı

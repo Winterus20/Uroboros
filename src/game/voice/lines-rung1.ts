@@ -14,8 +14,9 @@ import type { VoiceContext, VoiceLine } from './types'
  * Metinler İngilizce yazılır, çevrilmez (P3); kod yorumları Türkçe kalır.
  *
  * MEKANİK DOĞRULUK (Kural 2): buradaki her sayısal iddia src/game/number/tuning.ts
- * ile uyumlu olmak zorunda. Fiyatlar 10 · 100 · 1e3 · … · 1e8, oran 1/s · 1e2 · …,
- * kapı 1.79e308, boost çarpanı (zirve/10)^0.2 ≈ 23 döngü, prestij sonrası sayı 10.
+ * ile uyumlu olmak zorunda. Fiyatlar 25 · 200 · 1 600 · … · 5,24e7 (×8), üretim 1 sayı/sn
+ * (Fingers) ve 0,11 birim/sn (üst halkalar), blok 10 birim, kapı 1.79e308,
+ * boost çarpanı (zirve/10)^0.2 ≈ 21 döngü, prestij sonrası sayı 10.
  */
 
 /** Sayı bandı yardımcısı: [lo, hi) — hi verilmezse açık uçlu. */
@@ -32,9 +33,9 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_open_4', channel: 'ticker', text: 'Press the plus. The plus is honest.' },
   { id: 'r1_open_5', channel: 'ticker', text: 'Nothing here needs explaining. There is only the plus button.', when: (c) => band(c, '0', '1e3') },
   { id: 'r1_open_6', channel: 'ticker', text: 'Small numbers. Each one still looks like itself.', when: (c) => band(c, '0', '1e3') },
-  { id: 'r1_fingers_1', channel: 'ticker', text: 'Fingers cost ten and make one per second. That is the best deal in here.', when: (c) => band(c, '0', '1e6') },
-  { id: 'r1_fingers_2', channel: 'ticker', text: 'Ten fingers. That is not a metaphor, that is the price.', when: (c) => band(c, '0', '1e6') },
-  { id: 'r1_fingers_3', channel: 'ticker', text: 'The chain costs ten, then a hundred, then a thousand. After that it stops being polite.', when: (c) => band(c, '0', '1e6') },
+  { id: 'r1_fingers_1', channel: 'ticker', text: 'Fingers cost twenty-five and make one per second. That is the best deal in here.', when: (c) => band(c, '0', '1e6') },
+  { id: 'r1_fingers_2', channel: 'ticker', text: 'Twenty-five for a finger. That is not a metaphor, that is the price.', when: (c) => band(c, '0', '1e6') },
+  { id: 'r1_fingers_3', channel: 'ticker', text: 'The chain costs twenty-five, then two hundred, then sixteen hundred. After that it stops being polite.', when: (c) => band(c, '0', '1e6') },
   { id: 'r1_fingers_4', channel: 'ticker', text: 'Ten of one link opens the next. The rule does not bend.', when: (c) => band(c, '0', '1e6') },
 
   // ── BANT: 1e3 – 1e6 ───────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_k_2', channel: 'ticker', text: 'A thousand. Round numbers feel like progress. They are just zeros in a row.', when: (c) => band(c, '1e3', '1e6') },
   { id: 'r1_k_3', channel: 'ticker', text: 'Nothing changed at a thousand. You expected something to change.', when: (c) => band(c, '1e3', '1e6') },
   { id: 'r1_k_4', channel: 'ticker', text: 'A hundred thousand. Still legible, and already too long for a label.', when: (c) => band(c, '1e5', '1e6') },
-  { id: 'r1_k_5', channel: 'ticker', text: 'Notch costs a hundred and produces a hundred. The arithmetic is not subtle.', when: (c) => band(c, '1e3', '1e6') },
+  { id: 'r1_k_5', channel: 'ticker', text: 'A Notch costs two hundred and makes a finger every nine seconds. The arithmetic is not subtle.', when: (c) => band(c, '1e3', '1e6') },
   { id: 'r1_k_6', channel: 'ticker', text: 'Six digits. You have started reading the trend instead of the number.', when: (c) => band(c, '1e5', '1e6') },
   { id: 'r1_k_7', channel: 'ticker', text: 'Between a thousand and a million there is only patience and a rising exponent.', when: (c) => band(c, '1e3', '1e6') },
 
@@ -60,7 +61,7 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_t_1', channel: 'ticker', text: 'A trillion. You are counting past anything you could say out loud in a lifetime.', when: (c) => band(c, '1e12', '1e30') },
   { id: 'r1_t_2', channel: 'ticker', text: 'Fifteen digits. The exponent is doing the work now. You are providing the willingness.', when: (c) => band(c, '1e12', '1e30') },
   { id: 'r1_t_3', channel: 'ticker', text: 'At some point you stopped saying the digits and started saying a lot. You were right.', when: (c) => band(c, '1e12', '1e30') },
-  { id: 'r1_t_4', channel: 'ticker', text: 'The Mathematician at the top costs a hundred million and earns a hundred million.', when: (c) => band(c, '1e12', '1e30') },
+  { id: 'r1_t_4', channel: 'ticker', text: 'The Mathematician costs fifty-two million and makes a Supercomputer every nine seconds.', when: (c) => band(c, '1e12', '1e30') },
   { id: 'r1_t_5', channel: 'ticker', text: 'Nothing here is abstract. The number is a number. It is just not a size you can hold.', when: (c) => c.number.gte('1e6') },
   { id: 'r1_t_6', channel: 'ticker', text: 'Thirteen digits. The commas are load-bearing now.', when: (c) => band(c, '1e12', '1e30') },
   { id: 'r1_t_7', channel: 'ticker', text: 'You are in the range where the first digit is worth more than the rest combined.', when: (c) => band(c, '1e12', '1e30') },
@@ -136,7 +137,7 @@ export const RUNG1_LINES: VoiceLine[] = [
   // ── BOOST / PRESTİJ / KAPI ────────────────────────────────────────────────
   { id: 'r1_boost_1', channel: 'ticker', text: 'The chain is empty. The multiplier is not.', when: (c) => c.boosts >= 1 },
   { id: 'r1_boost_2', channel: 'ticker', text: 'You sold the whole chain for one number that does not reset.', when: (c) => c.boosts >= 1 },
-  { id: 'r1_boost_3', channel: 'ticker', text: 'You will do this again. About twenty more times.', when: (c) => c.boosts >= 3 },
+  { id: 'r1_boost_3', channel: 'ticker', text: 'You will do this again. About eighteen more times.', when: (c) => c.boosts >= 3 },
   { id: 'r1_boost_4', channel: 'ticker', text: 'You have not breathed yet. Everything you built is still standing.', when: (c) => c.boosts === 0 && c.number.gte('1e9') },
   { id: 'r1_boost_5', channel: 'ticker', text: 'Ten breaths. The multiplier is doing more than your fingers now.', when: (c) => c.boosts >= 10 },
   { id: 'r1_prest_1', channel: 'ticker', text: 'You have taken a Definition before. The number does not remember it.', when: (c) => c.prestiges >= 1 },
@@ -158,7 +159,7 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_rare_h_1', channel: 'ticker', rare: true, text: 'You are near the ceiling. The ceiling is a number you were taught to fear.', when: (c) => band(c, '1e150', '1e300') },
   { id: 'r1_rare_g_1', channel: 'ticker', rare: true, text: 'You are one decision away from the gate. The decision is to keep going.', when: (c) => band(c, '1e300') },
   { id: 'r1_rare_boost_1', channel: 'ticker', rare: true, text: 'Five breaths. The number resets. The multiplier does not. Remember which one you are here for.', when: (c) => c.boosts >= 5 },
-  { id: 'r1_rare_boost_2', channel: 'ticker', rare: true, text: 'The arithmetic expected about twenty-three of these. It does not check.', when: (c) => c.boosts >= 20 },
+  { id: 'r1_rare_boost_2', channel: 'ticker', rare: true, text: 'The arithmetic expected about twenty-one of these. It does not check.', when: (c) => c.boosts >= 20 },
   { id: 'r1_rare_prest_1', channel: 'ticker', rare: true, text: 'You started over on purpose. The number is at ten. It is not a punishment.', when: (c) => c.prestiges >= 1 },
   { id: 'r1_rare_prest_2', channel: 'ticker', rare: true, text: 'Second time at ten. The first ten was an event. This one is a habit.', when: (c) => c.prestiges >= 2 && c.number.lt('1e3') },
   { id: 'r1_rare_ps_1', channel: 'ticker', rare: true, text: 'A million per second. The plus button is now a souvenir.', when: (c) => c.perSecond.gte('1e6') },

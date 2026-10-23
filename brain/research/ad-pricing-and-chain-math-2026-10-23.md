@@ -170,3 +170,19 @@ unlock   = 10 birim (tek blok) — mevcut mandal aynen kalır
 
 Not: birim başına büyüme 1,4 → 1,2 düşünce tek birim fiyatları da düşer (25 → 25·1,2^b),
 yani ilk parmak hâlâ 25 ve açılış 15 tık — `P1` kararı etkilenmiyor.
+
+### Kesinleşen sabitler (gerçek motor ölçümü, 2026-10-23)
+
+Uygulamada `CHAIN_RATE = 0,11` seçildi (yukarıdaki tarama 0,12 ile yapılmıştı). Gerçek motor
+(`balance.test.ts`, 20 TPS, 2 tık/sn, blok politikası):
+
+| Ölçüm | Değer |
+| :--- | ---: |
+| Kapı | **119,0 dk** |
+| Mini boost | **21** |
+| Alınan birim | **371** |
+| İlk 10 dk alım kararı | **42** |
+| Halka açılışları | 0 · 1,6 · 4,2 · 6,8 · 9,4 · 12,0 · 14,5 · **17,1** dk |
+
+10'lu blok fiyatları (bought = 0): 649 · 5 192 · 41 534 · 332 271 · 2 658 169 · 21 265 352 ·
+170 122 819 · 1 360 982 553.

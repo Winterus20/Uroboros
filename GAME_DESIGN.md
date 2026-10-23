@@ -73,28 +73,45 @@ Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 73,6 saa
 Ekranda liste **yukarıdan aşağı** `Fingers → … → Mathematician` okunur; üretim **aşağıdan
 yukarı** akar. Yani halka 8 (en pahalı) halka 7'yi besler; **halka 1 sayının kendisini üretir**.
 
-| # | Halka | Taban maliyet | Taban üretim | 10 birimlik kilit | Geri ödeme | İlk açılış |
+| # | Halka | Taban maliyet | Taban üretim | 10 birimlik blok (kilit) | Geri ödeme | İlk açılış |
 | --: | :--- | ---: | ---: | ---: | ---: | ---: |
-| 1 | **Fingers** | **25** | 0,08 /sn (sayı) | 1 745 | 313 sn | 0,0 dk |
-| 2 | Notch | **80** | 0,08 | 5 585 | 40 sn | 11,4 dk |
-| 3 | Abacus | **250** | 0,08 | 17 453 | 39 sn | 21,0 dk |
-| 4 | Pencil | **800** | 0,08 | 55 851 | 40 sn | 26,1 dk |
-| 5 | Calculator | **2 500** | 0,08 | 174 534 | 39 sn | 29,3 dk |
-| 6 | Computer | **8 000** | 0,08 | 558 509 | 40 sn | 31,7 dk |
-| 7 | Supercomputer | **25 000** | 0,08 | 1 745 342 | 39 sn | 33,7 dk |
-| 8 | **Mathematician** | **80 000** | 0,08 | 5 585 093 | 40 sn | 35,4 dk |
+| 1 | **Fingers** | **25** | **1 /sn** (sayı) | 649 | **25 sn** | 0,0 dk |
+| 2 | Notch | **200** | 0,11 /sn | 5 192 | 73 sn | 1,6 dk |
+| 3 | Abacus | **1 600** | 0,11 /sn | 41 534 | 73 sn | 4,2 dk |
+| 4 | Pencil | **12 800** | 0,11 /sn | 332 271 | 73 sn | 6,8 dk |
+| 5 | Calculator | **102 400** | 0,11 /sn | 2 658 169 | 73 sn | 9,4 dk |
+| 6 | Computer | **819 200** | 0,11 /sn | 21 265 352 | 73 sn | 12,0 dk |
+| 7 | Supercomputer | **6 553 600** | 0,11 /sn | 170 122 819 | 73 sn | 14,5 dk |
+| 8 | **Mathematician** | **52 428 800** | 0,11 /sn | 1 360 982 553 | 73 sn | **17,1 dk** |
 
-**Fiyat kuralı (tek cümle):** her halka **0,08 birim/sn** üretir ve her halka bir öncekinin
-**3,2 katı** eder → **her halka kendini 40 saniyede öder** (`T_i = 3,2 / 0,08`).
-Üretim sabit olduğu için merdiven bir *hız* değil, bir *değer* merdivenidir: üstteki halka daha
-hızlı üretmez, daha değerli olanı üretir. Tam çalışma:
-[`brain/research/ring-pricing-2026-10-23.md`](brain/research/ring-pricing-2026-10-23.md).
+Blok sütunu, o halkadan **ilk 10 birimin** toplam fiyatıdır: `c_i · (g^10 − 1)/(g − 1)`.
+
+**Fiyat kuralı (tek cümle):** halka 1 saniyede **1 sayı** üretir (`NUMBER_RATE = 1`); her üst halka
+altındakinden saniyede **0,11 birim** üretir (`CHAIN_RATE = 0,11`) ve bir öncekinin **8 katı**
+eder → birim fiyatı **1,20** ile artar, halka başına `log(8)/log(1,20) = 11,4` birim alınır; yani
+**10'lu blok tam olarak bir halkadır** ve geri ödeme `c_i/(p_i·c_{i-1}) = 8/0,11 ≈ 73 sn` olur
+(halka 1: **25 sn**).
+
+**Neden zincir 0,11?** Zincir 7 katlı bir integraldir: `N(t) ≈ M·(∏p)·t⁸/8!`. Sekiz halka da
+1/sn üretseydi `∏p = 1` olur ve zincir bugünkünün `(1/0,11)⁷ ≈ 5,1e6` katı güçlenirdi; ölçümde
+kapı **43 dakikaya** iniyor ve 10. dakikada **1,3e10** parmak oluyor. `CHAIN_RATE = 0,11` iki
+saatlik koşuyu koruyan sayıdır.
+
+**"10'lu blok" bir fiyat sistemi değil, bir ritimdir.** Merdiven ×8 sabitken birim büyümesini
+**1,4 → 1,20** yapmak halka başına birim sayısını **6,2 → 11,4**'e çıkarır; kapı süresi değişmez
+(ölçüldü), böylece tek blok tam bir halkayı satın alır ve kilit eşiği (10 birim) tek bloktur.
+Halka 2–8 aynı hızda ürettiği için merdiven onlar için bir *hız* değil, bir *değer* merdivenidir;
+halka 1'in 1/sn'si `+1`in gerçek bir birim olmasını sağlar (`S9`). Tam çalışma:
+[`brain/research/ring-pricing-2026-10-23.md`](brain/research/ring-pricing-2026-10-23.md) ·
+[`brain/research/ad-pricing-and-chain-math-2026-10-23.md`](brain/research/ad-pricing-and-chain-math-2026-10-23.md) §6.
 
 **Tek kaynak:** [`src/game/number/tuning.ts`](src/game/number/tuning.ts). Buradaki sayılar
 **ölçümle** kilitlendi (bkz. §7); başka bir yerde tekrar yazılmaz.
 
-- **Alım:** sınırsız, tek havuz (`E2`, `E10`). Fiyat her alımda **×1,4**.
-- **Kilit:** bir halkadan **10 birim** alınınca sonraki halka açılır (`E11`); kilit **mandallı** —
+- **Alım:** sınırsız, tek havuz (`E2`, `E10`). Birim fiyatı her alımda **×1,20**; blok
+  fiyatı AD'nin "Buy 10" formülüyle `c_i · g^b · (g^10 − 1)/(g − 1)`.
+- **Kilit:** bir halkadan **10 birim** alınınca sonraki halka açılır (`E11`) — 10 birim **tek
+  blok**, yani bloğu tamamlayan oyuncu kilidi kendiliğinden açar; kilit **mandallı** —
   boost/prestij kapatmaz (`D6`).
 - **`+1`:** gerçekten 1 ekler, hiçbir çarpan uygulanmaz (`S9`). Üst basamaklarda gösterim
   çözünürlüğünün altında kaldığı için ekranda hiçbir şey değişmez — bu **yuvarlama**, yalan değil.
@@ -106,7 +123,8 @@ hızlı üretmez, daha değerli olanı üretir. Tam çalışma:
 ### 5.1 Maliyet
 
 ```
-maliyet_i(b) = c_i · g^b        c_i = halka taban maliyeti, g = 1,4 (güvenli bant 1,32–1,48)
+maliyet_i(b)  = c_i · g^b                          c_i = halka taban maliyeti, g = 1,20
+blok_i(b, 10) = c_i · g^b · (g^10 − 1)/(g − 1)     AD'nin "Buy 10" formülü
 ```
 
 `b` = o halkadan **bu koşuda** alınan birim sayısı. Boost/prestij `b`'yi sıfırlar.
@@ -119,7 +137,8 @@ halka_i/sn   = A_{i+1} · p_{i+1} · chainMult      (i = 1..6)
 halka_8/sn   = 0                                  (zincirin tepesi)
 ```
 
-`A_i` = halkadaki birim sayısı, `p_i` = halkanın taban üretimi.
+`A_i` = halkadaki birim sayısı, `p_i` = halkanın taban üretimi (`p_1 = 1`,
+`p_i = 0,11` için `i ≥ 2`).
 
 **`D1` (ölçümün zorunlu kıldığı düzeltme):** boost çarpanı **yalnız sayı üretimine** uygulanır,
 halka beslemesine **uygulanmaz**. Her halkaya uygulandığında `N ∝ M⁸` olur ve döngüler 2 saniyeye
@@ -180,13 +199,16 @@ vermez, yalnızca tıklama yükünü alır.
 
 ---
 
-## 7. Ölçüm — 1. basamak (`K5`, Set A)
+## 7. Ölçüm — 1. basamak (`K5`, Set A → A+)
 
 Simülasyon: [`brain/scratchpad/balance-2026-10-23/sim.mjs`](brain/scratchpad/balance-2026-10-23/sim.mjs)
 · rapor: [`report.md`](brain/scratchpad/balance-2026-10-23/report.md) · çalıştır: `node sim.mjs --all`.
 Zincir kapalı formla entegre edildiği için sonuç `dt`'den bağımsızdır (0,5 / 0,1 / 0,05 sn).
 
-| Hedef | İstenen | Ölçülen (Set A) | Durum |
+> Aşağıdaki Set A tablosu **0,08/sn · ×1,4** sabitleriyle ölçüldü; A+ revizyonu (bu bölümün
+> sonunda) bu sabitleri değiştirdi. Yürürlükteki sayılar A+ paragrafındadır.
+
+| Hedef | İstenen | Ölçülen (Set A, tarihsel) | Durum |
 | :--- | :--- | :--- | :--- |
 | Kapı | 110–130 dk | **119,8 dk** | ✅ |
 | Mini boost | 20–26 | **23** | ✅ |
@@ -208,6 +230,15 @@ alım, halka açılışları 0 · 11,7 · 22,0 · 27,5 · 30,8 · 33,4 · 35,4 �
 tutuyor**; naif Euler'in "%17 erken" farkı motorun güncelleme sırasında oluşmuyor. Bu ölçüm
 `src/game/number/balance.test.ts` içinde **6 regresyon testi** olarak kilitlendi.
 
+**A+ revizyonu (aynı gün, üçüncü tur):** sabitler yeniden yazıldı — halka 1 `NUMBER_RATE = 1`,
+halka 2–8 `CHAIN_RATE = 0,11`, fiyat ×8 (25 → 52 428 800), birim büyümesi `g = 1,20`, 10'lu blok
+`BLOCK_SIZE = 10`. Gerçek motor (20 TPS, 2 tık/sn, K5 politikası) yeniden ölçüldü: kapı
+**119,0 dk** · **21** boost · **371** birim alımı · ilk 10 dk **42** alım kararı · halka açılışları
+**0 · 1,6 · 4,2 · 6,8 · 9,4 · 12,0 · 14,5 · 17,1 dk**. Yukarıdaki Set A satırları ve "4b"
+tartışması **0,08/sn · ×1,4** ekonomisine aittir, tarihseldir. Yürürlükteki regresyon bantları
+`balance.test.ts`'te: kapı 110–130 dk · 18–24 boost · ilk 10 dk ≥ 6 karar · 8 halka < 45 dk ·
+halka başına en az bir blok.
+
 **Belge borcu:** hedef 4b'nin bu revizyonu henüz yazılı karar kaydına (grilling §6.2 / ADR) işlenmedi.
 `todo.md` → `K5` bunu "kalan belge borcu" olarak tutuyor; denge tarafında açık bir iş yok.
 
@@ -222,8 +253,8 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 | :--- | :--- |
 | Zincir | Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician |
 | Yön | Aşağıdan yukarı; **Fingers sayıyı üretir**; `+1` = elle Fingers |
-| Alım | Sınırsız, fiyat ×1,3–1,5 (kilit: **×1,4**), 2 saatte 100–150 alım |
-| Kilit | Bir halkadan 10 birim → sonraki halka (mandallı) |
+| Alım | Sınırsız, birim fiyatı **×1,20**; 10'lu blok = bir halka (AD "Buy 10"), 2 saatte ~370 birim |
+| Kilit | Bir halkadan 10 birim (= tek blok) → sonraki halka (mandallı) |
 | Döngü | 8. halkada mini boost: tam sıfırlama + `(zirve/10)^0,2` kalıcı çarpan |
 | Kapı | `1,79e308` → prestij: sayı `10`, `Tanım = log10(1+A)`, verim `0,9^log10 A` |
 | Ses | Ticker konuşur (`V4`); tooltip ve sayısal etiket **asla** şaka yapmaz |

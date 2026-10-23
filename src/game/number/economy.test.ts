@@ -1,19 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { D } from '../../core/math'
-import { NUMBER_TUNING, ringCostAt } from './tuning'
+import { D, Decimal } from '../../core/math'
+import { BLOCK_SIZE, NUMBER_TUNING, ringBlockCost, ringCostAt } from './tuning'
 import {
   advance,
   applyBoost,
   applyPrestige,
   boostMultiplier,
   buyRing,
+  buyRingMax,
   canBoost,
   createNumberState,
   gateReady,
   manualTap,
+  maxAffordableRing,
   numberPerSecond,
   overflowRatio,
   productionEfficiency,
+  ringBlockPrice,
   ringCost,
   ringGainPerSecond,
   ringUnlocked,
@@ -196,5 +199,52 @@ describe('sayı ekonomisi — 1. basamak', () => {
     manualTap(s)
     expect(s.number.toString()).toBe('11')
     expect(s.bestNumber.toString()).toBe('11')
+  })
+})
+
+describe('blok satın alma — AD "Buy 10"', () => {
+  it('blok fiyatı 10 birimin geometrik toplamıdır', () => {
+    const base = NUMBER_TUNING.rings[0].baseCost
+    const g = NUMBER_TUNING.costGrowth
+    const expected = base.times(new Decimal(g).pow(BLOCK_SIZE).minus(1)).div(g - 1)
+    expect(ringBlockCost(base, 0, BLOCK_SIZE).div(expected).toNumber()).toBeCloseTo(1, 9)
+  })
+
+  it('tek birim fiyatı count = 1 ile aynıdır', () => {
+    const base = NUMBER_TUNING.rings[3].baseCost
+    expect(ringBlockCost(base, 4, 1).toString()).toBe(ringCostAt(base, 4).toString())
+  })
+
+  it('blok alımı toplamı düşer, sayacı 10 artırır ve sonraki halkayı açar', () => {
+    const s = createNumberState()
+    s.number = D('1e12')
+    const price = ringBlockPrice(s, 0, BLOCK_SIZE)
+    const before = s.number
+    expect(buyRing(s, 0, BLOCK_SIZE)).toBe(BLOCK_SIZE)
+    expect(s.number.eq(before.minus(price))).toBe(true)
+    expect(s.rings[0].bought).toBe(BLOCK_SIZE)
+    expect(ringUnlocked(s, 1)).toBe(true)
+  })
+
+  it('maxAffordableRing bütçenin alabildiği en büyük sayıyı verir', () => {
+    const s = createNumberState()
+    s.number = D('1e6')
+    const n = maxAffordableRing(s, 0)
+    expect(n).toBeGreaterThan(BLOCK_SIZE)
+    expect(s.number.gte(ringBlockPrice(s, 0, n))).toBe(true)
+    expect(s.number.lt(ringBlockPrice(s, 0, n + 1))).toBe(true)
+  })
+
+  it('kilitli halkada max 0 döner, alım yapılmaz', () => {
+    const s = createNumberState()
+    s.number = D('1e30')
+    expect(maxAffordableRing(s, 4)).toBe(0)
+    expect(buyRingMax(s, 4)).toBe(0)
+  })
+
+  it('halka başına bir blok sığar (log(8)/log(1,20) = 11,4 birim)', () => {
+    const perRing = Math.log(NUMBER_TUNING.ladderRatio) / Math.log(NUMBER_TUNING.costGrowth)
+    expect(perRing).toBeGreaterThan(BLOCK_SIZE)
+    expect(perRing).toBeLessThan(BLOCK_SIZE * 1.3)
   })
 })
