@@ -125,10 +125,11 @@ kilitlilik griyle verilir. Hue kimlik taşır, durum taşımaz.
 | 4 | taban büyük, ok sayısı üstsimge, büyüklük küçük | `10` + `↑6` + `4.27` |
 | 5–11 | isim tek başına **tam punto** | `G` · `TREE(3)` · `BIG FOOT` · `LNGN` |
 
-**Sayı merdiveni (`ADR-0080`):** 1000 altı düz sayı — ondalık kısım görünür (`1.001`);
-1e3–1e12 kısaltma (`1.23` + küçük `K` · `4.5` + `M` · `2` + `B` · `7` + `T`); 1e15 ve üstü
-e-notasyonu (`1.23` + `e15`). Kısaltma tükenince otomatik e'ye düşer; ekranda asla `1000 K`
-görünmez (yuvarlama taşarsa kısaltma büyür: 999 999 → `1 M`).
+**Sayı merdiveni (`ADR-0080`):** 1000 altı düz **tam sayı** (`12`, `649`); yalnız 1'in
+altındaki oranlar ondalık taşır (`0.11/sn`). 1e3–1e12 kısaltma (`1.23` + küçük `K` · `4.5` + `M` ·
+`2` + `B` · `7` + `T`); 1e15 ve üstü e-notasyonu (`1.23` + `e15`). Kısaltma tükenince otomatik
+e'ye düşer; ekranda asla `1000 K` görünmez (yuvarlama taşarsa kısaltma büyür: 999 999 → `1 M`,
+999.6 → `1 K`).
 
 **Ölçek:** hero tabanı masaüstünde 96–120px aralığında; basamak başına sabit (elle tablo),
 dizeye göre otomatik değil. Küçük ölçek (üs, üstsimge) tabanın ~%32-36'sı.

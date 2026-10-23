@@ -7,7 +7,7 @@ export type NotationType = 'standard' | 'scientific' | 'engineering' | 'logarith
  * yerel ayar (tr-TR) kullanılmaz; ayırıcılar sabittir.
  *
  * Gösterim merdiveni (ADR-0080):
- *  - 0 … 999,999: düz sayı, ondalık kısım GÖRÜNÜR ("1.001", "12.34")
+ *  - 0 … 999: düz TAM sayı ("12"), 1'in altında ondalık korunur ("0.11")
  *  - 1 000 … 10^15: çoğu insanın okuduğu kısaltmalar ("1.23 K", "4.5 M", "2 B", "7 T")
  *  - 10^15 ve üstü: e-notasyonu ("1.23e15"), sonra break_eternity kulesi
  *
@@ -36,22 +36,22 @@ function plain(value: number, precision: number): string {
 }
 
 /**
- * 1000 altı yazım: ondalık kısım GÖRÜNÜR kalır.
+ * 1000 altı yazım: TAM SAYI (ADR-0080 revizyonu, 2026-10-23).
  *
- * `plain` sondaki sıfırları attığı için kesir yuvarlamada yutulabiliyordu
- * (1.001 → "1") ve artış ekranda kayboluyordu. Burada kesir yutulursa
- * hassasiyet sessizce artırılır (en fazla 4 basamak): 1.001 → "1.001".
- * Oyuncu Ayarlar'dan 0 ondalık seçtiyse bu artırma yapılmaz.
+ * Sahibi: "12.35 yerine direkt 12 yazsın." Sayı büyürken ondalık kuyruk
+ * gürültüydü; 1 ve üstü değerler en yakın tam sayıya yuvarlanır (12.35 → "12").
+ * 1'in ALTINDA ondalık korunur: 0.11/sn gibi üretim oranları "0" görünüp
+ * yalan söylemesin (0.004 gibi çok küçükler en fazla 4 basamağa kadar açılır).
  */
 function plainSmall(value: number, precision: number): string {
   if (!Number.isFinite(value)) return '0'
+  if (value >= 1) return plain(value, 0)
   const start = clampPrecision(precision)
   const text = plain(value, start)
-  if (start === 0 || Number.isInteger(value) || text.indexOf('.') >= 0) return text
-  const cap = Math.max(start, 4)
-  for (let digits = start + 1; digits <= cap; digits += 1) {
+  if (text !== '0') return text
+  for (let digits = Math.max(start, 1) + 1; digits <= 4; digits += 1) {
     const wider = plain(value, digits)
-    if (wider.indexOf('.') >= 0) return wider
+    if (wider !== '0') return wider
   }
   return text
 }
@@ -66,9 +66,14 @@ export function format(value: DecimalSource, precision = 2, notation: NotationTy
   if (dec.eq(0)) return '0'
   if (dec.layer >= 2) return dec.toString()
 
-  if (dec.lt(1000)) return plainSmall(dec.toNumber(), safePrecision)
-
   const exp = dec.log10().floor().toNumber()
+
+  if (dec.lt(1000)) {
+    const text = plainSmall(dec.toNumber(), safePrecision)
+    // 999.6 tam sayıya yuvarlanınca "1000" olur; kısaltmalı yazımda "1 K"ya devret.
+    if (text === '1000' && notation === 'standard') return '1 ' + STANDARD_SUFFIXES[1]
+    return text
+  }
 
   if (notation === 'standard') return formatStandard(dec, exp, safePrecision)
 
@@ -97,7 +102,9 @@ function formatStandard(dec: Decimal, exp: number, precision: number): string {
     index += 1
     mantissa = dec.div(Decimal.pow(10, index * 3)).toNumber()
   }
-  if (index <= 0 || index >= STANDARD_SUFFIXES.length) return formatScientific(dec, precision)
+  // index <= 0 yalnız "999.6 → 1 K" devrinde görülür; kalan yol düz tam sayıdır.
+  if (index <= 0) return plain(dec.toNumber(), 0)
+  if (index >= STANDARD_SUFFIXES.length) return formatScientific(dec, precision)
   return plain(mantissa, precision) + ' ' + STANDARD_SUFFIXES[index]
 }
 
@@ -135,7 +142,7 @@ export function formatParts(
 
 /**
  * Hero dizgi (ADR-0078 §4): sayı iki ölçeğe ayrılır, punto küçülmez.
- *  - < 1000: tek parça, ondalık kısım görünür
+ *  - < 1000: tek parça, tam sayı (1'in altında ondalık)
  *  - 1e3..1e15: taban + kısaltma ("1.23" + "K")
  *  - 1e15..: taban + 'e' üssü
  *  - layer >= 2: break_eternity'nin kule yazımı ikiye bölünür
@@ -153,7 +160,12 @@ export function heroParts(value: DecimalSource, notation: NotationType = 'standa
     const inner = heroParts(dec.neg(), notation)
     return { base: '-' + inner.base, tail: inner.tail }
   }
-  if (dec.lt(1000)) return { base: plainSmall(dec.toNumber(), 2), tail: '' }
+  if (dec.lt(1000)) {
+    const text = plainSmall(dec.toNumber(), 2)
+    // 999.6 → "1000" değil "1" + "K": hero ile etiketler aynı dili konuşur.
+    if (text === '1000' && notation === 'standard') return { base: '1', tail: 'K' }
+    return { base: text, tail: '' }
+  }
   if (dec.layer >= 2) {
     const text = dec.toString()
     const idx = text.indexOf('e')

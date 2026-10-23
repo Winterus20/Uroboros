@@ -39,10 +39,16 @@ dışında. Kısaltma tükenince e'ye düşmek, uydurma bir sözlük öğrenmekt
 `999 999` ekranda `1000 K` olmaz → `1 M`. `formatStandard()` yuvarlanmış mantisayı denetler ve
 gerekirse bir üst kısaltmaya geçer. Aynı kural hero dizgisinde de geçerli.
 
-### 4. 1000 altında ondalık kısım görünür kalır
-`plainSmall()`: kesir yuvarlamada yutulursa hassasiyet sessizce artar (en fazla 4 basamak):
-`1.001` → `1.001`, `12.345` → `12.35`. Oyuncu Ayarlar'dan **0 ondalık** seçtiyse artırma
-yapılmaz — ayar yalan söylemez.
+### 4. 1000 altında TAM sayı (revizyon — aynı gün ikinci geri bildirim)
+Sahibi ilk turda "1000 altında ondalık görünsün" dedi, aynı gün ikinci turda vazgeçti:
+*"12.35 yerine direkt 12 yazsın."* Sayı büyürken ondalık kuyruk gürültüydü (hero'da her karede
+iki basamak titriyordu). Kural artık:
+
+- **1 ve üstü → en yakın tam sayı:** `12.345` → `12`, `12.6` → `13`, `648.97` → `649`.
+- **1'in altı → ondalık korunur:** `0.11` → `0.11` (halka üretim oranı "0/sn" görünüp yalan
+  söylemesin); `0.004` gibi çok küçükler en fazla 4 basamağa kadar açılır.
+- **Sınır:** `999.6` tam sayıya yuvarlanınca `1000` olur; bu durumda gösterim `1 K`ya devreder
+  (hero dâhil), yani ekranda ne `1000 K` ne de yalnız `1000` kalır.
 
 ### 5. Hero dizgisi yapısal kalır (`G9`)
 `heroParts(value, notation)` kısaltmayı **kuyruk** parçasına koyar: taban hero puntosu, kısaltma
@@ -61,11 +67,12 @@ yazılır, oyuncunun sonraki seçimi korunur.
 
 - **Olumlu:** İlk `+1`'den itibaren sayı okunur (`1.02`, `12.35`, `1.23 K`, `4.57 M`); oyuncu
   kısaltma sözlüğü öğrenmek zorunda kalmıyor; e-notasyonu yalnız 1e15 üstünde görünüyor.
-- **Olumlu:** Ondalık artış ekranda kaybolmuyor (eski `1.001 → 1` hatası kapandı).
+- **Olumlu:** Ondalık kuyruk kalktı: hero ve etiketler tam sayı okur (`12`, `649`), yalnız 1'in
+  altındaki oranlar (`0.11/sn`) ondalık taşır.
 - **Ödün:** `Qa`…`NoTg` basamakları 1e15'te e'ye devredildiği için oyunda kısaltma çeşitliliği
   azaldı — bilinçli: okunurluk > sözlük zenginliği.
-- **Açık (kabul):** 999,999 ile 1000 arasındaki bir kare `1000` (düz) gösterebilir; bir sonraki
-  karede `1 K` olur. Bir karelik sınır, ek kural eklemeye değmedi.
+- **Açık (kabul):** 0 ile 1 arası değerler tam sayı kuralının dışında; oran etiketleri
+  (`0.11/sn`) ondalık gösterir — sayı ile oranın aynı dili konuşmaması bilinçli.
 
 ---
 
@@ -87,5 +94,5 @@ yazılır, oyuncunun sonraki seçimi korunur.
 
 - `npm run typecheck` → temiz · `npm run test` → **101 test / 6 dosya geçti** · `npm run build` → başarılı.
 - Tarayıcı (Playwright, gerçek build, kayıt enjekte edilerek):
-  `1.5 → 1.5` · `100 → 100` · `12.345 → 12.35` · `1234.5 → 1.23K` · `4567000 → 4.57M` ·
+  `12.345 → 12` · `0.11 → 0.11` · `999.6 → 1K` · `1234.5 → 1.23K` · `4567000 → 4.57M` ·
   `999999 → 1M` · `1e16 → 1e16` · notasyon `scientific` iken `1234.5 → 1.23e3`.

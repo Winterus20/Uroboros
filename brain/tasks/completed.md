@@ -1,6 +1,6 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
-## [2026-10-23] ✔ — Sayı gösterimi: K/M/B/T kısaltmaları, 1000 altında ondalık, sonra e
+## [2026-10-23] ✔ — Sayı gösterimi: K/M/B/T kısaltmaları, 1000 altında tam sayı, sonra e
 
 ### Ne yapıldı
 Proje sahibinin oyun içi geri bildirimi (*"1000'de `1e3` yazıyor, çoğu insanın anladığı şekilde
@@ -13,8 +13,9 @@ olarak kayda geçti ve uygulandı.
   düşer (`1.23e15`); `layer >= 2` kule yazımı aynı. `Qa`, `NoTg`, `UTg` gibi bileşik kısaltmalar
   kalktı — "çoğu insanın anladığı" ölçü bin/milyon/milyar/trilyon.
 - **Yuvarlama taşması:** 999 999 → `1 M`; ekranda `1000 K` görünmez. Aynı kural hero'da da geçerli.
-- **1000 altı ondalık görünür (`plainSmall`):** kesir yuvarlamada yutulmuyor (1.001 → `1.001`,
-  12.345 → `12.35`), en fazla 4 basamağa kadar; oyuncu 0 ondalık seçtiyse artırma yapılmaz.
+- **1000 altı TAM sayı (`plainSmall`) — aynı gün ikinci geri bildirim:** *"12.35 yerine direkt 12
+  yazsın."* 1 ve üstü tam sayıya yuvarlanır (12.345 → `12`, 648.97 → `649`); 1'in altındaki
+  oranlar ondalık kalır (0.11 → `0.11`), yoksa "0/sn" yalanı doğardı. 999.6 sınırı `1 K`ya devreder.
 - **Hero dizgisi (`G9`) korunur:** `heroParts(value, notation)` kısaltmayı kuyruk parçasına koyar
   (`4.57` + küçük `M`). Negatif sayıda işaret tabana eklenir (eskiden üs dalına düşüyordu).
 - **Kayıt v20 → v21 (şema aynı):** v20 kayıtlarındaki `scientific` *eski varsayılan* olduğu için
@@ -32,10 +33,10 @@ olarak kayda geçti ve uygulandı.
 [ADR-0080](../decisions/0080-number-notation-ladder.md) · `brain/decisions/README.md` · bu kayıt.
 
 ### Doğrulama
-`npm run typecheck` temiz · `npm run test` → **101 test / 6 dosya geçti** · `npm run build` başarılı.
+`npm run typecheck` temiz · `npm run test` → **102 test / 6 dosya geçti** · `npm run build` başarılı.
 Tarayıcı (Playwright, gerçek dev build, kayıt enjekte edilerek): `1.5 → 1.5` · `100 → 100` ·
-`12.345 → 12.35` · `1234.5 → 1.23K` · `4567000 → 4.57M` · `999999 → 1M` · `1e16 → 1e16` ·
-notasyon `scientific` iken `1234.5 → 1.23e3`.
+`12.345 → 12` · `0.11 → 0.11` · `999.6 → 1K` · `1234.5 → 1.23K` · `4567000 → 4.57M` ·
+`999999 → 1M` · `1e16 → 1e16` · notasyon `scientific` iken `1234.5 → 1.23e3`.
 
 ---
 

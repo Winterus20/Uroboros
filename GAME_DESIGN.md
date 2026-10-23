@@ -324,7 +324,7 @@ Tam sözleşme: [`brain/context/visual-language.md`](brain/context/visual-langua
 | Mini boost | 400 ms "tek nefes" (`G11`); sahne diliyle karışmaz |
 | `+1` | Hiç değişmez (`G10`): aynı yer, aynı boyut, aynı etiket, aynı ses |
 | Dizgi | Yapısal (`G9`): taban büyük, notasyon küçük; **auto-fit yasak** |
-| Sayı merdiveni | `1.001` düz (ondalık görünür) · `1.23 K` → `7 T` kısaltma · `1.23e15`+ e-notasyonu (`ADR-0080`) |
+| Sayı merdiveni | `12` düz tam sayı (1 altı ondalık) · `1.23 K` → `7 T` kısaltma · `1.23e15`+ e-notasyonu (`ADR-0080`) |
 
 ---
 
