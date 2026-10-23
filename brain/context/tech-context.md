@@ -27,8 +27,9 @@
 ## 3. Kayıt, Bulut, Ses ve Test Altyapısı
 - **Kayıt:** LZ-String + LocalStorage; 3 slot + otomatik yedek + bozuk kayıt karantinası;
   import/export boyut koruması.
-- **Şema sürümü:** `SAVE_VERSION = 20`, `MIN_SUPPORTED_SAVE_VERSION = 20` (P5: v19 ve altı
-  kayıtlar açılmaz). Daha yeni bir build'in kaydı `SaveVersionError` ile reddedilir.
+- **Şema sürümü:** `SAVE_VERSION = 21`, `MIN_SUPPORTED_SAVE_VERSION = 20` (P5: v19 ve altı
+  kayıtlar açılmaz; v20 açılır, notasyonu bir kez `standard`'a taşınır — ADR-0080). Daha yeni
+  bir build'in kaydı `SaveVersionError` ile reddedilir.
 - **Cloud Save:** Firebase Auth + Firestore; misafir ve Google ile giriş desteklenir; anahtarsız
   oyun tam çalışır. Çakışma `CloudConflictModal` ile çözülür.
 - **Ses/Müzik:** Web Audio API — harici ses dosyası yok, tamamı sentez (`src/core/audio.ts`,

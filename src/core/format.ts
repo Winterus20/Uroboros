@@ -6,16 +6,21 @@ export type NotationType = 'standard' | 'scientific' | 'engineering' | 'logarith
  * Sayı biçimlendirme — TEK kaynak. P3: tüm oyun metni İngilizce, bu yüzden
  * yerel ayar (tr-TR) kullanılmaz; ayırıcılar sabittir.
  *
+ * Gösterim merdiveni (ADR-0080):
+ *  - 0 … 999,999: düz sayı, ondalık kısım GÖRÜNÜR ("1.001", "12.34")
+ *  - 1 000 … 10^15: çoğu insanın okuduğu kısaltmalar ("1.23 K", "4.5 M", "2 B", "7 T")
+ *  - 10^15 ve üstü: e-notasyonu ("1.23e15"), sonra break_eternity kulesi
+ *
  * Kural (ADR-0078 §4): auto-fit YOK — punto dizeye göre küçülmez. Bunun için
  * `formatParts` / `heroParts` sayıyı YAPISAL iki parçaya ayırır (taban + kuyruk),
  * UI parçaları farklı puntoda çizer.
  */
-const STANDARD_SUFFIXES = [
-  '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
-  'Dc', 'UDc', 'DDc', 'TDc', 'QaDc', 'QiDc', 'SxDc', 'SpDc', 'OcDc', 'NoDc',
-  'Vg', 'UVg', 'DVg', 'TVg', 'QaVg', 'QiVg', 'SxVg', 'SpVg', 'OcVg', 'NoVg',
-  'Tg', 'UTg', 'DTg', 'TTg', 'QaTg', 'QiTg', 'SxTg', 'SpTg', 'OcTg', 'NoTg'
-]
+/**
+ * Kısaltmalar yalnız ÇOĞU İNSANIN okuduğu basamaklar: bin, milyon, milyar,
+ * trilyon. Kısaltma tükendiğinde sayı e-notasyonuna devredilir; "Qa", "UTg"
+ * gibi bileşik kısaltmalar oyuncunun sözlüğünde yoktu.
+ */
+const STANDARD_SUFFIXES = ['', 'K', 'M', 'B', 'T']
 
 function clampPrecision(p: number): number {
   if (!Number.isFinite(p)) return 2
@@ -30,7 +35,28 @@ function plain(value: number, precision: number): string {
   return fixed.indexOf('.') >= 0 ? fixed.replace(/0+$/, '').replace(/\.$/, '') : fixed
 }
 
-export function format(value: DecimalSource, precision = 2, notation: NotationType = 'scientific'): string {
+/**
+ * 1000 altı yazım: ondalık kısım GÖRÜNÜR kalır.
+ *
+ * `plain` sondaki sıfırları attığı için kesir yuvarlamada yutulabiliyordu
+ * (1.001 → "1") ve artış ekranda kayboluyordu. Burada kesir yutulursa
+ * hassasiyet sessizce artırılır (en fazla 4 basamak): 1.001 → "1.001".
+ * Oyuncu Ayarlar'dan 0 ondalık seçtiyse bu artırma yapılmaz.
+ */
+function plainSmall(value: number, precision: number): string {
+  if (!Number.isFinite(value)) return '0'
+  const start = clampPrecision(precision)
+  const text = plain(value, start)
+  if (start === 0 || Number.isInteger(value) || text.indexOf('.') >= 0) return text
+  const cap = Math.max(start, 4)
+  for (let digits = start + 1; digits <= cap; digits += 1) {
+    const wider = plain(value, digits)
+    if (wider.indexOf('.') >= 0) return wider
+  }
+  return text
+}
+
+export function format(value: DecimalSource, precision = 2, notation: NotationType = 'standard'): string {
   const dec = D(value)
   const safePrecision = clampPrecision(precision)
 
@@ -40,18 +66,11 @@ export function format(value: DecimalSource, precision = 2, notation: NotationTy
   if (dec.eq(0)) return '0'
   if (dec.layer >= 2) return dec.toString()
 
-  if (dec.lt(1000)) return plain(dec.toNumber(), Math.min(safePrecision, 3))
+  if (dec.lt(1000)) return plainSmall(dec.toNumber(), safePrecision)
 
   const exp = dec.log10().floor().toNumber()
 
-  if (notation === 'standard') {
-    const suffixIndex = Math.floor(exp / 3)
-    if (suffixIndex < STANDARD_SUFFIXES.length) {
-      const mantissa = dec.div(Decimal.pow(10, suffixIndex * 3)).toNumber()
-      return plain(mantissa, safePrecision) + ' ' + STANDARD_SUFFIXES[suffixIndex]
-    }
-    return formatScientific(dec, safePrecision)
-  }
+  if (notation === 'standard') return formatStandard(dec, exp, safePrecision)
 
   if (notation === 'engineering') {
     const engExp = Math.floor(exp / 3) * 3
@@ -64,6 +83,22 @@ export function format(value: DecimalSource, precision = 2, notation: NotationTy
   }
 
   return formatScientific(dec, safePrecision)
+}
+
+/**
+ * Kısaltmalı yazım: "1.23 K" … "999.9 T". Kısaltma tükendiğinde (10^15+)
+ * sayı e-notasyonuna devredilir. Yuvarlama bir üst basamağa taşarsa
+ * (999 999) kısaltma büyür — ekranda "1000 K" görünmez.
+ */
+function formatStandard(dec: Decimal, exp: number, precision: number): string {
+  let index = Math.floor(exp / 3)
+  let mantissa = dec.div(Decimal.pow(10, index * 3)).toNumber()
+  if (Number(mantissa.toFixed(precision)) >= 1000) {
+    index += 1
+    mantissa = dec.div(Decimal.pow(10, index * 3)).toNumber()
+  }
+  if (index <= 0 || index >= STANDARD_SUFFIXES.length) return formatScientific(dec, precision)
+  return plain(mantissa, precision) + ' ' + STANDARD_SUFFIXES[index]
 }
 
 function formatScientific(dec: Decimal, precision: number): string {
@@ -85,15 +120,14 @@ export interface FormattedParts {
 export function formatParts(
   value: DecimalSource,
   precision = 2,
-  notation: NotationType = 'scientific'
+  notation: NotationType = 'standard'
 ): FormattedParts {
   const full = format(value, precision, notation)
-  if (notation === 'standard') {
-    const idx = full.lastIndexOf(' ')
-    if (idx > 0) return { main: full.slice(0, idx), suffix: full.slice(idx + 1), kind: 'suffix' }
-    return { main: full, suffix: '', kind: 'plain' }
-  }
   if (notation === 'logarithm') return { main: full, suffix: '', kind: 'plain' }
+  // Kısaltmalı yazımda kuyruk bir sözcüktür ("K", "T"); kısaltma tükenince
+  // aynı dal e-notasyonuna düşer, o yüzden üs kontrolü her iki dalda çalışır.
+  const spaceIdx = full.lastIndexOf(' ')
+  if (spaceIdx > 0) return { main: full.slice(0, spaceIdx), suffix: full.slice(spaceIdx + 1), kind: 'suffix' }
   const m = /^(-?[\d.]+)e(-?\d+)$/.exec(full)
   if (m) return { main: m[1], suffix: 'e' + m[2], kind: 'exponent' }
   return { main: full, suffix: '', kind: 'plain' }
@@ -101,8 +135,9 @@ export function formatParts(
 
 /**
  * Hero dizgi (ADR-0078 §4): sayı iki ölçeğe ayrılır, punto küçülmez.
- *  - < 1000: tek parça
- *  - 1e3..: taban + 'e' üssü
+ *  - < 1000: tek parça, ondalık kısım görünür
+ *  - 1e3..1e15: taban + kısaltma ("1.23" + "K")
+ *  - 1e15..: taban + 'e' üssü
  *  - layer >= 2: break_eternity'nin kule yazımı ikiye bölünür
  */
 export interface HeroParts {
@@ -110,10 +145,15 @@ export interface HeroParts {
   tail: string
 }
 
-export function heroParts(value: DecimalSource): HeroParts {
+export function heroParts(value: DecimalSource, notation: NotationType = 'standard'): HeroParts {
   const dec = D(value)
   if (dec.isNan() || Number.isNaN(dec.mag)) return { base: 'NaN', tail: '' }
-  if (dec.lt(1000) && dec.gte(0)) return { base: plain(dec.toNumber(), 2), tail: '' }
+  if (!dec.isFinite()) return { base: 'Infinity', tail: '' }
+  if (dec.sign < 0) {
+    const inner = heroParts(dec.neg(), notation)
+    return { base: '-' + inner.base, tail: inner.tail }
+  }
+  if (dec.lt(1000)) return { base: plainSmall(dec.toNumber(), 2), tail: '' }
   if (dec.layer >= 2) {
     const text = dec.toString()
     const idx = text.indexOf('e')
@@ -121,8 +161,19 @@ export function heroParts(value: DecimalSource): HeroParts {
     return { base: text, tail: '' }
   }
   const exp = dec.log10().floor().toNumber()
-  const mantissa = dec.div(Decimal.pow(10, exp)).toNumber()
-  return { base: plain(mantissa, 2), tail: 'e' + exp }
+  if (notation === 'standard') {
+    let index = Math.floor(exp / 3)
+    let mantissa = dec.div(Decimal.pow(10, index * 3)).toNumber()
+    if (Number(mantissa.toFixed(2)) >= 1000) {
+      index += 1
+      mantissa = dec.div(Decimal.pow(10, index * 3)).toNumber()
+    }
+    if (index > 0 && index < STANDARD_SUFFIXES.length) {
+      return { base: plain(mantissa, 2), tail: STANDARD_SUFFIXES[index] }
+    }
+  }
+  const towerBase = dec.div(Decimal.pow(10, exp)).toNumber()
+  return { base: plain(towerBase, 2), tail: 'e' + exp }
 }
 
 export function formatTime(seconds: number): string {

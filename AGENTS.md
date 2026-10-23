@@ -29,7 +29,7 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 | **Sayı Motoru** | **`break_eternity.js`** | **ÖNEMLİ:** `isNaN` yerine küçük harfle **`isNan()`** — `dec.isNan() \|\| Number.isNaN(dec.mag)`. Tip tanımı `plus/minus/times` ister; `add/sub/mul` runtime'da var ama tipte yok. |
 | **Stil** | **Tailwind CSS 3.4** + CSS değişkenleri | "Saf Sayı" (ADR-0078): kart/blur/yuvarlak köşe/gölge YOK; 1px hairline + tipografi + boşluk |
 | **Tipografi** | **Space Grotesk** (hero+UI) · **Space Mono** (veri) | `tabular-nums` zorunlu; hero asla `font-bold` (300 sabit) |
-| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 20`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
+| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 21`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
 | **Ses** | **Web Audio API** | Harici ses dosyası yok; osilatör sentezi |
 
 ---
@@ -71,7 +71,7 @@ Incremental/
     │   ├── math.ts            # break_eternity Decimal sarmalayıcısı ve sabitler
     │   ├── format.ts          # Notasyon biçimleri + hero dizgi parçaları
     │   ├── save.ts            # LZ-String, slotlar, karantina, import/export
-    │   ├── save-version.ts    # SAVE_VERSION (v20) ve asgari sürüm
+    │   ├── save-version.ts    # SAVE_VERSION (v21) ve asgari sürüm
     │   ├── game-loop.ts       # 20 TPS sabit adımlı döngü + çevrimdışı devir
     │   ├── audio.ts           # Ses cephesi (efekt + müzik köprüsü)
     │   ├── music/             # Prosedürel müzik motoru

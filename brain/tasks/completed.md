@@ -1,5 +1,44 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — Sayı gösterimi: K/M/B/T kısaltmaları, 1000 altında ondalık, sonra e
+
+### Ne yapıldı
+Proje sahibinin oyun içi geri bildirimi (*"1000'de `1e3` yazıyor, çoğu insanın anladığı şekilde
+yazsın; bir yere kadar kısaltmalar, sonra e'li sayılar"*) [ADR-0080](../decisions/0080-number-notation-ladder.md)
+olarak kayda geçti ve uygulandı.
+
+- **Varsayılan notasyon `standard`:** 1000 artık `1e3` değil `1 K`. Ayarlar'daki dört seçenek
+  (`standard` · `scientific` · `engineering` · `logarithm`) duruyor, `standard` ilk sırada.
+- **Kısaltma merdiveni 41 → 4 basamak:** `K · M · B · T` (1e3–1e12). 1e15 ve üstü e-notasyonuna
+  düşer (`1.23e15`); `layer >= 2` kule yazımı aynı. `Qa`, `NoTg`, `UTg` gibi bileşik kısaltmalar
+  kalktı — "çoğu insanın anladığı" ölçü bin/milyon/milyar/trilyon.
+- **Yuvarlama taşması:** 999 999 → `1 M`; ekranda `1000 K` görünmez. Aynı kural hero'da da geçerli.
+- **1000 altı ondalık görünür (`plainSmall`):** kesir yuvarlamada yutulmuyor (1.001 → `1.001`,
+  12.345 → `12.35`), en fazla 4 basamağa kadar; oyuncu 0 ondalık seçtiyse artırma yapılmaz.
+- **Hero dizgisi (`G9`) korunur:** `heroParts(value, notation)` kısaltmayı kuyruk parçasına koyar
+  (`4.57` + küçük `M`). Negatif sayıda işaret tabana eklenir (eskiden üs dalına düşüyordu).
+- **Kayıt v20 → v21 (şema aynı):** v20 kayıtlarındaki `scientific` *eski varsayılan* olduğu için
+  `deserialize()` içinde bir kez `standard`'a taşınır; `MIN_SUPPORTED_SAVE_VERSION = 20` kaldı →
+  kayıt açılır, sıfırlanmaz.
+- **Test:** yeni [`src/core/format.test.ts`](../../src/core/format.test.ts) — dokuz test üç eşiği de
+  (düz sayı · kısaltma · e) ve hero/formatParts ayrımını pinler.
+
+### Dosyalar
+`src/core/format.ts` (suffix tablosu, `plainSmall`, `formatStandard`, `formatParts`, `heroParts`) ·
+`src/core/format.test.ts` (yeni) · `src/stores/game.ts` (varsayılan notasyon, hero getter, v21 göçü) ·
+`src/core/save-version.ts` (`SAVE_VERSION = 21`) · `src/components/SettingsModal.vue` (sıra) ·
+`src/models/save.ts` (yorum) · `GAME_DESIGN.md` §9 + §12 · `brain/context/visual-language.md` §4 ·
+`AGENTS.md` · `README.md` · `brain/context/project-brief.md` · `tech-context.md` ·
+[ADR-0080](../decisions/0080-number-notation-ladder.md) · `brain/decisions/README.md` · bu kayıt.
+
+### Doğrulama
+`npm run typecheck` temiz · `npm run test` → **101 test / 6 dosya geçti** · `npm run build` başarılı.
+Tarayıcı (Playwright, gerçek dev build, kayıt enjekte edilerek): `1.5 → 1.5` · `100 → 100` ·
+`12.345 → 12.35` · `1234.5 → 1.23K` · `4567000 → 4.57M` · `999999 → 1M` · `1e16 → 1e16` ·
+notasyon `scientific` iken `1234.5 → 1.23e3`.
+
+---
+
 ## [2026-10-23] ✔ — A+ ekonomi revizyonu: parmak 1/sn, 10'lu blok, ×8 merdiven
 
 ### Ne yapıldı

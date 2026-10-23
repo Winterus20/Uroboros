@@ -52,7 +52,8 @@ oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-vo
   4 `Tanım` yükseltmesi, autobuy, `+1`, İngilizce ticker çekirdeği.
 - ✅ Altyapı korundu: kayıt (LZ-String + 3 slot + karantina), 20 TPS game loop, audio + müzik
   motoru, Firebase auth + bulut kayıt, `AlgorithmicSwirl`, ayarlar.
-- ✅ Kayıt şeması **v20**; `MIN_SUPPORTED_SAVE_VERSION = 20` → eski kayıtlar açılmaz (P5).
+- ✅ Kayıt şeması **v21**; `MIN_SUPPORTED_SAVE_VERSION = 20` → v19 ve altı açılmaz (P5).
+  v21 yalnız gösterim göçü (ADR-0080), şema aynı.
 - 🟡 2–11. basamaklar tasarlanmadı; prestij şimdilik `Tanım` verip 1. basamağı yeniden başlatır
   (kodda belgelenmiş stub).
 - ✅ Denge ölçüldü (`K5`): kapı **119,6 dk** (gerçek motor, 20 TPS) · 23 boost · 121 alım ·

@@ -5,8 +5,13 @@
  * silindi; yerine sayı ekonomisi geldi (8 halka, prestij/`Tanım`, mini boost).
  * P5 gereği GERİYE DÖNÜK UYUMLULUK YOK: v19 ve altı kayıtlar açılmaz, oyuncu
  * sıfırdan başlar (temaya da, ekonominin kendisine de yabancı).
+ *
+ * v21 — GÖSTERİM (ADR-0080): varsayılan notasyon `standard` oldu (K/M/B/T,
+ * 10^15 ve üstünde e-notasyonu). ŞEMA DEĞİŞMEDİ; sürüm yalnız v20 kayıtlarının
+ * ESKİ varsayılanı ("scientific") bir kez yeni gösterime taşıması için arttı.
+ * Asgari sürüm 20'de kaldı → v20 kayıtları açılır, kaybolmaz.
  */
-export const SAVE_VERSION = 20
+export const SAVE_VERSION = 21
 
 /** Bunun altındaki kayıtlar sıfırlanır (P5: sert temizlik). */
 export const MIN_SUPPORTED_SAVE_VERSION = 20

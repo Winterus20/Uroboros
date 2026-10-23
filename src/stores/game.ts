@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { Decimal, D, D_0 } from '../core/math'
 import { format, heroParts, type NotationType } from '../core/format'
-import { SAVE_VERSION } from '../core/save-version'
+import { SAVE_VERSION, readSaveVersion } from '../core/save-version'
 import { BLOCK_SIZE, NUMBER_TUNING, RING_COUNT } from '../game/number/tuning'
 import {
   advance,
@@ -45,7 +45,7 @@ const SEEN_VOICE_LIMIT = 8
 
 export function defaultSettings(): GameSettings {
   return {
-    notation: 'scientific',
+    notation: 'standard',
     decimalPlaces: 2,
     humor: 'measured',
     soundEnabled: true,
@@ -145,7 +145,7 @@ export const useGameStore = defineStore('game', {
     },
 
     heroParts(state): { base: string; tail: string } {
-      return heroParts(state.number)
+      return heroParts(state.number, state.settings.notation)
     },
 
     numberText(state): string {
@@ -394,6 +394,12 @@ export const useGameStore = defineStore('game', {
       this.lastSeenAt = typeof data.lastSeenAt === 'number' ? data.lastSeenAt : fresh.lastSeenAt
       this.upgrades = { ...emptyUpgrades(), ...(data.upgrades ?? {}) }
       this.settings = { ...fresh.settings, ...(data.settings ?? {}) }
+      // v21 (ADR-0080): "standard" (K/M/B/T) yeni varsayılan gösterim. v20
+      // kayıtlarındaki "scientific" oyuncunun seçimi değil ESKİ VARSAYILANDI;
+      // bir kez yeni gösterime taşınır, sonrasında oyuncunun seçimi korunur.
+      if (this.settings.notation === 'scientific' && readSaveVersion(data) < 21) {
+        this.settings.notation = 'standard'
+      }
       this.seenVoice = Array.isArray(data.seenVoice) ? data.seenVoice.slice(0, SEEN_VOICE_LIMIT) : []
       this.latched = Array.isArray(data.latched) ? [...data.latched] : []
       this.offlineReport = null

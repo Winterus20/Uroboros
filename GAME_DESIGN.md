@@ -261,14 +261,17 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 
 ---
 
-## 9. Kayıt şeması — v20
+## 9. Kayıt şeması — v21
 
-[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 20`,
+[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 21`,
 `MIN_SUPPORTED_SAVE_VERSION = 20`.
 
 - **P5 — sert temizlik:** v19 ve altı kayıtlar **açılmaz**; oyuncu sıfırdan başlar. Veda ekranı
   yok, arşiv yok (`P4`). Gerekçe: pivot hem temayı hem ekonomiyi değiştirdi; eski kayıt hem
   teknik hem anlam olarak yüklenemez.
+- **v21 yalnız gösterim göçü (ADR-0080):** şema değişmedi; v20 kayıtlarındaki `scientific`
+  değeri *eski varsayılan* olduğu için bir kez `standard`'a taşınır. Asgari sürüm 20'de kaldı,
+  yani v20 kayıtları açılır — sıfırlanmaz.
 - **Daha yeni kayıt korunur:** `SaveVersionError` — yeni build'in kaydı eski build'de reddedilir,
   sessizce düşürülmez.
 - **Şema:** `number`, `peak`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
@@ -321,6 +324,7 @@ Tam sözleşme: [`brain/context/visual-language.md`](brain/context/visual-langua
 | Mini boost | 400 ms "tek nefes" (`G11`); sahne diliyle karışmaz |
 | `+1` | Hiç değişmez (`G10`): aynı yer, aynı boyut, aynı etiket, aynı ses |
 | Dizgi | Yapısal (`G9`): taban büyük, notasyon küçük; **auto-fit yasak** |
+| Sayı merdiveni | `1.001` düz (ondalık görünür) · `1.23 K` → `7 T` kısaltma · `1.23e15`+ e-notasyonu (`ADR-0080`) |
 
 ---
 

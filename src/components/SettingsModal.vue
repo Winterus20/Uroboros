@@ -39,7 +39,7 @@ async function pushToCloud(): Promise<void> {
   status.value = ok ? 'Save copied to the cloud.' : 'Cloud save failed.'
 }
 
-const NOTATIONS: NotationType[] = ['scientific', 'standard', 'engineering', 'logarithm']
+const NOTATIONS: NotationType[] = ['standard', 'scientific', 'engineering', 'logarithm']
 const HUMOR: HumorLevel[] = ['off', 'measured', 'full']
 const MOTION: MotionMode[] = ['full', 'reduced', 'off']
 const TRACKS: MusicTrackId[] = ['lofi_chill', 'synthwave', 'ambient_drone', 'subway_groove']

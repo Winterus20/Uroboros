@@ -1,4 +1,4 @@
-/** Kayıt tipleri — yeni şema (SAVE_VERSION 20). */
+/** Kayıt tipleri — yeni şema (SAVE_VERSION 21). */
 import type { NotationType } from '../core/format'
 import type { HumorLevel, MotionMode, MusicTrackId } from './settings'
 
@@ -46,7 +46,7 @@ export interface SerializedSettings {
 }
 
 /**
- * Diske/buluta yazılan tam durum (SAVE_VERSION 20).
+ * Diske/buluta yazılan tam durum (SAVE_VERSION 21).
  * P5: pivot öncesi kayıtlar (v19 ve altı) açılmaz — sürüm artırıldı, eski kayıt "uyumsuz".
  */
 export interface SerializedPlayerState {
