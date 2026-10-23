@@ -1,15 +1,43 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useAuthStore } from '../stores/auth'
 import { SaveSystem } from '../core/save'
 import type { HumorLevel, MotionMode, MusicTrackId } from '../models/settings'
 import type { NotationType } from '../core/format'
 
 const store = useGameStore()
+const auth = useAuthStore()
 const emit = defineEmits<{ close: [] }>()
 
 const importText = ref('')
 const status = ref('')
+
+/** Bulut kayıt girişi: altyapı korunuyor (A şıkkı) — erişim ayarlardan açık kalmalı. */
+const cloudBusy = computed(() => auth.isSyncing || auth.authActionLoading)
+
+const cloudStatus = computed(() => {
+  if (!auth.isConfigured) return 'Cloud saves are not set up in this build.'
+  if (!auth.isAuthenticated) return 'Not signed in. The number lives in this browser only.'
+  if (auth.isSyncing) return 'Syncing…'
+  if (auth.syncStatus === 'error') return 'Sync failed.' + (auth.error ? ' ' + auth.error : '')
+  if (auth.syncStatus === 'success') return 'Up to date — ' + (auth.userDisplayName || auth.userEmail)
+  return 'Signed in — ' + (auth.userDisplayName || auth.userEmail)
+})
+
+function openSignIn(): void {
+  auth.openAuthModal()
+}
+
+async function signOut(): Promise<void> {
+  await auth.signOut()
+  status.value = 'Signed out of the cloud save.'
+}
+
+async function pushToCloud(): Promise<void> {
+  const ok = await auth.saveToCloud(true)
+  status.value = ok ? 'Save copied to the cloud.' : 'Cloud save failed.'
+}
 
 const NOTATIONS: NotationType[] = ['scientific', 'standard', 'engineering', 'logarithm']
 const HUMOR: HumorLevel[] = ['off', 'measured', 'full']
@@ -107,6 +135,28 @@ function hardReset(): void {
         <button type="button" class="ghost" @click="importSave">Load save</button>
       </div>
 
+      <div class="block block--cloud">
+        <div class="block__head">
+          <p class="block__title">Cloud save</p>
+          <p class="block__state data" :class="{ 'block__state--on': auth.isAuthenticated }">{{ cloudStatus }}</p>
+        </div>
+        <div class="cloud__actions">
+          <button
+            v-if="!auth.isAuthenticated"
+            type="button"
+            class="ghost"
+            :disabled="!auth.isConfigured"
+            @click="openSignIn"
+          >
+            Sign in
+          </button>
+          <template v-else>
+            <button type="button" class="ghost" :disabled="cloudBusy" @click="pushToCloud">Save to cloud</button>
+            <button type="button" class="ghost" :disabled="cloudBusy" @click="signOut">Sign out</button>
+          </template>
+        </div>
+      </div>
+
       <div class="block">
         <button type="button" class="danger" @click="hardReset">Hard reset</button>
       </div>
@@ -128,4 +178,11 @@ select, input[type='range'] { background: transparent; color: var(--pn-text); bo
 .block { display: flex; flex-direction: column; gap: 8px; padding: 14px 0 0; }
 .area { min-height: 76px; background: transparent; border: 1px solid var(--pn-hairline); color: var(--pn-text-dim); font-family: var(--font-data); font-size: 11px; padding: 8px; resize: vertical; }
 .status { margin: 12px 0 0; font-family: var(--font-data); font-size: 11px; color: var(--pn-amber); }
+.block--cloud { border-top: 1px solid var(--pn-hairline); margin-top: 14px; }
+.block__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.block__title { margin: 0; font-family: var(--font-ui); font-size: 13px; color: var(--pn-text-dim); }
+.block__state { margin: 0; font-size: 11px; line-height: 1.5; color: var(--pn-text-dim); text-align: right; max-width: 60%; }
+.block__state--on { color: var(--pn-text); }
+.cloud__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ghost:disabled { color: var(--pn-locked); cursor: default; }
 </style>

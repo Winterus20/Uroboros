@@ -9,6 +9,7 @@
  */
 
 :root {
+  /* Tuval + metin ölçeği (sözleşme §2.1) */
   --pn-bg: #060608;
   --pn-hairline: rgba(255, 255, 255, 0.07);
   --pn-hairline-strong: rgba(255, 255, 255, 0.14);
@@ -16,47 +17,126 @@
   --pn-text-dim: #8d8a80;
   --pn-text-faint: #4e4e58;
   --pn-locked: #33333a;
+
+  /* Rezerve renkler (sözleşme §2.3): amber = prestij/milestone · rose = tehlike · gri = kilitli */
   --pn-amber: #f59e0b;
   --pn-rose: #f43f5e;
+
+  /* Basamak rengi yalnız iki yerde yaşar: hero sayı + AlgorithmicSwirl (§2.2). */
   --pn-rung: #98e500;
 
   --font-hero: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-ui: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-data: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /*
+   * Eski --ds-* adları hâlâ dışarıdan (AlgorithmicSwirl fallback'i, AuthModal,
+   * CloudConflictModal, ConfirmModal) okunuyor. ADR-0078 sözleşmesi bu dosyanın
+   * sahibi olduğu için tokenlar "Saf Sayı" tuvaline bağlanır: panel = tuval,
+   * kart = tuval (kart yüzeyi yok), çizgi = hairline.
+   */
+  --ds-bg: var(--pn-bg);
+  --ds-abyss: #000000;
+  --ds-panel: var(--pn-bg);
+  --ds-panel-strong: var(--pn-bg);
+  --ds-card: var(--pn-bg);
+  --ds-border: var(--pn-hairline);
+  --ds-hero: var(--pn-text);
+
+  color-scheme: dark;
 }
 
 html, body, #app { height: 100%; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
   background: var(--pn-bg);
   color: var(--pn-text);
   font-family: var(--font-ui);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
   user-select: none;
 }
 
 * { box-sizing: border-box; }
 
-button { font: inherit; }
+button { font: inherit; color: inherit; }
 
-/* Veri katmanı: sayı saniyede 20 kez yenilenir — rakam genişliği titreyemez. */
+/* G10: klavye ile odaklanabilir her buton tek bir odak diliyle konuşur. */
+:focus-visible {
+  outline: 1px solid var(--pn-text-dim);
+  outline-offset: 3px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Veri katmanı: sayı saniyede 20 kez yenilenir — rakam genişliği titreyemez (§3.1). */
 .data {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
-/* Hareket kapısı (ADR-0058): azaltılmış harekette tekrarlayan animasyon yok. */
+/*
+ * Anlar (sözleşme §6). Keyframe'ler global: sahneler tek yerden, tek dil ile konuşur.
+ * boost = yalnız hareket · sahne = renk + isim. İki dil asla karışmaz.
+ */
+@keyframes pn-tap-stroke {
+  0% { transform: scale(0.94); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pn-boost-collapse {
+  0% { transform: scale(1); opacity: 1; }
+  38% { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pn-boost-badge {
+  0% { opacity: 0; transform: translateY(-7px); }
+  45% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pn-swirl-breath {
+  0% { transform: scale(1); filter: brightness(1); }
+  42% { transform: scale(1.04); filter: brightness(1.32); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* G8 — 2,5 sn sahne: sönme (0-500 ms) · isim (500-1850 ms) · sayının doğuşu (1850-2500 ms). */
+@keyframes pn-scene-shell {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes pn-scene-name {
+  0%, 16% { opacity: 0; transform: translateY(7px); }
+  30%, 62% { opacity: 1; transform: translateY(0); }
+  74%, 100% { opacity: 0; transform: translateY(0); }
+}
+
+/* Hareket kapısı (ADR-0058): OS azaltılmış hareket. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-html[data-motion='reduced'] *, html[data-motion='off'] * {
+/* Hareket kapısı (ADR-0058): ayar 'reduced' / 'off' — tekrarlayan animasyon yok. */
+html[data-motion='reduced'] *,
+html[data-motion='off'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='off'] *::before {
   animation: none !important;
   transition: none !important;
 }
