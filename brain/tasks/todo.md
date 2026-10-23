@@ -23,6 +23,11 @@
 ## 🟡 Devam eden — `K5` denge ölçümü
 
 - [x] **K5 — Denge (ölçüm):** 2 saatlik basamak ölçüldü, sabitler `tuning.ts`'e işlendi.
+      - **Fiyat revizyonu (2026-10-23):** halka fiyatları tek değişmezden türetildi — her halka
+        0,08/sn üretir, her halka bir öncekinin 3,2 katı eder, **her halka 40 sn'de kendini öder**.
+        Yeni merdiven **25 · 80 · 250 · 800 · 2 500 · 8 000 · 25 000 · 80 000**; geri ödeme bandı
+        39–40 sn; koşu **121,9 dk · 23 boost · 122 alım**. Çalışma:
+        [`ring-pricing-2026-10-23.md`](../research/ring-pricing-2026-10-23.md).
       - Set A simülasyonu: kapı **119,8 dk** · **23** boost · **121** alım · halka açılışları
         **12,2–37,3 dk** · ilk 10 dk **9** alım · döngü **3,69 dk**.
       - **Gerçek motor (20 TPS) doğrulaması:** kapı **119,6 dk** · 23 boost · 121 alım · ilk 10 dk 9
@@ -54,5 +59,7 @@
 - [ ] `A5` **`LNGN` final sahnesi** — en son yazılır
 - [ ] `A6` **Başarımlar + meydan okumalar** — hacim büyük
 - [ ] `A7` **Müzik motoru** — uyarlama mı yeniden yazım mı
+- [ ] `P1` **Açılış fiyatı (`c_1`)** — uygulanan 25 (15 tık, 121,9 dk). Yumuşak alternatif 20
+      (10 tık, 113,3 dk) ölçüldü, uygulanmadı. Karar proje sahibinde; tek satır + test alt sınırı.
 - [ ] `A8` **İngilizce metin sahipliği** — kural yazıldı (ajan yazar, sahip redakte eder);
       hacim tamamlanmadı (`R2`)

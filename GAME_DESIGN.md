@@ -73,16 +73,22 @@ Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 73,6 saa
 Ekranda liste **yukarıdan aşağı** `Fingers → … → Mathematician` okunur; üretim **aşağıdan
 yukarı** akar. Yani halka 8 (en pahalı) halka 7'yi besler; **halka 1 sayının kendisini üretir**.
 
-| # | Halka | Taban maliyet | Taban üretim | İlk açılış (gerçek motor, 20 TPS) |
-| --: | :--- | ---: | ---: | ---: |
-| 1 | **Fingers** | 25 | 0,071 /sn (sayı) | 0,0 dk |
-| 2 | Notch | ≈79 | 0,0746 | 11,7 dk |
-| 3 | Abacus | 250 | 0,0783 | 22,0 dk |
-| 4 | Pencil | ≈791 | 0,0822 | 27,5 dk |
-| 5 | Calculator | 2 500 | 0,0863 | 30,8 dk |
-| 6 | Computer | ≈7 906 | 0,0906 | 33,4 dk |
-| 7 | Supercomputer | 25 000 | 0,0951 | 35,4 dk |
-| 8 | **Mathematician** | ≈79 057 | 0,0999 | 37,2 dk |
+| # | Halka | Taban maliyet | Taban üretim | 10 birimlik kilit | Geri ödeme | İlk açılış |
+| --: | :--- | ---: | ---: | ---: | ---: | ---: |
+| 1 | **Fingers** | **25** | 0,08 /sn (sayı) | 1 745 | 313 sn | 0,0 dk |
+| 2 | Notch | **80** | 0,08 | 5 585 | 40 sn | 11,4 dk |
+| 3 | Abacus | **250** | 0,08 | 17 453 | 39 sn | 21,0 dk |
+| 4 | Pencil | **800** | 0,08 | 55 851 | 40 sn | 26,1 dk |
+| 5 | Calculator | **2 500** | 0,08 | 174 534 | 39 sn | 29,3 dk |
+| 6 | Computer | **8 000** | 0,08 | 558 509 | 40 sn | 31,7 dk |
+| 7 | Supercomputer | **25 000** | 0,08 | 1 745 342 | 39 sn | 33,7 dk |
+| 8 | **Mathematician** | **80 000** | 0,08 | 5 585 093 | 40 sn | 35,4 dk |
+
+**Fiyat kuralı (tek cümle):** her halka **0,08 birim/sn** üretir ve her halka bir öncekinin
+**3,2 katı** eder → **her halka kendini 40 saniyede öder** (`T_i = 3,2 / 0,08`).
+Üretim sabit olduğu için merdiven bir *hız* değil, bir *değer* merdivenidir: üstteki halka daha
+hızlı üretmez, daha değerli olanı üretir. Tam çalışma:
+[`brain/research/ring-pricing-2026-10-23.md`](brain/research/ring-pricing-2026-10-23.md).
 
 **Tek kaynak:** [`src/game/number/tuning.ts`](src/game/number/tuning.ts). Buradaki sayılar
 **ölçümle** kilitlendi (bkz. §7); başka bir yerde tekrar yazılmaz.

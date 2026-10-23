@@ -4,16 +4,26 @@ import { Decimal, D } from '../../core/math'
  * 1. BASAMAK (`1.79e308` — "I thought it was a wall") denge sabitleri.
  *
  * Kaynak: brain/research/theme-pivot-grilling-2026-10-23.md §11.3 (E6–E14) +
- * ÖLÇÜM: brain/scratchpad/balance-2026-10-23/report.md (Set A).
- * Hedefler: kapı ~120 dk · 23 boost · 121 alım · halka açılışları 0–37 dk · ilk 10 dk 9 alım.
+ * ÖLÇÜM: brain/scratchpad/balance-2026-10-23/report.md (Set A) ve pricing-probe/pricing-flat.
  *
- * Ölçümün zorunlu kıldığı üç düzeltme (rapor §2.2):
+ * ── FİYAT KURALI (tek cümle) ─────────────────────────────────────────────
+ * Her halka 0,08 birim/sn üretir ve her halka bir öncekinin 3,2 katı eder.
+ * Bu ikisinin çarpımı tek bir değişmez verir: **her halka kendini 40 saniyede öder**
+ *   T_i = c_i / (p_i · c_{i-1}) = 3,2 / 0,08 = 40 sn      (i = 2..8)
+ * 3,2 katsayısı buradan gelir: hedef geri ödeme (40 sn) × üretim (0,08/sn).
+ * Ölçülen sapma: 39–40 sn (yuvarlama payı, ±%2,5).
+ *
+ * Halka 1'in geri ödemesi 25/0,08 = 313 sn'dir; o bir istisna değil, oyunun
+ * kendi para birimidir (sayı, kendisiyle ölçülür).
+ *
+ * ── ÖLÇÜMÜN ZORUNLU KILDIĞI ÜÇ DÜZELTME (rapor §2.2) ────────────────────
  *  D1 — Boost çarpanı YALNIZ sayı üretimine uygulanır; halka beslemesine uygulanmaz.
- *       (Her halkaya uygulanınca N ∝ M⁸ oluyor, döngü 2 sn'ye çöküyor.)
  *  D3 — Boost sonrası halkalar 0'a değil 1 birime iner; zincir canlı kalır.
  *  D6 — Kilitler MANDALLIDIR: bir kez açılan halka boost/prestij ile kapanmaz (S3).
  *
- * Fiyat/üretim: c_i = 25 · 10^{0,5(i-1)} · p_i = 0,071 · 1,05^{i-1} (ölçülen Set A).
+ * ── DOĞRULANAN KOŞU (20 TPS, 2 tık/sn) ──────────────────────────────────
+ * kapı 121,9 dk · 23 boost · 122 alım · ilk 10 dk 9 alım
+ * halka açılışları 0 · 11,4 · 21,0 · 26,1 · 29,3 · 31,7 · 33,7 · 35,4 dk
  */
 
 export interface RingTuning {
@@ -28,6 +38,9 @@ export interface RingTuning {
 function ring(name: string, baseCost: number, baseRate: number): RingTuning {
   return { name, baseCost: D(baseCost), baseRate: D(baseRate) }
 }
+
+/** Tüm halkalar aynı hızda üretir — merdiven bir HIZ değil, bir DEĞER merdivenidir. */
+export const RING_RATE = 0.08
 
 export const NUMBER_TUNING = {
   /** Kapı: 1. basamağın sonu (S1/S5). */
@@ -47,14 +60,14 @@ export const NUMBER_TUNING = {
 
   /** 1. basamak zinciri — indeks 0 = ekranın en üstü = Fingers (E6). */
   rings: [
-    ring('Fingers', 25, 0.071),
-    ring('Notch', 79.06, 0.07455),
-    ring('Abacus', 250, 0.07828),
-    ring('Pencil', 790.57, 0.08219),
-    ring('Calculator', 2500, 0.0863),
-    ring('Computer', 7905.69, 0.09061),
-    ring('Supercomputer', 25000, 0.09514),
-    ring('Mathematician', 79056.94, 0.0999)
+    ring('Fingers', 25, RING_RATE),
+    ring('Notch', 80, RING_RATE),
+    ring('Abacus', 250, RING_RATE),
+    ring('Pencil', 800, RING_RATE),
+    ring('Calculator', 2500, RING_RATE),
+    ring('Computer', 8000, RING_RATE),
+    ring('Supercomputer', 25000, RING_RATE),
+    ring('Mathematician', 80000, RING_RATE)
   ] as readonly RingTuning[]
 } as const
 

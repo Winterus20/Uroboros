@@ -1,5 +1,34 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-23] ✔ — Halka fiyatlandırması: 8 halkanın tam fiyat çalışması
+
+### Ne yapıldı
+Fiyatlar ızgara aramasından (`25·10^{0,5(i-1)}` → `79,06 / 790,57 / 7 905,69 / 79 056,94`) çıktı;
+okunmuyordu ve geri ödeme süresi halkalar arasında 43 → 32 sn kayıyordu. Fiyat tek değişmezden
+yeniden türetildi:
+
+```
+T_i = c_i / (p_i · c_{i-1}) = 40 sn   →   c_i = 3,2 · c_{i-1},  p_i = 0,08
+```
+
+- **Yeni merdiven:** 25 · 80 · 250 · 800 · 2 500 · 8 000 · 25 000 · 80 000 (×3,2, yuvarlanmış).
+- **Üretim:** tüm halkalar `RING_RATE = 0,08`/sn — merdiven hız değil **değer** merdiveni.
+- **Ölçülen:** geri ödeme **39–40 sn** (±%2,5) · kapı **121,9 dk** · **23** boost · **122** alım ·
+  ilk 10 dk **9** alım · halka açılışları 0 / 11,4 / 21,0 / 26,1 / 29,3 / 31,7 / 33,7 / 35,4 dk.
+- **Açılış:** `c_1 = 25` → 15 tık (Cookie Clicker'ın ilk cursor'ı da 15). `c_1 = 20` alternatifi
+  (10 tık, 113,3 dk) ölçüldü, uygulanmadı — `todo.md` `P1` olarak açık.
+
+### Dosyalar
+`src/game/number/tuning.ts` (yeni sabitler + kural yorumu) · `src/game/number/economy.test.ts`
+(sabit `0,071` yerine `NUMBER_TUNING.rings[0].baseRate`) · `GAME_DESIGN.md` §4 · `ADR-0079` ek ·
+[`brain/research/ring-pricing-2026-10-23.md`](../research/ring-pricing-2026-10-23.md) (yeni çalışma).
+
+### Doğrulama
+`npx vitest run` → **86 test / 5 dosya** (denge kilidi 6 test dahil) · `npx vue-tsc --noEmit` → 0 hata ·
+`npx vite build` → başarılı.
+
+---
+
 ## [2026-10-23] ✔ — Sayı Ekonomisi Dikey Dilimi · 1. basamak oynanabilir (ADR-0079)
 
 ### Ne yapıldı

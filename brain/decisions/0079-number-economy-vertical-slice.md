@@ -224,3 +224,26 @@ Commit `013c4b2`: **154 dosya silindi · 34 987 satır gitti · 22 dosya eklendi
 - Ekonomi kuralları: [`src/game/number/economy.ts`](../../src/game/number/economy.ts)
 - Tasarım anlatısı: [`GAME_DESIGN.md`](../../GAME_DESIGN.md)
 - Görev durumu: [`../tasks/in-progress.md`](../tasks/in-progress.md)
+
+---
+
+## Ek — Fiyat revizyonu (2026-10-23, ikinci tur)
+
+İlk uygulamada halka fiyatları bir ızgara aramasından geliyordu (`25 · 10^{0,5(i-1)}` →
+`79,06 / 790,57 / 7 905,69 / 79 056,94`). Sayılar okunmuyordu ve **geri ödeme süresi**
+halkalar arasında 43 sn'den 32 sn'ye kayıyordu. Fiyat, tek bir değişmezden yeniden türetildi:
+
+```
+T_i = c_i / (p_i · c_{i-1}) = 40 sn      →      c_i = 3,2 · c_{i-1},  p_i = 0,08
+```
+
+**Karar:** tüm halkalar aynı hızda üretir (`RING_RATE = 0,08`), fiyat oranı sabittir (×3,2),
+fiyatlar insan okunur sayılara yuvarlanır: **25 · 80 · 250 · 800 · 2 500 · 8 000 · 25 000 · 80 000**.
+Ölçülen geri ödeme bandı **39–40 sn** (±%2,5), koşu **121,9 dk · 23 boost · 122 alım**.
+
+**Açılış:** `c_1 = 25` → oyuncu 10 ile başlar, ilk halka **15 tık** sonra alınır (Cookie Clicker'ın
+ilk cursor'ı da 15'tir; `S9`'un "+1 gerçek" kuralı böylece ilk saniyede hissedilir).
+Yumuşak alternatif `c_1 = 20` (10 tık, 113,3 dk) ölçüldü ama uygulanmadı — açık madde.
+
+Tam çalışma, elenen adaylar ve ölçüm tablosu:
+[`../research/ring-pricing-2026-10-23.md`](../research/ring-pricing-2026-10-23.md).

@@ -75,10 +75,10 @@ describe('sayı ekonomisi — 1. basamak', () => {
     const s = createNumberState()
     s.number = D('1e6')
     buyRing(s, 0)
-    expect(numberPerSecond(s).toNumber()).toBeCloseTo(0.071, 9)
+    expect(numberPerSecond(s).toNumber()).toBeCloseTo(NUMBER_TUNING.rings[0].baseRate.toNumber(), 9)
     const before = s.number
     advance(s, 1)
-    expect(s.number.minus(before).toNumber()).toBeCloseTo(0.071, 6)
+    expect(s.number.minus(before).toNumber()).toBeCloseTo(NUMBER_TUNING.rings[0].baseRate.toNumber(), 6)
   })
 
   it('üst halka alt halkayı besler', () => {
