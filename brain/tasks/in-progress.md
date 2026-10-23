@@ -337,7 +337,7 @@ hızlı kazanalım yutulan kütleyi"* → *"gerçek fizik gibi bir şey yapacağ
 ---
 
 ## 🎭 AKTİF — Tema Pivotu: `Hold That Number` (2026-10-23)
-**Durum:** ✅ onaylandı · 🟡 tasarım oturumu duraklatıldı (28 karar kilitli, 9 madde açık)
+**Durum:** ✅ onaylandı · 🟡 tasarım oturumu duraklatıldı (29 karar kilitli, 9 madde açık)
 **Oturum kaydı (tek gerçek):** [`theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md) — kararlar, açık maddeler, **devam noktası §6**
 **Kısa özet:** "Kozmik Oburluk" silindi; konuşan artık **oyunun kendisi** (sessiz meta, gerçek oyuncu, tek ses çift ritim);
 `SİCİL` iptal; 11 basamak = 11 prestij katmanı; **~85 saat**; kadran 5. basamakta başlar (`OmegaNum` ile 1-4 gerçek);
