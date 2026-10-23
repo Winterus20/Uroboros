@@ -55,6 +55,8 @@ export interface SerializedPlayerState {
   peak: string
   bestNumber: string
   rings: SerializedRing[]
+  /** Halka kilitleri — mandallı (D6). */
+  unlocked: boolean[]
   boostMult: string
   boosts: number
   rung: number

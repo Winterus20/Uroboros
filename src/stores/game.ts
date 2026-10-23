@@ -313,6 +313,7 @@ export const useGameStore = defineStore('game', {
         peak: this.peak.toString(),
         bestNumber: this.bestNumber.toString(),
         rings: this.rings.map((ring) => ({ a: ring.amount.toString(), b: ring.bought })),
+        unlocked: [...this.unlocked],
         boostMult: this.boostMult.toString(),
         boosts: this.boosts,
         rung: this.rung,
@@ -369,6 +370,10 @@ export const useGameStore = defineStore('game', {
         const ring = parsedRings[i]
         this.rings[i].amount = ring ? num(ring.a, D_0) : D_0
         this.rings[i].bought = ring && typeof ring.b === 'number' ? ring.b : 0
+      }
+      const unlocked = Array.isArray(data.unlocked) ? data.unlocked : []
+      for (let i = 0; i < RING_COUNT; i++) {
+        this.unlocked[i] = i === 0 ? true : unlocked[i] === true
       }
       applyUpgradeLevels(this, this.upgrades)
     },
