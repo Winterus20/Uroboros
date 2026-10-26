@@ -21,11 +21,7 @@ function context(over: Partial<VoiceContext> = {}): VoiceContext {
   return {
     rung: 1,
     number: D(10),
-    peak: D(10),
     perSecond: D(0),
-    tanim: D(0),
-    prestiges: 0,
-    boosts: 0,
     taps: 0,
     uselessTaps: 0,
     idleSeconds: 0,
@@ -52,17 +48,17 @@ const ids = (pool: readonly VoiceLine[]): string[] => pool.map((line) => line.id
 const RENDER_CONTEXTS: VoiceContext[] = [
   context(),
   context({ number: D('1e12'), perSecond: D(50), taps: 1500, uselessTaps: 1200, hour: 3 }),
-  context({ number: D('1.7e308'), perSecond: D('1e9'), boosts: 23, prestiges: 2, tanim: D(12), idleSeconds: 200 }),
-  context({ tab: 'upgrades', hour: 23 })
+  context({ number: D('1.7e308'), perSecond: D('1e9'), idleSeconds: 200 }),
+  context({ tab: 'stats', hour: 23 })
 ]
 
 describe('1. basamak havuzu — bütünlük', () => {
-  it('120 satır: 110 ticker + 10 sahne, 20 nadir, hepsi benzersiz kimlik', () => {
-    expect(RUNG1_LINES).toHaveLength(120)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(110)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(10)
-    expect(RUNG1_LINES.filter((line) => line.rare === true)).toHaveLength(20)
-    expect(new Set(ids(RUNG1_LINES)).size).toBe(120)
+  it('100 satır: 92 ticker + 8 sahne, 14 nadir, hepsi benzersiz kimlik', () => {
+    expect(RUNG1_LINES).toHaveLength(100)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(92)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(8)
+    expect(RUNG1_LINES.filter((line) => line.rare === true)).toHaveLength(14)
+    expect(new Set(ids(RUNG1_LINES)).size).toBe(100)
   })
 
   it('her sahne mandallıdır (S3): latch olmayan sahne yok', () => {
@@ -73,7 +69,7 @@ describe('1. basamak havuzu — bütünlük', () => {
 
   it('sahne satırları iki ritim taşır (V5): tam birer satır sonu, ticker metinleri tek satır', () => {
     for (const line of RUNG1_LINES) {
-      const text = lineText(line, context({ number: D('1e6'), boosts: 3, uselessTaps: 2000 }))
+      const text = lineText(line, context({ number: D('1e6'), uselessTaps: 2000 }))
       if (line.channel === 'scene') {
         expect(text.split('\n'), line.id).toHaveLength(2)
       } else {
@@ -139,7 +135,6 @@ describe('(a) filtre doğru mu', () => {
     expect(poolIds).toContain('r1_open_1')
     expect(poolIds).not.toContain('r1_m_1')
     expect(poolIds).not.toContain('r1_scene_open')
-    expect(poolIds).not.toContain('r1_gate_1')
   })
 
   it('sayı bandı değişince havuz değişir', () => {
@@ -243,8 +238,8 @@ describe('(b) nadir satır ~10× seyrek mi', () => {
       context({ number: D('1e6'), perSecond: D(100) }),
       context({ number: D('1e9'), perSecond: D('1e4'), taps: 600, uselessTaps: 200 }),
       context({ number: D('1e20'), perSecond: D('1e8'), hour: 3 }),
-      context({ number: D('1e80'), perSecond: D('1e20'), boosts: 4, prestiges: 1, tanim: D(3) }),
-      context({ number: D('1.7e308'), perSecond: D('1e40'), boosts: 23, prestiges: 2, tanim: D(9) })
+      context({ number: D('1e80'), perSecond: D('1e20') }),
+      context({ number: D('1.7e308'), perSecond: D('1e40') })
     ]
     for (const ctx of contexts) {
       const depth = eligibleTickerLines(ctx).length
@@ -341,9 +336,6 @@ describe('bağlam anahtarları gerçekten kullanılıyor (V3)', () => {
     ['taps', context({ taps: 0 }), context({ taps: 600 })],
     ['uselessTaps', context({ uselessTaps: 0 }), context({ uselessTaps: 2000 })],
     ['hour', context({ hour: 12 }), context({ hour: 3 })],
-    ['boosts', context({ boosts: 0 }), context({ boosts: 12 })],
-    ['prestiges', context({ prestiges: 0 }), context({ prestiges: 2 })],
-    ['tab', context({ tab: 'number' }), context({ tab: 'upgrades' })],
     ['perSecond', context({ perSecond: D(0) }), context({ perSecond: D('1e7') })]
   ]
 
@@ -365,7 +357,7 @@ describe('sahne kanalı (S3 mandal)', () => {
     expect(early).not.toContain('r1_scene_m')
     const mid = ids(availableSceneLines(context({ number: D('1e6') }), []))
     expect(mid).toContain('r1_scene_m')
-    expect(mid).not.toContain('r1_scene_gate')
+    expect(mid).not.toContain('r1_scene_g')
   })
 
   it('mandallı sahne ikinci kez dönmez', () => {
@@ -376,7 +368,7 @@ describe('sahne kanalı (S3 mandal)', () => {
   })
 
   it('koşul sağlanmadan sahne oynamaz', () => {
-    expect(pickSceneLine(1, [], 'r1_scene_gate', context({ number: D(10) }))).toBeNull()
-    expect(pickSceneLine(1, [], 'r1_scene_gate', context({ number: D('1.75e308') }))).not.toBeNull()
+    expect(pickSceneLine(1, [], 'r1_scene_g', context({ number: D(10) }))).toBeNull()
+    expect(pickSceneLine(1, [], 'r1_scene_g', context({ number: D('1e300') }))).not.toBeNull()
   })
 })

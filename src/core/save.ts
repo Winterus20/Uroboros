@@ -45,7 +45,6 @@ export interface InspectResult {
   error?: string
   summary?: {
     number: string
-    prestiges: number
     version: number
     playtime: number
     stats?: {
@@ -288,7 +287,6 @@ export const SaveSystem = {
       slot,
       exists: true,
       number: state.number,
-      prestiges: typeof state.prestiges === 'number' ? state.prestiges : 0,
       playtime: typeof state.playTime === 'number' ? state.playTime : 0,
       timestamp: typeof state.lastSeenAt === 'number' ? state.lastSeenAt : 0
     }
@@ -414,7 +412,6 @@ export const SaveSystem = {
         valid: true,
         summary: {
           number: parsed.number,
-          prestiges: typeof parsed.prestiges === 'number' ? parsed.prestiges : 0,
           version: typeof parsed.version === 'number' ? parsed.version : 1,
           playtime: typeof parsed.playTime === 'number' ? parsed.playTime : 0,
           stats: {

@@ -4,8 +4,6 @@ import { useGameStore } from './stores/game'
 import { useAuthStore } from './stores/auth'
 import { SaveSystem } from './core/save'
 import { gameLoop } from './core/game-loop'
-import { format } from './core/format'
-import { sounds } from './core/audio'
 import type { MotionMode } from './models/settings'
 import AlgorithmicSwirl from './components/AlgorithmicSwirl.vue'
 import TickerBar from './components/TickerBar.vue'
@@ -13,7 +11,6 @@ import HeroNumber from './components/HeroNumber.vue'
 import TapButton from './components/TapButton.vue'
 import TelemetryLine from './components/TelemetryLine.vue'
 import ChainList from './components/ChainList.vue'
-import UpgradeList from './components/UpgradeList.vue'
 import StatsPanel from './components/StatsPanel.vue'
 import RungScene from './components/RungScene.vue'
 import SettingsModal from './components/SettingsModal.vue'
@@ -21,18 +18,14 @@ import AuthModal from './components/AuthModal.vue'
 import CloudConflictModal from './components/CloudConflictModal.vue'
 import OfflineModal from './components/OfflineModal.vue'
 
-type Tab = 'number' | 'upgrades' | 'stats' | 'settings'
+type Tab = 'number' | 'stats' | 'settings'
 
 const store = useGameStore()
 const auth = useAuthStore()
 const tab = ref<Exclude<Tab, 'settings'>>('number')
 const showSettings = ref(false)
-const boostPulse = ref(false)
 
-const TABS: Tab[] = ['number', 'upgrades', 'stats', 'settings']
-
-const boostText = computed(() => format(store.boostGain, 2, store.settings.notation))
-const rewardText = computed(() => format(store.tanimReward, 2, store.settings.notation))
+const TABS: Tab[] = ['number', 'stats', 'settings']
 
 /** Dock: aktif sekme alt çizgiyle. Ayarlar bir sekme gibi davranır (modal açar). */
 const activeTab = computed<Tab>(() => (showSettings.value ? 'settings' : tab.value))
@@ -56,44 +49,6 @@ function syncMotionGate(mode: MotionMode): void {
 
 watch(() => store.settings.motionMode, syncMotionGate, { immediate: true })
 
-let boostTimer: number | null = null
-
-/** G11: 400 ms — sayı içeri çöker, swirl nefes alır, çarpan rozeti oturur. Sahne yok. */
-function pulse(): void {
-  if (boostTimer !== null) {
-    window.clearTimeout(boostTimer)
-    boostTimer = null
-  }
-  boostPulse.value = false
-  // Sınıfı bir kare sonra geri aç: CSS animasyonu baştan oynasın (art arda boost'lar).
-  window.requestAnimationFrame(() => {
-    boostPulse.value = true
-    boostTimer = window.setTimeout(() => {
-      boostPulse.value = false
-      boostTimer = null
-    }, 400)
-  })
-}
-
-/** E12–E14: mini boost — 8. halka alınınca açılır, her şeyi sıfırlar. */
-function boost(): void {
-  if (!store.boostAvailable) return
-  const gain = store.boost()
-  if (gain.gt(1)) {
-    pulse()
-    if (store.settings.soundEnabled) sounds.playShift()
-  }
-  showSettings.value = false
-  tab.value = 'number'
-}
-
-/** E7/S2: kapı — Tanım kazanılır, sayı başlangıca döner. */
-function prestige(): void {
-  if (store.settings.confirmDialogs && !window.confirm('Take ' + rewardText.value + ' Definition and start over?')) return
-  store.prestige()
-  if (store.settings.soundEnabled) sounds.playMilestone()
-}
-
 function onKeydown(event: KeyboardEvent): void {
   if (!store.settings.hotkeysEnabled) return
   const target = event.target as HTMLElement | null
@@ -106,14 +61,6 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.key === ' ' || event.key === '+') {
     event.preventDefault()
     store.tap()
-    return
-  }
-  if (event.key.toLowerCase() === 'b' && store.boostAvailable) {
-    boost()
-    return
-  }
-  if (event.key.toLowerCase() === 'p' && store.gateReady) {
-    prestige()
     return
   }
   const index = Number(event.key)
@@ -134,7 +81,7 @@ onMounted(() => {
   auth.init()
   window.addEventListener('keydown', onKeydown)
 
-  // Yalnız geliştirme: sahne/boost anlarını tarayıcıdan tetikleyip doğrulamak için.
+  // Yalnız geliştirme: sahne anlarını tarayıcıdan tetikleyip doğrulamak için.
   if (import.meta.env.DEV) {
     ;(window as unknown as { __htn?: { store: typeof store } }).__htn = { store }
   }
@@ -143,14 +90,13 @@ onMounted(() => {
 onUnmounted(() => {
   gameLoop.stop()
   window.removeEventListener('keydown', onKeydown)
-  if (boostTimer !== null) window.clearTimeout(boostTimer)
 })
 </script>
 
 <template>
   <div class="app">
     <!-- G2/G12: oyunun tek ortamı swirl; basamak rengini taşıyan tek yüzey. -->
-    <div class="app__swirl" :class="{ 'app__swirl--breath': boostPulse }" aria-hidden="true">
+    <div class="app__swirl" aria-hidden="true">
       <AlgorithmicSwirl />
     </div>
 
@@ -158,31 +104,9 @@ onUnmounted(() => {
       <TickerBar />
 
       <main class="stage">
-        <HeroNumber :boost-pulse="boostPulse" />
+        <HeroNumber />
 
         <TapButton />
-
-        <!-- Yerleşim sabit: boost/kapı düğmeleri belirip kaybolurken +1 kıpırdamaz (G10). -->
-        <div class="modifiers">
-          <button
-            v-if="store.boostAvailable"
-            type="button"
-            class="modifier"
-            :aria-label="'Breathe — reset the run for a permanent ×' + boostText + ' multiplier'"
-            @click="boost"
-          >
-            breathe <span class="modifier__value data">×{{ boostText }}</span>
-          </button>
-          <button
-            v-if="store.gateReady"
-            type="button"
-            class="modifier modifier--gate"
-            :aria-label="'Gate — take ' + rewardText + ' Definition and start over'"
-            @click="prestige"
-          >
-            gate <span class="modifier__value data">+{{ rewardText }}</span>
-          </button>
-        </div>
 
         <TelemetryLine />
 
@@ -202,15 +126,12 @@ onUnmounted(() => {
 
         <section class="panel">
           <ChainList v-if="tab === 'number'" />
-          <UpgradeList v-else-if="tab === 'upgrades'" />
           <StatsPanel v-else />
         </section>
       </main>
 
       <footer class="foot data">
         <span>{{ store.taps }} presses</span>
-        <span class="foot__dot" aria-hidden="true">·</span>
-        <span>{{ store.prestiges }} gates</span>
       </footer>
     </div>
 
@@ -241,15 +162,12 @@ onUnmounted(() => {
   min-height: 100vh;
 }
 
-/* Swirl sarmalayıcı: nefes (G11) yalnız ölçek + parlaklık — renk/isim yok. */
+/* Swirl sarmalayıcı: yalnız ölçek — renk/isim yok. */
 .app__swirl {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-}
-.app__swirl--breath {
-  animation: pn-swirl-breath 400ms cubic-bezier(0.3, 0.6, 0.2, 1);
 }
 
 .app__inner {
@@ -267,32 +185,6 @@ onUnmounted(() => {
   margin: 0 auto;
   padding-bottom: 24px;
 }
-
-.modifiers {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  min-height: 40px;
-  padding: 0 20px 12px;
-}
-
-.modifier {
-  appearance: none;
-  border: 1px solid var(--pn-hairline-strong);
-  border-radius: 0;
-  background: transparent;
-  color: var(--pn-text);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  padding: 9px 18px;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-}
-.modifier:hover { border-color: var(--pn-text-faint); }
-.modifier__value { margin-left: 7px; color: inherit; opacity: 0.9; }
-.modifier--gate { color: var(--pn-amber); }
 
 /* Dock: metin sekmeler, aktif olan alt çizgiyle. İkon-only sekme yok. */
 .dock {
@@ -341,7 +233,5 @@ onUnmounted(() => {
 
 @media (max-width: 560px) {
   .dock { gap: 20px; }
-  .modifiers { padding-bottom: 8px; }
-  .modifier { font-size: 12px; padding: 8px 14px; }
 }
 </style>

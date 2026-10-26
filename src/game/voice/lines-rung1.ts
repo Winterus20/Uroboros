@@ -10,13 +10,12 @@ import type { VoiceContext, VoiceLine } from './types'
  * sayının büyüklüğüyle dalga geçmek, çeviri kokan espri, aynı şakanın tekrarı.
  *
  * Dağılım (T3 çekirdek havuz, hedef ~120 satır):
- *   ~55 sayı bandı · ~25 durum · 20 nadir · ~10 boost/prestij/kapı · 10 sahne.
+ *   ~55 sayı bandı · ~25 durum · 20 nadir · 10 sahne.
  * Metinler İngilizce yazılır, çevrilmez (P3); kod yorumları Türkçe kalır.
  *
  * MEKANİK DOĞRULUK (Kural 2): buradaki her sayısal iddia src/game/number/tuning.ts
  * ile uyumlu olmak zorunda. Fiyatlar 25 · 200 · 1 600 · … · 5,24e7 (×8), üretim 1 sayı/sn
- * (Fingers) ve 0,11 birim/sn (üst halkalar), blok 10 birim, kapı 1.79e308,
- * boost çarpanı (zirve/10)^0.2 ≈ 21 döngü, prestij sonrası sayı 10.
+ * (Fingers) ve 0,11 birim/sn (üst halkalar), blok 10 birim. Sıfırlama yoktur.
  */
 
 /** Sayı bandı yardımcısı: [lo, hi) — hi verilmezse açık uçlu. */
@@ -86,13 +85,12 @@ export const RUNG1_LINES: VoiceLine[] = [
   // ── BANT: 1e150 – 1e300 ───────────────────────────────────────────────────
   { id: 'r1_h_1', channel: 'ticker', text: 'You are close to the largest number a machine will hold without asking for help.', when: (c) => band(c, '1e150', '1e300') },
   { id: 'r1_h_2', channel: 'ticker', text: 'Two hundred digits. The end is visible as a number, not as a wall.', when: (c) => band(c, '1e200', '1e300') },
-  { id: 'r1_h_3', channel: 'ticker', text: '1.79e308 is the ceiling. It is written on the ceiling in plain digits.', when: (c) => c.number.gte('1e9') },
-  { id: 'r1_h_4', channel: 'ticker', text: 'The last digits before the gate are the least interesting and the most expensive.', when: (c) => band(c, '1e150', '1e300') },
-  { id: 'r1_h_5', channel: 'ticker', text: 'You can see the gate from here. It has not moved and it will not.', when: (c) => band(c, '1e150', '1e300') },
+  { id: 'r1_h_3', channel: 'ticker', text: '1.79e308 is the marked ceiling. It is written on the ceiling in plain digits.', when: (c) => c.number.gte('1e9') },
+  { id: 'r1_h_4', channel: 'ticker', text: 'The last digits before the ceiling are the least interesting and the most expensive.', when: (c) => band(c, '1e150', '1e300') },
+  { id: 'r1_h_5', channel: 'ticker', text: 'You can see the ceiling from here. It has not moved and it will not.', when: (c) => band(c, '1e150', '1e300') },
 
   // ── BANT: 1e300 ve üstü (kapı) ────────────────────────────────────────────
   { id: 'r1_g_1', channel: 'ticker', text: 'Three hundred digits. The ceiling is a number, and you can read it.', when: (c) => band(c, '1e300') },
-  { id: 'r1_g_2', channel: 'ticker', text: 'The gate is 1.79e308. After it the notation changes, not the ambition.', when: (c) => band(c, '1e300') },
   { id: 'r1_g_3', channel: 'ticker', text: 'This is the last stretch where the number can be written in full.', when: (c) => band(c, '1e300') },
   { id: 'r1_g_4', channel: 'ticker', text: 'You are about to run out of digits that mean anything.', when: (c) => band(c, '1e300') },
 
@@ -126,25 +124,12 @@ export const RUNG1_LINES: VoiceLine[] = [
   // ── DURUM: sekme ──────────────────────────────────────────────────────────
   { id: 'r1_tab_1', channel: 'ticker', text: 'You are looking at the number. Watching it is not a multiplier.', when: (c) => c.tab === 'number' },
   { id: 'r1_tab_2', channel: 'ticker', text: 'The number is on this screen. So are you. That is the arrangement.', when: (c) => c.tab === 'number' },
-  { id: 'r1_tab_3', channel: 'ticker', text: 'You are reading prices. The prices are real. The number counts behind them.', when: (c) => c.tab === 'upgrades' },
 
   // ── DURUM: üretim hızı ────────────────────────────────────────────────────
   { id: 'r1_ps_1', channel: 'ticker', text: 'Nothing is producing yet. The plus button is the whole economy.', when: (c) => c.perSecond.lte(0) },
   { id: 'r1_ps_2', channel: 'ticker', text: 'One per second. It is not fast. It is not zero.', when: (c) => c.perSecond.gte(1) && c.perSecond.lt(2) },
   { id: 'r1_ps_3', channel: 'ticker', text: 'The chain produces faster than you can press. That was the arrangement.', when: (c) => c.perSecond.gte(100) && c.perSecond.lt('1e6') },
   { id: 'r1_ps_4', channel: 'ticker', text: 'A million per second. Your presses are a rounding error now.', when: (c) => c.perSecond.gte('1e6') },
-
-  // ── BOOST / PRESTİJ / KAPI ────────────────────────────────────────────────
-  { id: 'r1_boost_1', channel: 'ticker', text: 'The chain is empty. The multiplier is not.', when: (c) => c.boosts >= 1 },
-  { id: 'r1_boost_2', channel: 'ticker', text: 'You sold the whole chain for one number that does not reset.', when: (c) => c.boosts >= 1 },
-  { id: 'r1_boost_3', channel: 'ticker', text: 'You will do this again. About eighteen more times.', when: (c) => c.boosts >= 3 },
-  { id: 'r1_boost_4', channel: 'ticker', text: 'You have not breathed yet. Everything you built is still standing.', when: (c) => c.boosts === 0 && c.number.gte('1e9') },
-  { id: 'r1_boost_5', channel: 'ticker', text: 'Ten breaths. The multiplier is doing more than your fingers now.', when: (c) => c.boosts >= 10 },
-  { id: 'r1_prest_1', channel: 'ticker', text: 'You have taken a Definition before. The number does not remember it.', when: (c) => c.prestiges >= 1 },
-  { id: 'r1_prest_2', channel: 'ticker', text: 'Ten again. It looks smaller than the first time. It is the same ten.', when: (c) => c.prestiges >= 1 && c.number.lt('1e3') },
-  { id: 'r1_gate_1', channel: 'ticker', text: 'Take the Definition. Leave the number. It will be ten again.', when: (c) => c.number.gte('1.7e308') },
-  { id: 'r1_gate_2', channel: 'ticker', text: 'Definition does not grow on its own. It is the only thing in here that does not.', when: (c) => c.tanim.gt(0) },
-  { id: 'r1_gate_3', channel: 'ticker', text: '1.79e308. The gate is not a wall. It is where the notation changes.', when: (c) => c.number.gte('1.7e308') },
 
   // ── NADİR (rare: true — ~10× seyrek, T3) ──────────────────────────────────
   { id: 'r1_rare_idle_1', channel: 'ticker', rare: true, text: 'The tab is still open. The number noticed, in the way a number can.', when: (c) => c.idleSeconds > 120 },
@@ -157,16 +142,10 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_rare_q_1', channel: 'ticker', rare: true, text: 'Thirty digits. You are not reading the number. You are reading its direction.', when: (c) => band(c, '1e30', '1e60') },
   { id: 'r1_rare_s_1', channel: 'ticker', rare: true, text: 'At this size the number is a rumor of a quantity. It is still exact.', when: (c) => band(c, '1e60', '1e150') },
   { id: 'r1_rare_h_1', channel: 'ticker', rare: true, text: 'You are near the ceiling. The ceiling is a number you were taught to fear.', when: (c) => band(c, '1e150', '1e300') },
-  { id: 'r1_rare_g_1', channel: 'ticker', rare: true, text: 'You are one decision away from the gate. The decision is to keep going.', when: (c) => band(c, '1e300') },
-  { id: 'r1_rare_boost_1', channel: 'ticker', rare: true, text: 'Five breaths. The number resets. The multiplier does not. Remember which one you are here for.', when: (c) => c.boosts >= 5 },
-  { id: 'r1_rare_boost_2', channel: 'ticker', rare: true, text: 'The arithmetic expected about twenty-one of these. It does not check.', when: (c) => c.boosts >= 20 },
-  { id: 'r1_rare_prest_1', channel: 'ticker', rare: true, text: 'You started over on purpose. The number is at ten. It is not a punishment.', when: (c) => c.prestiges >= 1 },
-  { id: 'r1_rare_prest_2', channel: 'ticker', rare: true, text: 'Second time at ten. The first ten was an event. This one is a habit.', when: (c) => c.prestiges >= 2 && c.number.lt('1e3') },
+  { id: 'r1_rare_g_1', channel: 'ticker', rare: true, text: 'You are one decision away from the ceiling. The decision is to keep going.', when: (c) => band(c, '1e300') },
   { id: 'r1_rare_ps_1', channel: 'ticker', rare: true, text: 'A million per second. The plus button is now a souvenir.', when: (c) => c.perSecond.gte('1e6') },
   { id: 'r1_rare_hour_1', channel: 'ticker', rare: true, text: 'Three in the morning and the exponent moved. You were here for it. That is the whole event.', when: (c) => c.hour >= 2 && c.hour < 4 },
   { id: 'r1_rare_hour_2', channel: 'ticker', rare: true, text: 'Late. The number will still be here in the morning. It has no other plans.', when: (c) => c.hour >= 22 },
-  { id: 'r1_rare_number_1', channel: 'ticker', rare: true, text: 'A billion without a single breath. The multiplier is still one. It is watching the peak.', when: (c) => band(c, '1e9', '1e12') && c.boosts === 0 },
-  { id: 'r1_rare_gate_1', channel: 'ticker', rare: true, text: 'The gate is the only number in here that you cannot pass by pressing.', when: (c) => c.number.gte('1.7e308') },
 
   // ── SAHNE (channel: 'scene', latch: true — S3 mandal, bir kez oynar) ──────
   { id: 'r1_scene_open', channel: 'scene', latch: true, text: 'Ten. It is not a lot.\nIt is a start.' },
@@ -175,8 +154,6 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_scene_t', channel: 'scene', latch: true, text: 'A trillion. The word used to mean all of it.\nIt does not.', when: (c) => c.number.gte('1e12') },
   { id: 'r1_scene_q', channel: 'scene', latch: true, text: 'Thirty digits.\nNobody taught you the rest. You are teaching yourself.', when: (c) => c.number.gte('1e30') },
   { id: 'r1_scene_g', channel: 'scene', latch: true, text: 'You are at the edge of the numbers you were taught.\nThe rest are numbers too.', when: (c) => c.number.gte('1e300') },
-  { id: 'r1_scene_gate', channel: 'scene', latch: true, text: 'It is over. 1.79e308. There is nothing after this.\nThere is.', when: (c) => c.number.gte('1.7e308') },
-  { id: 'r1_scene_boost', channel: 'scene', latch: true, text: 'Everything you built is gone.\nThat was the price. It was not hidden.', when: (c) => c.boosts >= 1 },
   { id: 'r1_scene_use', channel: 'scene', latch: true, text: 'A thousand presses with nothing on screen.\nThe number counted all of them.', when: (c) => c.uselessTaps >= 1000 },
   { id: 'r1_scene_late', channel: 'scene', latch: true, text: 'It is late.\nThe number is not tired. It will not be.', when: (c) => c.hour >= 0 && c.hour < 5 }
 ]

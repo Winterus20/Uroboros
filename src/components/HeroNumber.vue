@@ -1,29 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { format } from '../core/format'
 import { RUNGS } from '../game/number/rungs'
-
-const props = withDefaults(defineProps<{ boostPulse?: boolean }>(), { boostPulse: false })
 
 const store = useGameStore()
 const parts = computed(() => store.heroParts)
 const rung = computed(() => store.rungInfo)
 const rungTotal = RUNGS.length
-const boostText = computed(() => format(store.boostMult, 2, store.settings.notation))
 </script>
 
 <template>
   <!--
     G9: yapısal dizgi — taban büyük / kuyruk küçük, auto-fit YOK.
     G13: 390px'te uzun notasyon iki satıra iner, punto küçültülmez.
-    G11: mini boost yalnız hareket — renk ve isim değişmez.
     §8.4: basamak bilgisi renkle değil, her zaman yazıyla da verilir (etiket + ad).
   -->
-  <section class="hero" :class="{ 'hero--boost': props.boostPulse }">
+  <section class="hero">
     <div class="hero__top">
       <p class="hero__label data">{{ rung.label }}</p>
-      <p v-if="props.boostPulse" class="hero__badge data" aria-hidden="true">×{{ boostText }}</p>
     </div>
 
     <div class="hero__number" :style="{ color: rung.color }">
@@ -65,18 +59,6 @@ const boostText = computed(() => format(store.boostMult, 2, store.settings.notat
   color: var(--pn-text-dim);
 }
 
-/* Çarpan rozeti: kutu değil, mono okuma. Boost anında sağ üstteki yuvasına oturur. */
-.hero__badge {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  margin: 0;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--pn-text);
-  transform: translateY(-50%);
-  animation: pn-boost-badge 400ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
-}
 .hero__number {
   display: flex;
   align-items: baseline;
@@ -103,10 +85,6 @@ const boostText = computed(() => format(store.boostMult, 2, store.settings.notat
   font-size: var(--hero-tail);
   line-height: 1;
   opacity: 0.88;
-}
-
-.hero--boost .hero__number {
-  animation: pn-boost-collapse 400ms cubic-bezier(0.3, 0.7, 0.3, 1);
 }
 
 .hero__name {

@@ -8,12 +8,9 @@ const store = useGameStore()
 const rows = computed(() => [
   { label: 'Playtime', value: formatTime(store.playTime) },
   { label: 'Best number', value: format(store.bestNumber, 2, store.settings.notation) },
-  { label: 'Prestiges', value: String(store.prestiges) },
-  { label: 'Boosts', value: String(store.boosts) },
   { label: 'Purchases', value: String(store.totalBuys) },
   { label: '+1 presses', value: String(store.taps) },
-  { label: 'Presses that changed nothing', value: String(store.uselessTaps) },
-  { label: 'Definition earned', value: format(store.tanimTotal, 2, store.settings.notation) }
+  { label: 'Presses that changed nothing', value: String(store.uselessTaps) }
 ])
 </script>
 

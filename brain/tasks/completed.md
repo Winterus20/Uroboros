@@ -1,5 +1,40 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-25] ✔ — Zincir-only dilim: boost, prestij ve Tanım yükseltmeleri kaldırıldı
+
+### Ne yapıldı
+Proje sahibinin talebi (*"boosta bastığımda hepsi bir kalıyor, aldıklarım tamamen sıfırlanmıyor"* →
+*"kaldır sadece bu zincir kalsın; boost ve diğer güçlendirmeleri daha sonra planlayacağız"*)
+[ADR-0082](../decisions/0082-chain-only-slice.md) olarak kayda geçti ve uygulandı.
+
+- **Kaldırılanlar:** mini boost (breathe düğmesi + `B`), kapı/prestij (`gate` düğmesi + `P`),
+  `Tanım` yükseltmeleri (`start` · `chain` · `boost` · `autobuy`), otomasyon ve bunların ses/UI/kayıt izleri.
+- **Kalan tek katman zincir:** 8 halka, tek havuz, `+1`, mandallı kilitler (10 birim), halka → sayı
+  doğrudan katkısı (`RING_DIRECT_SHARE = 1`). Sıfırlama yok.
+- **Kayıt v22:** `boostMult`, `boosts`, `tanim`, `tanimTotal`, `prestiges`, `totalBoosts`,
+  `gateReached`, `upgrades` şemadan düştü. `MIN_SUPPORTED_SAVE_VERSION = 20` kaldı → v20/v21
+  kayıtları açılır, sayı + zincir korunur.
+- **Ses havuzu:** 100 satır (92 ticker + 8 sahne, 14 nadir); boost/prestij/kapı replikleri silindi.
+- **Ölçüm (zincir-only, 2 tık/sn):** halka açılışları 0 · 1,6 · 4,2 · 6,8 · 9,3 · 11,9 · 14,5 ·
+  **17,0 dk** · 60. dk **7,9e15** · 120. dk **4,3e19** · 120. dk **1 440 alım**.
+
+### Dosyalar
+`src/game/number/economy.ts` · `src/game/number/tuning.ts` · `src/game/number/upgrades.ts` (silindi) ·
+`src/game/number/economy.test.ts` · `src/game/number/balance.test.ts` · `src/stores/game.ts` ·
+`src/models/number.ts` · `src/models/save.ts` · `src/core/save-version.ts` · `src/core/save.ts` ·
+`src/core/auth/cloud-save-service.ts` · `src/App.vue` · `src/components/UpgradeList.vue` (silindi) ·
+`HeroNumber.vue` · `TelemetryLine.vue` · `StatsPanel.vue` · `TickerBar.vue` · `AlgorithmicSwirl.vue` ·
+`AuthModal.vue` · `CloudConflictModal.vue` · `src/game/voice/*` · `GAME_DESIGN.md` ·
+[ADR-0082](../decisions/0082-chain-only-slice.md) · `brain/decisions/README.md` · bu kayıt.
+
+### Doğrulama
+`npx vue-tsc --noEmit` → **0 hata** · `npx vitest run` → **95 test / 6 dosya geçti** ·
+`npx vite build` → başarılı. Tarayıcı (Playwright, gerçek dev build): store'da boost/prestij/upgrade
+alanı yok; sekmeler `number · stats · settings`; `breathe`/`gate` düğmesi yok; 10 Fingers alımı
+sonrası `/s = 10`; kayıt anahtarları yalnız zincir + meta.
+
+---
+
 ## [2026-10-23] ✔ — Halkalar sayıya doğrudan katkı veriyor (`RING_DIRECT_SHARE`)
 
 ### Ne yapıldı

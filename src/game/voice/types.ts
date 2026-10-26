@@ -13,11 +13,7 @@ export type VoiceChannel = 'ticker' | 'scene' | 'achievement' | 'description'
 export interface VoiceContext {
   rung: number
   number: Decimal
-  peak: Decimal
   perSecond: Decimal
-  tanim: Decimal
-  prestiges: number
-  boosts: number
   taps: number
   uselessTaps: number
   idleSeconds: number

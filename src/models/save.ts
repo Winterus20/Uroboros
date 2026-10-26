@@ -1,4 +1,4 @@
-/** Kayıt tipleri — yeni şema (SAVE_VERSION 21). */
+/** Kayıt tipleri — yeni şema (SAVE_VERSION 22). */
 import type { NotationType } from '../core/format'
 import type { HumorLevel, MotionMode, MusicTrackId } from './settings'
 
@@ -7,8 +7,6 @@ export interface SaveSlotMeta {
   exists: boolean
   /** Slot kartında gösterilen sayı (ham string). */
   number?: string
-  /** Prestij (kapı) sayısı. */
-  prestiges?: number
   playtime?: number
   timestamp?: number
 }
@@ -46,32 +44,27 @@ export interface SerializedSettings {
 }
 
 /**
- * Diske/buluta yazılan tam durum (SAVE_VERSION 21).
- * P5: pivot öncesi kayıtlar (v19 ve altı) açılmaz — sürüm artırıldı, eski kayıt "uyumsuz".
+ * Diske/buluta yazılan tam durum (SAVE_VERSION 22).
+ *
+ * v22 (2026-10-25): boost/prestij/Tanım yükseltmeleri kaldırıldı; kayıttan
+ * `boostMult`, `boosts`, `tanim`, `prestiges`, `upgrades` ve `gateReached`
+ * alanları düştü. Eski kayıtlar (v20/v21) yine açılır: bilinmeyen alanlar yok
+ * sayılır, sayı ve zincir korunur.
  */
 export interface SerializedPlayerState {
   version: number
   number: string
-  peak: string
   bestNumber: string
   rings: SerializedRing[]
   /** Halka kilitleri — mandallı (D6). */
   unlocked: boolean[]
-  boostMult: string
-  boosts: number
   rung: number
-  tanim: string
-  tanimTotal: string
-  prestiges: number
   totalBuys: number
-  totalBoosts: number
-  gateReached: boolean
   taps: number
   uselessTaps: number
   playTime: number
   startedAt: number
   lastSeenAt: number
-  upgrades: Record<string, number>
   settings: SerializedSettings
   seenVoice: string[]
   latched: string[]

@@ -270,15 +270,13 @@ function hexToRgb(hex: string): [number, number, number] {
 
 function getTargetParams(): SwirlParams {
   const [r, g, b] = hexToRgb(store.rungInfo.color)
-  // Mini boost sayısı arttıkça ortam nefes alır (G11: 400 ms'lik anın kalıcı izi)
-  const breath = Math.min(1, Math.log10(1 + store.boosts) / 1.4)
   return {
     c1: [r * 0.09, g * 0.09, b * 0.09, 1.0],
     c2: [r * 0.42, g * 0.42, b * 0.42, 1.0],
     c3: [0.02, 0.02, 0.03, 1.0],
-    speed: 0.72 + 0.3 * breath,
-    contrast: 2.3 + 0.5 * breath,
-    lighting: 0.3 + 0.06 * breath
+    speed: 0.72,
+    contrast: 2.3,
+    lighting: 0.3
   }
 }
 

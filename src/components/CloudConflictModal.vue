@@ -32,7 +32,7 @@ const isCloudAhead = computed(() => {
   try {
     const localDop = new Decimal(conflict.value.localMeta.number)
     const cloudDop = new Decimal(conflict.value.cloudMeta.number)
-    return cloudDop.gt(localDop) || conflict.value.cloudMeta.prestiges > conflict.value.localMeta.prestiges
+    return cloudDop.gt(localDop)
   } catch {
     return false
   }
@@ -100,12 +100,6 @@ const { dialogRef } = useFocusTrap(
                 </span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-slate-400">Kozmik Çöküş:</span>
-                <span class="font-mono tabular-nums text-amber-300">
-                  {{ conflict.localMeta.prestiges }} kez
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
                 <span class="text-slate-400">Oynama Süresi:</span>
                 <span class="font-mono tabular-nums text-slate-300">
                   {{ formatTime(conflict.localMeta.playtime) }}
@@ -156,12 +150,6 @@ const { dialogRef } = useFocusTrap(
                 <span class="text-slate-400">Kütle:</span>
                 <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
                   {{ formatMatter(conflict.cloudMeta.number) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Kozmik Çöküş:</span>
-                <span class="font-mono tabular-nums text-amber-300">
-                  {{ conflict.cloudMeta.prestiges }} kez
                 </span>
               </div>
               <div class="flex justify-between items-center">

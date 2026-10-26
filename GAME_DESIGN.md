@@ -1,6 +1,6 @@
 # HOLD THAT NUMBER — Oyun Tasarım Dokümanı (GDD)
 
-> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-23 · **Durum:** 1. basamak oynanabilir; 2–11 tasarlanmadı
+> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-25 · **Durum:** 1. basamak **zincir-only** oynanabilir; 2–11 tasarlanmadı
 > **Bu belge 2026-10-23'te BAŞTAN YAZILDI.** Eski "Kozmik Oburluk / UROBOROS" içeriği
 > (kütle ekonomisi, D1–D8 boyutları, Lab, Crisis, Neural, Time Clock, Colony, Singularity,
 > başarımlar, meydan okumalar) **tamamen kaldırıldı** — kod da, bu belge de.
@@ -9,7 +9,12 @@
 > [`brain/research/theme-pivot-grilling-2026-10-23.md`](brain/research/theme-pivot-grilling-2026-10-23.md) (50 karar) ·
 > [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) (ses) ·
 > [`brain/context/visual-language.md`](brain/context/visual-language.md) (görsel dil) ·
-> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi)
+> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi) · ADR-0082 (zincir-only)
+>
+> **2026-10-25 — ADR-0082:** mini boost, kapı/prestij ve `Tanım` yükseltmeleri **geçici olarak
+> oyundan kaldırıldı**. Mevcut build yalnız zinciri büyütür (8 halka, tek havuz, `+1`); sıfırlama
+> ve kapı yoktur. Aşağıdaki §5.3–§5.5, §6 ve §11 **tasarım arşividir** — bunlar geri eklenecekse
+> önce uzun bir tasarım turu yapılacak.
 
 ---
 
@@ -18,8 +23,8 @@
 Tek bir sayı var. Oyuncu onu büyütür, 11 basamaklık bir notasyon merdiveninde yukarı taşır ve
 merdivenin sonunda (`LNGN`) oyun biter.
 
-**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri + *Cookie Clicker*
-prestij döngüsü. **Süre:** tek koşu, ~**85 saat**, kuyruk yok, NG+ yok (`S4`).
+**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri. Prestij döngüsü
+geçici olarak kaldırıldı (ADR-0082). **Süre:** tek koşu, ~**85 saat**, kuyruk yok, NG+ yok (`S4`).
 
 ---
 
@@ -151,7 +156,7 @@ Zincir satırındaki `+x/s` okuması bu katkıdır.
 halka beslemesine **uygulanmaz**. Her halkaya uygulandığında `N ∝ M⁸` olur ve döngüler 2 saniyeye
 çöker (ölçüldü: 4,7 dakikada 11 boost).
 
-### 5.3 `Birikim` — kapı aşımı verim cezası (`E7`)
+### 5.3 `Birikim` — kapı aşımı verim cezası (`E7`) — **ARŞİV, build'de yok**
 
 ```
 A = sayı / kapı(1,79e308)
@@ -162,7 +167,7 @@ N > kapı  → verim = 0,9^log10(A)
 Kapı aşıldıktan sonra beklemek ödülü büyütür, üretimi yavaşlatır: "şimdi mi, biraz daha mı?"
 kararı (`E4`). Ceza **yalnız sayı üretimine** uygulanır (`D1` ile aynı gerekçe).
 
-### 5.4 Mini boost (`E12`–`E14`)
+### 5.4 Mini boost (`E12`–`E14`) — **ARŞİV, build'de yok**
 
 ```
 koşul  : halka 8 (Mathematician) bu koşuda en az 1 kez alınmış
@@ -175,7 +180,7 @@ Tanım  : VERMEZ
 8 halkayı yeniden kurmak zorunda kalır (ölçüldü: ~250 alım). **`D4`** (oyuncu politikası):
 boost, zirve bir önceki zirveyi geri kazanınca yapılır; "alır almaz boost" döngüyü 2 saniyeye indirir.
 
-### 5.5 Kapı ve prestij
+### 5.5 Kapı ve prestij — **ARŞİV, build'de yok**
 
 ```
 kapı      : sayı ≥ 1,79e308  (aynı zamanda JS float tavanı)
@@ -187,7 +192,7 @@ Prestij **tek ödül kapısıdır**; mini boost `Tanım` vermez (`E12`).
 
 ---
 
-## 6. `Tanım` yükseltmeleri (prestijin harcama yeri)
+## 6. `Tanım` yükseltmeleri (prestijin harcama yeri) — **ARŞİV, build'de yok**
 
 Tek kaynak: [`src/game/number/upgrades.ts`](src/game/number/upgrades.ts).
 
@@ -207,6 +212,10 @@ vermez, yalnızca tıklama yükünü alır.
 ---
 
 ## 7. Ölçüm — 1. basamak (`K5`, Set A → A+)
+
+> **Not (ADR-0082):** Aşağıdaki 119 dk'lık koşu boost/prestij dönemine aittir ve **arşivdir**.
+> Zincir-only build'in ölçümü `balance.test.ts` içindedir: 60. dk **7,9e15**, 120. dk **4,3e19**,
+> **1 440 alım**, halka açılışları 0 · 1,6 · 4,2 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk.
 
 Simülasyon: [`brain/scratchpad/balance-2026-10-23/sim.mjs`](brain/scratchpad/balance-2026-10-23/sim.mjs)
 · rapor: [`report.md`](brain/scratchpad/balance-2026-10-23/report.md) · çalıştır: `node sim.mjs --all`.
@@ -287,13 +296,14 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 - **v21 yalnız gösterim göçü (ADR-0080):** şema değişmedi; v20 kayıtlarındaki `scientific`
   değeri *eski varsayılan* olduğu için bir kez `standard`'a taşınır. Asgari sürüm 20'de kaldı,
   yani v20 kayıtları açılır — sıfırlanmaz.
+- **v22 zincir-only (ADR-0082):** boost/prestij/yükseltme alanları şemadan düştü. Asgari sürüm
+  yine 20: v20/v21 kayıtları açılır, sayı + zincir korunur, kaldırılan alanlar yok sayılır.
 - **Daha yeni kayıt korunur:** `SaveVersionError` — yeni build'in kaydı eski build'de reddedilir,
   sessizce düşürülmez.
-- **Şema:** `number`, `peak`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
-  `boostMult`, `boosts`, `rung`, `tanim`, `tanimTotal`, `prestiges`, `totalBuys`, `totalBoosts`,
-  `gateReached`, `taps`, `uselessTaps`, `playTime`, `startedAt`, `lastSeenAt`, `upgrades`,
+- **Şema (v22):** `number`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
+  `rung`, `totalBuys`, `taps`, `uselessTaps`, `playTime`, `startedAt`, `lastSeenAt`,
   `settings`, `seenVoice[]`, `latched[]`.
-- **Uçucu alanlar kayda yazılmaz:** `autobuyTimer`, `offlineReport`.
+- **Uçucu alanlar kayda yazılmaz:** `offlineReport`.
 - **Depolama:** LZ-String + LocalStorage, 3 slot + otomatik yedek + karantina; Firebase/Firestore
   bulut kayıt isteğe bağlı (anahtarsız oyun tam çalışır).
 
@@ -302,7 +312,7 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 ## 10. Çevrimdışı ilerleme (`S6`)
 
 Üretim kapalıyken de sürer, **12 saatte tavan** yapar (`OFFLINE_CAP_SECONDS = 12·3600`).
-Simülasyon **1 saniyelik adımlarla** ilerletilir ve autobuy dâhil edilir; sonuç
+Simülasyon **1 saniyelik adımlarla** ilerletilir; sonuç
 `OfflineReport` (`seconds`, `capped`, `gained`) olarak "welcome back" modalına gider.
 
 Gerekçe: 85 saatlik oyunda uyuyan oyuncuyu cezalandırmak düşmanca; ama bir hafta kapatıp gelince
@@ -310,7 +320,7 @@ oyunu atlamış olmak oyunu anlamsız kılar.
 
 ---
 
-## 11. Kapı sonrası — 2. basamak stub'ı
+## 11. Kapı sonrası — 2. basamak stub'ı — **ARŞİV, build'de yok**
 
 2. basamak henüz tasarlanmadığı için prestij şu an **`rung`'u ilerletmez**: oyuncu `Tanım`
 kazanır, sayı başlangıca döner ve **1. basamağı** `Tanım` yükseltmeleriyle daha hızlı oynar.
@@ -361,10 +371,10 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | Katman | Dosya | Durum |
 | :--- | :--- | :--- |
-| Ekonomi | `src/game/number/` (tuning · economy · upgrades · rungs) | ✅ |
-| Store | `src/stores/game.ts` (tick, autobuy, prestij, serialize/deserialize) | ✅ |
-| Ses | `src/game/voice/` + `TickerBar.vue` | ✅ 1. basamak havuzu (110 ticker + 11 sahne) |
-| UI | `App.vue` + 10 bileşen (Hero, Tap, Chain, Telemetry, Ticker, Upgrade, Stats, Settings, Offline, RungScene) | ✅ |
+| Ekonomi | `src/game/number/` (tuning · economy · rungs) | ✅ zincir-only (ADR-0082) |
+| Store | `src/stores/game.ts` (tick, alım, serialize/deserialize) | ✅ |
+| Ses | `src/game/voice/` + `TickerBar.vue` | ✅ 1. basamak havuzu (92 ticker + 8 sahne) |
+| UI | `App.vue` + 9 bileşen (Hero, Tap, Chain, Telemetry, Ticker, Stats, Settings, Offline, RungScene) | ✅ |
 | Sahne (`G8`) | `RungScene.vue` | ⚠️ motor hazır; `rung` ilerlemediği için tetiklenmiyor |
 | Altyapı | 20 TPS loop · LZ-String + slot + karantina · Firebase auth/bulut · audio + müzik · swirl | ✅ |
 | 2–11. basamak | — | ⛔ tasarlanmadı |
@@ -378,7 +388,8 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | # | Konu | Durum |
 | :-- | :--- | :--- |
-| `K5` | Denge ölçümü — hedef 4b çelişkisi ve Euler→kapalı form farkı | 🟡 devam ediyor |
+| `K5` | Zincir-only denge ölçümü — 60. dk 7,9e15 · 120. dk 4,3e19 · 1 440 alım | ✅ `balance.test.ts` |
+| `R1` | **Boost + prestij + `Tanım` yükseltmeleri** — kaldırıldı; geri eklemeden önce uzun tasarım turu | ⛔ arşiv (ADR-0082) |
 | — | **2. basamak tasarımı** (`E5`: kendi turunda; `OmegaNum` adaptörü + kadran) | ⛔ sıradaki büyük iş |
 | `A4` | Mizah yoğunluğu — ticker kapısı var; sahne (`RungScene`) ve başarım kapısı yok | 🟡 |
 | `A5` | `LNGN` final sahnesi (ton kırılması, `G8` motoru) | 🟡 en son |

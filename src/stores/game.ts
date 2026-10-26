@@ -5,35 +5,20 @@ import { SAVE_VERSION, readSaveVersion } from '../core/save-version'
 import { BLOCK_SIZE, NUMBER_TUNING, RING_COUNT } from '../game/number/tuning'
 import {
   advance,
-  applyBoost,
-  applyPrestige,
-  boostMultiplier,
   buyRing as buyRingRaw,
   buyRingMax,
-  canBoost,
   createNumberState,
-  gateReady as gateReadyRaw,
   manualTap,
   maxAffordableRing,
   numberPerSecond,
-  productionEfficiency,
   ringBlockPrice,
   ringCost,
   ringGainPerSecond,
   ringNumberRate,
   ringUnlocked,
-  tanimReward as tanimRewardRaw,
   unlockedRingCount
 } from '../game/number/economy'
 import { rungDef } from '../game/number/rungs'
-import {
-  UPGRADES,
-  applyUpgradeLevels,
-  autobuyIntervalFor,
-  emptyUpgrades,
-  upgradeCost,
-  type UpgradeId
-} from '../game/number/upgrades'
 import type { GameSettings, MusicTrackId } from '../models/settings'
 import type { BuyMode, GameState, RingRow } from '../models/number'
 import type { SerializedPlayerState } from '../models/save'
@@ -72,12 +57,10 @@ export function buildInitialState(): GameState {
     playTime: 0,
     startedAt: now,
     lastSeenAt: now,
-    upgrades: emptyUpgrades(),
     settings: defaultSettings(),
     seenVoice: [],
     latched: [],
     buyMode: 10,
-    autobuyTimer: 0,
     offlineReport: null
   }
 }
@@ -91,13 +74,9 @@ export const useGameStore = defineStore('game', {
   state: buildInitialState,
 
   getters: {
-    /** Sayı/sn (Birikim cezası dahil). */
+    /** Sayı/sn. */
     perSecond(state): Decimal {
       return numberPerSecond(state)
-    },
-
-    efficiency(state): Decimal {
-      return productionEfficiency(state)
     },
 
     unlockedRings(state): number {
@@ -125,27 +104,6 @@ export const useGameStore = defineStore('game', {
       }))
     },
 
-    boostAvailable(state): boolean {
-      return canBoost(state)
-    },
-
-    boostGain(state): Decimal {
-      return boostMultiplier(state)
-    },
-
-    gateReady(state): boolean {
-      return gateReadyRaw(state)
-    },
-
-    tanimReward(state): Decimal {
-      return tanimRewardRaw(state)
-    },
-
-    /** Prestij ödülü ekranda göründüğü haliyle (2 ondalık). */
-    tanimRewardText(state): string {
-      return format(tanimRewardRaw(state), 2, state.settings.notation)
-    },
-
     heroParts(state): { base: string; tail: string } {
       return heroParts(state.number, state.settings.notation)
     },
@@ -162,35 +120,6 @@ export const useGameStore = defineStore('game', {
       return rungDef(state.rung)
     },
 
-    /** Basamak içi ilerleme [0,1] — yalnız telemetri; eşik değil. */
-    rungProgress(state): number {
-      const log = state.number.log10().toNumber()
-      if (!Number.isFinite(log) || log <= 0) return 0
-      return Math.min(1, Math.max(0, log / 308))
-    },
-
-    autobuyInterval(state): number {
-      return autobuyIntervalFor(state.upgrades.autobuy)
-    },
-
-    upgradesView(state) {
-      return UPGRADES.map((def) => {
-        const level = state.upgrades[def.id]
-        return {
-          id: def.id,
-          name: def.name,
-          level,
-          maxLevel: def.maxLevel,
-          cost: upgradeCost(def.id, level),
-          effect: def.describe(level),
-          affordable: (() => {
-            const cost = upgradeCost(def.id, level)
-            return cost !== null && state.tanim.gte(cost)
-          })()
-        }
-      })
-    },
-
     humorSuspended(state): boolean {
       return state.settings.humor === 'off'
     }
@@ -202,31 +131,6 @@ export const useGameStore = defineStore('game', {
       if (!Number.isFinite(dt) || dt <= 0) return
       advance(this, dt)
       this.playTime += dt
-      this.runAutobuy(dt)
-      if (this.number.gte(NUMBER_TUNING.gate) && !this.gateReached) this.gateReached = true
-    },
-
-    /**
-     * Otomasyon: en ucuz alınabilir halkadan bir BLOK alır (Tanım yükseltmesi).
-     * Tek birim almak 1,20 büyümesinde anlamsız kalıyordu; blok = bir halka (11,4 birim).
-     */
-    runAutobuy(dt: number): void {
-      const interval = autobuyIntervalFor(this.upgrades.autobuy)
-      if (interval <= 0) return
-      this.autobuyTimer += dt
-      if (this.autobuyTimer < interval) return
-      this.autobuyTimer = 0
-      const rows = this.ringRows
-      let best = -1
-      let bestCost: Decimal | null = null
-      for (const row of rows) {
-        if (!row.affordable10) continue
-        if (bestCost === null || row.cost10.lt(bestCost)) {
-          bestCost = row.cost10
-          best = row.index
-        }
-      }
-      if (best >= 0) this.buyRing(best, BLOCK_SIZE)
     },
 
     /** `+1` — gerçekten 1 ekler (S9); gösterim değişmediyse anlamsız basış sayılır. */
@@ -272,28 +176,6 @@ export const useGameStore = defineStore('game', {
       this.buyWithMode(rows[0].index)
     },
 
-    /** Mini boost (E12–E14). */
-    boost(): Decimal {
-      return applyBoost(this)
-    },
-
-    /** Prestij (E7/S2). Dikey dilimde `rung` 1'de kalır (2. basamak tasarlanmadı). */
-    prestige(): Decimal {
-      const reward = applyPrestige(this)
-      this.autobuyTimer = 0
-      return reward
-    },
-
-    buyUpgrade(id: UpgradeId): boolean {
-      const level = this.upgrades[id]
-      const cost = upgradeCost(id, level)
-      if (cost === null || this.tanim.lt(cost)) return false
-      this.tanim = this.tanim.minus(cost)
-      this.upgrades[id] = level + 1
-      applyUpgradeLevels(this, this.upgrades)
-      return true
-    },
-
     setSetting<K extends keyof GameSettings>(key: K, value: GameSettings[K]): void {
       this.settings[key] = value
     },
@@ -330,7 +212,6 @@ export const useGameStore = defineStore('game', {
         const dt = Math.min(step, remaining)
         advance(this, dt)
         this.playTime += dt
-        this.runAutobuy(dt)
         remaining -= dt
       }
       this.offlineReport = {
@@ -345,25 +226,16 @@ export const useGameStore = defineStore('game', {
       return {
         version: SAVE_VERSION,
         number: this.number.toString(),
-        peak: this.peak.toString(),
         bestNumber: this.bestNumber.toString(),
         rings: this.rings.map((ring) => ({ a: ring.amount.toString(), b: ring.bought })),
         unlocked: [...this.unlocked],
-        boostMult: this.boostMult.toString(),
-        boosts: this.boosts,
         rung: this.rung,
-        tanim: this.tanim.toString(),
-        tanimTotal: this.tanimTotal.toString(),
-        prestiges: this.prestiges,
         totalBuys: this.totalBuys,
-        totalBoosts: this.totalBoosts,
-        gateReached: this.gateReached,
         taps: this.taps,
         uselessTaps: this.uselessTaps,
         playTime: this.playTime,
         startedAt: this.startedAt,
         lastSeenAt: this.lastSeenAt,
-        upgrades: { ...this.upgrades },
         settings: { ...this.settings },
         seenVoice: [...this.seenVoice],
         latched: [...this.latched]
@@ -378,23 +250,14 @@ export const useGameStore = defineStore('game', {
         return dec.isNan() ? fallback : dec
       }
       this.number = num(data.number, D(10))
-      this.peak = num(data.peak, this.number)
       this.bestNumber = num(data.bestNumber, this.number)
-      this.boostMult = num(data.boostMult, D(1))
-      this.boosts = typeof data.boosts === 'number' ? data.boosts : 0
       this.rung = typeof data.rung === 'number' ? Math.min(11, Math.max(1, data.rung)) : 1
-      this.tanim = num(data.tanim, D_0)
-      this.tanimTotal = num(data.tanimTotal, D_0)
-      this.prestiges = typeof data.prestiges === 'number' ? data.prestiges : 0
       this.totalBuys = typeof data.totalBuys === 'number' ? data.totalBuys : 0
-      this.totalBoosts = typeof data.totalBoosts === 'number' ? data.totalBoosts : 0
-      this.gateReached = data.gateReached === true
       this.taps = typeof data.taps === 'number' ? data.taps : 0
       this.uselessTaps = typeof data.uselessTaps === 'number' ? data.uselessTaps : 0
       this.playTime = typeof data.playTime === 'number' ? data.playTime : 0
       this.startedAt = typeof data.startedAt === 'number' ? data.startedAt : fresh.startedAt
       this.lastSeenAt = typeof data.lastSeenAt === 'number' ? data.lastSeenAt : fresh.lastSeenAt
-      this.upgrades = { ...emptyUpgrades(), ...(data.upgrades ?? {}) }
       this.settings = { ...fresh.settings, ...(data.settings ?? {}) }
       // v21 (ADR-0080): "standard" (K/M/B/T) yeni varsayılan gösterim. v20
       // kayıtlarındaki "scientific" oyuncunun seçimi değil ESKİ VARSAYILANDI;
@@ -405,7 +268,6 @@ export const useGameStore = defineStore('game', {
       this.seenVoice = Array.isArray(data.seenVoice) ? data.seenVoice.slice(0, SEEN_VOICE_LIMIT) : []
       this.latched = Array.isArray(data.latched) ? [...data.latched] : []
       this.offlineReport = null
-      this.autobuyTimer = 0
       const parsedRings = Array.isArray(data.rings) ? data.rings : []
       for (let i = 0; i < RING_COUNT; i++) {
         const ring = parsedRings[i]
@@ -416,7 +278,6 @@ export const useGameStore = defineStore('game', {
       for (let i = 0; i < RING_COUNT; i++) {
         this.unlocked[i] = i === 0 ? true : unlocked[i] === true
       }
-      applyUpgradeLevels(this, this.upgrades)
     },
 
     /** Sert sıfırlama (Ayarlar > Hard Reset). */
@@ -424,12 +285,6 @@ export const useGameStore = defineStore('game', {
       const settings = { ...this.settings }
       Object.assign(this, buildInitialState())
       this.settings = settings
-      this.autobuyTimer = 0
-    },
-
-    /** `runAutobuy` sayacı — uçucu, kayda yazılmaz. */
-    setAutobuyTimer(value: number): void {
-      this.autobuyTimer = value
     }
   }
 })

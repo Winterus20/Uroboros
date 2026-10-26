@@ -13,11 +13,7 @@ function context(): VoiceContext {
   return {
     rung: store.rung,
     number: store.number,
-    peak: store.peak,
     perSecond: store.perSecond,
-    tanim: store.tanim,
-    prestiges: store.prestiges,
-    boosts: store.boosts,
     taps: store.taps,
     uselessTaps: store.uselessTaps,
     idleSeconds: (Date.now() - lastInteraction.value) / 1000,

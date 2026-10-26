@@ -1,4 +1,4 @@
-import { Decimal, D_0, D_1, D_10 } from '../../core/math'
+import { Decimal, D_0, D_10 } from '../../core/math'
 import {
   NUMBER_TUNING,
   RING_COUNT,
@@ -18,58 +18,30 @@ export interface RingState {
  * 1. basamağın tüm sayısal durumu. Framework'ten bağımsız: Pinia yok, Vue yok —
  * böylece hem store hem saf testler aynı fonksiyonları kullanır.
  *
- * Kural (S3): `peak` mandallıdır, alım düşürse de geri gitmez; `number` serbest
- * inip çıkar (E2). `bestNumber` hayat boyu rekor. `unlocked` de mandallıdır (D6).
+ * 2026-10-25: mini boost, prestij ve Tanım yükseltmeleri kaldırıldı. Oyun yalnız
+ * zinciri büyütür: sıfırlama yoktur, sayı yalnız alımlarla düşer. `unlocked`
+ * mandallıdır (D6): bir kez açılan halka kapanmaz.
  */
 export interface NumberState {
   number: Decimal
-  /** Bu koşudaki en yüksek sayı — boost çarpanının girdisi (E14). */
-  peak: Decimal
   rings: RingState[]
-  /** Halka kilitleri — bir kez açılır, boost/prestij kapatmaz (D6/S3). */
+  /** Halka kilitleri — bir kez açılır, kapanmaz (D6/S3). */
   unlocked: boolean[]
-  /** Mini boost'ların biriktirdiği kalıcı çarpan (basamak içi). */
-  boostMult: Decimal
-  boosts: number
   /** Basamak (çapa) 1..11. Dikey dilimde daima 1. */
   rung: number
-  /** Harcanabilir prestij para birimi (E7). */
-  tanim: Decimal
-  /** Hayat boyu kazanılan Tanım (istatistik). */
-  tanimTotal: Decimal
-  prestiges: number
+  /** Hayat boyu kazanılan en yüksek sayı. */
   bestNumber: Decimal
   totalBuys: number
-  totalBoosts: number
-  /** Kapı bir kez aşıldı mı (mandal — sahne bir kez oynar, S3). */
-  gateReached: boolean
-  /** Prestij sonrası başlangıç sayısı — `start` yükseltmesiyle büyür (varsayılan 10). */
-  startNumber: Decimal
-  /** `chain` yükseltmesinin zincir üretim çarpanı (varsayılan 1). */
-  chainMult: Decimal
-  /** `boost` yükseltmesinin boost üssü (varsayılan 0,2). */
-  boostExp: number
 }
 
 export function createNumberState(): NumberState {
   return {
     number: D_10,
-    peak: D_10,
     rings: Array.from({ length: RING_COUNT }, () => ({ amount: D_0, bought: 0 })),
     unlocked: Array.from({ length: RING_COUNT }, (_, i) => i === 0),
-    boostMult: D_1,
-    boosts: 0,
     rung: 1,
-    tanim: D_0,
-    tanimTotal: D_0,
-    prestiges: 0,
     bestNumber: D_10,
-    totalBuys: 0,
-    totalBoosts: 0,
-    gateReached: false,
-    startNumber: D_10,
-    chainMult: D_1,
-    boostExp: NUMBER_TUNING.boostExponent
+    totalBuys: 0
   }
 }
 
@@ -107,7 +79,7 @@ export function canBuyRing(state: NumberState, index: number): boolean {
 
 /**
  * Tek havuz: maliyet sayıdan düşülür (E2). Alım sayıyı düşürebilir —
- * `peak`, `bestNumber` ve kilitler mandallı olduğu için hiçbir eşik geri gitmez (S3).
+ * `bestNumber` ve kilitler mandallı olduğu için hiçbir eşik geri gitmez (S3).
  *
  * @returns gerçekten alınan birim sayısı (0 = yetersiz sayı / kilitli halka)
  */
@@ -135,16 +107,6 @@ export function buyRingMax(state: NumberState, index: number): number {
 }
 
 /**
- * `Birikim` cezası (E7): kapı aşımı arttıkça üretim verimi düşer.
- * Yalnız SAYI üretimine uygulanır (D1 ile aynı gerekçe).
- */
-export function productionEfficiency(state: NumberState): Decimal {
-  const ratio = state.number.div(NUMBER_TUNING.gate)
-  if (ratio.lte(1)) return D_1
-  return new Decimal(NUMBER_TUNING.efficiencyBase).pow(ratio.log10())
-}
-
-/**
  * Halka `index`in SAYIYA doğrudan katkısı (birim başına /sn).
  * Halka 1 zaten sayının kendisidir (`p₀ = 1`), ona ikinci bir katkı eklenmez (E6).
  */
@@ -153,7 +115,7 @@ export function ringDirectRate(index: number): Decimal {
   return NUMBER_TUNING.rings[index].baseRate.times(RING_DIRECT_SHARE)
 }
 
-/** Halka 2–8'in sayıya doğrudan katkılarının toplamı — çarpanlar ve verim hariç. */
+/** Halka 2–8'in sayıya doğrudan katkılarının toplamı. */
 export function directNumberPerSecond(state: NumberState): Decimal {
   let total = D_0
   for (let i = 1; i < RING_COUNT; i++) {
@@ -164,119 +126,33 @@ export function directNumberPerSecond(state: NumberState): Decimal {
 
 /**
  * Sayı üretimi: halka 1 (Fingers) sayıyı üretir (E6); halka 2–8 de sayıya doğrudan
- * yazar (`RING_DIRECT_SHARE`). Çarpanlar: boost (D1) × zincir yükseltmesi × Birikim verimi.
+ * yazar (`RING_DIRECT_SHARE`).
  */
 export function numberPerSecond(state: NumberState): Decimal {
-  const base = state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate).plus(directNumberPerSecond(state))
-  return base.times(state.boostMult).times(state.chainMult).times(productionEfficiency(state))
+  return state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate).plus(directNumberPerSecond(state))
 }
 
 /**
  * Halka n'in saniyede ürettiği miktar — BESLEME (indeks 0 için: Fingers'ın sayıya kattığı).
- * D1: boost çarpanı halka beslemesine UYGULANMAZ — zincir kendi hızında akar.
  *
  * Halka 1 kendi başına `/s`nin tamamı DEĞİLDİR: halka 2–8 de sayıya doğrudan yazar
  * (`ringNumberRate`). Toplam okuma `numberPerSecond`.
  */
 export function ringGainPerSecond(state: NumberState, index: number): Decimal {
   if (index === 0) {
-    return state.rings[0].amount
-      .times(NUMBER_TUNING.rings[0].baseRate)
-      .times(state.boostMult)
-      .times(state.chainMult)
-      .times(productionEfficiency(state))
+    return state.rings[0].amount.times(NUMBER_TUNING.rings[0].baseRate)
   }
-  return state.rings[index].amount.times(NUMBER_TUNING.rings[index].baseRate).times(state.chainMult)
+  return state.rings[index].amount.times(NUMBER_TUNING.rings[index].baseRate)
 }
 
 /**
- * Halka `index`in sayıya DOĞRUDAN kattığı miktar (çarpanlar dahil). Halka 1 için 0 —
+ * Halka `index`in sayıya DOĞRUDAN kattığı miktar. Halka 1 için 0 —
  * onun katkısı zaten `ringGainPerSecond(state, 0)`.
  */
 export function ringNumberRate(state: NumberState, index: number): Decimal {
   const rate = ringDirectRate(index)
   if (rate.lte(0)) return D_0
-  return state.rings[index].amount
-    .times(rate)
-    .times(state.boostMult)
-    .times(state.chainMult)
-    .times(productionEfficiency(state))
-}
-
-/** Mini boost açık mı? Zincirin son halkası alınmış olmalı (E13). */
-export function canBoost(state: NumberState): boolean {
-  return state.rings[RING_COUNT - 1].bought > 0
-}
-
-/** Boost ödülü: zirveye bağlı (E14). Zirve başlangıcın altındaysa 1 (nötr). */
-export function boostMultiplier(state: NumberState): Decimal {
-  if (state.peak.lte(state.startNumber) || state.startNumber.lte(0)) return D_1
-  return state.peak.div(state.startNumber).pow(state.boostExp)
-}
-
-/**
- * Mini boost: sayı başlangıca döner, her halka 1 birime iner (D3 — zincir canlı kalır),
- * kilitler AÇIK kalır (D6). Karşılığında basamak içi KALICI üretim çarpanı (E12).
- * Tanım VERMEZ.
- *
- * @returns uygulanan çarpan (uygulanamadıysa 1)
- */
-export function applyBoost(state: NumberState): Decimal {
-  if (!canBoost(state)) return D_1
-  const gain = boostMultiplier(state)
-  state.boostMult = state.boostMult.times(gain)
-  state.boosts += 1
-  state.totalBoosts += 1
-  resetRun(state)
-  return gain
-}
-
-/** Kapı aşıldı mı (prestij hazır)? */
-export function gateReady(state: NumberState): boolean {
-  return state.number.gte(NUMBER_TUNING.gate)
-}
-
-/** Aşım oranı: sayı / kapı (prestij ödülünün girdisi, E7). */
-export function overflowRatio(state: NumberState): Decimal {
-  return state.number.div(NUMBER_TUNING.gate)
-}
-
-/** Prestij ödülü: Tanım = log10(1 + A), A = sayı / kapı (E7). */
-export function tanimReward(state: NumberState): Decimal {
-  if (!gateReady(state)) return D_0
-  return overflowRatio(state).plus(1).log10()
-}
-
-/**
- * Prestij: Tanım kazanılır, sayı başlangıca döner, zincir yeniden kurulur (S2).
- *
- * Dikey dilim notu: 2. basamak henüz tasarlanmadı (E5) — bu yüzden `rung`
- * ŞİMDİLİK 1'de kalır ve oyuncu Tanım yükseltmeleriyle 1. basamağı tekrar oynar.
- * Basamak geçişi 2. basamak yazıldığında buraya bağlanacak.
- *
- * @returns kazanılan Tanım (kapı kapalıysa 0)
- */
-export function applyPrestige(state: NumberState): Decimal {
-  const reward = tanimReward(state)
-  if (reward.lte(0)) return D_0
-  state.tanim = state.tanim.plus(reward)
-  state.tanimTotal = state.tanimTotal.plus(reward)
-  state.prestiges += 1
-  state.boostMult = D_1
-  state.boosts = 0
-  resetRun(state)
-  return reward
-}
-
-/** Koşu sıfırlama (boost ve prestij aynı sıfırlamayı kullanır). */
-function resetRun(state: NumberState): void {
-  state.number = state.startNumber
-  state.peak = state.startNumber
-  for (const ring of state.rings) {
-    ring.amount = D_1
-    ring.bought = 0
-  }
-  state.gateReached = false
+  return state.rings[index].amount.times(rate)
 }
 
 /**
@@ -288,15 +164,13 @@ export function advance(state: NumberState, dt: number): void {
   if (!Number.isFinite(dt) || dt <= 0) return
   for (let i = 0; i < RING_COUNT - 1; i++) {
     const feeder = state.rings[i + 1]
-    const gain = feeder.amount.times(NUMBER_TUNING.rings[i + 1].baseRate).times(state.chainMult).times(dt)
+    const gain = feeder.amount.times(NUMBER_TUNING.rings[i + 1].baseRate).times(dt)
     state.rings[i].amount = state.rings[i].amount.plus(gain)
   }
   // Tek kaynak: `/s` okuması ile tick aynı formülü kullanır (Fingers + doğrudan katkı).
   const perSecond = numberPerSecond(state)
   if (perSecond.gt(0)) state.number = state.number.plus(perSecond.times(dt))
-  if (state.number.gt(state.peak)) state.peak = state.number
   if (state.number.gt(state.bestNumber)) state.bestNumber = state.number
-  if (!state.gateReached && state.number.gte(NUMBER_TUNING.gate)) state.gateReached = true
 }
 
 /** `+1` butonu: S9 — gerçekten 1 ekler, hiçbir çarpan uygulanmaz. */

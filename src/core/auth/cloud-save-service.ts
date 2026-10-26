@@ -52,7 +52,8 @@ function getDeviceName(): string {
 function extractMeta(state: SerializedPlayerState, slot: number): CloudSaveMeta {
   return {
     number: typeof state.number === 'string' ? state.number : '10',
-    prestiges: typeof state.prestiges === 'number' ? state.prestiges : 0,
+    // v22: prestij kaldırıldı; alan bulut meta'sında uyumluluk için 0 kalır.
+    prestiges: 0,
     playtime: typeof state.playTime === 'number' ? state.playTime : 0,
     version: typeof state.version === 'number' ? state.version : 1,
     activeSlot: slot,

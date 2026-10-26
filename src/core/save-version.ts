@@ -10,8 +10,13 @@
  * 10^15 ve üstünde e-notasyonu). ŞEMA DEĞİŞMEDİ; sürüm yalnız v20 kayıtlarının
  * ESKİ varsayılanı ("scientific") bir kez yeni gösterime taşıması için arttı.
  * Asgari sürüm 20'de kaldı → v20 kayıtları açılır, kaybolmaz.
+ *
+ * v22 — ZİNCİR-ONLY (ADR-0082): mini boost, prestij ve Tanım yükseltmeleri
+ * kaldırıldı. Kayıttaki `boostMult`, `boosts`, `tanim`, `prestiges`,
+ * `upgrades` ve `gateReached` alanları düştü. Asgari sürüm 20'de kaldı:
+ * v20/v21 kayıtları açılır, sayı + zincir korunur, kaldırılan alanlar yok sayılır.
  */
-export const SAVE_VERSION = 21
+export const SAVE_VERSION = 22
 
 /** Bunun altındaki kayıtlar sıfırlanır (P5: sert temizlik). */
 export const MIN_SUPPORTED_SAVE_VERSION = 20

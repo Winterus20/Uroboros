@@ -1,43 +1,38 @@
 import { Decimal, D } from '../../core/math'
 
 /**
- * 1. BASAMAK (`1.79e308` — "I thought it was a wall") denge sabitleri.
+ * 1. BASAMAK ("1.79e308") zincir sabitleri.
  *
- * Kaynak: brain/research/theme-pivot-grilling-2026-10-23.md §11.3 (E6–E14) ·
+ * Kaynak: brain/research/theme-pivot-grilling-2026-10-23.md §11.3 (E6–E11) ·
  * brain/research/ring-pricing-2026-10-23.md (fiyat kuralı) ·
  * brain/research/ad-pricing-and-chain-math-2026-10-23.md §6 (A+ ölçümü).
+ *
+ * 2026-10-25: mini boost, prestij ve Tanım yükseltmeleri kaldırıldı. Oyun şimdilik
+ * yalnız zinciri büyütür; sıfırlama ve kapı yoktur. Bu dosya zincirin tek sabit
+ * kaynağıdır.
  *
  * ── ÜRETİM (Antimatter Dimensions kuralı, S9) ────────────────────────────
  * Bir parmak saniyede TAM 1 sayı üretir; her halka kendinden bir aşağıdakini
  * saniyede `CHAIN_RATE` adet üretir. `+1` bu yüzden gerçek bir birimdir.
  *
- * ── HALKANIN SAYIYA DOĞRUDAN KATKISI (2026-10-23) ────────────────────────
+ * ── HALKANIN SAYIYA DOĞRUDAN KATKISI ────────────────────────────────────
  * Halka 2–8, bir altındakine verdiği miktarı sayının kendisine de yazar
- * (`RING_DIRECT_SHARE = 1` → birim başına 0,11/sn). Zincir integrali artık tek
- * yol değil: alınan halka `/s` okumasını ANINDA büyütür. Denge ölçümü:
- * `src/game/number/balance.test.ts` (bant 110–130 dk) bu katkıyla birlikte koşar.
+ * (`RING_DIRECT_SHARE = 1` → birim başına 0,11/sn). Zincir integrali tek
+ * yol değil: alınan halka `/s` okumasını ANINDA büyütür.
  *
- * ── FİYAT KURALI (tek cümle) ─────────────────────────────────────────────
+ * ── FİYAT KURALI (tek cümle) ────────────────────────────────────────────
  * Her halka bir öncekinin 8 katı eder, birim başına fiyat 1,20 ile artar:
  *     c_i = 25 · 8^i          g = 1,20
  * İkisi birlikte halka başına log(8)/log(1,2) = 11,4 birim verir; yani 10'lu
  * blok (AD'nin "Buy 10"ı) tam olarak BİR halkayı satın alır ve kilit eşiği
  * (10 birim) tek bloktur.
  *
- * ── NEDEN 1/sn HER YERDE DEĞİL ───────────────────────────────────────────
- * Zincir 7 katlı bir integraldir: N(t) ≈ M · (∏p) · t⁸/8!. Sekiz halka da
- * 1/sn olsaydı ∏p = 1 olur, zincir bugünkünün (1/0,11)⁷ ≈ 5,1e6 katı güçlenir
- * ve iki saatlik koşu imkânsızlaşırdı (ölçüm: 43 dakikada kapı + 10. dakikada
- * 1,3e10 parmak). `CHAIN_RATE = 0,11` iki saatlik koşuyu koruyan sayıdır.
+ * ── NEDEN 1/sn HER YERDE DEĞİL ──────────────────────────────────────────
+ * Zincir 7 katlı bir integraldir. Sekiz halka da 1/sn olsaydı zincir
+ * (1/0,11)⁷ ≈ 5,1e6 kat güçlenirdi. `CHAIN_RATE = 0,11` zincirin ritmini koruyan sayıdır.
  *
- * ── ÖLÇÜMÜN ZORUNLU KILDIĞI ÜÇ DÜZELTME (rapor §2.2) ────────────────────
- *  D1 — Boost çarpanı YALNIZ sayı üretimine uygulanır; halka beslemesine uygulanmaz.
- *  D3 — Boost sonrası halkalar 0'a değil 1 birime iner; zincir canlı kalır.
- *  D6 — Kilitler MANDALLIDIR: bir kez açılan halka boost/prestij ile kapanmaz (S3).
- *
- * ── DOĞRULANAN KOŞU (20 TPS, 2 tık/sn, K5 politikası — gerçek motor) ────
- * kapı 119,0 dk · 21 boost · 371 alım · halka açılışları 0 · 1,6 · 4,2 · 6,8 ·
- * 9,4 · 12,0 · 14,5 · 17,1 dk
+ * ── ÖLÇÜLEN AÇILIŞLAR (zincir-only, 2 tık/sn) ───────────────────────────
+ * Halka açılışları 0 · 1,6 · 4,2 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk.
  */
 
 export interface RingTuning {
@@ -56,7 +51,7 @@ function ring(name: string, baseCost: number, baseRate: number): RingTuning {
 /** Halka 1 → sayı: bir parmak saniyede tam 1 sayı (S9: "+1 gerçek"). */
 export const NUMBER_RATE = 1
 
-/** Halka i+1 → halka i: saniyede 0,11 birim. ∏p'yi iki saate kalibre eden sayı. */
+/** Halka i+1 → halka i: saniyede 0,11 birim. */
 export const CHAIN_RATE = 0.11
 
 /**
@@ -66,8 +61,6 @@ export const CHAIN_RATE = 0.11
  *
  * - Halka 1 (Fingers) hariç: o zaten sayının kendisidir, "1 parmak = 1 sayı/sn" bozulmaz.
  * - `0` yazılırsa özellik kapanır (eski davranış: yalnız Fingers sayı üretir).
- * - Boost çarpanı bu katkıya UYGULANIR: `D1` "boost yalnız SAYI üretimine" der, bu katkı sayı
- *   üretimidir; zincir beslemesi (`ringGainPerSecond`) yine boost almaz.
  */
 export const RING_DIRECT_SHARE = 1
 
@@ -75,20 +68,11 @@ export const RING_DIRECT_SHARE = 1
 export const BLOCK_SIZE = 10
 
 export const NUMBER_TUNING = {
-  /** Kapı: 1. basamağın sonu (S1/S5). */
-  gate: D('1.79e308'),
-
   /** Birim başına fiyat çarpanı (g). 1,20 → halka başına 11,4 birim. */
   costGrowth: 1.2,
 
   /** Halkalar arası fiyat oranı: c_i = c_0 · ladderRatio^i. */
   ladderRatio: 8,
-
-  /** Mini boost çarpan üssü (E14: (zirve/başlangıç)^0,2). */
-  boostExponent: 0.2,
-
-  /** `Birikim` verim cezası tabanı (E7: 0,9^log10(A)) — yalnız sayı üretimine. */
-  efficiencyBase: 0.9,
 
   /** Halkadan kaç birim alınınca sonraki halka açılır (E11, mandallı). */
   unlockThreshold: BLOCK_SIZE,

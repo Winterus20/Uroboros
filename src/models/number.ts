@@ -1,13 +1,12 @@
-/** Yeni ekonominin çalışma zamanı tipleri. */
+/** Zincir ekonominin çalışma zamanı tipleri. */
 import type { Decimal } from '../core/math'
 import type { NumberState } from '../game/number/economy'
-import type { UpgradeId } from '../game/number/upgrades'
 import type { GameSettings } from './settings'
 import type { OfflineReport } from './save'
 
 export type { OfflineReport }
 
-/** Oyunun tam çalışma zamanı durumu: sayı ekonomisi + meta + ayarlar. */
+/** Oyunun tam çalışma zamanı durumu: sayı zinciri + meta + ayarlar. */
 export interface GameState extends NumberState {
   /** `+1` basış sayısı (gösterim çözünürlüğünün üstünde kalanlar dahil). */
   taps: number
@@ -16,7 +15,6 @@ export interface GameState extends NumberState {
   playTime: number
   startedAt: number
   lastSeenAt: number
-  upgrades: Record<UpgradeId, number>
   settings: GameSettings
   /** Ticker'ın son gösterdiği satır kimlikleri (tekrar önleme, T4). */
   seenVoice: string[]
@@ -24,8 +22,6 @@ export interface GameState extends NumberState {
   latched: string[]
   /** Seçili satın alma modu — uçucu, kayda yazılmaz. */
   buyMode: BuyMode
-  /** Otomasyon sayacı (sn) — uçucu, kayda yazılmaz. */
-  autobuyTimer: number
   /** Son çevrimdışı rapor (uçucu — kayda yazılmaz). */
   offlineReport: OfflineReport | null
 }
