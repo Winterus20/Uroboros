@@ -285,9 +285,9 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 
 ---
 
-## 9. Kayıt şeması — v21
+## 9. Kayıt şeması — v22
 
-[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 21`,
+[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 22`,
 `MIN_SUPPORTED_SAVE_VERSION = 20`.
 
 - **P5 — sert temizlik:** v19 ve altı kayıtlar **açılmaz**; oyuncu sıfırdan başlar. Veda ekranı

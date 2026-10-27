@@ -13,7 +13,7 @@
 
 - [x] **K1 — Sayı ekonomisi:** 8 halka (Fingers → Mathematician), sınırsız alım (birim fiyatı
       ×1,20, 10'lu blok), bir halkadan 10 birim → sonraki halka (mandallı); `Fingers` sayıyı üretir,
-      `+1` elle Fingers. → `src/game/number/` (tuning · economy · upgrades · rungs)
+      `+1` elle Fingers. → `src/game/number/` (tuning · economy · rungs)
 - [x] **K2 — Prestij + `Tanım`:** `1,79e308` kapısı; prestijde sayı başlangıca döner,
       `Tanım = log10(1+A)`, verim `0,9^log10 A`; 4 `Tanım` yükseltmesi (start · chain · boost · autobuy).
 - [x] **K3 — Mini boost:** 8. halka koşulu, tam sıfırlama (halkalar 1 birime), `(zirve/başlangıç)^0,2`

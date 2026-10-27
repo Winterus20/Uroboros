@@ -78,7 +78,7 @@ npm run dev      # geliştirme sunucusu → http://localhost:3000
 | Sayı motoru | **break_eternity.js** — NaN kontrolü küçük harfle: `dec.isNan()` |
 | Stil | **Tailwind CSS 3.4** + CSS değişkenleri — "Saf Sayı" (ADR-0078) |
 | Tipografi | Space Grotesk (hero + UI) · Space Mono (veri) |
-| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v21** |
+| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v22** |
 | Bulut | **Firebase** Auth + Firestore (isteğe bağlı; anahtarsız oyun tam çalışır) |
 | Ses | **Web Audio API** — harici dosya yok, tamamı sentez |
 | Test | **Vitest** |
@@ -95,7 +95,7 @@ Incremental/
 └── src/
     ├── core/          # math, format, game-loop (20 TPS), save, audio, music, auth
     ├── game/
-    │   ├── number/    # SAF ekonomi: tuning · economy · upgrades · rungs
+    │   ├── number/    # SAF ekonomi: tuning · economy · rungs
     │   └── voice/     # Ses havuzu: types · lines-rung1 · seçim algoritması
     ├── stores/        # Pinia: game.ts (ekonomi), auth.ts (bulut)
     ├── models/        # Tip tanımları
@@ -106,8 +106,9 @@ Incremental/
 ## Kayıt
 
 - 3 bağımsız slot + otomatik yedek rotasyonu; bozuk kayıt **karantinaya** alınır.
-- `SAVE_VERSION = 21`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
-  kayıtlar açılmaz; v20 kayıtları açılır ve bir kez yeni gösterime (ADR-0080) taşınır.
+- `SAVE_VERSION = 22`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
+  kayıtlar açılmaz; v20/v21 kayıtları açılır ve bir kez yeni gösterime (ADR-0080) taşınır.
+  v22 (ADR-0082) kaldırılan boost/prestij alanlarını şemadan düşürür.
 - Daha yeni bir build'in kaydı reddedilir (`SaveVersionError`), sessizce düşürülmez.
 - Çevrimdışı üretim **12 saatte** tavan yapar.
 

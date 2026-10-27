@@ -64,3 +64,32 @@ number · stats · settings; breathe / gate düğmeleri yok.
 
 - A+ dalgası (arşiv): e564d0a (UI), a5c09c1 (halka fiyatlandırması), e9a4528 + 2f9b10e.
 - Zincir-only dalgası: ADR-0082 — boost/prestij/upgrade kaldırıldı, kayıt v22, 95 test / 6 dosya.
+
+---
+
+## 🔬 Ölçüm turu — zincir büyüme katmanı (2026-10-27)
+
+**Durum:** Boost + güçlendirme döngüsü tasarım turu için **ölçüm tamamlandı**, karar sahibin.
+Rapor: [`chain-growth-layer-2026-10-27.md`](../research/chain-growth-layer-2026-10-27.md).
+Hiçbir oyun kodu değişmedi (`src/` dokunulmadı); yalnız belge kaymaları düzeltildi.
+
+### Yanıtlanan sorular
+
+| Soru | Cevap |
+| :--- | :--- |
+| Zincir tek başına kapıya ulaşır mı? | **Hayır.** 96 saatte 2,76e34; kalan ~274 basamak ~200 gün eder |
+| Kaldırılan boost neden patlıyordu? | Ödül zirveye bağlıydı → log uzayında çift üstel → 43 boost un 28 i son 5 dakikada |
+| Sabit ödüllü boost (AD modeli) olur mu? | Kararlı ama 300-1 000 boost gerekiyor; oyuncuya aynı düğmeyi 1 000 kez bastırmak |
+| Aynı anda 2 saat + 8 halka + 1,79e308 mümkün mü? | **Hayır** — aritmetik kısıt (rapor §4). En az biri değişmeli |
+
+### Öneri (rapor §6)
+
+1. Önce aritmetik kısıtı sahiplen.
+2. Boost u **eski haliyle** geri getirme.
+3. Önce **M6 / seçenek C** (sıfırlamasız milestone + yavaş boost) dene; tutmazsa **seçenek A**
+   (kapıyı halka kilometre taşına çevir).
+
+### Sıradaki adım
+
+🟡 **Sahip kararı bekleniyor:** seçenek A / B / C / D. C onaylanırsa iki katmanlı eğri
+birlikte ölçülecek (bu raporun kapsamı dışında kaldı).
