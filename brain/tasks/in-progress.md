@@ -93,3 +93,41 @@ Hiçbir oyun kodu değişmedi (`src/` dokunulmadı); yalnız belge kaymaları d�
 
 🟡 **Sahip kararı bekleniyor:** seçenek A / B / C / D. C onaylanırsa iki katmanlı eğri
 birlikte ölçülecek (bu raporun kapsamı dışında kaldı).
+---
+
+## 📋 AKTİF — 1. basamak tasarım planı (2026-10-27)
+
+**Durum:** 🟡 **TASLAK hazır, karar bekleniyor.** Kapı (`1,79e308`) hedefi sahibin
+kararıyla **bırakıldı**; odak yalnız **zincir + güçlendirme** katmanı.
+Plan: [`rung-1-plan-2026-10-27.md`](../research/rung-1-plan-2026-10-27.md).
+
+### Planın cevapladığı soru
+
+> "1. basamak iki saat boyunca ne yaptırır?"
+
+### İçindekiler
+
+| Bölüm | İçerik |
+| :--- | :--- |
+| §1 | Bugünkü durum + **beş teşhis** (T1–T5) |
+| §3–4 | Neler olacak / **neler olmayacak** |
+| §5 | Mekanikler: halka rolleri (R1–R3) · alım · ritim · kilometre taşları |
+| §6 | Güçlendirmeler: 8 kalıcı yükseltme · halka seviyeleri · `+1` ikinci iş · boost dersi |
+| §7 | 1. basamak bitişi (B1–B3) |
+| §9 | Ölçüm planı (kod yazmadan önce) |
+| §10 | **Açık kararlar D1–D8** |
+
+### Bekleyen kararlar (sahip)
+
+| # | Karar | Seçenekler |
+| :- | :--- | :--- |
+| D1 | Halka rolü | R1 çarpan · R2 dönüşümlü · R3 dokunma |
+| D2 | 1. basamak bitişi | B1 · B2 · B3 |
+| D3 | Ritim hedefi | ~105 dk · 120 dk |
+
+### Sıradaki adım
+
+1. Sahip **D1 + D2** yi seçer.
+2. Ajan o karara göre **1–4 ölçümünü** yapar (kod yazmadan).
+3. Sayılar plana işlenir → kilitli spec `GAME_DESIGN.md` §8 e taşınır.
+4. Kod dalgası + `balance.test.ts` yeniden yazımı.
