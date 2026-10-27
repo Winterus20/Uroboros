@@ -95,39 +95,47 @@ Hiçbir oyun kodu değişmedi (`src/` dokunulmadı); yalnız belge kaymaları d�
 birlikte ölçülecek (bu raporun kapsamı dışında kaldı).
 ---
 
-## 📋 AKTİF — 1. basamak tasarım planı (2026-10-27)
+## 📋 AKTİF — 1. Basamak Kilitli Tasarım Planı ve Simülasyonu (2026-10-27)
 
-**Durum:** 🟡 **TASLAK hazır, karar bekleniyor.** Kapı (`1,79e308`) hedefi sahibin
-kararıyla **bırakıldı**; odak yalnız **zincir + güçlendirme** katmanı.
-Plan: [`rung-1-plan-2026-10-27.md`](../research/rung-1-plan-2026-10-27.md).
+**Durum:** 🟢 **KİLİTLENDİ VE SİMÜLASYONLA DOĞRULANDI.** Proje sahibiyle yapılan `/grill-me` oturumunda D1–D8 kararlarının tamamı kilitlendi; 4 Tam Sıfırlamalı öğrenme fazı ve alt-kritik kararlı basamaklarla güncellenen `brain/scratchpad/chain-only-probe/rung1-full-sim.ts` deterministik simülasyonu ile `1,79e308` kapısına **120,63 dakikada (2,01 saat)** kararlı, kesintisiz ve organik biçimde ulaşıldığı kanıtlandı.
+Kilitli Plan: [`rung-1-plan-2026-10-27.md`](../research/rung-1-plan-2026-10-27.md).
 
-### Planın cevapladığı soru
+### Kilitlenen Kararlar Özeti
 
-> "1. basamak iki saat boyunca ne yaptırır?"
+1. **Öğrenme Fazı (4 Tam Sıfırlama):** Challenge'lar hemen açılmaz; oyuncu önce 4 Tam Sıfırlama boyunca saf zincir + Blok Çarpanı büyümesini sindirerek öğrenir (~34,4 dk).
+2. **Kademeli Challenge Açılışı:**
+   - 1., 2., 3. Sıfırlama: Sadece Blok Çarpanı büyür (saf zincir).
+   - 4. Sıfırlama (Math 40, Sayı $10^{40}$): **C1, C2, C3** açılır.
+   - 5. Sıfırlama (Math 55, Sayı $10^{115}$): **C4, C5, C6** açılır.
+   - 6. Sıfırlama (Math 70, Sayı $10^{210}$): **C7, C8** açılır.
+3. **Pürüzsüz Basamak Tırmanışı:** C1–C8 basamak hedefleri ($10^{55} \rightarrow 10^{75} \rightarrow 10^{100} \rightarrow 10^{135} \rightarrow 10^{165} \rightarrow 10^{195} \rightarrow 10^{240} \rightarrow 10^{275}$) dengeli adımlarla büyütülür; ani $10^{100}$ sıçramaları ve süper-kritik taşmalar engellenmiştir.
+4. **Kesintisiz Akış Kuralı:** Challenge hedefi tamamlandığında ceza anında kalkar, ödül anında devreye girer ve zincir sıfırlanmadan koşu kesintisiz devam eder.
+5. **Sürekli Logaritmik İlerleme Göstergesi:**
+   - Normal mod: `Goal: 1.79e308 · XX% (Next: Reset #N)` — formül: `floor(100 * log10(max(1, N)) / 308.254)%`.
+   - Challenge modu: `C<id> Active · XX% · Goal: <goal> · [Exit]` — formül: `floor(100 * log10(max(1, N)) / log10(Goal))%`.
 
-### İçindekiler
+### Simülasyon Ölçüm Özeti (`rung1-full-sim.ts` - 120,6 dk)
 
-| Bölüm | İçerik |
-| :--- | :--- |
-| §1 | Bugünkü durum + **beş teşhis** (T1–T5) |
-| §3–4 | Neler olacak / **neler olmayacak** |
-| §5 | Mekanikler: halka rolleri (R1–R3) · alım · ritim · kilometre taşları |
-| §6 | Güçlendirmeler: 8 kalıcı yükseltme · halka seviyeleri · `+1` ikinci iş · boost dersi |
-| §7 | 1. basamak bitişi (B1–B3) |
-| §9 | Ölçüm planı (kod yazmadan önce) |
-| §10 | **Açık kararlar D1–D8** |
+| Faz | Süre Aralığı | Olay | Sayı | Blok Çarpanı |
+| :--- | :--- | :--- | :--- | :--- |
+| **Öğrenme 1** | 0,0 – 11,5 dk | 1. Tam Sıfırlama (Math 10) | $1,000\times 10^{10}$ | $2,00 \rightarrow 2,10\times$ |
+| **Öğrenme 2** | 11,5 – 19,4 dk | 2. Tam Sıfırlama (Math 20) | $1,000\times 10^{18}$ | $2,10 \rightarrow 2,20\times$ |
+| **Öğrenme 3** | 19,4 – 26,9 dk | 3. Tam Sıfırlama (Math 30) | $1,000\times 10^{28}$ | $2,20 \rightarrow 2,30\times$ |
+| **Öğrenme 4** | 26,9 – 34,4 dk | 4. Tam Sıfırlama (Math 40) | $1,000\times 10^{40}$ | $2,30 \rightarrow 2,40\times$ + C1–C3 açık |
+| **C1 (Fingers)** | 34,4 – 42,9 dk | Hedef $10^{55}$ (Tam El ödülü) | $1,000\times 10^{55}$ | $2,40\times$ |
+| **C2 (Notch)** | 42,9 – 51,4 dk | Hedef $10^{75}$ (Beşli Çentik ödülü) | $1,000\times 10^{75}$ | $2,40\times$ |
+| **C3 (Abacus)** | 51,4 – 59,9 dk | Hedef $10^{100}$ (Carry ödülü) | $1,000\times 10^{100}$ | $2,40\times$ |
+| **Reset 5** | 59,9 – 67,9 dk | 5. Tam Sıfırlama (Math 55) | $1,000\times 10^{115}$ | $2,40 \rightarrow 2,50\times$ + C4–C6 açık |
+| **C4 (Pencil)** | 67,9 – 76,4 dk | Hedef $10^{135}$ (Uzun Çarpma ödülü) | $1,000\times 10^{135}$ | $2,50\times$ |
+| **C5 (Calculator)** | 76,4 – 84,6 dk | Hedef $10^{165}$ (Anlık Sonuç ödülü) | $1,000\times 10^{165}$ | $2,50\times$ |
+| **C6 (Computer)** | 84,6 – 92,8 dk | Hedef $10^{195}$ (Overclock ödülü) | $1,000\times 10^{195}$ | $2,50\times$ |
+| **Reset 6** | 92,8 – 101,1 dk | 6. Tam Sıfırlama (Math 70) | $1,000\times 10^{210}$ | $2,50 \rightarrow 2,60\times$ + C7–C8 açık |
+| **C7 (Supercomputer)** | 101,1 – 109,1 dk | Hedef $10^{240}$ (Paralel Küme ödülü) | $1,000\times 10^{240}$ | $2,60\times$ |
+| **C8 (Mathematician)** | 109,1 – 117,1 dk | Hedef $10^{275}$ (Teorem ödülü) | $1,000\times 10^{275}$ | $2,60\times$ |
+| **Final Kapı İtişi** | 117,1 – 120,6 dk | **1,79e308 KAPISI AÇILDI** | **1,79e308** | **Rung 2 Prestij (+1 Tanım)** |
 
-### Bekleyen kararlar (sahip)
+### Sıradaki Adım
 
-| # | Karar | Seçenekler |
-| :- | :--- | :--- |
-| D1 | Halka rolü | R1 çarpan · R2 dönüşümlü · R3 dokunma |
-| D2 | 1. basamak bitişi | B1 · B2 · B3 |
-| D3 | Ritim hedefi | ~105 dk · 120 dk |
-
-### Sıradaki adım
-
-1. Sahip **D1 + D2** yi seçer.
-2. Ajan o karara göre **1–4 ölçümünü** yapar (kod yazmadan).
-3. Sayılar plana işlenir → kilitli spec `GAME_DESIGN.md` §8 e taşınır.
-4. Kod dalgası + `balance.test.ts` yeniden yazımı.
+1. Kilitli tasarım spec'ini `GAME_DESIGN.md` §8'e taşımak.
+2. `src/` altındaki kod dalgasını başlatmak (tuning, economy, challenge motoru, store ve UI).
+3. `balance.test.ts` ve birim testleri yeni kilitli formüllere göre güncellemek.
