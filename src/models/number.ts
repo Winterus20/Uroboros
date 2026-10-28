@@ -24,6 +24,13 @@ export interface GameState extends NumberState {
   buyMode: BuyMode
   /** Son çevrimdışı rapor (uçucu — kayda yazılmaz). */
   offlineReport: OfflineReport | null
+  /**
+   * Store'un bıraktığı son OLAY satırı (uçucu — kayda yazılmaz).
+   *
+   * Mücadele girişi/bitişi ve kapı gibi olaylarda doldurulur. Ticker havuzundan
+   * bağımsızdır: havuz rastgele konuşur, bu satır OLAN şeyi söyler (V4).
+   */
+  tickerLine: string | null
 }
 
 /** Satın alma modu — AD'nin ×1 / ×10 / Max düğmeleri (uçucu, kayda yazılmaz). */
@@ -51,4 +58,45 @@ export interface RingRow {
   producesPerSecond: Decimal
   /** Sayıya DOĞRUDAN kattığı miktar (halka 1 için 0 — o zaten sayının kendisi). */
   addsPerSecond: Decimal
+  /** Blok çarpanı: 5.5 ^ floor(bought / 10) — yalnız üretime uygulanır. */
+  blockFactor: Decimal
+  /** Ekranda okunan biçim: "x5.50", "x1.2e30" vb. (V4: sayısal etiket yalan söylemez). */
+  blockFactorText: string
+}
+/** Mücadelenin paneldeki durumu (UI türetimi, kayda yazılmaz). */
+export type ChallengeStatus = 'locked' | 'available' | 'active' | 'completed'
+
+/**
+ * Mücadele panelinde tek satır (contract §4).
+ *
+ * `goal` Decimal olarak, `goalText` aynı hedefin biçimlenmiş hâlidir: UI hangisini
+ * isterse okur, ikisi de TEK kaynaktan (`challengeGoalLog`) türer — ekrandaki sayı
+ * ile mekanik aynı şeyi söyler (V4).
+ */
+export interface ChallengeRow {
+  id: string
+  /** Ödül adı (C1 → "Full Hand"); ödül satırının iki nokta öncesi. */
+  name: string
+  ringName: string
+  status: ChallengeStatus
+  /** Hedef sayı; aktif mücadelede girişte kilitlenen hedef. */
+  goal: Decimal
+  /** Aynı hedefin biçimlenmiş hâli (oyuncunun seçtiği notasyon). */
+  goalText: string
+  /** 0–100; tamamlanmış 100, aktif olanda girişten hedefe oran. */
+  progress: number
+  penaltyLabel: string
+  rewardLabel: string
+}
+
+/** GoalBar'ın aktif mücadele için okuduğu satır. */
+export interface ActiveChallengeRow {
+  id: string
+  name: string
+  ringName: string
+  goal: Decimal
+  goalText: string
+  progress: number
+  penaltyLabel: string
+  rewardLabel: string
 }

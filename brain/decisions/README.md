@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0082**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0083**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -98,3 +98,4 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0080 | Sayı Gösterimi — K/M/B/T Kısaltmaları, Sonra e-Notasyonu | 2026-10-23 | **Kabul edildi & uygulandı** — varsayılan notasyon `standard`; kısaltma 1e15'te biter, 1000 altında ondalık görünür; save v21 (yalnız gösterim göçü) | [0080-number-notation-ladder.md](0080-number-notation-ladder.md) |
 | 0081 | Halkaların Sayıya Doğrudan Katkısı — `RING_DIRECT_SHARE` | 2026-10-23 | **Kabul edildi & uygulandı** — halka 2–8 bir altındakine verdiği miktarı sayıya da yazar (`0,11/sn`); `/s` satın almada anında büyür. Kapı 119,0 → **118,85 dk**; ADR-0079'un "sayıyı yalnız halka 1 üretir" cümlesini genişletir | [0081-ring-direct-number-contribution.md](0081-ring-direct-number-contribution.md) |
 | 0082 | Zincir-Only Dilim — Boost, Prestij ve `Tanım` Yükseltmelerinin Kaldırılması | 2026-10-25 | **Kabul edildi & uygulandı** — sahibin talebiyle döngü geçici olarak çıkarıldı; oyun yalnız zinciri büyütür. Save v22; v20/v21 kayıtları açılır. Boost/prestij geri gelmeden önce ayrı tasarım turu | [0082-chain-only-slice.md](0082-chain-only-slice.md) |
+| 0083 | 1. Basamak — Tek Koşu, 190 Dakika ve Sıfırlamasız Mücadele Modeli | 2026-10-27 | **Kabul edildi** — v1 in resetli 120 dk modelini geçersiz kılar: B=5.5 sabit, 8 sıfırlamasız mücadele, C8 ×2, save v23. Kalibrasyon 188,8/189,1 dk | [0083-rung-1-single-run-challenge-model.md](0083-rung-1-single-run-challenge-model.md) |

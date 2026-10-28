@@ -12,7 +12,7 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 - **Sütunlar:**
   1. **Zincir:** 8 halka (Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician). Halka *n+1* halka *n*'i üretir; halka 1 sayıyı üretir. `+1` zincirin köküdür.
   2. **Tek havuz:** Cüzdan sayının kendisidir. Alım sayıyı düşürür (AD / Cookie Clicker modeli); eşikler mandallıdır, geri gitmez.
-  3. **Döngü:** 8. halkada mini boost (tam sıfırlama + zirveye bağlı kalıcı çarpan) → kapı (`1,79e308`) → prestij (`Tanım`).
+  3. **Döngü:** **Tek koşu (ADR-0083):** 1,79e308 e kadar sıfırlama yok; 8 sıfırlamasız mücadele (ceza → ödül) → kapı → prestij (`+1 Tanım`).
   4. **Ses:** Sahne · ticker · başarım · açıklama. Tooltip ve sayısal etiket **asla** şaka yapmaz.
 - **Hedef:** 11 basamak, ~85 saat, tek koşu. `LNGN` oyunun sonudur; kuyruk yoktur.
 - **Bağlayıcı kaynaklar:** [`brain/research/theme-pivot-grilling-2026-10-23.md`](brain/research/theme-pivot-grilling-2026-10-23.md) (kararlar) · [`brain/context/visual-language.md`](brain/context/visual-language.md) (görsel sözleşme) · [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) (ses sözleşmesi) · [`GAME_DESIGN.md`](GAME_DESIGN.md).
@@ -29,7 +29,7 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 | **Sayı Motoru** | **`break_eternity.js`** | **ÖNEMLİ:** `isNaN` yerine küçük harfle **`isNan()`** — `dec.isNan() \|\| Number.isNaN(dec.mag)`. Tip tanımı `plus/minus/times` ister; `add/sub/mul` runtime'da var ama tipte yok. |
 | **Stil** | **Tailwind CSS 3.4** + CSS değişkenleri | "Saf Sayı" (ADR-0078): kart/blur/yuvarlak köşe/gölge YOK; 1px hairline + tipografi + boşluk |
 | **Tipografi** | **Space Grotesk** (hero+UI) · **Space Mono** (veri) | `tabular-nums` zorunlu; hero asla `font-bold` (300 sabit) |
-| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 22`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
+| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 23`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
 | **Ses** | **Web Audio API** | Harici ses dosyası yok; osilatör sentezi |
 
 ---
@@ -71,19 +71,19 @@ Incremental/
     │   ├── math.ts            # break_eternity Decimal sarmalayıcısı ve sabitler
     │   ├── format.ts          # Notasyon biçimleri + hero dizgi parçaları
     │   ├── save.ts            # LZ-String, slotlar, karantina, import/export
-    │   ├── save-version.ts    # SAVE_VERSION (v22) ve asgari sürüm
+    │   ├── save-version.ts    # SAVE_VERSION (v23) ve asgari sürüm
     │   ├── game-loop.ts       # 20 TPS sabit adımlı döngü + çevrimdışı devir
     │   ├── audio.ts           # Ses cephesi (efekt + müzik köprüsü)
     │   ├── music/             # Prosedürel müzik motoru
     │   └── auth/              # Firebase Auth + Firestore bulut kayıt
     ├── game/
-    │   ├── number/            # SAF ekonomi: tuning · economy · rungs
+    │   ├── number/            # SAF ekonomi: tuning · challenges · economy · rungs
     │   └── voice/             # Ses havuzu: types · lines-rung1 · seçim algoritması
     ├── stores/
     │   ├── game.ts            # Merkezi Pinia store (state, getters, actions)
     │   └── auth.ts            # Oturum + bulut senkronizasyonu
     ├── models/                # Tip tanımları (number, save, settings, auth)
-    └── components/            # HeroNumber, ChainList, TapButton, TickerBar, …
+    └── components/            # HeroNumber, ChainList, ChallengePanel, GoalBar, GateModal, …
 ```
 
 ---

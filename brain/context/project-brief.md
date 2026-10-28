@@ -1,7 +1,7 @@
 # Project Brief: Hold That Number
 
-> **Durum:** tema pivotu uygulandı (ADR-0077) · görsel dil kilitli (ADR-0078) · 1. basamak
-> oynanabilir (ADR-0079). Eski "Kozmik Oburluk / UROBOROS" teması ve kütle ekonomisi **koddan
+> **Durum:** tema pivotu uygulandı (ADR-0077) · görsel dil kilitli (ADR-0078) · 1. basamak v2
+> uygulanıyor (ADR-0083: tek koşu, 190 dk, 8 sıfırlamasız mücadele). Eski "Kozmik Oburluk / UROBOROS" teması ve kütle ekonomisi **koddan
 > silindi**; bu brief yeni oyunun gerçeğidir.
 
 ## 1. Vizyon
@@ -29,16 +29,16 @@ ekler.
 | :-- | :--- | :--- |
 | 1 | **Zincir** | 8 halka: Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician. Halka *n+1* halka *n*'i üretir; halka 1 sayıyı üretir; `+1` zincirin köküdür |
 | 2 | **Tek havuz** | Cüzdan sayının kendisidir. Alım sayıyı düşürür; eşikler mandallıdır, geri gitmez |
-| 3 | **Döngü** | 8. halkada mini boost (tam sıfırlama + zirveye bağlı kalıcı çarpan) → kapı `1.79e308` → prestij (`Tanım`) |
+| 3 | **Döngü** | Tek koşu: sıfırlama yok. 8 sıfırlamasız mücadele (ceza → ödül) → kapı `1.79e308` → prestij (`+1 Tanım`) |
 | 4 | **Ses** | Sahne · ticker · başarım · açıklama. Tooltip ve sayısal etiket **asla** şaka yapmaz |
 | 5 | **Görsel** | "Saf Sayı": zemin + hairline + tipografi + basamak rengi. Kart/blur/süs yok |
 
 ## 4. İlerleme ve ölçek
 
-- **11 basamak**, süreler **×1,25** geometrik eğri, 1. basamak **2 saat**, toplam **~85 saat**.
+- **11 basamak**, süreler **×1,25** geometrik eğri; 1. basamak **190 dk**, toplam **~135 saat** (85 saat hedefi için çarpan ×1.165).
 - **1–5** gerçek aritmetik (`break_eternity`, 4 için `OmegaNum`), **6–11** kadran (`rank` + `mag`).
-- **Prestij para birimi `Tanım`**; ödül `log10(1+A)` (`A = sayı/kapı`); bekleme cezası
-  `0,9^log10(A)` (`Birikim`).
+- **Prestij para birimi `Tanım`**; kapıda `+1 Tanım` (ADR-0083). Eski `log10(1+A)` / `Birikim`
+  formülü arşivde; 2. basamak tanımı geldiğinde yeniden ele alınacak.
 - **Çevrimdışı** üretim 12 saatte tavan yapar.
 
 ## 5. Ses (tek cümle)
@@ -46,19 +46,16 @@ ekler.
 Oyun kendisinin oyun olduğunu **bilir**, bunu **asla söylemez**; mizah dünyada değil, oyun ile
 oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-voice.md).
 
-## 6. Bugünkü durum (2026-10-23)
+## 6. Bugünkü durum (2026-10-27)
 
-- ✅ 1. basamak uçtan uca oynanabilir: 8 halka, tek havuz, 10 birim kilidi, mini boost, prestij,
-  4 `Tanım` yükseltmesi, autobuy, `+1`, İngilizce ticker çekirdeği.
-- ✅ Altyapı korundu: kayıt (LZ-String + 3 slot + karantina), 20 TPS game loop, audio + müzik
-  motoru, Firebase auth + bulut kayıt, `AlgorithmicSwirl`, ayarlar.
-- ✅ Kayıt şeması **v21**; `MIN_SUPPORTED_SAVE_VERSION = 20` → v19 ve altı açılmaz (P5).
-  v21 yalnız gösterim göçü (ADR-0080), şema aynı.
-- 🟡 2–11. basamaklar tasarlanmadı; prestij şimdilik `Tanım` verip 1. basamağı yeniden başlatır
-  (kodda belgelenmiş stub).
-- ✅ Denge ölçüldü (`K5`): kapı **119,6 dk** (gerçek motor, 20 TPS) · 23 boost · 121 alım ·
-  ilk 10 dk 9 alım; `balance.test.ts` içinde 6 regresyon testi. “Son halka ≥ 90 dk” hedefi ölçümle
-  revize edildi (8 halka < 45 dk) — yazılı karar kaydı hâlâ bekliyor.
+- 🟡 **1. basamak v2 uygulanıyor** (ADR-0083): tek koşu 190 dk, `B = 5.5`, 8 sıfırlamasız
+  mücadele, C8 ×2, save v23. Kalibrasyon: **188,8 dk** (Max All) / **189,1 dk** (idle).
+- ✅ 8 halka, tek havuz, 10 birim kilidi, `+1`, İngilizce ticker altyapısı korunuyor.
+- ✅ Altyapı: kayıt (LZ-String + 3 slot + karantina), 20 TPS loop, audio + müzik, Firebase,
+  `AlgorithmicSwirl`, ayarlar.
+- 🟡 2–11. basamaklar tasarlanmadı; prestij `+1 Tanım` verip 2. basamağa geçer (stub).
+- ⚠️ Eski v1 planı (4 öğrenme + 6 Math sıfırlaması, 120 dk) **geçersiz**; `rung1-full-sim.ts`
+  kanıt değil. Yerine gerçek motor kalibrasyonu: `brain/research/rung-1-190-calibration-2026-10-27.md`.
 
 ## 7. Bağlayıcı belgeler
 
@@ -69,4 +66,5 @@ oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-vo
 | [`visual-language.md`](visual-language.md) | "Saf Sayı" görsel sözleşmesi (ADR-0078) |
 | [`tech-context.md`](tech-context.md) | Teknoloji yığını ve kısıtlar |
 | [`../decisions/0079-number-economy-vertical-slice.md`](../decisions/0079-number-economy-vertical-slice.md) | Uygulanan ekonominin karar kaydı |
+| [`../decisions/0083-rung-1-single-run-challenge-model.md`](../decisions/0083-rung-1-single-run-challenge-model.md) | Rung 1 v2: tek koşu, 190 dk, 8 mücadele |
 | [`../research/theme-pivot-grilling-2026-10-23.md`](../research/theme-pivot-grilling-2026-10-23.md) | 50 kararın tam kaydı |

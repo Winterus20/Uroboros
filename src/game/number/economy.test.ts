@@ -3,9 +3,11 @@ import { D, Decimal } from '../../core/math'
 import { BLOCK_SIZE, NUMBER_TUNING, RING_DIRECT_SHARE, ringBlockCost, ringCostAt } from './tuning'
 import {
   advance,
+  blockFactor,
   buyRing,
   buyRingMax,
   createNumberState,
+  directNumberPerSecond,
   manualTap,
   maxAffordableRing,
   numberPerSecond,
@@ -67,10 +69,11 @@ describe('sayı ekonomisi — zincir', () => {
     expect(ringCostAt(base, 5).div(base).toNumber()).toBeCloseTo(Math.pow(NUMBER_TUNING.costGrowth, 5), 4)
   })
 
-  it('Fingers sayıyı üretir; tek başına /s = 1 (E6)', () => {
+  it('Fingers sayıyı üretir; tek parmak /s = 1 (E6, ilk blokta blok çarpanı ×1)', () => {
     const s = createNumberState()
     s.number = D('1e6')
     buyRing(s, 0)
+    // bought = 1 → blockFactor = 5,5^0 = 1, yani ham oran geçerli.
     expect(numberPerSecond(s).toNumber()).toBeCloseTo(NUMBER_TUNING.rings[0].baseRate.toNumber(), 9)
     const before = s.number
     advance(s, 1)
@@ -88,6 +91,8 @@ describe('sayı ekonomisi — zincir', () => {
   it('satın alınan halka /s okumasını ANINDA büyütür (zinciri beklemez)', () => {
     const s = createNumberState()
     s.number = D('1e6')
+    // 10 parmak: Fingers artık blok çarpanı ×5,5 alır (v2). Ölçüm `after - before`
+    // farkı olduu için sabit çarpan iki tarafta da bulunur ve fark değişmez.
     buyRing(s, 0, BLOCK_SIZE)
     expect(ringUnlocked(s, 1)).toBe(true)
     const before = numberPerSecond(s)
@@ -171,3 +176,29 @@ describe('blok satın alma — AD "Buy 10"', () => {
     expect(perRing).toBeLessThan(BLOCK_SIZE * 1.3)
   })
 })
+
+describe('blok çarpanı — her 10 alımda üretim ×5,5 (v2)', () => {
+  it('Fingers üretimi blok çarpanını alır', () => {
+    const s = createNumberState()
+    s.number = D('1e9')
+    expect(buyRing(s, 0, 10)).toBe(10)
+    // 10 parmak × 1 sayı/sn × 5,5 = 55 sayı/sn (doğrudan katkı yok).
+    expect(s.rings[0].amount.toNumber()).toBe(10)
+    expect(numberPerSecond(s).toNumber()).toBeCloseTo(10 * 5.5, 6)
+    expect(blockFactor(10).toNumber()).toBeCloseTo(5.5, 9)
+  })
+
+  it('doğrudan pay blok çarpanını alır, besleme almaz', () => {
+    const s = createNumberState()
+    s.rings[1].amount = D(1)
+    s.rings[1].bought = 10
+    // Doğrudan katkı: 1 birim × 0,11 × 5,5.
+    expect(directNumberPerSecond(s).toNumber()).toBeCloseTo(0.11 * 5.5, 9)
+    // Besleme: 1 birim × 0,11 × 1 (blok çarpanı YOK).
+    expect(ringGainPerSecond(s, 1).toNumber()).toBeCloseTo(0.11, 9)
+    s.rings[0].amount = D(0)
+    advance(s, 1)
+    expect(s.rings[0].amount.toNumber()).toBeCloseTo(0.11, 9)
+  })
+})
+

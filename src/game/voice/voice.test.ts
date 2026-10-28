@@ -53,12 +53,12 @@ const RENDER_CONTEXTS: VoiceContext[] = [
 ]
 
 describe('1. basamak havuzu — bütünlük', () => {
-  it('100 satır: 92 ticker + 8 sahne, 14 nadir, hepsi benzersiz kimlik', () => {
-    expect(RUNG1_LINES).toHaveLength(100)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(92)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(8)
+  it('124 satır: 99 ticker + 25 sahne, 14 nadir, hepsi benzersiz kimlik', () => {
+    expect(RUNG1_LINES).toHaveLength(124)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(99)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(25)
     expect(RUNG1_LINES.filter((line) => line.rare === true)).toHaveLength(14)
-    expect(new Set(ids(RUNG1_LINES)).size).toBe(100)
+    expect(new Set(ids(RUNG1_LINES)).size).toBe(124)
   })
 
   it('her sahne mandallıdır (S3): latch olmayan sahne yok', () => {

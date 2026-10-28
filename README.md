@@ -9,8 +9,10 @@
 [![save](https://img.shields.io/badge/kayıt-LZ--String_+_3_slot-0ea5e9?style=flat-square)](#kayıt)
 [![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square)](LICENSE)
 
-**Tür:** sayı odaklı incremental / idle · **Hedef:** 11 basamak, ~85 saat, tek koşu
-**Durum:** 1. basamak oynanabilir; 2–11 tasarım aşamasında ([ADR-0079](brain/decisions/0079-number-economy-vertical-slice.md))
+**Tür:** sayı odaklı incremental / idle · **Hedef:** 11 basamak, tek koşu
+**Durum:** Rung 1 v2 — 190 dk tek koşu, 8 sıfırlamasız mücadele, `B = 5.5`, kapı `1.79e308`,
+kayıt şeması v23 ([ADR-0083](brain/decisions/0083-rung-1-single-run-challenge-model.md)); uygulama
+dalgası sürüyor, 2–11 tasarım aşamasında
 
 ---
 
@@ -19,12 +21,20 @@
 Ortada tek bir sayı var ve o sayı senin cüzdanın. 8 halkalı bir zincir kurarsın —
 **Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician** —
 halka *n+1* halka *n*'i besler, halka 1 sayının kendisini üretir. `+1` butonu gerçekten `+1`
-ekler; 85. saatte de aynı yerde, aynı boyutta durur.
+ekler; 190 dakikalık koşunun sonunda da aynı yerde, aynı boyutta durur.
 
-Döngü: halkaları büyüt → 8. halkada **mini boost** (her şey sıfırlanır, kalıcı çarpan kalır) →
-`1.79e308` kapısı → **prestij**: `Tanım` kazan, `Tanım` yükseltmeleriyle daha hızlı başla.
+Her halka 10 alımda bir Blok Çarpanı basamağı kazanır (`B^⌊bought/10⌋`, `B = 5.5`); `Max All`
+bütçenin yettiği en derin halkadan başlayarak alır.
 
-Tasarım referansı: [`GAME_DESIGN.md`](GAME_DESIGN.md) · ses sözleşmesi:
+Koşu tek: `1.79e308`e kadar sıfırlama yok. Sayı, halkalar, Blok Çarpanı ve mücadele ödülleri
+baştan sona kalıcıdır. İlerleme 8 **sıfırlamasız mücadele**yle bölünür — girişte hiçbir şey
+sıfırlanmaz, ceza koşunun üstüne biner, hedefe varınca ödül kalıcı açılır. Tek sıfırlama
+kapıdaki **prestijdir**: `+1 Tanım`. 2. basamak bu build'de yok.
+
+Tasarım referansı: [`GAME_DESIGN.md`](GAME_DESIGN.md) · plan v2:
+[`rung-1-plan-2026-10-27.md`](brain/research/rung-1-plan-2026-10-27.md) · kalibrasyon:
+[`rung-1-190-calibration-2026-10-27.md`](brain/research/rung-1-190-calibration-2026-10-27.md) ·
+karar: [ADR-0083](brain/decisions/0083-rung-1-single-run-challenge-model.md) · ses sözleşmesi:
 [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) · görsel dil:
 [`brain/context/visual-language.md`](brain/context/visual-language.md).
 
@@ -57,13 +67,18 @@ npm run dev      # geliştirme sunucusu → http://localhost:3000
 
 ## Kontroller
 
-| Eylem | Tuş |
+| Eylem | Girdi |
 | :--- | :--- |
 | `+1` | `Space` veya `+` |
 | Halka satın al (1–8) | `1` … `8` |
-| Mini boost | `B` (8. halka alındıysa) |
-| Prestij | `P` (kapı açıksa) |
+| `Max All` | Zincir listesindeki düğme — en derin halkadan geriye, bütçe yettikçe |
+| Mücadeleye gir | Challenges satırındaki `Enter` (kilit açıldıysa) |
+| Mücadeleden çık | GoalBar'daki `Exit` — ceza kalkar, ilerleme korunur |
+| Prestij | `1.79e308` kapı modalındaki `Prestige` |
 | Ayarlar | `Esc` ile kapat |
+
+Klavye kısayolları ayarlardan kapatılabilir (`hotkeysEnabled`). `Max All`, mücadele `Enter`/`Exit`
+ve kapı `Prestige` eylemlerinin kısayolu yoktur; düğmeyle çalışır.
 
 ---
 
@@ -78,7 +93,7 @@ npm run dev      # geliştirme sunucusu → http://localhost:3000
 | Sayı motoru | **break_eternity.js** — NaN kontrolü küçük harfle: `dec.isNan()` |
 | Stil | **Tailwind CSS 3.4** + CSS değişkenleri — "Saf Sayı" (ADR-0078) |
 | Tipografi | Space Grotesk (hero + UI) · Space Mono (veri) |
-| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v22** |
+| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v23** (asgari **v20**) |
 | Bulut | **Firebase** Auth + Firestore (isteğe bağlı; anahtarsız oyun tam çalışır) |
 | Ses | **Web Audio API** — harici dosya yok, tamamı sentez |
 | Test | **Vitest** |
@@ -95,20 +110,22 @@ Incremental/
 └── src/
     ├── core/          # math, format, game-loop (20 TPS), save, audio, music, auth
     ├── game/
-    │   ├── number/    # SAF ekonomi: tuning · economy · rungs
+    │   ├── number/    # SAF ekonomi: tuning · economy · rungs · challenges
     │   └── voice/     # Ses havuzu: types · lines-rung1 · seçim algoritması
     ├── stores/        # Pinia: game.ts (ekonomi), auth.ts (bulut)
     ├── models/        # Tip tanımları
-    ├── components/    # HeroNumber, ChainList, TapButton, TickerBar, …
-    └── App.vue        # Tek ekran: ticker · sayı · +1 · zincir · dock
+    ├── components/    # HeroNumber, ChainList, TapButton, TickerBar,
+    │                  # GoalBar, ChallengePanel, GateModal, …
+    └── App.vue        # Tek ekran: ticker · hedef satırı · sayı · +1 · zincir · dock
 ```
 
 ## Kayıt
 
 - 3 bağımsız slot + otomatik yedek rotasyonu; bozuk kayıt **karantinaya** alınır.
-- `SAVE_VERSION = 22`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
+- `SAVE_VERSION = 23`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
   kayıtlar açılmaz; v20/v21 kayıtları açılır ve bir kez yeni gösterime (ADR-0080) taşınır.
-  v22 (ADR-0082) kaldırılan boost/prestij alanlarını şemadan düşürür.
+- v22 (ADR-0082) kaldırılan boost/prestij alanlarını şemadan düşürdü; v23 (ADR-0083) `challenges`,
+  `gateReached` ve `tanim` alanlarını geri getirir. v22 kayıtları açılır, bu alanlar varsayılanla gelir.
 - Daha yeni bir build'in kaydı reddedilir (`SaveVersionError`), sessizce düşürülmez.
 - Çevrimdışı üretim **12 saatte** tavan yapar.
 

@@ -1,5 +1,25 @@
 # Aktif Görev (In-Progress)
 
+## ✅ TAMAMLANDI — Rung 1 v2 uygulaması (2026-10-28)
+
+**Durum:** Uygulama tamam, kapılar yeşil. Kayıt: [ADR-0083](../decisions/0083-rung-1-single-run-challenge-model.md).
+
+- **190 dk tek koşu**, `B = 5.5`, 8 sıfırlamasız mücadele, C8 ×2, save v23.
+- **Kalibrasyon:** 188,8 dk (Max All) / 189,1 dk (idle); final 9,2 / 9,4 dk; mücadeleler 21–22 dk.
+- **Doğrulama:** `npm run typecheck` 0 hata · `npx vitest run` **192/192** (9 dosya) ·
+  `npm run build` başarılı · tarayıcı duman testi (hedef satırı, panel, Max All, C1 giriş/çıkış,
+  kapı modalı, prestij).
+
+### Açık maddeler
+
+| Konu | Durum |
+| :--- | :--- |
+| `R2` Boost reset modeli ("boost alınca sayı sıfırlansın") | 🟡 sahip oyun içi testte karar verecek |
+| `R3` C5 ödülü (+%7,7) · C3 58 basamak sıçrama · final 179 basamak | 🟡 his testi |
+| `R4` Toplam 135 saat mi 85 saat mi | 🟡 sahip kararı |
+
+---
+
 ## 🎯 AKTİF — Zincir-only dilim uygulandı (2026-10-25)
 
 **Durum:** Proje sahibinin talebiyle mini boost, kapı/prestij ve Tanım yükseltmeleri **geçici
@@ -97,7 +117,7 @@ birlikte ölçülecek (bu raporun kapsamı dışında kaldı).
 
 ## 📋 AKTİF — 1. Basamak Kilitli Tasarım Planı ve Simülasyonu (2026-10-27)
 
-**Durum:** 🟢 **KİLİTLENDİ VE SİMÜLASYONLA DOĞRULANDI.** Proje sahibiyle yapılan `/grill-me` oturumunda D1–D8 kararlarının tamamı kilitlendi; 4 Tam Sıfırlamalı öğrenme fazı ve alt-kritik kararlı basamaklarla güncellenen `brain/scratchpad/chain-only-probe/rung1-full-sim.ts` deterministik simülasyonu ile `1,79e308` kapısına **120,63 dakikada (2,01 saat)** kararlı, kesintisiz ve organik biçimde ulaşıldığı kanıtlandı.
+**Durum:** ⚠️ **SUPERSEDED — v1 sayıları geçersiz (ADR-0083).** Proje sahibiyle yapılan `/grill-me` oturumunda D1–D8 kararlarının tamamı kilitlendi; 4 Tam Sıfırlamalı öğrenme fazı ve alt-kritik kararlı basamaklarla güncellenen `brain/scratchpad/chain-only-probe/rung1-full-sim.ts` deterministik simülasyonu ile `1,79e308` kapısına **120,63 dakikada (2,01 saat)** kararlı, kesintisiz ve organik biçimde ulaşıldığı kanıtlandı.
 Kilitli Plan: [`rung-1-plan-2026-10-27.md`](../research/rung-1-plan-2026-10-27.md).
 
 ### Kilitlenen Kararlar Özeti

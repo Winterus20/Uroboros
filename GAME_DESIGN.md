@@ -44,29 +44,30 @@ geçici olarak kaldırıldı (ADR-0082). **Süre:** tek koşu, ~**85 saat**, kuy
 
 ## 3. 11 basamak (notasyon merdiveni)
 
-Süre eğrisi **×1,25** geometrik artış; 1. basamak **2 saat** (`S5`). Toplam **85,14 saat**.
+Süre eğrisi **×1,25** geometrik artış; 1. basamak **190 dk (3,17 sa)** — ADR-0083.
+Varsayılan toplam **~135 saat**. 85 saatte kalmak istenirse basamak çarpanı **×1.165**
+(190 dk × 26,97 ≈ 85,4 sa).
 
 | # | Basamak adı (kod: `rungs.ts`) | Gösterim | Süre | Kümülatif |
 | --: | :--- | :--- | ---: | ---: |
-| 1 | I thought it was a wall | `1.79e308` | 2,00 sa | 2,00 |
-| 2 | The end of the shelf | `1e(9e15)` | 2,50 sa | 4,50 |
-| 3 | The tower is done | `10^^1.79e308` | 3,13 sa | 7,63 |
-| 4 | The arrows are done | `6 arrows` (ekranda `↑⁶`) | 3,91 sa | 11,54 |
-| 5 | It did not write it. It showed it. | `G` | 4,88 sa | 16,42 |
-| 6 | We do not know | `TREE(3)` | 6,10 sa | 22,52 |
-| 7 | The room | `SSCG(3)` | 7,63 sa | 30,15 |
-| 8 | *Untitled* (geçici ad) | `Rayo` | 9,54 sa | 39,69 |
-| 9 | The door | `Fish 7` | 11,92 sa | 51,61 |
-| 10 | Does it count? | `BIG FOOT` | 14,90 sa | 66,51 |
-| 11 | *Last* (geçici ad — final sahnesi `A5`) | `LNGN` | 18,63 sa | **85,14** |
+| 1 | I thought it was a wall | `1.79e308` | 3,17 sa | 3,17 |
+| 2 | The end of the shelf | `1e(9e15)` | 3,96 sa | 7,13 |
+| 3 | The tower is done | `10^^1.79e308` | 4,95 sa | 12,08 |
+| 4 | The arrows are done | `6 arrows` (ekranda `↑⁶`) | 6,18 sa | 18,26 |
+| 5 | It did not write it. It showed it. | `G` | 7,73 sa | 25,99 |
+| 6 | We do not know | `TREE(3)` | 9,66 sa | 35,65 |
+| 7 | The room | `SSCG(3)` | 12,08 sa | 47,73 |
+| 8 | *Untitled* (geçici ad) | `Rayo` | 15,10 sa | 62,83 |
+| 9 | The door | `Fish 7` | 18,87 sa | 81,70 |
+| 10 | Does it count? | `BIG FOOT` | 23,59 sa | 105,29 |
+| 11 | *Last* (geçici ad — final sahnesi `A5`) | `LNGN` | 29,49 sa | **134,78** |
 
-**Dağılım:** 1–5 = **16,4 saat (%19)** · 6–11 = **68,7 saat (%81)**. Oynanışın beşte dördü
-arka altı basamakta geçtiği için `S7` (5 sistem + 4 kural) zorunludur: her basamakta yeni bir
-*motor* değil, yeni bir *kural*.
+**Dağılım:** 1–5 ≈ 26 sa (%19) · 6–11 ≈ 109 sa (%81). Oran v1 ile aynıdır; yalnız taban
+190 dakikaya çıktığı için toplam 135 saate taşındı.
 
 **Kadran (basamak 5+):** `rank` (ok seviyesi) + `mag ∈ [2.00, 10.00)`. `mag` asla büyümez,
 her hücrede döner; hücreler `a ↑ⁿ 2 = a ↑ⁿ⁻¹ a` özdeşliğiyle kusursuz birleşir (`T2`).
-Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 73,6 saat ÷ 42 ≈ **1 sa 45 dk/hücre**.
+Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 116,8 saat ÷ 42 ≈ **2 sa 47 dk/hücre**.
 
 **Motorlar (`T1`):** 1–3 `break_eternity` gerçek aritmetik · 4 için `OmegaNum` adaptörü
 (henüz yazılmadı) · 5–11 kadran.
@@ -93,6 +94,10 @@ o zaten sayının kendisidir, "1 parmak = 1 sayı/sn" bozulmaz.
 | 6 | Computer | **819 200** | 0,11 /sn | 21 265 352 | 73 sn | 12,0 dk |
 | 7 | Supercomputer | **6 553 600** | 0,11 /sn | 170 122 819 | 73 sn | 14,5 dk |
 | 8 | **Mathematician** | **52 428 800** | 0,11 /sn | 1 360 982 553 | 73 sn | **17,1 dk** |
+
+> **v2 notu (ADR-0083):** bu tablo zincir-only dönemin ölçümüdür. Rung 1 v2
+> `B = 5.5` blok çarpanıyla çalışır; halka açılışları ve süreler değişti. Güncel süre
+> tablosu: [`brain/research/rung-1-190-calibration-2026-10-27.md`](brain/research/rung-1-190-calibration-2026-10-27.md).
 
 Blok sütunu, o halkadan **ilk 10 birimin** toplam fiyatıdır: `c_i · (g^10 − 1)/(g − 1)`.
 
@@ -142,19 +147,21 @@ blok_i(b, 10) = c_i · g^b · (g^10 − 1)/(g − 1)     AD'nin "Buy 10" formül
 ### 5.2 Üretim
 
 ```
-sayı/sn      = (A₁ · p₁ + Σ_{i≥2} A_i · d_i) · M      M = boostMult · chainMult · verim
-halka_i/sn   = A_{i+1} · p_{i+1} · chainMult          (i = 1..6)
-halka_8/sn   = 0                                      (zincirin tepesi)
+sayı/sn    = (A₁·p₁·B^⌊b₁/10⌋ + Σ_{i≥2} A_i·d_i·B^⌊b_i/10⌋) · R
+halka_i/sn = A_{i+1}·p_{i+1} · F                         (i = 1..6)
+halka_8/sn = 0                                            (zincirin tepesi)
+
+B = 5.5 (sabit blok tabanı)   R = mücadele ödül çarpanları (kalıcı)
+F = besleme çarpanı           F = 0.2 iken mücadele aktif; açılış/finalde 1
 ```
 
-`A_i` = halkadaki birim sayısı, `p_i` = halkanın taban üretimi (`p_1 = 1`,
-`p_i = 0,11` için `i ≥ 2`), `d_i = p_i · RING_DIRECT_SHARE` = halkanın sayıya **doğrudan**
-katkısı (`i ≥ 2`, `RING_DIRECT_SHARE = 1` → `0,11/sn`). `d_i` sayı üretimidir: `M`yi alır.
-Zincir satırındaki `+x/s` okuması bu katkıdır.
+`A_i` = halkadaki birim sayısı, `b_i` = bu koşuda alınan birim, `p_i` = taban üretim
+(`p_1 = 1`, `p_i = 0,11` için `i ≥ 2`), `d_i = p_i · RING_DIRECT_SHARE` = sayıya **doğrudan**
+katkı (`0,11/sn`). Zincir satırındaki `+x/s` okuması bu katkıdır.
 
-**`D1` (ölçümün zorunlu kıldığı düzeltme):** boost çarpanı **yalnız sayı üretimine** uygulanır,
-halka beslemesine **uygulanmaz**. Her halkaya uygulandığında `N ∝ M⁸` olur ve döngüler 2 saniyeye
-çöker (ölçüldü: 4,7 dakikada 11 boost).
+**`D1` (ADR-0083):** blok çarpanı **yalnız sayı üretimine** uygulanır (Fingers tabanı +
+doğrudan katkı), zincir beslemesine **uygulanmaz**. Aksi hâlde `N ∝ B⁸` olur ve sistem
+patlar. Blok çarpanı `B^⌊b_i/10⌋`; 10 alımda bir kademe, kalıcı (sıfırlama yok).
 
 ### 5.3 `Birikim` — kapı aşımı verim cezası (`E7`) — **ARŞİV, build'de yok**
 
@@ -271,21 +278,42 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 
 ---
 
-## 8. 1. basamak spec'i (kilitli, `E6`–`E14`)
+## 8. 1. basamak spec'i (kilitli, ADR-0083)
 
 | Alan | Karar |
 | :--- | :--- |
 | Zincir | Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician |
 | Yön | Aşağıdan yukarı; **Fingers sayıyı üretir**; `+1` = elle Fingers |
-| Alım | Sınırsız, birim fiyatı **×1,20**; 10'lu blok = bir halka (AD "Buy 10"), 2 saatte ~370 birim |
+| Alım | Sınırsız, birim fiyatı **×1,20** (mücadelelerde 1,22 / 1,35 / 1,45); 10'lu blok = bir halka |
 | Kilit | Bir halkadan 10 birim (= tek blok) → sonraki halka (mandallı) |
-| Döngü | 8. halkada mini boost: tam sıfırlama + `(zirve/10)^0,2` kalıcı çarpan |
-| Kapı | `1,79e308` → prestij: sayı `10`, `Tanım = log10(1+A)`, verim `0,9^log10 A` |
+| Blok Çarpanı | `B = 5.5`; her halkada `B^⌊bought/10⌋`; yalnız Fingers tabanı + doğrudan katkı |
+| Döngü | **Yok** — `1,79e308`e kadar tek koşu; hiçbir sıfırlama yok (ADR-0083) |
+| Mücadele | 8 sıfırlamasız overlay; girişte sayı/halkalar/B korunur; cezalar 21–22 dk |
+| Kapı | `1,79e308` → prestij: `+1 Tanım`, 2. basamak |
+| Süre | 190 dk (3 sa 10 dk); kalibrasyon 188,8 / 189,1 dk |
 | Ses | Ticker konuşur (`V4`); tooltip ve sayısal etiket **asla** şaka yapmaz |
 
 ---
 
-## 9. Kayıt şeması — v22
+## 9. Kayıt şeması — v23
+
+[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 23` (ADR-0083),
+`MIN_SUPPORTED_SAVE_VERSION = 20`.
+
+- **P5 — sert temizlik:** v19 ve altı kayıtlar **açılmaz**; oyuncu sıfırdan başlar. Veda ekranı
+  yok, arşiv yok (`P4`). Gerekçe: pivot hem temayı hem ekonomiyi değiştirdi; eski kayıt hem
+  teknik hem anlam olarak yüklenemez.
+- **v21 yalnız gösterim göçü (ADR-0080):** şema değişmedi; v20 kayıtlarındaki `scientific`
+  değeri *eski varsayılan* olduğu için bir kez `standard`'a taşınır.
+- **v22 zincir-only (ADR-0082):** boost/prestij/yükseltme alanları şemadan düştü.
+- **v23 rung 1 v2 (ADR-0083):** `challenges`, `gateReached`, `tanim` eklendi. v22 kayıtları
+  açılır; boş mücadele listesi ve `gateReached: false` ile gelir.
+- **Daha yeni kayıt korunur:** `SaveVersionError` — yeni build'in kaydı eski build'de reddedilir,
+  sessizce düşürülmez.
+- **Şema (v23):** `number`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
+  `rung`, `totalBuys`, `taps`, `uselessTaps`, `playTime`, `startedAt`, `lastSeenAt`,
+  `settings`, `seenVoice[]`, `latched[]`, `challenges{}`, `gateReached`, `tanim`.
+- **Uçucu alanlar kayda yazılmaz:** `offlineReport`.
 
 [`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 22`,
 `MIN_SUPPORTED_SAVE_VERSION = 20`.
@@ -371,13 +399,16 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | Katman | Dosya | Durum |
 | :--- | :--- | :--- |
-| Ekonomi | `src/game/number/` (tuning · economy · rungs) | ✅ zincir-only (ADR-0082) |
-| Store | `src/stores/game.ts` (tick, alım, serialize/deserialize) | ✅ |
-| Ses | `src/game/voice/` + `TickerBar.vue` | ✅ 1. basamak havuzu (92 ticker + 8 sahne) |
-| UI | `App.vue` + 9 bileşen (Hero, Tap, Chain, Telemetry, Ticker, Stats, Settings, Offline, RungScene) | ✅ |
-| Sahne (`G8`) | `RungScene.vue` | ⚠️ motor hazır; `rung` ilerlemediği için tetiklenmiyor |
+| Ekonomi | `src/game/number/` (tuning · challenges · economy · rungs) | 🟡 Rung 1 v2 — B=5.5 + 8 mücadele (ADR-0083) |
+| Store | `src/stores/game.ts` (tick, alım, mücadele, prestij, serialize/deserialize) | 🟡 save v23 |
+| Ses | `src/game/voice/` + `TickerBar.vue` | 🟡 mücadele/kapı satırları ekleniyor |
+| UI | `App.vue` + GoalBar · ChallengePanel · GateModal + mevcut 9 bileşen | 🟡 |
+| Sahne (`G8`) | `RungScene.vue` | 🟡 kapı anı GateModal ile bağlanacak |
 | Altyapı | 20 TPS loop · LZ-String + slot + karantina · Firebase auth/bulut · audio + müzik · swirl | ✅ |
 | 2–11. basamak | — | ⛔ tasarlanmadı |
+
+**Doğrulama kapıları:** `npm run typecheck` (vue-tsc, 0 hata) · `npm test` (vitest) ·
+`npm run build` (vue-tsc + vite). `npm run verify` = typecheck + test.
 
 **Doğrulama kapıları:** `npm run typecheck` (vue-tsc, 0 hata) · `npm test` (vitest) ·
 `npm run build` (vue-tsc + vite). `npm run verify` = typecheck + test.
@@ -388,8 +419,10 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | # | Konu | Durum |
 | :-- | :--- | :--- |
-| `K5` | Zincir-only denge ölçümü — 60. dk 7,9e15 · 120. dk 4,3e19 · 1 440 alım | ✅ `balance.test.ts` |
-| `R1` | **Boost + prestij + `Tanım` yükseltmeleri** — kaldırıldı; geri eklemeden önce uzun tasarım turu | ⛔ arşiv (ADR-0082) |
+| `K5` | Zincir-only denge ölçümü — **geçersiz**; B=5.5 + mücadele kalibrasyonu | ✅ `rung-1-190-calibration-2026-10-27.md` |
+| `R1` | **Rung 1 v2** — tek koşu, 190 dk, 8 sıfırlamasız mücadele, C8 ×2 | 🟡 uygulanıyor (ADR-0083) |
+| `R2` | Boost reset modeli ("boost alınca sayı sıfırlansın") | 🟡 sahip oyun içi testte karar verecek |
+| `R3` | C5 ödülü (+7,7%) ve C3 58 basamak sıçraması | 🟡 his testi |
 | — | **2. basamak tasarımı** (`E5`: kendi turunda; `OmegaNum` adaptörü + kadran) | ⛔ sıradaki büyük iş |
 | `A4` | Mizah yoğunluğu — ticker kapısı var; sahne (`RungScene`) ve başarım kapısı yok | 🟡 |
 | `A5` | `LNGN` final sahnesi (ton kırılması, `G8` motoru) | 🟡 en son |

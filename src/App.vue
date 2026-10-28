@@ -10,22 +10,25 @@ import TickerBar from './components/TickerBar.vue'
 import HeroNumber from './components/HeroNumber.vue'
 import TapButton from './components/TapButton.vue'
 import TelemetryLine from './components/TelemetryLine.vue'
+import GoalBar from './components/GoalBar.vue'
 import ChainList from './components/ChainList.vue'
+import ChallengePanel from './components/ChallengePanel.vue'
 import StatsPanel from './components/StatsPanel.vue'
 import RungScene from './components/RungScene.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import AuthModal from './components/AuthModal.vue'
 import CloudConflictModal from './components/CloudConflictModal.vue'
 import OfflineModal from './components/OfflineModal.vue'
+import GateModal from './components/GateModal.vue'
 
-type Tab = 'number' | 'stats' | 'settings'
+type Tab = 'number' | 'challenges' | 'stats' | 'settings'
 
 const store = useGameStore()
 const auth = useAuthStore()
 const tab = ref<Exclude<Tab, 'settings'>>('number')
 const showSettings = ref(false)
 
-const TABS: Tab[] = ['number', 'stats', 'settings']
+const TABS: Tab[] = ['number', 'challenges', 'stats', 'settings']
 
 /** Dock: aktif sekme alt çizgiyle. Ayarlar bir sekme gibi davranır (modal açar). */
 const activeTab = computed<Tab>(() => (showSettings.value ? 'settings' : tab.value))
@@ -53,6 +56,10 @@ function onKeydown(event: KeyboardEvent): void {
   if (!store.settings.hotkeysEnabled) return
   const target = event.target as HTMLElement | null
   if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) return
+  // Kapıda büyüme durur: basış/alım kısayolları susar, aksi hâlde klavye modalın
+  // söylediğinin tersini yapardı (Kural 2). gateReached bir mandaldır ve prestijden
+  // sonra da true kalır — kapıyı sormak için growthStopped okunur, mandal değil.
+  if (store.growthStopped) return
   if (event.key === 'Escape') {
     // En üstteki katman kapanır: bulut modalları açıkken ayarlar açık kalır.
     if (!auth.showAuthModal && !auth.showConflictModal) showSettings.value = false
@@ -103,6 +110,9 @@ onUnmounted(() => {
     <div class="app__inner">
       <TickerBar />
 
+      <!-- Hedef satırı sayının ÜSTÜNDE ve kalıcı (contract §6): sekme değişse de yerinde kalır. -->
+      <GoalBar />
+
       <main class="stage">
         <HeroNumber />
 
@@ -126,6 +136,7 @@ onUnmounted(() => {
 
         <section class="panel">
           <ChainList v-if="tab === 'number'" />
+          <ChallengePanel v-else-if="tab === 'challenges'" />
           <StatsPanel v-else />
         </section>
       </main>
@@ -137,6 +148,14 @@ onUnmounted(() => {
 
     <!-- G8: basamak geçişi motoru (mandallı, 2.500 ms). -->
     <RungScene />
+
+    <!--
+      Kapı (contract §6): 1.79e308'de büyüme durur ve tek bir an açılır.
+      Katman sırası: ayarlar (40) ve çevrimdışı (45) kapının ALTINDA kalır — oyuncu
+      kapıyı görmeden ayar/rapor penceresi onu kesmez. Bulut katmanları (55/60) üstte
+      kalır: giriş ve çakışma çözümü sistem yüzeyleridir, sayıyı kapatmaz.
+    -->
+    <GateModal v-if="store.gateOpen" />
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
 

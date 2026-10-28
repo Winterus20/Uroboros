@@ -15,8 +15,19 @@
  * kaldırıldı. Kayıttaki `boostMult`, `boosts`, `tanim`, `prestiges`,
  * `upgrades` ve `gateReached` alanları düştü. Asgari sürüm 20'de kaldı:
  * v20/v21 kayıtları açılır, sayı + zincir korunur, kaldırılan alanlar yok sayılır.
+ *
+ * v23 — TEK KOŞU + 8 MÜCADELE (ADR-0083): 1. basamak 190 dk'lık tek koşuya döndü.
+ * Kayıt üç alan kazandı:
+ *   - `challenges`: 8 mücadelenin durumu (tamamlanan kimlikler, aktif kimlik,
+ *     giriş/hedef log10'u, son alım zamanı). Mücadele bir örtüdür — girişte
+ *     hiçbir şey sıfırlanmaz, hedefe varınca ödül kalıcı olur.
+ *   - `gateReached`: `1.79e308` kapısı bir kez açıldı mı (mandal).
+ *   - `tanim`: prestij sayacı; v22'de silinmişti, artık yalnız kapıda +1 artar.
+ * Asgari sürüm 20'de kaldı: v20/v21/v22 kayıtları açılır. Üç yeni alan eski
+ * kayıtlarda YOK SAYILMAZ, VARSAYILANLA doldurulur (boş mücadele, kapı kapalı,
+ * 0 Tanım) — oyuncu ilerlemesini kaybetmez, akışa temiz girer.
  */
-export const SAVE_VERSION = 22
+export const SAVE_VERSION = 23
 
 /** Bunun altındaki kayıtlar sıfırlanır (P5: sert temizlik). */
 export const MIN_SUPPORTED_SAVE_VERSION = 20

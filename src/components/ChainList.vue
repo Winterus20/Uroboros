@@ -66,23 +66,68 @@ function lockHint(row: RingRow): string {
   const remaining = Math.max(0, NUMBER_TUNING.unlockThreshold - store.rings[row.index - 1].bought)
   return remaining === 1 ? '1 more ' + previous.name : remaining + ' more ' + previous.name
 }
+
+/**
+ * Blok çarpanı (contract §0): 5.5 ** floor(bought / 10). Metin satırdan gelir —
+ * biçim tek kaynakta kalır ki zincir satırı ile `blockMultText` ayrı düşmesin (V4).
+ * Çarpan 1 iken (henüz blok yok) satır susar: ekranı x1.00 ile doldurmaz.
+ */
+function blockFactorText(row: RingRow): string {
+  return row.blockFactor.gt(1) ? row.blockFactorText : ''
+}
+
+/**
+ * Max All: tüm halkaları alır (contract §3, store.buyMaxAll).
+ * Ses yalnız gerçekten alım olduysa çalar ve en derin değişen halkanın tonunu kullanır —
+ * fiyat hiçbir yere yetmediyse sessiz kalır.
+ */
+function buyMaxAll(): void {
+  const before = store.rings.map((ring) => ring.bought)
+  store.buyMaxAll()
+  if (!store.settings.soundEnabled) return
+  let deepest = -1
+  for (let i = 0; i < store.rings.length; i++) {
+    if (store.rings[i].bought > before[i]) deepest = i
+  }
+  if (deepest >= 0) sounds.playBuy(deepest)
+}
+
+/** Blok çarpanı hesaplanmış mı: şablon boş metin için ayırıcı basmaz. */
+function hasBlockFactor(row: RingRow): boolean {
+  return blockFactorText(row).length > 0
+}
 </script>
 
 <template>
   <section class="chain" aria-label="Chain">
     <header class="chain__head">
       <p class="chain__title">Chain</p>
-      <div class="modes" role="group" aria-label="Buy amount">
+      <div class="modes">
+        <div class="modes__modes" role="group" aria-label="Buy amount">
+          <button
+            v-for="option in MODES"
+            :key="option.label"
+            type="button"
+            class="mode"
+            :class="{ 'mode--on': store.buyMode === option.mode }"
+            :aria-pressed="store.buyMode === option.mode"
+            @click="selectMode(option.mode)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+
+        <!--
+          Max All: her satırın kendi modundan bağımsız, tek vuruşta tüm zinciri alır.
+          Metin düğmesi — seçili mod değil, eylem; bu yüzden alt çizgi taşımaz.
+        -->
         <button
-          v-for="option in MODES"
-          :key="option.label"
           type="button"
-          class="mode"
-          :class="{ 'mode--on': store.buyMode === option.mode }"
-          :aria-pressed="store.buyMode === option.mode"
-          @click="selectMode(option.mode)"
+          class="mode mode--action"
+          aria-label="Buy every affordable block across the chain"
+          @click="buyMaxAll"
         >
-          {{ option.label }}
+          Max All
         </button>
       </div>
     </header>
@@ -98,6 +143,11 @@ function lockHint(row: RingRow): string {
           <template v-if="row.addsPerSecond.gt(0)">
             <span class="dot" aria-hidden="true">·</span>
             <span class="row__direct">+{{ format(row.addsPerSecond, 2, store.settings.notation) }}/s</span>
+          </template>
+          <!-- Blok çarpanı (contract §0): yalnız satır bu değeri yayınlıyorsa yazılır. -->
+          <template v-if="hasBlockFactor(row)">
+            <span class="dot" aria-hidden="true">·</span>
+            <span class="row__block">{{ blockFactorText(row) }}</span>
           </template>
         </p>
       </div>
@@ -148,6 +198,12 @@ function lockHint(row: RingRow): string {
   align-items: baseline;
   gap: 16px;
 }
+/* Mod grubu ile Max All ayrı roller: seçim ile eylem arasında biraz daha boşluk. */
+.modes__modes {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
 .mode {
   appearance: none;
   border: 0;
@@ -167,6 +223,17 @@ function lockHint(row: RingRow): string {
   color: var(--pn-text);
   border-bottom-color: var(--pn-hairline-strong);
 }
+/*
+ * Max All bir secim degil eylemdir: alt cizgi tasimaz, tonla one cikar.
+ * Ayni satirda iki farkli anlam (secim / eylem) iki farkli gorselle anlatilir (S8.5).
+ */
+.mode--action {
+  color: var(--pn-text-dim);
+  letter-spacing: 0.1em;
+}
+.mode--action:hover { color: var(--pn-text); }
+/* Blok çarpanı: aynı meta satırının en gerisinde — süs değil, okuma. */
+.row__block { color: var(--pn-text-faint); }
 
 /* Kutu yok: her satır yalnız 1px hairline ile ayrılır (G3). */
 .row {
@@ -240,7 +307,8 @@ function lockHint(row: RingRow): string {
   .chain { padding: 0 16px; }
   .chain__head { gap: 10px; padding: 9px 0 10px; }
   .chain__title { font-size: 12px; }
-  .modes { gap: 12px; }
+  .modes { gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .modes__modes { gap: 12px; }
   .row { gap: 12px; }
   .row__name { font-size: 13px; }
   .row__buy { min-width: 100px; font-size: 12px; gap: 6px; }

@@ -1,5 +1,48 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-28] 🚀 — Rung 1 v2 uygulaması: tek koşu + 8 sıfırlamasız mücadele (ADR-0083)
+
+### Ne yapıldı
+
+v1 planı (4 öğrenme sıfırlaması + 6 Math sıfırlaması, 120 dk) gerçek motorla çürütüldü:
+B=2.0 ile 1e40 493 dk, 1e55 96 saatte yok. B=5.5 ile tek koşu 190 dk ya oturdu.
+
+- **Kalibrasyon:** B=5.5, 8 mücadele, global mücadele beslemesi ×0,2, C8 ×2 bitirici,
+  hedefler 1e33.242 → 1e128.967. Ölçüm: **188,8 dk** (Max All) / **189,1 dk** (idle);
+  son itiş 9,2 / 9,4 dk; 8 mücadele 21–22 dk.
+  Kaynak: `brain/research/rung-1-190-calibration-2026-10-27.md`.
+- **Ekonomi:** `BLOCK_MULT = 5.5` blok çarpanı yalnız üretime (Fingers + doğrudan katkı),
+  beslemeye asla. 8 ceza / 8 ödül saf fonksiyonlarla; mücadele giriş/çıkış/tamamlama
+  sayıyı, halkaları ve çarpanı DEĞİŞTİRMEZ.
+- **Store + kayıt v23:** `challenges`, `gateReached`, `tanim`. v22 kayıtları varsayılanla
+  açılır; kilit/alım çelişkisi yüklemede uzlaştırılır.
+- **UI:** `GoalBar`, `ChallengePanel`, `GateModal`, `ChainList` Max All + blok rozeti.
+- **Ses:** 8 mücadele başlangıcı, 8 tamamlanma, kapı ve tek koşu satırları.
+
+### Dosyalar
+
+Yeni: `challenges.ts` · `challenges.test.ts` · `rung1.integration.test.ts` · `GoalBar.vue` ·
+`ChallengePanel.vue` · `GateModal.vue` · `0083-rung-1-single-run-challenge-model.md` ·
+`rung-1-implementation-contract.md`.
+Değişen: `tuning.ts` · `economy.ts` · `models/number.ts` · `models/save.ts` ·
+`save-version.ts` · `stores/game.ts` · `game.save.test.ts` · `ChainList.vue` · `App.vue` ·
+`lines-rung1.ts` · `balance.test.ts` · `economy.test.ts` · `GAME_DESIGN.md` · `README.md` ·
+`AGENTS.md` · `brain/context/*` · `brain/tasks/*`.
+
+### Doğrulama
+
+`npm run typecheck` **exit 0** · `npx vitest run` **192/192, 9 dosya** ·
+`npm run build` **exit 0** (1684 modül). Tarayıcı duman testi: hedef satırı, mücadele paneli,
+Max All, C1 giriş/çıkış (sayı korunur), kapı modalı ve prestij (`tanim=1`, ikinci açılış yok).
+
+### Açık (sahip kararı)
+
+1. **Boost reset modeli:** sahibin "boost alınca sayı sıfırlansın" açıklaması bu no-reset
+   modelle çelişiyor. Seçilirse kalibrasyon yenilenir (`R2`).
+2. **C5 ödülü** en zayıf (+%7,7); C3 te 58 basamaklık sıçrama; final 9 dk da 179 basamak —
+   oyun içi his testi gerekli.
+3. **Toplam süre:** 135 saat (×1.25) mi, 85 saat (×1.165) mi?
+
 ## [2026-10-27] 🔬 — Zincir büyüme katmanı ölçümü + belge kayması düzeltmesi
 
 ### Ne yapıldı

@@ -1,4 +1,4 @@
-/** Kayıt tipleri — yeni şema (SAVE_VERSION 22). */
+/** Kayıt tipleri — yeni şema (SAVE_VERSION 23). */
 import type { NotationType } from '../core/format'
 import type { HumorLevel, MotionMode, MusicTrackId } from './settings'
 
@@ -44,12 +44,44 @@ export interface SerializedSettings {
 }
 
 /**
- * Diske/buluta yazılan tam durum (SAVE_VERSION 22).
+ * 8 mücadelenin kayda yazılan durumu (v23).
+ *
+ * Mücadele bir örtüdür: giriş sayıyı/halkaları SIFIRLAMAZ. `entryLog10` hedefin
+ * alt sınırını kilitler (`goal = max(plan, giriş + Δ)`), böylece hedefe yaklaşıp
+ * girme istismarı kapanır. `lastBuyAt` çürüme cezasının okuduğu oyun saatidir.
+ */
+export interface SerializedChallenges {
+  /** Tamamlanmış mücadele kimlikleri (`C1`…`C8`) — mandal, ödül kalıcı. */
+  completed: string[]
+  /** Aktif mücadele kimliği; yoksa `null`. */
+  active: string | null
+  /** Girişteki sayının log10 değeri; mücadele yoksa `null`. */
+  entryLog10: number | null
+  /** Girişte kilitlenen hedef (log10); mücadele yoksa `null`. */
+  goalLog10: number | null
+  /** Son alımın oyun zamanı (sn) — çürüme cezasının okuduğu saat. */
+  lastBuyAt: number
+  /**
+   * En son satın alınan halka (0–7) — C7 "newestOnly" cezası okur.
+   *
+   * `-1` = bu koşuda henüz alım yapılmadı; o durumda C7 cezası hiçbir halkayı
+   * tam saymaz (motorun `newestBoughtRing = -1` davranışı, engine.ts).
+   */
+  lastBoughtRing: number
+}
+
+/**
+ * Diske/buluta yazılan tam durum (SAVE_VERSION 23).
  *
  * v22 (2026-10-25): boost/prestij/Tanım yükseltmeleri kaldırıldı; kayıttan
  * `boostMult`, `boosts`, `tanim`, `prestiges`, `upgrades` ve `gateReached`
  * alanları düştü. Eski kayıtlar (v20/v21) yine açılır: bilinmeyen alanlar yok
  * sayılır, sayı ve zincir korunur.
+ *
+ * v23 (2026-10-27, ADR-0083): tek koşu + 8 sıfırlamasız mücadele. Kayıt
+ * `challenges` (mücadele durumu), `gateReached` (`1.79e308` mandalı) ve `tanim`
+ * (prestij sayacı) alanlarını geri kazandı. v22 kayıtları bu üç alan olmadan da
+ * açılır: deserialize onları VARSAYILANLA doldurur, oyuncu ilerlemesi korunur.
  */
 export interface SerializedPlayerState {
   version: number
@@ -68,6 +100,12 @@ export interface SerializedPlayerState {
   settings: SerializedSettings
   seenVoice: string[]
   latched: string[]
+  /** v23 — 8 mücadele durumu. v22 kayıtlarında yoktur. */
+  challenges: SerializedChallenges
+  /** v23 — `1.79e308` kapısı bir kez açıldı mı (mandal). */
+  gateReached: boolean
+  /** v23 — prestij sayacı (`Tanım`); yalnız kapıda artar. */
+  tanim: number
 }
 
 export type SerializedGameState = SerializedPlayerState

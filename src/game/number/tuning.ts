@@ -67,6 +67,33 @@ export const RING_DIRECT_SHARE = 1
 /** AD'nin "Buy 10"ı: tek blok = bir halka (11,4 birim) = kilit eşiği. */
 export const BLOCK_SIZE = 10
 
+/**
+ * Blok çarpanı (v2 / 190 dk kalibrasyonu): her 10 alımda üretim ×5,5.
+ *
+ * Kaynak: brain/research/rung-1-190-calibration-2026-10-27.md ·
+ * brain/scratchpad/chain-only-probe/190-calibration/engine.ts.
+ *
+ *     blockFactor(bought) = 5,5 ^ floor(bought / 10)
+ *
+ * Yalnız ÜRETİME uygulanır: Fingers’ın sayı üretimi ve halka 2–8’in doğrudan
+ * katkısı. Zincir BESLEMESİNE uygulanmaz (besleme 0,11/sn kalır) — bu yüzden
+ * derin halka sayıyı blok çarpanıyla, alt halkayı ise çarpansız besler.
+ */
+export const BLOCK_MULT = 5.5
+
+/**
+ * Mücadele sırasında global besleme çarpanı (190 dk kalibrasyonunun ana kolu).
+ * Açılış ve final itişi tam besleme kullanır; herhangi bir mücadele aktifken
+ * zincir beslemesi ×0,2 olur (feedFifth / price135feedHalf bunun üzerine biner).
+ */
+export const CHALLENGE_FEED_MULT = 0.2
+
+/** 1. basamak kapısı: standart JS float sınırı (İlk Tekillik). */
+export const GATE = D('1.79e308')
+
+/** log10(GATE) — kapı yüzdesi ve hedef metni bunu kullanır. */
+export const GATE_LOG10 = 308.25286978738966
+
 export const NUMBER_TUNING = {
   /** Birim başına fiyat çarpanı (g). 1,20 → halka başına 11,4 birim. */
   costGrowth: 1.2,
