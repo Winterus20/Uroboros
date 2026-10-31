@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useGameStore } from './stores/game'
+import { OFFLINE_REPORT_MIN_SECONDS, useGameStore } from './stores/game'
 import { useAuthStore } from './stores/auth'
 import { SaveSystem } from './core/save'
 import { gameLoop } from './core/game-loop'
@@ -81,7 +81,8 @@ onMounted(() => {
   if (result.state) {
     store.deserialize(result.state)
     const away = (Date.now() - (result.state.lastSeenAt ?? Date.now())) / 1000
-    if (away > 60) store.simulateOffline(away)
+    // Kısa yokluk simüle edilmez; rapor eşiği store'daki ile aynı sabittir.
+    if (away >= OFFLINE_REPORT_MIN_SECONDS) store.simulateOffline(away)
   }
   gameLoop.start()
   // Bulut kayıt: ayarlardaki giriş noktası oturum dinleyicisine bağlanır.

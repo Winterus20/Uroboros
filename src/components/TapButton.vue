@@ -18,8 +18,12 @@ function press(): void {
 
 <template>
   <div class="tap-wrap">
-    <button class="tap" type="button" @click="press">
-      <span :key="stroke" class="tap__label">+1</span>
+    <!--
+      Erişilebilir ad düğmede sabittir: etiket her basışta yeniden anahtarlanıp
+      doğduğu için ağaçtaki ad ona bırakılamaz. Görünür "+1" ile aynı şeyi söyler.
+    -->
+    <button class="tap" type="button" aria-label="Add one" @click="press">
+      <span :key="stroke" class="tap__label" aria-hidden="true">+1</span>
     </button>
   </div>
 </template>

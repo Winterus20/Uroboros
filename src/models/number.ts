@@ -83,6 +83,13 @@ export interface ChallengeRow {
   goal: Decimal
   /** Aynı hedefin biçimlenmiş hâli (oyuncunun seçtiği notasyon). */
   goalText: string
+  /**
+   * Açılma eşiği: sayı bu değere ulaşınca mücadele girilebilir (`unlockLog10`).
+   * Kilitli satır gerekçesini bununla yazar; renk tek başına bilgi taşımaz (§8.4).
+   */
+  unlockAt: Decimal
+  /** Aynı eşiğin biçimlenmiş hâli (oyuncunun seçtiği notasyon). */
+  unlockText: string
   /** 0–100; tamamlanmış 100, aktif olanda girişten hedefe oran. */
   progress: number
   penaltyLabel: string
