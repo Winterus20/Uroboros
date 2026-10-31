@@ -1,5 +1,31 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-31] ✨ — 1. basamak oyun testi cilası + swirl parlaklık tavanı (ADR-0084)
+
+### Ne yapıldı
+
+İlk dakikaların oyun testinde bulunan pürüzler giderildi. **Ekonomi, tuning ve kayıt şeması değişmedi.**
+
+- **Alım modu ×1 ile başlar** (`stores/game.ts`): ×10 açılışta "10 Fingers · 649" gösteriyordu;
+  oyuncunun elinde 10 vardı. Mod uçucudur, kayda yazılmaz.
+- **Çevrimdışı rapor eşiği** `OFFLINE_REPORT_MIN_SECONDS = 60`: ≥ 1 sn her duraklama yine simüle
+  edilir, ama "While you were away" yalnız ≥ 60 sn yoklukta açılır (4 sn'lik sekme değişimi
+  "+0 · 4s" modalı açıyordu). Kayıttan yükleme yolu aynı sabiti kullanır.
+- **Kilitli mücadele gerekçesi:** `ChallengePanel` "Locked" yerine "Unlocks at <eşik>" yazar
+  (`ChallengeRow.unlockAt/unlockText`, oyuncunun notasyonunda).
+- **`+1` erişilebilirliği:** `aria-label="Add one"`; animasyonlu etiket `aria-hidden`.
+- **`game-loop.ts`:** çevrimdışı tavanı yorumu 24 sa → 12 sa.
+- **Swirl (ADR-0084):** `AlgorithmicSwirl` son rengi shader'da üretir, en parlak piksel
+  L ≤ 0,016 (11 basamağın hepsinde); piksel kuantizasyonu, opaklık/blend ve gradyan fallback
+  kaldırıldı. `--pn-text-dim` en parlak girdap üstünde 1,69:1 → 4,62:1. Sözleşme §2.4 eklendi.
+- **Testler:** `src/stores/game.test.ts` (11 yeni test).
+
+### Açık kalanlar
+
+- `--pn-text-faint` (2,46:1) ve `--pn-locked` (1,62:1) düz zeminde bile AA altında — ayrı token kararı.
+- Mücadele kilidi anlık sayıya bağlı; büyük alımdan sonra açılmış mücadele yeniden kilitlenebilir.
+- `style.css`'teki kullanılmayan `pn-swirl-breath` bağlanırsa tavanı deler (ADR-0084).
+
 ## [2026-10-31] 🧹 — Eski tema kalıntısı temizliği + görev belgelerinin ADR-0083'e hizalanması
 
 ### Ne yapıldı
