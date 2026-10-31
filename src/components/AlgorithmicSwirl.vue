@@ -19,45 +19,47 @@ let lastTime = 0
 let totalShaderTime = 0
 const isSupported = ref(true)
 
+/*
+ * Parlaklık tavanı (visual-language.md §2.4, ADR-0084):
+ * swirl'ün EN PARLAK pikseli bile metin kontrastını bozamaz. Shader rengi doğrudan
+ * hesaplamaz; zemin (`--pn-bg`) + tavanlı tint × [0,1] gölge üretir. Tint, JS'te WCAG
+ * göreli parlaklığına göre çözülür — böylece tavan basamak renginden bağımsız tutar.
+ *
+ * Tavan L ≤ 0.016 (tüm ekran, tek kural): en parlak swirl pikseli üzerinde
+ * `--pn-text-dim` ≥ 4,6:1, 1. basamak hero ≥ 10:1, `--pn-text` ≥ 14:1.
+ */
+const SWIRL_BG: [number, number, number] = [6 / 255, 6 / 255, 8 / 255] // --pn-bg
+const SWIRL_MAX_LUMINANCE = 0.016
+/** Basamak renginin korunan doygunluk payı (1 = tam neon, 0 = gri). */
+const SWIRL_SATURATION = 0.55
+
 // Shader Uniform Lokasyonları
 interface UniformLocations {
   resolution: WebGLUniformLocation | null
   time: WebGLUniformLocation | null
-  color1: WebGLUniformLocation | null
-  color2: WebGLUniformLocation | null
-  color3: WebGLUniformLocation | null
-  speed: WebGLUniformLocation | null
+  base: WebGLUniformLocation | null
+  tint: WebGLUniformLocation | null
   contrast: WebGLUniformLocation | null
-  lighting: WebGLUniformLocation | null
 }
 let uniforms: UniformLocations = {
   resolution: null,
   time: null,
-  color1: null,
-  color2: null,
-  color3: null,
-  speed: null,
-  contrast: null,
-  lighting: null
+  base: null,
+  tint: null,
+  contrast: null
 }
 
-// Pürüzsüz durum Lerp değişkenleri (ani renk ve hız sıçramalarını önler)
+// Pürüzsüz durum Lerp değişkenleri (basamak geçişinde ani renk sıçramasını önler)
 interface SwirlParams {
-  c1: [number, number, number, number]
-  c2: [number, number, number, number]
-  c3: [number, number, number, number]
+  tint: [number, number, number]
   speed: number
   contrast: number
-  lighting: number
 }
 
 const currentParams: SwirlParams = {
-  c1: [0.04, 0.05, 0.09, 1.0],
-  c2: [0.30, 0.11, 0.58, 1.0],
-  c3: [0.02, 0.02, 0.03, 1.0],
-  speed: 1.0,
-  contrast: 2.6,
-  lighting: 0.35
+  tint: [0, 0, 0],
+  speed: 0.72,
+  contrast: 2.3
 }
 
 // Sistem tercihi (OS seviyesi): prefers-reduced-motion — canlı dinlenir (JuiceLayer kalıbı).
@@ -94,24 +96,19 @@ void main() {
 }
 `
 
-// Balatro Procedural Paint Swirl Fragment Shader (AspectRatio & Quantized UV & 5-Step Warping)
+// Prosedürel boya girdabı (aspect-correct UV · 5 kademeli warp). Piksel kuantizasyonu
+// YOK: Balatro mirası "retro piksel" Saf Sayı'da ölü (G4 piksel font, ADR-0069 CRT/retro).
 const FS_SOURCE = `
 precision mediump float;
 uniform vec2 u_resolution;
 uniform float u_time;
-uniform vec4 u_color1;
-uniform vec4 u_color2;
-uniform vec4 u_color3;
-uniform float u_speed;
+uniform vec3 u_base;
+uniform vec3 u_tint;
 uniform float u_contrast;
-uniform float u_lighting;
 
 void main() {
-  // 1. Aspect-correct UV & retro pikselleştirme (480 filter)
-  float pixel_filter = 480.0;
-  float pixel_size = length(u_resolution) / pixel_filter;
-  vec2 uv = floor(gl_FragCoord.xy / pixel_size) * pixel_size;
-  uv = (uv - 0.5 * u_resolution) / length(u_resolution);
+  // 1. Aspect-correct UV (kuantizasyonsuz: yumuşak alan, bilinear büyütme)
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / length(u_resolution);
 
   // 2. Kutupsal dönüşüm ve açısal girdap (Polar Coordinates & Swirl)
   float uv_len = length(uv);
@@ -122,7 +119,7 @@ void main() {
   uv *= 28.0;
 
   // 3. 5 Kademeli İteratif Kaos Döngüsü (Iterative Warping Loop)
-  float loop_speed = u_time * u_speed;
+  float loop_speed = u_time;
   vec2 uv2 = vec2(uv.x + uv.y, 0.0);
 
   for (int i = 0; i < 5; i++) {
@@ -131,17 +128,15 @@ void main() {
     uv -= 1.0 * cos(uv.x + uv.y) - 1.0 * sin(uv.x * 0.711 - uv.y);
   }
 
-  // 4. 3 Renkli Boya Ayrışması ve Işıklandırma
+  // 4. Boya ayrışması → tek gölge değeri [0,1] (beyaz ışık eklemesi yok: tavanı delerdi)
   float contrast_mod = (0.25 * u_contrast + 0.5 * 0.25 + 1.2);
   float paint_res = min(2.0, max(0.0, length(uv) * 0.035 * contrast_mod));
   float c1 = max(0.0, 1.0 - contrast_mod * abs(1.0 - paint_res));
   float c2 = max(0.0, 1.0 - contrast_mod * abs(paint_res));
-  float c3 = 1.0 - min(1.0, c1 + c2);
+  float shade = clamp(0.32 * c1 + 0.78 * c2 + 0.22 * max(c2 * 5.0 - 4.0, 0.0), 0.0, 1.0);
 
-  float light = (u_lighting - 0.2) * max(c1 * 5.0 - 4.0, 0.0) + u_lighting * max(c2 * 5.0 - 4.0, 0.0);
-  vec4 final_color = (0.3 / u_contrast) * u_color1 + (1.0 - 0.3 / u_contrast) * (u_color1 * c1 + u_color2 * c2 + u_color3 * c3) + light;
-  
-  gl_FragColor = vec4(final_color.rgb, 1.0);
+  // 5. Zemin + tavanlı tint: shade ≤ 1 olduğundan hiçbir piksel tavanı aşamaz.
+  gl_FragColor = vec4(u_base + u_tint * shade, 1.0);
 }
 `
 
@@ -227,13 +222,13 @@ function initWebGL(): boolean {
   uniforms = {
     resolution: gl.getUniformLocation(program, 'u_resolution'),
     time: gl.getUniformLocation(program, 'u_time'),
-    color1: gl.getUniformLocation(program, 'u_color1'),
-    color2: gl.getUniformLocation(program, 'u_color2'),
-    color3: gl.getUniformLocation(program, 'u_color3'),
-    speed: gl.getUniformLocation(program, 'u_speed'),
-    contrast: gl.getUniformLocation(program, 'u_contrast'),
-    lighting: gl.getUniformLocation(program, 'u_lighting')
+    base: gl.getUniformLocation(program, 'u_base'),
+    tint: gl.getUniformLocation(program, 'u_tint'),
+    contrast: gl.getUniformLocation(program, 'u_contrast')
   }
+  // Başlangıç tinti hedefe eşit: ilk karede tavansız/yanlış renkli flaş olmaz.
+  const initial = getTargetParams()
+  currentParams.tint = [...initial.tint]
 
   resizeCanvas()
   return true
@@ -243,13 +238,20 @@ function resizeCanvas() {
   if (!canvasRef.value || !gl) return
   const canvas = canvasRef.value
   
-  // Düşük çözünürlüklü tampon: Dengeli modda 0.5x, yüksek modda 0.75x
-  // Retro piksel estetiğini pekiştirir ve fill-rate yükünü %75 azaltır
+  // Düşük çözünürlüklü tampon (CSS pikseline göre, DPR bilinçli olarak yok sayılır):
+  // Dengeli 0.5x, yüksek 0.75x → fill-rate ~%75 / ~%44 düşer. Alan yumuşak olduğu için
+  // tarayıcının bilinear büyütmesi yeterli; `image-rendering: pixelated` kaldırıldı.
+  // En-boy oranı viewport ile AYNI tutulur: eski 320×240 tabanı dar ekranda tamponu
+  // görüntüden farklı orana zorlayıp object-cover ile 2× kırpılmış bloklara büyütüyordu.
   const quality = store.settings.swirlShaderQuality ?? 'balanced'
-  const scale = quality === 'high' ? 0.75 : 0.5
-  
-  const w = Math.max(320, Math.floor(window.innerWidth * scale))
-  const h = Math.max(240, Math.floor(window.innerHeight * scale))
+  const vw = Math.max(1, window.innerWidth)
+  const vh = Math.max(1, window.innerHeight)
+  let scale = quality === 'high' ? 0.75 : 0.5
+  // Kısa kenar 200 px'in altına düşmesin (çok küçük pencerede bulanıklaşmayı sınırlar).
+  scale = Math.min(1, Math.max(scale, 200 / Math.min(vw, vh)))
+
+  const w = Math.max(1, Math.round(vw * scale))
+  const h = Math.max(1, Math.round(vh * scale))
 
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w
@@ -268,15 +270,47 @@ function hexToRgb(hex: string): [number, number, number] {
   ]
 }
 
+/** WCAG 2.x göreli parlaklık (sRGB). */
+function relativeLuminance([r, g, b]: [number, number, number]): number {
+  const lin = (c: number): number => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+
+/**
+ * Basamak renginden tavanlı tint: renk önce griye doğru `SWIRL_SATURATION` kadar çekilir,
+ * sonra `SWIRL_BG + k·renk` göreli parlaklığı tam `maxLum` olacak şekilde k ikiye bölmeyle
+ * bulunur. Shader'da gölge ≤ 1 olduğu için hiçbir piksel bu tavanı aşamaz.
+ */
+function cappedTint(color: [number, number, number], maxLum: number): [number, number, number] {
+  const luma = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
+  const dir = color.map((c) => luma + (c - luma) * SWIRL_SATURATION) as [number, number, number]
+  const peak = Math.max(dir[0], dir[1], dir[2], 1e-6)
+  const at = (k: number): [number, number, number] =>
+    dir.map((c, i) => Math.min(1, SWIRL_BG[i] + c * k)) as [number, number, number]
+  let lo = 0
+  let hi = 1 / peak
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2
+    if (relativeLuminance(at(mid)) > maxLum) hi = mid
+    else lo = mid
+  }
+  return dir.map((c) => c * lo) as [number, number, number]
+}
+
+// Tint yalnız basamak değişince yeniden çözülür (her karede 24 adımlık arama gereksiz).
+let tintCacheKey = ''
+let tintCache: [number, number, number] = [0, 0, 0]
+
 function getTargetParams(): SwirlParams {
-  const [r, g, b] = hexToRgb(store.rungInfo.color)
+  const hex = store.rungInfo.color
+  if (hex !== tintCacheKey) {
+    tintCache = cappedTint(hexToRgb(hex), SWIRL_MAX_LUMINANCE)
+    tintCacheKey = hex
+  }
   return {
-    c1: [r * 0.09, g * 0.09, b * 0.09, 1.0],
-    c2: [r * 0.42, g * 0.42, b * 0.42, 1.0],
-    c3: [0.02, 0.02, 0.03, 1.0],
+    tint: tintCache,
     speed: 0.72,
-    contrast: 2.3,
-    lighting: 0.3
+    contrast: 2.3
   }
 }
 
@@ -298,27 +332,24 @@ function render(now: number) {
   const target = getTargetParams()
   const lerpFactor = Math.min(1.0, dt * 2.8)
 
-  // Parametreleri pürüzsüzce yaklaştır
-  for (let i = 0; i < 4; i++) {
-    currentParams.c1[i] = lerp(currentParams.c1[i], target.c1[i], lerpFactor)
-    currentParams.c2[i] = lerp(currentParams.c2[i], target.c2[i], lerpFactor)
-    currentParams.c3[i] = lerp(currentParams.c3[i], target.c3[i], lerpFactor)
+  // Parametreleri pürüzsüzce yaklaştır. Basamak geçişinde iki tavanlı tint arasında lineer
+  // karışım: sRGB→lineer dönüşüm konveks olduğundan karışımın parlaklığı iki ucun
+  // karışımını aşamaz — geçiş boyunca da tavan tutar.
+  for (let i = 0; i < 3; i++) {
+    currentParams.tint[i] = lerp(currentParams.tint[i], target.tint[i], lerpFactor)
   }
   currentParams.speed = lerp(currentParams.speed, target.speed, lerpFactor)
   currentParams.contrast = lerp(currentParams.contrast, target.contrast, lerpFactor)
-  currentParams.lighting = lerp(currentParams.lighting, target.lighting, lerpFactor)
 
   totalShaderTime += dt * currentParams.speed
 
   // Uniform güncellemesi
-  gl.uniform2f(uniforms.resolution, canvasRef.value.width, canvasRef.value.height)
+  const width = canvasRef.value.width
+  gl.uniform2f(uniforms.resolution, width, canvasRef.value.height)
   gl.uniform1f(uniforms.time, totalShaderTime)
-  gl.uniform4fv(uniforms.color1, currentParams.c1)
-  gl.uniform4fv(uniforms.color2, currentParams.c2)
-  gl.uniform4fv(uniforms.color3, currentParams.c3)
-  gl.uniform1f(uniforms.speed, 1.0)
+  gl.uniform3fv(uniforms.base, SWIRL_BG)
+  gl.uniform3fv(uniforms.tint, currentParams.tint)
   gl.uniform1f(uniforms.contrast, currentParams.contrast)
-  gl.uniform1f(uniforms.lighting, currentParams.lighting)
 
   gl.drawArrays(gl.TRIANGLES, 0, 6)
 
@@ -440,18 +471,20 @@ onUnmounted(() => {
     class="algorithmic-swirl-container pointer-events-none fixed inset-0 w-screen h-screen max-w-full max-h-full z-0 overflow-hidden select-none"
     aria-hidden="true"
   >
-    <!-- WebGL Canlı Balatro Swirl Katmanı -->
+    <!--
+      Canlı swirl: renk shader'da son haliyle üretilir (zemin + tavanlı tint). Opaklık ve
+      mix-blend yok — hem tavanı ölçülebilir kılar hem ekstra kompozit geçişini kaldırır.
+    -->
     <canvas
       v-if="isEnabled && isSupported"
       ref="canvasRef"
-      class="w-full h-full object-cover opacity-65 mix-blend-screen"
-      style="image-rendering: pixelated;"
+      class="algorithmic-swirl-canvas"
     />
 
-    <!-- Fallback / Statik Gece Zemin Gradyanı (Shader kapalıyken veya desteklenmediğinde) -->
+    <!-- Kapalı / azaltılmış hareket / WebGL yok: tek renk zemin (§2.1 — gradyan dolgu yok). -->
     <div
       v-else
-      class="w-full h-full bg-radial-at-c from-purple-950/20 via-[var(--ds-bg)] to-[var(--ds-abyss)]"
+      class="algorithmic-swirl-still"
     />
   </div>
 </template>
@@ -459,5 +492,17 @@ onUnmounted(() => {
 <style scoped>
 .algorithmic-swirl-container {
   contain: strict;
+}
+
+.algorithmic-swirl-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.algorithmic-swirl-still {
+  width: 100%;
+  height: 100%;
+  background: var(--pn-bg);
 }
 </style>
