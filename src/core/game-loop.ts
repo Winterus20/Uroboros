@@ -36,7 +36,8 @@ export class GameLoop {
         this.accumulator = 0
       } else if (rawDelta >= 1000) {
         // 1 saniye ve üzeri duraklamalar / sekme değişimi: offline simülasyona devret
-        // (24 saat ile sınırlıdır; Welcome Back raporu store.offlineReport'a yazılır)
+        // (OFFLINE_CAP_SECONDS = 12 saat ile sınırlıdır; Welcome Back raporu yalnız
+        // OFFLINE_REPORT_MIN_SECONDS ve üzerindeki yokluklarda store.offlineReport'a yazılır)
         store.simulateOffline(Math.min(rawDelta / 1000, OFFLINE_CAP_SECONDS))
         this.accumulator = 0
       } else {

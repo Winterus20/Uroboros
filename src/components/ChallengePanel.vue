@@ -121,7 +121,13 @@ function enter(id: string): void {
           <span class="crow__check" aria-hidden="true">✓</span>
           {{ statusLabel(row.status) }}
         </span>
-        <span v-else class="crow__state data">{{ statusLabel(row.status) }}</span>
+        <!--
+          Kilitli satır gerekçesini yazar (zincir listesindeki "N more …" ile aynı dil):
+          eşik oyuncunun notasyonunda, sayısal etiket şaka yapmaz (V4).
+        -->
+        <span v-else class="crow__state crow__state--locked data">
+          {{ 'Unlocks at ' + row.unlockText }}
+        </span>
       </div>
     </div>
   </section>
@@ -246,6 +252,8 @@ function enter(id: string): void {
 }
 .crow__state--active { color: var(--pn-text); }
 .crow__state--done { color: var(--pn-text-dim); }
+/* Kilit gerekçesi okunur tonda kalır; kilitliliği satırın grisi zaten söyler. */
+.crow__state--locked { color: var(--pn-text-dim); letter-spacing: 0.02em; }
 .crow__check { flex: none; font-size: 12px; line-height: 1; }
 
 @media (max-width: 560px) {

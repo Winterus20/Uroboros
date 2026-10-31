@@ -57,6 +57,18 @@ import type { SerializedChallenges, SerializedPlayerState } from '../models/save
 /** S6 — çevrimdışı ilerleme 12 saatte tavan yapar. */
 export const OFFLINE_CAP_SECONDS = 12 * 60 * 60
 
+/**
+ * "While you were away" raporunun gösterildiği asgari yokluk süresi (sn).
+ *
+ * Simülasyon her duraklamada (≥ 1 sn) çalışır; bu eşik YALNIZ raporu yönetir.
+ * Birkaç saniyelik sekme değişimi "uzakta kalmak" değildir: o aralıkta kazanç
+ * ekranda zaten okunur, "+0 · 4s of counting" diyen bir modal oyuncunun akışını
+ * boşuna böler. Bir dakika, oyuncunun gerçekten başka bir şeye döndüğü ve dönüşte
+ * "ne oldu?" sorusunun anlamlı olduğu ilk ölçektir. Kayıttan yükleme yolu da aynı
+ * eşiği kullanır.
+ */
+export const OFFLINE_REPORT_MIN_SECONDS = 60
+
 /** Ticker geçmişinde tutulan satır sayısı (T4: tekrar önleme). */
 const SEEN_VOICE_LIMIT = 8
 
@@ -91,7 +103,9 @@ export function buildInitialState(): GameState {
     settings: defaultSettings(),
     seenVoice: [],
     latched: [],
-    buyMode: 10,
+    // Yeni oyun ×1 ile başlar: ilk karar "1 Fingers, 25" gibi okunmalı; ×10'un
+    // blok fiyatı ilk dakikada anlaşılmaz. Mod uçucudur, kayda yazılmaz.
+    buyMode: 1,
     offlineReport: null,
     tickerLine: null
   }
@@ -283,6 +297,7 @@ export const useGameStore = defineStore('game', {
               ? def.goalLog10
               : challengeGoalLog(def, safeLog)
         const goal = goalToDecimal(goalLog)
+        const unlockAt = goalToDecimal(def.unlockLog10)
         return {
           id: def.id,
           name: rewardName(def.rewardLabel),
@@ -290,6 +305,8 @@ export const useGameStore = defineStore('game', {
           status,
           goal,
           goalText: format(goal, state.settings.decimalPlaces, state.settings.notation),
+          unlockAt,
+          unlockText: format(unlockAt, state.settings.decimalPlaces, state.settings.notation),
           progress: completed ? 100 : active ? challengeProgress(state) : 0,
           penaltyLabel: def.penaltyLabel,
           rewardLabel: def.rewardLabel
@@ -502,15 +519,20 @@ export const useGameStore = defineStore('game', {
      * dönüşte tamamlanan mücadele ödülünü verir, ticker satırını yazar ve sesi
      * çalar. Aksi hâlde çevrimdışı dönüş, mekaniğin sessizce atlandığı tek yol
      * olurdu (V4: mekanik hakkında yalan yok).
+     *
+     * Rapor (`offlineReport`) yalnız `OFFLINE_REPORT_MIN_SECONDS` ve üzerindeki
+     * yokluklarda yazılır; daha kısa duraklamalar sessizce simüle edilir ve
+     * ekrandaki mevcut rapora dokunmaz.
      */
     simulateOffline(seconds: number): void {
       if (!Number.isFinite(seconds) || seconds <= 0) return
       const capped = seconds > OFFLINE_CAP_SECONDS
       const total = Math.min(seconds, OFFLINE_CAP_SECONDS)
+      const report = total >= OFFLINE_REPORT_MIN_SECONDS
       const before = this.number
       // Kapı açıksa çevrimdışı süre de büyüme üretmez: büyüme zaten durmuştur.
       if (this.growthStopped) {
-        this.offlineReport = { seconds: total, capped, gained: '0' }
+        if (report) this.offlineReport = { seconds: total, capped, gained: '0' }
         return
       }
       const step = 1
@@ -522,6 +544,7 @@ export const useGameStore = defineStore('game', {
         remaining -= dt
       }
       this.resolveChallengeAndGate()
+      if (!report) return
       this.offlineReport = {
         seconds: total,
         capped,
