@@ -2,6 +2,10 @@ import { Decimal, D_0, D_1, D_10 } from '../../core/math'
 import {
   BLOCK_MULT,
   BLOCK_SIZE,
+  BOOST_BASE_REQUIREMENT,
+  BOOST_MULT,
+  BOOST_PRICE_GROWTH,
+  BOOST_REQUIREMENT_GROWTH,
   CHAIN_RATE,
   CHALLENGE_FEED_MULT,
   GATE,
@@ -13,6 +17,10 @@ import {
   ringCostAt
 } from './tuning'
 import { activeChallenge, createChallengeState, type ChallengeState } from './challenges'
+import { resetRun } from './run'
+
+/** Koşu sıfırlama tek kaynaktan gelir; store ve testler aynı kapıyı kullanır. */
+export { resetRun } from './run'
 
 /** Tek halka: kaç birim var, bu koşuda kaç kez satın alındı (maliyet için). */
 export interface RingState {
@@ -24,10 +32,11 @@ export interface RingState {
  * 1. basamağın tüm sayısal durumu. Framework'ten bağımsız: Pinia yok, Vue yok —
  * böylece hem store hem saf testler aynı fonksiyonları kullanır.
  *
- * v2 (2026-10-27): tek koşu, sıfırlama yok. Sayı yalnız alımlarla düşer;
- * `unlocked` mandallıdır (D6). Blok çarpanı (`blockFactor`) ÜRETİME girer,
- * BESLEMEYE girmez (contract §0). Mücadeleler sıfırlamasız katmanlardır:
- * giriş, çıkış ve tamamlama sayıyı, halkaları ve blok çarpanını DEĞİŞTİRMEZ.
+ * ADR-0086 (2026-10-31): AD tarzı sıfırlama döngüsü. Mücadele girişi ve boost
+ * satın alımı sayıyı 10'a, zinciri sıfıra çeker (`resetRun`); bestNumber,
+ * tamamlanmış mücadeleler ve boost sayısı kalıcıdır. Blok çarpanı (`blockFactor`)
+ * ÜRETİME girer, BESLEMEYE girmez. Boost çarpanı da YALNIZ sayı üretimine girer;
+ * zincir beslemesi boost'tan etkilenmez.
  */
 export interface NumberState {
   number: Decimal
@@ -39,6 +48,11 @@ export interface NumberState {
   /** Hayat boyu kazanılan en yüksek sayı. */
   bestNumber: Decimal
   totalBuys: number
+  /**
+   * Satın alınmış boost sayısı (ADR-0086). Kalıcıdır: mücadele girişi ve koşu
+   * sıfırlamaları bunu silmez; yalnız kapıdaki prestij sıfırlar.
+   */
+  boostCount: number
   /** 8 mücadelenin durumu (contract §2). */
   challenges: ChallengeState
   /** Kapı (`1.79e308`) bir kez geçildi mi — mandal. */
@@ -57,6 +71,7 @@ export function createNumberState(): NumberState {
     rung: 1,
     bestNumber: D_10,
     totalBuys: 0,
+    boostCount: 0,
     challenges: createChallengeState(),
     gateReached: false,
     tanim: 0,
@@ -89,6 +104,113 @@ export function blockFactor(bought: number): Decimal {
     BLOCK_POWERS.push(BLOCK_POWERS[BLOCK_POWERS.length - 1].times(BLOCK_MULT))
   }
   return BLOCK_POWERS[exp]
+}
+
+/**
+ * Boost neden satın alınamıyor? `null` = engel yok (fiyat dahil).
+ *
+ * Sıra kullanıcıya en anlamlı engeli söyler: basamak → kapı → mücadele →
+ * gereksinim → fiyat. UI aynı sırayı göstermek zorunda değil; yalnız bu
+ * reason'ı okur (ADR-0086, task-2 sözleşmesi).
+ */
+export type BoostBlockedReason = 'challenge' | 'rung' | 'gate' | 'requirement' | 'price'
+
+/** Boost sayacı negatif/ondalıklı olamaz; bozuk girdi 0 sayılır. */
+function normalizedBoostCount(boostCount: number): number {
+  if (!Number.isFinite(boostCount)) return 0
+  return Math.max(0, Math.floor(boostCount))
+}
+
+/**
+ * Bir sonraki boost için son halkada (Mathematician) gereken `bought` sayısı:
+ *     ceil(50 · 1,35^n)
+ * Boost sayısı arttıkça her koşuda daha derin bir zincir istenir.
+ */
+export function boostRequirement(boostCount: number): number {
+  const n = normalizedBoostCount(boostCount)
+  const raw = BOOST_BASE_REQUIREMENT * Math.pow(BOOST_REQUIREMENT_GROWTH, n)
+  return Number.isFinite(raw) ? Math.ceil(raw) : Number.MAX_SAFE_INTEGER
+}
+
+/** `BOOST_MULT^n` önbelleği — `numberPerSecond` sıcak yolunda üs almayı önler. */
+const BOOST_POWERS: Decimal[] = [D_1]
+
+/**
+ * Boost üretim çarpanı: `1,5^n`. YALNIZ sayı üretimine uygulanır; zincir
+ * beslemesine (`ringGainPerSecond` index > 0) girmez.
+ */
+export function boostMultiplier(boostCount: number): Decimal {
+  const n = normalizedBoostCount(boostCount)
+  if (n <= 0) return D_1
+  if (n > MAX_CACHED_BLOCK_EXP) return new Decimal(BOOST_MULT).pow(n)
+  while (BOOST_POWERS.length <= n) {
+    BOOST_POWERS.push(BOOST_POWERS[BOOST_POWERS.length - 1].times(BOOST_MULT))
+  }
+  return BOOST_POWERS[n]
+}
+
+/** Son halkanın bu koşudaki alım sayısı (boost gereksiniminin okuduğu sayaç). */
+export function boostBought(state: NumberState): number {
+  return state.rings[RING_COUNT - 1].bought
+}
+
+/** Son halka açık mı, ya da daha önce boost alınmış mı? (ilerleme görünürlüğü) */
+export function boostUnlocked(state: NumberState): boolean {
+  return state.boostCount > 0 || ringUnlocked(state, RING_COUNT - 1)
+}
+
+/**
+ * Son halka bu koşuda açık mı? `boostBlockedReason` 'requirement' iki durumu
+ * (kilitli halka / yetersiz alım) birleştirir; UI ayrımı bu bayrakla yapar.
+ */
+export function boostRingUnlocked(state: NumberState): boolean {
+  return ringUnlocked(state, RING_COUNT - 1)
+}
+
+/**
+ * Bir sonraki boost'un sayı maliyeti:
+ *     sonHalka10Bloğu(state) · 1,5^n
+ * Fiyat, son halkanın O ANKİ blok fiyatıdır; boost zinciri sıfırladığı için
+ * her koşuda yeniden son halkaya tırmanmak gerekir.
+ */
+export function boostPrice(state: NumberState): Decimal {
+  const n = normalizedBoostCount(state.boostCount)
+  const growth = new Decimal(BOOST_PRICE_GROWTH).pow(n)
+  return ringBlockPrice(state, RING_COUNT - 1, BLOCK_SIZE).times(growth)
+}
+
+/** Boost'un önündeki ilk engel; `null` = satın alınabilir. */
+export function boostBlockedReason(state: NumberState): BoostBlockedReason | null {
+  if (state.rung !== 1) return 'rung'
+  if (state.gateReached) return 'gate'
+  if (activeChallenge(state) !== null) return 'challenge'
+  if (!boostUnlocked(state) || boostBought(state) < boostRequirement(state.boostCount)) {
+    return 'requirement'
+  }
+  if (state.number.lt(boostPrice(state))) return 'price'
+  return null
+}
+
+/** Boost satın alınabilir mi? (fiyat dahil; `boostBlockedReason` null ise evet) */
+export function canBoost(state: NumberState): boolean {
+  return boostBlockedReason(state) === null
+}
+
+/**
+ * Boost satın al: fiyatı öde, sayacı artır, koşuyu sıfırla.
+ *
+ * Sıra bilinçlidir: fiyat önce sayıdan düşülür (bütçe gerçekten harcanır), sonra
+ * `resetRun` sayıyı 10'a çeker. Boost sayısı, bestNumber, totalBuys, playTime,
+ * tamamlanmış mücadeleler ve Tanım korunur (ADR-0086 §2).
+ *
+ * @returns gerçekten satın alındıysa `true`
+ */
+export function applyBoost(state: NumberState): boolean {
+  if (!canBoost(state)) return false
+  state.number = state.number.minus(boostPrice(state))
+  state.boostCount = normalizedBoostCount(state.boostCount) + 1
+  resetRun(state)
+  return true
 }
 
 /** Halka açık mı? Kilitler mandallıdır (D6). */
@@ -320,6 +442,7 @@ export function ringNumberRate(state: NumberState, index: number): Decimal {
     .times(base)
     .times(blockFactor(state.rings[index].bought))
     .times(ringProductionMultiplier(state, index))
+    .times(boostMultiplier(state.boostCount))
 }
 
 /** Halka 2–8'in sayıya doğrudan katkılarının toplamı. */
@@ -336,6 +459,10 @@ export function directNumberPerSecond(state: NumberState): Decimal {
  * yazar (`RING_DIRECT_SHARE`). Blok çarpanı yalnız bu iki üretim kanalına uygulanır.
  */
 export function numberPerSecond(state: NumberState): Decimal {
+  // Boost çarpanı üretim kanallarının İÇİNDE (ringGainPerSecond 0 ve
+  // ringNumberRate) uygulanır; burada ikinci kez çarpılmaz. Böylece zincir
+  // satırlarındaki `producesPerSecond` / `addsPerSecond` okumaları hero'nun
+  // /s toplamıyla birebir uyuşur (V4).
   return ringGainPerSecond(state, 0).plus(directNumberPerSecond(state))
 }
 
@@ -353,6 +480,7 @@ export function ringGainPerSecond(state: NumberState, index: number): Decimal {
       .times(NUMBER_TUNING.rings[0].baseRate)
       .times(blockFactor(fingers.bought))
       .times(ringProductionMultiplier(state, 0))
+      .times(boostMultiplier(state.boostCount))
   }
   if (index >= RING_COUNT) return D_0
   return state.rings[index].amount

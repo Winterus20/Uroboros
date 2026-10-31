@@ -118,3 +118,119 @@ describe('kilitli mücadele gerekçesi', () => {
     expect(scientific).not.toBe(standard)
   })
 })
+
+describe('boost sözleşmesi — ADR-0086', () => {
+  it('yeni oyunda boost kapalıdır: gereksinim 50, engel requirement', () => {
+    const store = useGameStore()
+    expect(store.boostCount).toBe(0)
+    expect(store.boostRequirement).toBe(50)
+    expect(store.boostNextRequirement).toBe(68)
+    expect(store.boostBought).toBe(0)
+    expect(store.boostPrice.gt(0)).toBe(true)
+    expect(store.boostMultiplier.toString()).toBe('1')
+    expect(store.boostMultiplierText).toBe('x1.00')
+    expect(store.boostNextMultiplierText).toBe('x1.80')
+    expect(store.boostUnlocked).toBe(false)
+    expect(store.boostRingUnlocked).toBe(false)
+    expect(store.boostBlockedReason).toBe('requirement')
+    expect(store.canBoost).toBe(false)
+    expect(store.boostProgress).toBe(0)
+    expect(store.boost()).toBe(false)
+    expect(store.boostCount).toBe(0)
+  })
+
+  it('gereksinim dolunca fiyat ödenir, sayaç artar, koşu sıfırlanır', () => {
+    const store = useGameStore()
+    store.unlocked[7] = true
+    store.rings[7].bought = 50
+    store.number = D('1e30')
+    store.bestNumber = D('1e30')
+    const best = store.bestNumber.toString()
+    const price = store.boostPrice
+
+    expect(store.boostRingUnlocked).toBe(true)
+    expect(store.boostUnlocked).toBe(true)
+    expect(store.boostBlockedReason).toBeNull()
+    expect(store.canBoost).toBe(true)
+    expect(store.boostProgress).toBe(100)
+    expect(price.gt(0)).toBe(true)
+
+    expect(store.boost()).toBe(true)
+    expect(store.boostCount).toBe(1)
+    expect(store.number.toString()).toBe('10')
+    expect(store.rings.every((ring) => ring.bought === 0 && ring.amount.eq(0))).toBe(true)
+    expect(store.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(store.bestNumber.toString()).toBe(best)
+    // Yeni gereksinim ve çarpan bir sonraki kademeye geçti.
+    expect(store.boostRequirement).toBe(68)
+    expect(store.boostMultiplierText).toBe('x1.80')
+    expect(store.boostNextMultiplierText).toBe('x3.24')
+    expect(store.boostProgress).toBe(0)
+    expect(store.boostBlockedReason).toBe('requirement')
+    expect(store.boost()).toBe(false)
+  })
+
+  it('çarpan metni: x3.24 / x5.83', () => {
+    const store = useGameStore()
+    store.boostCount = 2
+    expect(store.boostMultiplier.toNumber()).toBeCloseTo(3.24, 9)
+    expect(store.boostMultiplierText).toBe('x3.24')
+    expect(store.boostNextMultiplierText).toBe('x5.83')
+  })
+
+  it('engel sırası: challenge → rung → gate → requirement → price', () => {
+    const store = useGameStore()
+    store.unlocked[7] = true
+    store.rings[7].bought = 50
+    store.number = D('1e30')
+
+    store.challenges.active = 'C1'
+    expect(store.boostBlockedReason).toBe('challenge')
+    expect(store.canBoost).toBe(false)
+
+    store.rung = 2
+    expect(store.boostBlockedReason).toBe('rung')
+
+    store.rung = 1
+    store.challenges.active = null
+    store.gateReached = true
+    expect(store.boostBlockedReason).toBe('gate')
+
+    store.gateReached = false
+    store.rings[7].bought = 25
+    expect(store.boostBlockedReason).toBe('requirement')
+    expect(store.boostProgress).toBe(50)
+
+    store.rings[7].bought = 50
+    store.number = D(10)
+    expect(store.boostBlockedReason).toBe('price')
+    expect(store.canBoost).toBe(false)
+  })
+
+  it('mücadele girişi boost sayısını korur, prestij sıfırlar', () => {
+    const store = useGameStore()
+    store.boostCount = 5
+    store.bestNumber = D('1e20')
+    store.enterChallenge('C1')
+    expect(store.boostCount).toBe(5)
+    expect(store.number.toString()).toBe('10')
+
+    store.gateReached = true
+    store.rung = 1
+    store.prestige()
+    expect(store.boostCount).toBe(0)
+    expect(store.tanim).toBe(1)
+  })
+})
+
+describe('ChallengeRow.enterable — sıra kilidi', () => {
+  it('yalnız sıradaki mücadele girilebilir; girişten sonra hiçbiri', () => {
+    const store = useGameStore()
+    store.bestNumber = D('1e10')
+    const rows = store.challengeRows
+    expect(rows.filter((row) => row.enterable).map((row) => row.id)).toEqual(['C1'])
+
+    store.enterChallenge('C1')
+    expect(store.challengeRows.filter((row) => row.enterable)).toHaveLength(0)
+  })
+})

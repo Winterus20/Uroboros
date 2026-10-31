@@ -15,7 +15,8 @@ import {
   ringCost,
   ringGainPerSecond,
   ringNumberRate,
-  ringProductionMultiplier
+  ringProductionMultiplier,
+  type NumberState
 } from './economy'
 import {
   CHALLENGES,
@@ -32,23 +33,20 @@ import {
 } from './challenges'
 
 /**
- * Rung 1 mücadele katmanı testleri — v2 / 190 dk kalibrasyonu.
- *
- * Bağlayıcı kaynak: brain/scratchpad/rung-1-implementation-contract.md §1–3.
+ * Rung 1 mücadele katmanı testleri — ADR-0086 (sıfırlamalı koşu).
  *
  * Kapsam sözleşmesi:
- *   · her ceza en az bir kez (fingersCap · price145 · directOff · decay ·
- *     firstFive · feedFifth · newestOnly · price135feedHalf)
- *   · her ödül en az bir kez (fingers10 · all5 · all3 · first3x5 ·
- *     direct5 · feed15 · all4 · finisher)
- *   · blok çarpanı Fingers ve doğrudan paya girer, BESLEMEYE GİRMEZ
- *   · giriş / çıkış / tamamlama sayıyı ve alımları KORUR
- *   · hedef = max(plan hedefi, giriş + delta) — girişte kilitlenir
- *   · kapı geçişi mandalı · maxAll en derin halkadan blok blok
+ *   · 8 ceza ve 8 ödül en az bir kez ölçülür
+ *   · giriş koşuyu sıfırlar: sayı 10, zincir 0, kilitler yalnız Fingers
+ *   · kalıcılar korunur: bestNumber, totalBuys, playTime, boostCount, completed
+ *   · sıra zorunlu; kilit bestNumber ile açılır (soft-lock yok)
+ *   · hedefler MUTLAK; girişteki sayı hedefi kaydırmaz
+ *   · tamamlama/çıkış sıfırlanmış koşuyu korur
+ *   · blok çarpanı üretime girer, BESLEMEYE girmez
  */
 
 /** Sayı ve halka durumunu tek satırda karşılaştırmak için anlık görüntü. */
-function snapshot(state: ReturnType<typeof createNumberState>) {
+function snapshot(state: NumberState) {
   return {
     number: state.number.toString(),
     best: state.bestNumber.toString(),
@@ -59,12 +57,28 @@ function snapshot(state: ReturnType<typeof createNumberState>) {
   }
 }
 
-describe('mücadele tanımları — v2 kalibrasyonu', () => {
-  it('8 mücadele, C1..C8 sırasıyla ve kalibre edilmiş hedeflerle', () => {
+/**
+ * Mücadeleye gerçek sırayla gir: önceki kimlikler tamamlanmış sayılır, bestNumber
+ * eşiğin üstüne çekilir. Giriş koşuyu sıfırladığı için ceza testleri setup'ı
+ * girişten SONRA yapar. `completed` varsayılan olarak sıfırlanır ki önceki
+ * ödüller ceza ölçümünü kirletmesin.
+ */
+function enterRun(id: string, isolate = true): NumberState {
+  const index = CHALLENGES.findIndex((def) => def.id === id)
+  const s = createNumberState()
+  s.bestNumber = D(10).pow(CHALLENGES[index].unlockLog10)
+  s.challenges.completed = CHALLENGES.slice(0, index).map((def) => def.id)
+  expect(enterChallenge(s, id)).toBe(true)
+  if (isolate) s.challenges.completed = []
+  return s
+}
+
+describe('mücadele tanımları — ADR-0086', () => {
+  it('8 mücadele, C1..C8 sırasıyla ve mutlak hedeflerle', () => {
     expect(CHALLENGES).toHaveLength(8)
     expect(CHALLENGES.map((def) => def.id)).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])
     expect(CHALLENGES.map((def) => def.goalLog10)).toEqual([
-      33.242, 37.376, 95.157, 104.688, 119.334, 122.271, 125.573, 128.967
+      10.5, 20.1, 29.8, 39.4, 49.1, 58.7, 68.4, 78
     ])
   })
 
@@ -82,14 +96,25 @@ describe('mücadele tanımları — v2 kalibrasyonu', () => {
     expect(rewards.size).toBe(8)
   })
 
-  it('hedef = max(plan hedefi, giriş + delta) ve delta = 2', () => {
-    for (const def of CHALLENGES) expect(def.delta).toBe(2)
+  it('hedef mutlaktır: giriş sayısı hedefi kaydırmaz', () => {
     const c1 = CHALLENGES[0]
-    // Giriş düşükse plan hedefi kazanır.
-    expect(challengeGoalLog(c1, 10)).toBeCloseTo(33.242, 6)
-    // Giriş plan hedefini aşarsa giriş + delta kazanır.
-    expect(challengeGoalLog(c1, 40)).toBeCloseTo(42, 6)
-    expect(challengeGoalLog(c1, 33)).toBeCloseTo(35, 6)
+    expect(challengeGoalLog(c1, 10)).toBeCloseTo(10.5, 6)
+    expect(challengeGoalLog(c1, 40)).toBeCloseTo(10.5, 6)
+    expect(challengeGoalLog(c1, 33)).toBeCloseTo(10.5, 6)
+  })
+
+  it('C1/C5/C6/C8 ceza etiketleri gerçek mekaniği söyler', () => {
+    const byId = (id: string) => challengeById(id)!.penaltyLabel
+    // Global besleme cezası her mücadelede vardır ve etikette yazmalıdır.
+    for (const id of ['C1', 'C5', 'C6', 'C8']) expect(byId(id)).toContain('x0.2')
+    // C6: global 0.2 × 1/5 = 25 kat yavaş.
+    expect(byId('C6')).toContain('25x')
+    expect(byId('C6')).toContain('/5')
+    // C8: global 0.2 × 1/2 = 10 kat yavaş.
+    expect(byId('C8')).toContain('10x')
+    expect(byId('C8')).toContain('/2')
+    // C5 yalnız ALIMI kilitler; üretim durmaz.
+    expect(byId('C5')).toContain('Rings 6-8 cannot be purchased')
   })
 
   it('bilinmeyen kimlik null döner (kayıt temizliği)', () => {
@@ -99,21 +124,40 @@ describe('mücadele tanımları — v2 kalibrasyonu', () => {
     expect(challengeById('C1')?.id).toBe('C1')
   })
 })
-describe('mücadele örtüsü — giriş/çıkış/tamamlama sıfırlamaz', () => {
-  it('C1 girişi sayıyı, halkaları, alımları ve blok çarpanını birebir korur', () => {
+
+describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () => {
+  it('C1 girişi sayıyı 10a, zinciri sıfıra çeker; bestNumber/boost/ödüller kalır', () => {
     const s = createNumberState()
     s.number = D('1e12')
-    buyRing(s, 0, 20)
+    s.bestNumber = D('1e40')
+    s.boostCount = 5
+    s.totalBuys = 88
+    s.playTime = 900
+    s.challenges.completed = []
+    s.rings[0].amount = D(20)
+    s.rings[0].bought = 20
     s.rings[1].amount = D(7)
-    const before = snapshot(s)
+    s.unlocked = s.unlocked.map(() => true)
+
     expect(enterChallenge(s, 'C1')).toBe(true)
-    expect(snapshot(s)).toEqual(before)
+
+    expect(s.number.toString()).toBe('10')
+    expect(s.rings.every((ring) => ring.amount.eq(0) && ring.bought === 0)).toBe(true)
+    expect(s.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(s.bestNumber.toString()).toBe('1e40')
+    expect(s.boostCount).toBe(5)
+    expect(s.totalBuys).toBe(88)
+    expect(s.playTime).toBe(900)
+    expect(s.challenges.lastBuyAt).toBe(900)
+    expect(s.challenges.lastBoughtRing).toBe(-1)
     expect(s.challenges.active).toBe('C1')
+    expect(s.challenges.entryLog10).toBe(1)
+    expect(s.challenges.goalLog10).toBeCloseTo(10.5, 6)
   })
 
-  it('kilitli mücadeleye girilmez, aktifken ikinci giriş reddedilir', () => {
+  it('sıra zorunlu: C1 bitmeden C2, C1 aktifken ikinci giriş reddedilir', () => {
     const s = createNumberState()
-    s.number = D('1e12')
+    s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C2')).toBe(false)
     expect(s.challenges.active).toBeNull()
     expect(enterChallenge(s, 'C1')).toBe(true)
@@ -121,45 +165,51 @@ describe('mücadele örtüsü — giriş/çıkış/tamamlama sıfırlamaz', () =
     expect(enterChallenge(s, 'C2')).toBe(false)
   })
 
+  it('C1 tamamlanınca C2 açılır; C3 hâlâ sırası değil', () => {
+    const s = createNumberState()
+    s.bestNumber = D('1e40')
+    expect(enterChallenge(s, 'C1')).toBe(true)
+    s.number = D('1e34')
+    expect(completeChallengeIfReady(s)?.id).toBe('C1')
+    expect(enterChallenge(s, 'C3')).toBe(false)
+    expect(enterChallenge(s, 'C2')).toBe(true)
+  })
+
   it('tamamlanmış mücadeleye yeniden girilmez (mandal)', () => {
     const s = createNumberState()
-    s.number = D('1e40')
+    s.bestNumber = D('1e40')
     s.challenges.completed = ['C1']
     expect(enterChallenge(s, 'C1')).toBe(false)
   })
 
   it('bilinmeyen kimlikle giriş reddedilir', () => {
     const s = createNumberState()
-    s.number = D('1e40')
+    s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C99')).toBe(false)
     expect(s.challenges.active).toBeNull()
   })
 
-  it('çıkış cezayı kaldırır, sayı ve alımlar aynı kalır', () => {
+  it('çıkış cezayı kaldırır; sıfırlanmış koşu aynen kalır (eski koşu geri gelmez)', () => {
     const s = createNumberState()
+    s.bestNumber = D('1e40')
     s.number = D('1e12')
-    buyRing(s, 0, 10)
-    enterChallenge(s, 'C1')
-    const inside = snapshot(s)
+    s.rings[0].bought = 10
+    expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e20')
-    expect(challengeProgress(s)).toBeGreaterThan(0)
+    const inside = snapshot(s)
     exitChallenge(s)
     expect(s.challenges.active).toBeNull()
     expect(s.challenges.goalLog10).toBeNull()
     expect(s.challenges.entryLog10).toBeNull()
-    // Sayı yalnız büyüdü; alımlar, halkalar ve kilitler değişmedi.
-    expect(s.number.gte(D(inside.number))).toBe(true)
-    expect(s.rings[0].bought).toBe(inside.bought[0])
-    expect(s.challenges.completed).toHaveLength(0)
+    expect(snapshot(s)).toEqual(inside)
   })
 
-  it('hedefe varınca tamamlanır: sayı korunur, ödül kalıcı, örtü kalkar', () => {
+  it('hedefe varınca tamamlanır: koşunun sayısı/halkaları korunur, ödül kalıcı', () => {
     const s = createNumberState()
-    // Önce alım (fiyat sayıdan düşer), SONRA eşiğin üstüne çık: 1e12 - 649 ≈ 1e10.
-    s.number = D('1e12')
-    expect(buyRing(s, 0, 10)).toBe(10)
-    s.number = D('1e11')
+    s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
+    s.number = D('1e30')
+    expect(buyRing(s, 0, 10)).toBe(10)
     s.number = D('1e35')
     const completed = completeChallengeIfReady(s)
     expect(completed?.id).toBe('C1')
@@ -173,9 +223,9 @@ describe('mücadele örtüsü — giriş/çıkış/tamamlama sıfırlamaz', () =
 
   it('hedefin altında tamamlanmaz; aktif mücadele yoksa null döner', () => {
     const s = createNumberState()
-    s.number = D('1e12')
-    enterChallenge(s, 'C1')
-    s.number = D('1e20')
+    s.bestNumber = D('1e40')
+    expect(enterChallenge(s, 'C1')).toBe(true)
+    s.number = D('1e5')
     expect(completeChallengeIfReady(s)).toBeNull()
     expect(s.challenges.active).toBe('C1')
     exitChallenge(s)
@@ -184,34 +234,42 @@ describe('mücadele örtüsü — giriş/çıkış/tamamlama sıfırlamaz', () =
     expect(s.challenges.completed).toHaveLength(0)
   })
 
-  it('girişte hedef kilitlenir: sonradan sayı artsa da hedef değişmez', () => {
+  it('hedef girişte mutlak değere kilitlenir ve sonradan değişmez', () => {
     const s = createNumberState()
-    s.number = D('1e11')
-    enterChallenge(s, 'C1')
+    s.bestNumber = D('1e40')
+    expect(enterChallenge(s, 'C1')).toBe(true)
     const goal = s.challenges.goalLog10
-    expect(goal).toBeCloseTo(33.242, 6)
+    expect(goal).toBeCloseTo(10.5, 6)
     s.number = D('1e50')
     expect(s.challenges.goalLog10).toBe(goal)
   })
 
-  it('giriş ilerlemesi 0 ile 100 arasında ve monoton', () => {
+  it('ilerleme 1 → 10,5 arasında 0–100 ve monoton', () => {
     const s = createNumberState()
-    s.number = D('1e11')
-    enterChallenge(s, 'C1')
+    s.bestNumber = D('1e40')
+    expect(enterChallenge(s, 'C1')).toBe(true)
     expect(challengeProgress(s)).toBeCloseTo(0, 6)
-    s.number = D('1e22') // giriş 11, hedef 33,242 → yaklaşık yarısı
+    s.number = D('1e5')
     const mid = challengeProgress(s)
     expect(mid).toBeGreaterThan(0)
     expect(mid).toBeLessThan(100)
-    s.number = D('1e34')
+    s.number = D('1e11')
     expect(challengeProgress(s)).toBe(100)
   })
+
+  it('boost sayısı mücadele girişinde korunur', () => {
+    const s = createNumberState()
+    s.bestNumber = D('1e40')
+    s.boostCount = 7
+    expect(enterChallenge(s, 'C1')).toBe(true)
+    expect(s.boostCount).toBe(7)
+  })
 })
+
 describe('mücadele cezaları — sekizi de', () => {
   it('fingersCap (C1): Fingers 10 alımda durur, mevcut üretim sayılmaya devam eder', () => {
-    const s = createNumberState()
+    const s = enterRun('C1')
     s.number = D('1e30')
-    enterChallenge(s, 'C1')
     expect(buyRing(s, 0, 25)).toBe(10)
     expect(s.rings[0].bought).toBe(10)
     s.number = D('1e300')
@@ -219,20 +277,18 @@ describe('mücadele cezaları — sekizi de', () => {
     expect(s.rings[0].bought).toBe(10)
     // Mevcut üretim durmaz: 10 parmak × blok çarpanı hâlâ sayı üretir.
     expect(numberPerSecond(s).gt(0)).toBe(true)
-    // Diğer halkalar etkilenmez.
+    // Diğer halkalar etkilenmez (10 parmak ring 1'i açtı).
     expect(buyRing(s, 1, 1)).toBe(1)
   })
 
-  it('price145 (C2): fiyat artışı 1,45 olur, çıkınca 1,20ye döner', () => {
-    const s = createNumberState()
+  it('price145 (C2): fiyat artışı 1,22 olur, çıkınca 1,20ye döner', () => {
+    const s = enterRun('C2')
     s.number = D('1e34')
     s.unlocked = s.unlocked.map(() => true)
     const base = D(200)
     expect(ringCost(s, 1).div(base).toNumber()).toBeCloseTo(1, 9)
-    enterChallenge(s, 'C2')
-    expect(ringCost(s, 1).div(base).toNumber()).toBeCloseTo(1, 9)
     buyRing(s, 1, 1)
-    expect(ringCost(s, 1).div(base).toNumber()).toBeCloseTo(1.45, 6)
+    expect(ringCost(s, 1).div(base).toNumber()).toBeCloseTo(1.22, 6)
     const blockInChallenge = ringBlockPrice(s, 1, 10)
     exitChallenge(s)
     expect(ringCost(s, 1).div(base).toNumber()).toBeCloseTo(1.2, 6)
@@ -240,12 +296,9 @@ describe('mücadele cezaları — sekizi de', () => {
   })
 
   it('directOff (C3): doğrudan katkı sıfırlanır, Fingers üretimi devam eder', () => {
-    const s = createNumberState()
+    const s = enterRun('C3')
     s.rings[1].amount = D(1)
     s.rings[1].bought = 10
-    s.number = D('1e38')
-    expect(directNumberPerSecond(s).gt(0)).toBe(true)
-    enterChallenge(s, 'C3')
     expect(directNumberPerSecond(s).toString()).toBe('0')
     expect(ringNumberRate(s, 1).toString()).toBe('0')
     s.rings[0].amount = D(5)
@@ -254,10 +307,8 @@ describe('mücadele cezaları — sekizi de', () => {
   })
 
   it('decay (C4): alım yoksa üretim düşer, 20 sn tau, taban 0.1', () => {
-    const s = createNumberState()
+    const s = enterRun('C4')
     s.rings[0].amount = D(100)
-    s.number = D('1e96')
-    enterChallenge(s, 'C4')
     s.playTime = 100
     s.challenges.lastBuyAt = 100
     expect(decayMultiplier(s)).toBeCloseTo(1, 9)
@@ -271,27 +322,23 @@ describe('mücadele cezaları — sekizi de', () => {
     expect(decayMultiplier(s)).toBeCloseTo(1, 9)
   })
 
-  it('firstFive (C5): 5-7. halkalar alınamaz, mevcut üretim sayılır', () => {
-    const s = createNumberState()
+  it('firstFive (C5): 6-8. halkalar ALINAMAZ, mevcut üretim sayılır', () => {
+    const s = enterRun('C5')
     s.number = D('1e121')
     s.unlocked = s.unlocked.map(() => true)
     s.rings[6].amount = D(10)
     s.rings[6].bought = 10
-    enterChallenge(s, 'C5')
     for (const i of [5, 6, 7]) {
       expect(buyRing(s, i, 1)).toBe(0)
       expect(buyRing(s, i, 10)).toBe(0)
-      expect(ringBlockPrice(s, i, 10).gt(0)).toBe(true)
     }
     for (const i of [0, 1, 2, 3, 4]) expect(buyRing(s, i, 1)).toBe(1)
+    // Yalnız alım engellenir: mevcut halkanın üretimi sürer.
     expect(ringNumberRate(s, 6).gt(0)).toBe(true)
   })
 
   it('feedFifth (C6): besleme /5, global 0,2 ile birlikte /25', () => {
-    const s = createNumberState()
-    s.number = D('1e120')
-    expect(feedMultiplier(s)).toBeCloseTo(1, 12)
-    enterChallenge(s, 'C6')
+    const s = enterRun('C6')
     expect(feedMultiplier(s)).toBeCloseTo(0.2 / 5, 12)
     s.rings[1].amount = D(1)
     advance(s, 1)
@@ -299,9 +346,7 @@ describe('mücadele cezaları — sekizi de', () => {
   })
 
   it('newestOnly (C7): yalnız son alınan halka tam hızda, diğerleri x0.25', () => {
-    const s = createNumberState()
-    s.number = D('1e123')
-    enterChallenge(s, 'C7')
+    const s = enterRun('C7')
     s.challenges.lastBoughtRing = 3
     expect(ringProductionMultiplier(s, 3)).toBeCloseTo(1, 9)
     for (const i of [0, 1, 2, 4, 5, 6, 7]) {
@@ -311,17 +356,17 @@ describe('mücadele cezaları — sekizi de', () => {
     expect(ringProductionMultiplier(s, 0)).toBeCloseTo(1, 9)
   })
 
-  it('price135feedHalf (C8): fiyat 1,35, besleme /2 (global 0,2 ile /10)', () => {
-    const s = createNumberState()
+  it('price135feedHalf (C8): fiyat 1,22, besleme /2 (global 0,2 ile /10)', () => {
+    const s = enterRun('C8')
     s.number = D('1e250')
     s.unlocked = s.unlocked.map(() => true)
-    enterChallenge(s, 'C8')
     const base = ringCost(s, 7)
     buyRing(s, 7, 1)
-    expect(ringCost(s, 7).div(base).toNumber()).toBeCloseTo(1.35, 6)
+    expect(ringCost(s, 7).div(base).toNumber()).toBeCloseTo(1.22, 6)
     expect(feedMultiplier(s)).toBeCloseTo(0.2 / 2, 12)
   })
 })
+
 describe('mücadele ödülleri — sekizi de kalıcı', () => {
   it('fingers10 (C1): Fingers x10, besleme x1.5', () => {
     const s = createNumberState()
@@ -372,7 +417,7 @@ describe('mücadele ödülleri — sekizi de kalıcı', () => {
     for (let i = 0; i < 8; i++) expect(ringProductionMultiplier(s, i)).toBe(4)
   })
 
-  it('finisher (C8): üretim x2 — eski 1.15 fiyat tabanlı değer DEĞİL', () => {
+  it('finisher (C8): üretim x2 — fiyat tabanlı değer DEĞİL', () => {
     const s = createNumberState()
     s.challenges.completed = ['C8']
     for (let i = 0; i < 8; i++) expect(ringProductionMultiplier(s, i)).toBe(2)
@@ -382,22 +427,20 @@ describe('mücadele ödülleri — sekizi de kalıcı', () => {
   it('ödüller çarpışır: C1..C8 birlikte Fingers 10x5x3x5x4x2 = 6000', () => {
     const s = createNumberState()
     s.challenges.completed = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']
-    // Fingers: C1 10 · C2 5 · C3 3 · C4 5 (0-2) · C5 1 (0 hariç) · C7 4 · C8 2
     expect(ringProductionMultiplier(s, 0)).toBe(10 * 5 * 3 * 5 * 4 * 2)
-    // Halka 7: C2 5 · C3 3 · C5 5 · C7 4 · C8 2 (C4 ve C1 yok)
     expect(ringProductionMultiplier(s, 7)).toBe(5 * 3 * 5 * 4 * 2)
-    // Besleme: C1 · C5 · C6 = 1,5^3
     expect(feedMultiplier(s)).toBeCloseTo(1.5 ** 3, 12)
   })
 })
-describe('blok çarpanı — 5,5 ^ floor(bought / 10)', () => {
+
+describe('blok çarpanı — 5,3 ^ floor(bought / 10)', () => {
   it('10 alımda bir kademe atlar, kademe içinde sabit kalır', () => {
     expect(blockFactor(0).toNumber()).toBe(1)
     expect(blockFactor(9).toNumber()).toBe(1)
-    expect(blockFactor(10).toNumber()).toBeCloseTo(5.5, 9)
-    expect(blockFactor(19).toNumber()).toBeCloseTo(5.5, 9)
-    expect(blockFactor(20).toNumber()).toBeCloseTo(30.25, 9)
-    expect(blockFactor(30).toNumber()).toBeCloseTo(166.375, 9)
+    expect(blockFactor(10).toNumber()).toBeCloseTo(5.3, 9)
+    expect(blockFactor(19).toNumber()).toBeCloseTo(5.3, 9)
+    expect(blockFactor(20).toNumber()).toBeCloseTo(28.09, 9)
+    expect(blockFactor(30).toNumber()).toBeCloseTo(148.877, 9)
   })
 
   it('geçersiz girdide güvenli: negatif ve NaN -> 1', () => {
@@ -406,24 +449,24 @@ describe('blok çarpanı — 5,5 ^ floor(bought / 10)', () => {
     expect(blockFactor(Number.POSITIVE_INFINITY).toNumber()).toBe(1)
   })
 
-  it('Fingers üretimine girer: 9 vs 10 alım tam 5,5 kat', () => {
+  it('Fingers üretimine girer: 9 vs 10 alım tam 5,3 kat', () => {
     const a = createNumberState()
     const b = createNumberState()
     a.rings[0].amount = D(1)
     b.rings[0].amount = D(1)
     a.rings[0].bought = 9
     b.rings[0].bought = 10
-    expect(numberPerSecond(b).div(numberPerSecond(a)).toNumber()).toBeCloseTo(5.5, 9)
+    expect(numberPerSecond(b).div(numberPerSecond(a)).toNumber()).toBeCloseTo(5.3, 9)
   })
 
-  it('doğrudan paya girer: halka 3 için 9 vs 10 alım tam 5,5 kat', () => {
+  it('doğrudan paya girer: halka 3 için 9 vs 10 alım tam 5,3 kat', () => {
     const a = createNumberState()
     const b = createNumberState()
     a.rings[3].amount = D(1)
     b.rings[3].amount = D(1)
     a.rings[3].bought = 9
     b.rings[3].bought = 10
-    expect(directNumberPerSecond(b).div(directNumberPerSecond(a)).toNumber()).toBeCloseTo(5.5, 9)
+    expect(directNumberPerSecond(b).div(directNumberPerSecond(a)).toNumber()).toBeCloseTo(5.3, 9)
   })
 
   it('BESLEMEYE girmez: 9 ve 10 alımlı halka aynı hızda besler', () => {
@@ -441,7 +484,7 @@ describe('blok çarpanı — 5,5 ^ floor(bought / 10)', () => {
     expect(ringGainPerSecond(a, 1).toString()).toBe(ringGainPerSecond(b, 1).toString())
   })
 
-  it('advance blok çarpanını Fingers üretiminde kullanır (sayı 5,5 kat hızlı büyür)', () => {
+  it('advance blok çarpanını Fingers üretiminde kullanır (sayı 5,3 kat hızlı büyür)', () => {
     const a = createNumberState()
     const b = createNumberState()
     a.number = D(0)
@@ -452,7 +495,7 @@ describe('blok çarpanı — 5,5 ^ floor(bought / 10)', () => {
     b.rings[0].bought = 10
     advance(a, 1)
     advance(b, 1)
-    expect(b.number.div(a.number).toNumber()).toBeCloseTo(5.5, 9)
+    expect(b.number.div(a.number).toNumber()).toBeCloseTo(5.3, 9)
   })
 })
 
@@ -481,6 +524,7 @@ describe('kapı geçişi — 1.79e308 mandalı', () => {
     expect(s.gateReached).toBe(true)
   })
 })
+
 describe('maxAll — en derin halkadan blok blok', () => {
   it('en derin açık halkadan başlar ve her halkada 10lu blok alır', () => {
     const s = createNumberState()
@@ -488,9 +532,7 @@ describe('maxAll — en derin halkadan blok blok', () => {
     const total = maxAll(s)
     expect(total).toBeGreaterThan(0)
     expect(s.totalBuys).toBe(total)
-    // Hiçbir halkada yarım blok kalmaz: tüm alımlar 10'un katı (0 dahil).
     for (const ring of s.rings) expect(ring.bought % 10).toBe(0)
-    // En derin halka (7) 1e12 bütçesinde erişilebilir hâle gelmiş olmalı.
     expect(s.rings[7].bought).toBeGreaterThan(0)
   })
 
@@ -510,7 +552,6 @@ describe('maxAll — en derin halkadan blok blok', () => {
 
   it('derin halkaya öncelik verir (alt halka sonra tamamlanır)', () => {
     const s = createNumberState()
-    // Tam 7. halkanın bir bloğuna yetecek, 0. halkanın bloğuna yetmeyecek kadar.
     s.unlocked = s.unlocked.map(() => true)
     const price7 = ringBlockPrice(s, 7, 10)
     s.number = price7
@@ -522,34 +563,41 @@ describe('maxAll — en derin halkadan blok blok', () => {
 
   it('mücadele cezası blok alımını da engeller (C1 Fingers 10 alımda durur)', () => {
     const s = createNumberState()
+    s.bestNumber = D('1e30')
+    expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e30')
-    enterChallenge(s, 'C1')
     maxAll(s)
     expect(s.rings[0].bought).toBe(10)
     expect(s.rings[1].bought).toBeGreaterThan(0)
   })
 })
 
-describe('nextChallenge ve kilit durumu', () => {
+describe('kilit ve sıra — bestNumber tabanlı', () => {
   it('sıradaki tamamlanmamış mücadeleyi verir', () => {
     const s = createNumberState()
     expect(nextChallenge(s)?.id).toBe('C1')
     s.challenges.completed = ['C1', 'C2']
     expect(nextChallenge(s)?.id).toBe('C3')
   })
+
   it('hepsi bittiğinde null döner', () => {
     const s = createNumberState()
     s.challenges.completed = CHALLENGES.map((def) => def.id)
     expect(nextChallenge(s)).toBeNull()
   })
-  it('kilit sayı eşiğine bağlıdır, tamamlanmışsa kapalıdır', () => {
+
+  it('kilit bestNumber eşiğine bağlıdır: current number 10 olsa da açık kalır', () => {
     const s = createNumberState()
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
-    s.number = D('1e10')
+    s.bestNumber = D('1e10')
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
+    // Koşu sıfırlandı: current number 10, kilit yine de açık (soft-lock yok).
+    s.number = D(10)
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
     s.challenges.completed = ['C1']
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
   })
+
   it('boş mücadele durumu doğru başlar', () => {
     const state = createChallengeState()
     expect(state.completed).toEqual([])
@@ -558,52 +606,30 @@ describe('nextChallenge ve kilit durumu', () => {
     expect(state.goalLog10).toBeNull()
     expect(state.lastBuyAt).toBe(0)
   })
+
   it('activeChallenge aktif kimliği çözer', () => {
     const s = createNumberState()
     expect(activeChallenge(s)).toBeNull()
-    s.number = D('1e12')
-    enterChallenge(s, 'C1')
+    s.bestNumber = D('1e40')
+    expect(enterChallenge(s, 'C1')).toBe(true)
     expect(activeChallenge(s)?.id).toBe('C1')
   })
 })
-describe('tam koşu — gerçek motor, 190 dk kalibrasyonu', () => {
-  it('260 dk sınırında 8 mücadele biter ve kapıya ulaşır, sayı sıfırlanmaz', () => {
+
+describe('sıralı koşu akışı', () => {
+  it('C1 tamamlanınca C2 girişi koşuyu yeniden sıfırlar, boost korunur', () => {
     const s = createNumberState()
-    const dt = 0.5
-    let seconds = 0
-    let tapAcc = 0
-    let previous = D(0)
-    let monotoneBreaks = 0
-    const limit = 260 * 60
-    while (seconds < limit && !s.gateReached) {
-      s.playTime = seconds
-      previous = s.number
-      advance(s, dt)
-      seconds += dt
-      // Sıfırlama yok: alım öncesi sayı asla eskisinden küçük olamaz.
-      if (s.number.lt(previous)) monotoneBreaks++
-      tapAcc += dt
-      while (tapAcc >= 0.5) {
-        tapAcc -= 0.5
-        s.number = s.number.plus(1)
-        if (s.number.gt(s.bestNumber)) s.bestNumber = s.number
-      }
-      completeChallengeIfReady(s)
-      if (!s.challenges.active) {
-        const next = nextChallenge(s)
-        if (next && isChallengeUnlocked(s, next)) enterChallenge(s, next.id)
-      }
-      maxAll(s)
-      checkGate(s)
-    }
-    expect(monotoneBreaks).toBe(0)
-    expect(s.challenges.completed).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])
-    expect(s.gateReached).toBe(true)
-    expect(s.challenges.active).toBeNull()
-    const minutes = seconds / 60
-    expect(minutes).toBeGreaterThan(170)
-    expect(minutes).toBeLessThan(210)
-    expect(Number.isFinite(s.number.log10().toNumber())).toBe(true)
-    expect(s.number.gte(D('1.79e308'))).toBe(true)
-  }, 180000)
+    s.bestNumber = D('1e40')
+    s.boostCount = 4
+    expect(enterChallenge(s, 'C1')).toBe(true)
+    s.number = D('1e34')
+    expect(completeChallengeIfReady(s)?.id).toBe('C1')
+    expect(nextChallenge(s)?.id).toBe('C2')
+    expect(enterChallenge(s, 'C2')).toBe(true)
+    expect(s.number.toString()).toBe('10')
+    expect(s.boostCount).toBe(4)
+    expect(s.bestNumber.toString()).toBe('1e40')
+    expect(s.challenges.active).toBe('C2')
+    expect(s.challenges.completed).toEqual(['C1'])
+  })
 })

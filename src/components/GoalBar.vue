@@ -1,20 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
 import type { DecimalSource } from '../core/math'
 import ProgressBar from './ui/ProgressBar.vue'
+import ConfirmDialog from './ui/ConfirmDialog.vue'
 
 /**
  * Kalıcı hedef alanı — üst çubuğun sağı (ADR-0085). Sayfa değişse de yerinde kalır.
  *
  * Normal:   Goal ▬▬▬▬▬ 42.1%  1.79e308
- * Mücadele: C3 Active ▬▬▬▬▬ 64.0%  Goal 1e95.16  [Exit]
+ * Mücadele: C3 Active ▬▬▬▬▬ 64.0%  Goal 1e29.80  [Exit]
+ * Basamak 2+: Rung 2 · Not implemented (kapı hedefi artık geçerli değil)
  *
  * Yüzde logaritmiktir (store.goalProgress) ve AŞAĞI yuvarlanır: hedefe varılmadan ekran
  * asla "100%" okumaz (V4). Sayılar mono + tabular (§3.1).
  */
 const store = useGameStore()
+
+/**
+ * 2. basamakta 1. basamağın kapı hedefi YOKTUR: sayı 1.79e308'de durur ama bu bir
+ * hedef değildir. Burada ilerleme çubuğu çizilmez — "%100, Goal 1.79e308" yazmak
+ * mekanik hakkında yalan olurdu (V4). Bu build'de 2. basamağın ekonomisi yok.
+ */
+const beyondRungOne = computed(() => store.rung > 1)
 
 /** Aktif mücadele satırı; yoksa null (contract §4). */
 const active = computed(() => store.activeChallengeRow)
@@ -34,38 +43,75 @@ function asGoalText(goal: DecimalSource | string): string {
   return format(goal, 2, store.settings.notation)
 }
 
-function exit(): void {
+/**
+ * Çıkış geri alınamaz: sıfırlanmış koşu korunur, giriş öncesi ilerleme geri gelmez.
+ * Onay bunu yazar; ayar kapalıysa eylem doğrudan çalışır.
+ */
+const askExit = ref(false)
+
+function requestExit(): void {
+  if (askExit.value) return
+  if (store.settings.confirmDialogs) {
+    askExit.value = true
+    return
+  }
+  store.exitChallenge()
+}
+
+function confirmExit(): void {
+  askExit.value = false
   store.exitChallenge()
 }
 </script>
 
 <template>
-  <div class="goal" :class="{ 'goal--challenge': active }">
-    <template v-if="active">
-      <span class="goal__id data">{{ active.id }}</span>
-      <span class="goal__mode">Active</span>
+  <div class="goal" :class="{ 'goal--challenge': active && !beyondRungOne, 'goal--beyond': beyondRungOne }">
+    <!-- Basamak 2+: 1. basamağın kapı hedefi artık hedef değildir; yüzde de çizilmez. -->
+    <span v-if="beyondRungOne" class="goal__beyond data">Rung {{ store.rung }} · not implemented</span>
+
+    <template v-else>
+      <template v-if="active">
+        <span class="goal__id data">{{ active.id }}</span>
+        <span class="goal__mode">Active</span>
+      </template>
+      <span v-else class="goal__label">Goal</span>
+
+      <ProgressBar
+        class="goal__bar"
+        :value="progress"
+        :label="active ? active.id + ' progress' : 'Progress to ' + asGoalText(store.goalText)"
+      />
+      <span class="goal__pct data">{{ percentText }}</span>
+
+      <span v-if="active" class="goal__target data">Goal {{ asGoalText(active.goal) }}</span>
+      <span v-else class="goal__target data">{{ asGoalText(store.goalText) }}</span>
     </template>
-    <span v-else class="goal__label">Goal</span>
-
-    <ProgressBar
-      class="goal__bar"
-      :value="progress"
-      :label="active ? active.id + ' progress' : 'Progress to ' + asGoalText(store.goalText)"
-    />
-    <span class="goal__pct data">{{ percentText }}</span>
-
-    <span v-if="active" class="goal__target data">Goal {{ asGoalText(active.goal) }}</span>
-    <span v-else class="goal__target data">{{ asGoalText(store.goalText) }}</span>
 
     <button
       v-if="active"
       type="button"
       class="btn goal__exit"
       aria-label="Exit challenge"
-      @click="exit"
+      @click="requestExit"
     >
       Exit
     </button>
+
+    <ConfirmDialog
+      v-if="askExit"
+      :open="askExit"
+      title="Exit challenge?"
+      confirm-label="Exit"
+      tone="danger"
+      @cancel="askExit = false"
+      @confirm="confirmExit"
+    >
+      <ul>
+        <li>The number and chain of this challenge run are kept.</li>
+        <li>Your progress from before entry is not restored.</li>
+        <li>The goal is cleared. The reward is granted only on completion.</li>
+      </ul>
+    </ConfirmDialog>
   </div>
 </template>
 
@@ -86,6 +132,7 @@ function exit(): void {
 .goal__pct { min-width: 44px; text-align: right; color: var(--pn-text); }
 .goal__target { color: var(--pn-text-faint); }
 .goal--challenge .goal__target { color: var(--pn-text-dim); }
+.goal__beyond { color: var(--pn-text-dim); }
 .goal__exit { height: 26px; padding: 0 10px; font-size: 11px; }
 
 @media (max-width: 1180px) {

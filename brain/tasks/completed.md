@@ -1,5 +1,61 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-31] 📊 — ADR-0086 final kalibrasyonu ve doküman hizalaması (T3 + doküman)
+
+### Ne yapıldı
+
+Sıfırlamalı modelin ilk kalibrasyonu bitti; tüm belgeler nihai sayılarla hizalandı (yalnız markdown).
+
+- **Nihai sabitler:** `BLOCK_MULT = 5.3`, `BOOST_MULT = 1.8`, `BOOST_BASE_REQUIREMENT = 50`,
+  `BOOST_REQUIREMENT_GROWTH = 1.35`, `BOOST_PRICE_GROWTH = 1.5`, `CHALLENGE_FEED_MULT = 0.2`,
+  mücadele fiyat büyümesi **1.22** (C1–C8).
+- **Hedefler (log10):** C1 10,5 · C2 20,1 · C3 29,8 · C4 39,4 · C5 49,1 · C6 58,7 · C7 68,4 ·
+  C8 78,0; kilit = önceki hedef (C1 = 10).
+- **Ölçüm (gerçek motor, `dt = 1 s`):** intended **181,0 dk** (optimal, 11 boost) · 0-greedy
+  195,8 dk · challenges-only **289,6 dk** (1,60×) · boost-only **672,6 dk** (3,72×) · base
+  **1031,9 dk** (5,70×). Mücadele koşuları: C1 17,1 · C2 7,7 · C3 8,0 · C4 8,8 · C5 9,3 ·
+  C6 18,8 · C7 10,5 · C8 14,2 dk; final itiş 52,7 dk; 11 boost farmı 9.–114. dk.
+- **Projeksiyon:** 181 × 26,4 ≈ **79,6 sa** (×1,165); 85 saat hedefi için eğri **×1,176**
+  (181 × 28,1 ≈ 84,8 sa).
+- **Belgeler:** `brain/decisions/0086-run-reset-and-boost.md` (formüller final, ölçüm tablosu,
+  açık maddelerde kalibrasyon kapandı), `brain/decisions/README.md` (0086 satırı + güncel en
+  yüksek numara), `README.md`, `GAME_DESIGN.md` (11 basamak tablosu, yeni mücadele hedef tablosu,
+  §5 sabitleri, §7 kalibrasyon bloğu, §8 spec, §15), `AGENTS.md`, `project-brief.md`,
+  `tech-context.md`, `todo.md`, `in-progress.md`.
+- **Tarihsel:** 190 dk / 188,8 / 189,1 dk ve 21–22 dk mücadele bantları yalnız "geçersiz/tarihsel"
+  atfı olarak kaldı; araştırma ve eski ADR'ler yeniden yazılmadı. Bu görevde `src/` değişmedi.
+
+### Doğrulama
+
+`git diff --check` temiz (markdown). Dalga sonu kapısı: `npm run verify` → typecheck 0, **230/230 test**, production build OK (2026-10-31). Commit: `feat: add boost-first reset loop and recalibrate rung 1 (ADR-0086)`.
+
+## [2026-10-31] 📝 — ADR-0086: boost + sıfırlamalı döngü, ses ve belgeler (T4)
+
+### Ne yapıldı
+
+ADR-0086'nın ses ve belge ayağı tamamlandı; ekonomi/UI ayakları T1–T3'te sürüyor.
+
+- **Ses (`src/game/voice/lines-rung1.ts`):** C1/C5/C6/C8 sahneleri gerçek mekaniğe çekildi —
+  C5 yalnız 6–8. halka **alımını** kilitler (üretim sürer), C6 toplam **25×**, C8 toplam **10×**
+  yavaş besleme (global **×0,2** cezasının üzerine biner), C1 global beşte biri açıkça söyler.
+  Üç boost sahnesi eklendi (`r1_boost_available` · `r1_boost_purchased` · `r1_boost_reset`),
+  hepsi `latch: true`, iki vuruş, ASCII, ünlemsiz. Sıfırlama modeline aykırı "ilk sıfırlama
+  kapıdır / kapıdan önce restart yok" ticker satırları düzeltildi; boost kuralı ve mücadele
+  besleme kuralı için birer ticker satırı eklendi. Havuz **129 satır = 101 ticker + 28 sahne**
+  (14 nadir).
+- **Test:** `voice.test.ts` sayıları güncellendi; boost/mücadele kimlikleri için ayrı test.
+- **Belgeler:** `GAME_DESIGN.md` §5.3 boost formülü (geçici sabitler), §8 spec, §9 **save v24**
+  (`boostCount`), §10 çevrimdışı hedef-adımı, §15 açık maddeler; yinelenen eski **v22** kayıt
+  bölümü silindi. `AGENTS.md` sütunları/save sürümü, `README.md`, `project-brief.md`,
+  `tech-context.md`, `todo.md`, bu dosya.
+- **Sayılar geçiciydi:** ADR-0086 formülleri (50 · 1,35^n, ×1,5 fiyat/çarpan) T3 kalibrasyonuyla
+  güncellendi (bkz. üstteki 2026-10-31 kalibrasyon kaydı).
+
+### Doğrulama
+
+`npx vitest run src/game/voice/voice.test.ts` → **29 test, 29 geçti** (2026-10-31).
+Tam kapı (`npm run verify`) dalga sonunda T1–T3 ile birlikte koşulacak.
+
 ## [2026-10-31] 🧪 — "Laboratuvar" arayüz yeniden tasarımı (ADR-0085)
 
 ### Ne yapıldı
@@ -116,7 +172,7 @@ kalan yorum, metin ve ölü kod temizlendi. **Ekonomi, tuning ve kayıt şeması
 `npm run verify` → typecheck **0 hata** · vitest **192/192 (9 dosya)** · build **başarılı**
 (1683 modül).
 
-## [2026-10-28] 🚀 — Rung 1 v2 uygulaması: tek koşu + 8 sıfırlamasız mücadele (ADR-0083)
+## [2026-10-28] 🚀 — Rung 1 v2 uygulaması: tek koşu + 8 sıfırlamasız mücadele (ADR-0083) — ⛔ ADR-0086 ile geçersiz
 
 ### Ne yapıldı
 

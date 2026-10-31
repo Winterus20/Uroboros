@@ -1,16 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { D, Decimal } from '../../core/math'
-import { BLOCK_SIZE, NUMBER_TUNING, RING_DIRECT_SHARE, ringBlockCost, ringCostAt } from './tuning'
+import { BLOCK_SIZE, BOOST_MULT, NUMBER_TUNING, RING_DIRECT_SHARE, ringBlockCost, ringCostAt } from './tuning'
 import {
   advance,
+  applyBoost,
   blockFactor,
+  boostBlockedReason,
+  boostBought,
+  boostMultiplier,
+  boostPrice,
+  boostRequirement,
+  boostUnlocked,
   buyRing,
   buyRingMax,
+  canBoost,
   createNumberState,
   directNumberPerSecond,
   manualTap,
   maxAffordableRing,
   numberPerSecond,
+  resetRun,
   ringDirectRate,
   ringBlockPrice,
   ringCost,
@@ -177,23 +186,23 @@ describe('blok satın alma — AD "Buy 10"', () => {
   })
 })
 
-describe('blok çarpanı — her 10 alımda üretim ×5,5 (v2)', () => {
+describe('blok çarpanı — her 10 alımda üretim ×5,3 (ADR-0086)', () => {
   it('Fingers üretimi blok çarpanını alır', () => {
     const s = createNumberState()
     s.number = D('1e9')
     expect(buyRing(s, 0, 10)).toBe(10)
-    // 10 parmak × 1 sayı/sn × 5,5 = 55 sayı/sn (doğrudan katkı yok).
+    // 10 parmak × 1 sayı/sn × 5,3 = 53 sayı/sn (doğrudan katkı yok).
     expect(s.rings[0].amount.toNumber()).toBe(10)
-    expect(numberPerSecond(s).toNumber()).toBeCloseTo(10 * 5.5, 6)
-    expect(blockFactor(10).toNumber()).toBeCloseTo(5.5, 9)
+    expect(numberPerSecond(s).toNumber()).toBeCloseTo(10 * 5.3, 6)
+    expect(blockFactor(10).toNumber()).toBeCloseTo(5.3, 9)
   })
 
   it('doğrudan pay blok çarpanını alır, besleme almaz', () => {
     const s = createNumberState()
     s.rings[1].amount = D(1)
     s.rings[1].bought = 10
-    // Doğrudan katkı: 1 birim × 0,11 × 5,5.
-    expect(directNumberPerSecond(s).toNumber()).toBeCloseTo(0.11 * 5.5, 9)
+    // Doğrudan katkı: 1 birim × 0,11 × 5,3.
+    expect(directNumberPerSecond(s).toNumber()).toBeCloseTo(0.11 * 5.3, 9)
     // Besleme: 1 birim × 0,11 × 1 (blok çarpanı YOK).
     expect(ringGainPerSecond(s, 1).toNumber()).toBeCloseTo(0.11, 9)
     s.rings[0].amount = D(0)
@@ -202,3 +211,160 @@ describe('blok çarpanı — her 10 alımda üretim ×5,5 (v2)', () => {
   })
 })
 
+
+describe('koşu sıfırlama — ADR-0086', () => {
+  it('sayı 10, zincir sıfır, kilitler yalnız Fingers; kalıcılar korunur', () => {
+    const s = createNumberState()
+    s.number = D('1e50')
+    s.bestNumber = D('1e60')
+    s.totalBuys = 42
+    s.boostCount = 3
+    s.playTime = 1234
+    s.challenges.completed = ['C1', 'C2']
+    s.challenges.lastBoughtRing = 7
+    s.rings[0].amount = D(5)
+    s.rings[0].bought = 10
+    s.unlocked = s.unlocked.map(() => true)
+
+    resetRun(s)
+
+    expect(s.number.toString()).toBe('10')
+    expect(s.rings.every((ring) => ring.amount.eq(0) && ring.bought === 0)).toBe(true)
+    expect(s.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(s.challenges.lastBuyAt).toBe(1234)
+    expect(s.challenges.lastBoughtRing).toBe(-1)
+    // Kalıcı olan her şey yerinde.
+    expect(s.bestNumber.toString()).toBe('1e60')
+    expect(s.totalBuys).toBe(42)
+    expect(s.boostCount).toBe(3)
+    expect(s.playTime).toBe(1234)
+    expect(s.challenges.completed).toEqual(['C1', 'C2'])
+  })
+})
+
+describe('boost — gereksinim, fiyat, çarpan', () => {
+  it('gereksinim ceil(50 · 1,35^n): 50, 68, 92', () => {
+    expect(boostRequirement(0)).toBe(50)
+    expect(boostRequirement(1)).toBe(68)
+    expect(boostRequirement(2)).toBe(92)
+  })
+
+  it('geçersiz boost sayacı 0 gibi davranır (negatif/NaN/ondalık)', () => {
+    expect(boostRequirement(-3)).toBe(50)
+    expect(boostRequirement(Number.NaN)).toBe(50)
+    expect(boostRequirement(1.9)).toBe(68)
+  })
+
+  it('çarpan 1,8^n ve 0. boost ×1', () => {
+    expect(boostMultiplier(0).toString()).toBe('1')
+    expect(boostMultiplier(1).toNumber()).toBeCloseTo(BOOST_MULT, 12)
+    expect(boostMultiplier(2).toNumber()).toBeCloseTo(BOOST_MULT * BOOST_MULT, 12)
+  })
+
+  it('fiyat son halkanın 10 bloğu × 1,5^n', () => {
+    const s = createNumberState()
+    s.rings[7].bought = 30
+    const basePrice = ringBlockPrice(s, 7, BLOCK_SIZE)
+    expect(boostPrice(s).eq(basePrice)).toBe(true)
+    s.boostCount = 1
+    expect(boostPrice(s).div(basePrice).toNumber()).toBeCloseTo(1.5, 9)
+  })
+})
+
+describe('boost — engel sırası ve satın alma', () => {
+  function ready(): ReturnType<typeof createNumberState> {
+    const s = createNumberState()
+    s.unlocked[7] = true
+    s.rings[7].bought = boostRequirement(0)
+    s.number = D('1e100')
+    s.bestNumber = D('1e120')
+    return s
+  }
+
+  it('son halka kilitliyken gereksinim engeli', () => {
+    const s = createNumberState()
+    s.number = D('1e100')
+    expect(boostUnlocked(s)).toBe(false)
+    expect(boostBought(s)).toBe(0)
+    expect(boostBlockedReason(s)).toBe('requirement')
+    expect(canBoost(s)).toBe(false)
+  })
+
+  it('gereksinim dolunca fiyat engeli; para yetince engel kalkar', () => {
+    const s = ready()
+    s.number = D(0)
+    expect(boostBlockedReason(s)).toBe('price')
+    expect(canBoost(s)).toBe(false)
+    s.number = D('1e100')
+    expect(boostBlockedReason(s)).toBeNull()
+    expect(canBoost(s)).toBe(true)
+  })
+
+  it('mücadele, basamak ve kapı engelleri sırayla öne çıkar', () => {
+    const s = ready()
+    s.challenges.active = 'C1'
+    expect(boostBlockedReason(s)).toBe('challenge')
+
+    s.rung = 2
+    expect(boostBlockedReason(s)).toBe('rung')
+
+    s.rung = 1
+    s.challenges.active = null
+    s.gateReached = true
+    expect(boostBlockedReason(s)).toBe('gate')
+  })
+
+  it('satın alma sayacı artırır, koşuyu sıfırlar, kalıcıları korur', () => {
+    const s = ready()
+    s.challenges.completed = ['C1']
+    s.totalBuys = 77
+    const best = s.bestNumber.toString()
+
+    expect(applyBoost(s)).toBe(true)
+    expect(s.boostCount).toBe(1)
+    expect(s.number.toString()).toBe('10')
+    expect(s.rings.every((ring) => ring.bought === 0 && ring.amount.eq(0))).toBe(true)
+    expect(s.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(s.bestNumber.toString()).toBe(best)
+    expect(s.totalBuys).toBe(77)
+    expect(s.challenges.completed).toEqual(['C1'])
+    // Yeni koşuda son halka yeniden kilitli: ikinci boost hemen alınamaz.
+    expect(applyBoost(s)).toBe(false)
+    expect(s.boostCount).toBe(1)
+  })
+})
+
+describe('boost çarpanı yalnız sayı üretimine girer', () => {
+  it('sayı üretimi ×1,8; doğrudan katkı ve zincir beslemesi değişmez', () => {
+    const plain = createNumberState()
+    const boosted = createNumberState()
+    for (const s of [plain, boosted]) {
+      s.rings[0].amount = D(10)
+      s.rings[0].bought = 10
+      s.rings[1].amount = D(2)
+    }
+    boosted.boostCount = 1
+
+    expect(numberPerSecond(boosted).div(numberPerSecond(plain)).toNumber()).toBeCloseTo(1.8, 9)
+    // İki üretim kanalı da boost alır: zincir satırlarının toplamı hero /s ile eşleşir.
+    expect(ringGainPerSecond(boosted, 0).div(ringGainPerSecond(plain, 0)).toNumber()).toBeCloseTo(1.8, 9)
+    expect(directNumberPerSecond(boosted).div(directNumberPerSecond(plain)).toNumber()).toBeCloseTo(1.8, 9)
+    // Zincir BESLEMESİ boost almaz.
+    expect(ringGainPerSecond(boosted, 1).toString()).toBe(ringGainPerSecond(plain, 1).toString())
+  })
+
+  it('advance sayıyı boost çarpanıyla büyütür, beslemeyi etkilemez', () => {
+    const plain = createNumberState()
+    const boosted = createNumberState()
+    for (const s of [plain, boosted]) {
+      s.number = D(0)
+      s.rings[0].amount = D(1)
+      s.rings[1].amount = D(1)
+    }
+    boosted.boostCount = 1
+    advance(plain, 1)
+    advance(boosted, 1)
+    expect(boosted.number.div(plain.number).toNumber()).toBeCloseTo(1.8, 9)
+    expect(boosted.rings[0].amount.toString()).toBe(plain.rings[0].amount.toString())
+  })
+})

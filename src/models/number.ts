@@ -58,9 +58,9 @@ export interface RingRow {
   producesPerSecond: Decimal
   /** Sayıya DOĞRUDAN kattığı miktar (halka 1 için 0 — o zaten sayının kendisi). */
   addsPerSecond: Decimal
-  /** Blok çarpanı: 5.5 ^ floor(bought / 10) — yalnız üretime uygulanır. */
+  /** Blok çarpanı: 5.3 ^ floor(bought / 10) — yalnız üretime uygulanır. */
   blockFactor: Decimal
-  /** Ekranda okunan biçim: "x5.50", "x1.2e30" vb. (V4: sayısal etiket yalan söylemez). */
+  /** Ekranda okunan biçim: "x5.30", "x1.2e30" vb. (V4: sayısal etiket yalan söylemez). */
   blockFactorText: string
 }
 /** Mücadelenin paneldeki durumu (UI türetimi, kayda yazılmaz). */
@@ -92,6 +92,11 @@ export interface ChallengeRow {
   unlockText: string
   /** 0–100; tamamlanmış 100, aktif olanda girişten hedefe oran. */
   progress: number
+  /**
+   * UI "Enter" düğmesini yalnız bu satırda gösterir: sıradaki tamamlanmamış
+   * mücadele, açık ve aktif mücadele yok. Sıra zorunludur (ADR-0086 §5).
+   */
+  enterable: boolean
   penaltyLabel: string
   rewardLabel: string
 }

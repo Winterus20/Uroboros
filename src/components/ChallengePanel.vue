@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Check } from 'lucide-vue-next'
 import { useGameStore } from '../stores/game'
 import { format } from '../core/format'
@@ -7,10 +7,12 @@ import type { DecimalSource } from '../core/math'
 import type { ChallengeRow } from '../models/number'
 import SectionHeader from './ui/SectionHeader.vue'
 import ProgressBar from './ui/ProgressBar.vue'
+import ConfirmDialog from './ui/ConfirmDialog.vue'
 
 /**
- * 8 mücadele (contract §1/§6). Mücadele bir sıfırlama değil, koşunun üstüne binen
- * kısıttır: girişte sayı/halkalar blok çarpanı korunur, ceza anında biner.
+ * 8 mücadele (ADR-0086). Giriş bir SIFIRLAMADIR: sayı 10'a, halkalar 0'a döner,
+ * kilitler yalnız Fingers'ta kalır; boost sayısı ve tamamlanmış ödüller korunur.
+ * Hedefler mutlaktır ve sıra zorunludur: yalnız store'un enterable dediği satır girilir.
  *
  * Satır dili zincir tablosuyla aynıdır (ADR-0085): 1px çizgili satırlar, mono veri,
  * vurgu yalnız eyleme açık durumda (Enter) ve aktif satırda.
@@ -58,8 +60,38 @@ function progressTone(row: ChallengeRow): 'rung' | 'dim' {
   return row.status === 'completed' ? 'dim' : 'rung'
 }
 
-function enter(id: string): void {
-  store.enterChallenge(id)
+/**
+ * Sıra zorunludur (ADR-0086 §5): yalnız store'un enterable dediği satır girilebilir.
+ * Sırası gelmemiş açık satır nedenini yazar — "Open" deyip ölü düğme göstermek
+ * mekanik hakkında yalan olurdu (V4).
+ */
+function queueLabel(row: ChallengeRow): string {
+  if (activeId.value) return 'One at a time'
+  const index = rows.value.findIndex((item) => item.id === row.id)
+  const previous = index > 0 ? rows.value[index - 1] : null
+  return previous ? 'After ' + previous.id : 'Locked'
+}
+
+/**
+ * Giriş geri alınamaz: koşu sıfırlanır ve giriş öncesi hâl geri gelmez.
+ * Onay diyaloğu bunu tek tek yazar; ayar kapalıysa eylem doğrudan çalışır.
+ */
+const pending = ref<ChallengeRow | null>(null)
+const dialogOpen = computed(() => pending.value !== null)
+
+function requestEnter(row: ChallengeRow): void {
+  if (!row.enterable) return
+  if (!store.settings.confirmDialogs) {
+    store.enterChallenge(row.id)
+    return
+  }
+  pending.value = row
+}
+
+function confirmEnter(): void {
+  const row = pending.value
+  pending.value = null
+  if (row) store.enterChallenge(row.id)
 }
 </script>
 
@@ -67,7 +99,7 @@ function enter(id: string): void {
   <section class="challenges" aria-label="Challenges">
     <SectionHeader
       title="Challenges"
-      description="One at a time, nothing resets. The penalty holds while you are inside; the reward is permanent."
+      description="One at a time, in order. Entering resets the number to 10 and the chain to 0; unlocks return to Fingers only. Boosts and completed rewards are kept."
     >
       <span class="challenges__note data">{{ doneCount }} / {{ rows.length }} done</span>
     </SectionHeader>
@@ -111,16 +143,16 @@ function enter(id: string): void {
 
           <td class="r ch__side">
             <button
-              v-if="row.status === 'available' && !activeId"
+              v-if="row.enterable"
               type="button"
               class="btn btn--accent ch__enter"
-              :aria-label="'Enter ' + row.id + ', ' + row.ringName"
-              @click="enter(row.id)"
+              :aria-label="'Enter ' + row.id + ', ' + row.ringName + '. Resets the run.'"
+              @click="requestEnter(row)"
             >
               Enter
             </button>
             <span v-else-if="row.status === 'available'" class="ch__state data">
-              {{ statusLabel(row.status) }}
+              {{ queueLabel(row) }}
             </span>
             <span v-else-if="row.status === 'active'" class="pill pill--accent">
               {{ statusLabel(row.status) }}
@@ -140,6 +172,24 @@ function enter(id: string): void {
         </tr>
       </tbody>
     </table>
+
+    <ConfirmDialog
+      v-if="pending"
+      :open="dialogOpen"
+      :title="'Enter ' + pending.id + '?'"
+      confirm-label="Enter"
+      tone="danger"
+      @cancel="pending = null"
+      @confirm="confirmEnter"
+    >
+      <p><strong>{{ pending.id }} · {{ pending.ringName }}</strong> — {{ pending.penaltyLabel }}</p>
+      <ul>
+        <li>Number resets to <strong>10</strong>; every ring returns to <strong>0</strong>; unlocks return to <strong>Fingers</strong> only.</li>
+        <li>Boost count and completed challenge rewards are kept.</li>
+        <li>Goal: <strong>{{ pending.goalText }}</strong>. Reward: {{ pending.rewardLabel }}</li>
+        <li>Your run before entry is not restored.</li>
+      </ul>
+    </ConfirmDialog>
   </section>
 </template>
 

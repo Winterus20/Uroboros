@@ -26,8 +26,13 @@
  * Asgari sürüm 20'de kaldı: v20/v21/v22 kayıtları açılır. Üç yeni alan eski
  * kayıtlarda YOK SAYILMAZ, VARSAYILANLA doldurulur (boş mücadele, kapı kapalı,
  * 0 Tanım) — oyuncu ilerlemesini kaybetmez, akışa temiz girer.
+ *
+ * v24 — SIFIRLAMALI KOŞU + BOOST (ADR-0086): kayıt `boostCount` alanını
+ * kazandı. Mücadele girişi ve boost satın alımı sayıyı/zinciri sıfırlar; boost
+ * sayısı mücadele girişinde korunur, kapıdaki prestijde sıfırlanır. v20-v23
+ * kayıtları `boostCount` olmadan açılır ve 0 ile doldurulur.
  */
-export const SAVE_VERSION = 23
+export const SAVE_VERSION = 24
 
 /** Bunun altındaki kayıtlar sıfırlanır (P5: sert temizlik). */
 export const MIN_SUPPORTED_SAVE_VERSION = 20

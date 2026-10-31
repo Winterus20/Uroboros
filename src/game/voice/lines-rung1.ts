@@ -9,14 +9,16 @@ import type { VoiceContext, VoiceLine } from './types'
  * Yasak: ünlem, mekanik hakkında yalan, oyuncuyu aptal yerine koymak,
  * sayının büyüklüğüyle dalga geçmek, çeviri kokan espri, aynı şakanın tekrarı.
  *
- * Dağılım (2026-10-28: 124 satır = 99 ticker + 25 sahne):
- *   53 sayı bandı · 25 durum · 14 nadir · 7 tek koşu/kapı = 99 ticker;
- *   25 sahne = 8 basamak · 8 mücadele girişi · 8 ödül · 1 kapı.
+ * Dağılım (2026-10-31: 129 satır = 101 ticker + 28 sahne):
+ *   53 sayı bandı · 25 durum · 14 nadir · 9 döngü/kapı = 101 ticker;
+ *   28 sahne = 8 basamak · 8 mücadele girişi · 8 ödül · 1 kapı · 3 boost.
  * Metinler İngilizce yazılır, çevrilmez (P3); kod yorumları Türkçe kalır.
  *
  * MEKANİK DOĞRULUK (Kural 2): buradaki her sayısal iddia src/game/number/tuning.ts
  * ile uyumlu olmak zorunda. Fiyatlar 25 · 200 · 1 600 · … · 5,24e7 (×8), üretim 1 sayı/sn
- * (Fingers) ve 0,11 birim/sn (üst halkalar), blok 10 birim. Sıfırlama yoktur.
+ * (Fingers) ve 0,11 birim/sn (üst halkalar), blok 10 birim. Döngü ADR-0086: mücadele
+ * girişi ve boost sayıyı + zinciri sıfırlar; boost sayacı ve mücadele ödülleri kalır;
+ * boost sayacı kapıda/prestijde sıfırlanır. Her mücadele zincir beslemesini ×0,2 yapar.
  */
 
 /** Sayı bandı yardımcısı: [lo, hi) — hi verilmezse açık uçlu. */
@@ -160,17 +162,18 @@ export const RUNG1_LINES: VoiceLine[] = [
 
   // ── MÜCADELE BAŞLANGICI (8 sahne, mandallı — S3) ──────────────────────
   // Kısıt dünyanın dilinde söylenir, UI açıklanmaz (V1). Zamanlamayı olay
-  // belirler, ses değil; bu yüzden when yoktur. Sayılar plan v2 §4 / kalibrasyon §2.
+  // belirler, ses değil; bu yüzden when yoktur. Sayılar ADR-0086 ve
+  // challenges.ts penaltyLabel ile birebir uyumludur (global feed ×0,2 dahil).
   // DİKKAT: bunlar kimlikle çağrılır (pickSceneLine ile olay anında), rastgele
   // sahne havuzuna girmez. VoiceContext'te mücadele alanı yoktur ve eklenmez (V3).
-  { id: 'r1_challenge_c1', channel: 'scene', latch: true, text: 'The Fingers stop at ten purchases.\nThe chain does not.' },
-  { id: 'r1_challenge_c2', channel: 'scene', latch: true, text: 'A Notch unit costs 1.45 times the one before it.\nIt was 1.20.' },
+  { id: 'r1_challenge_c1', channel: 'scene', latch: true, text: 'Every challenge takes a fifth of the chain feed.\nThe Fingers also stop at ten purchases.' },
+  { id: 'r1_challenge_c2', channel: 'scene', latch: true, text: 'A Notch unit costs 1.22 times the one before it.\nIt was 1.20.' },
   { id: 'r1_challenge_c3', channel: 'scene', latch: true, text: 'Rings no longer pay the number directly.\nOnly the chain feeds it now.' },
   { id: 'r1_challenge_c4', channel: 'scene', latch: true, text: 'Buy nothing and the chain starts to decay.\nTen percent is the floor.' },
-  { id: 'r1_challenge_c5', channel: 'scene', latch: true, text: 'Only the first five rings will take your number.\nThe top three are closed.' },
-  { id: 'r1_challenge_c6', channel: 'scene', latch: true, text: 'The chain feeds five times slower.\nEvery link, same cut.' },
+  { id: 'r1_challenge_c5', channel: 'scene', latch: true, text: 'The top three rings will not sell to you.\nThe ones you already own still produce.' },
+  { id: 'r1_challenge_c6', channel: 'scene', latch: true, text: 'The chain feeds twenty-five times slower.\nA fifth, then a fifth again.' },
   { id: 'r1_challenge_c7', channel: 'scene', latch: true, text: 'Only the link you bought last counts in full.\nThe rest are reduced.' },
-  { id: 'r1_challenge_c8', channel: 'scene', latch: true, text: 'A Mathematician unit costs 1.35 times the one before it.\nThe chain also feeds at half.' },
+  { id: 'r1_challenge_c8', channel: 'scene', latch: true, text: 'The chain feeds ten times slower: a fifth, then half.\nA unit also costs 1.22 times the one before.' },
 
   // ── MÜCADELE BİTİŞİ (8 sahne — ödül adı ve etkisi düz söylenir) ───────
   // Ödüller kalıcıdır (plan v2 §5); sahne kutlama yapmaz, yalnız adı ve etkiyi verir.
@@ -184,15 +187,26 @@ export const RUNG1_LINES: VoiceLine[] = [
   { id: 'r1_clear_c7', channel: 'scene', latch: true, text: 'Every ring you own gains, not just the newest.\nParallel Set.' },
   { id: 'r1_clear_c8', channel: 'scene', latch: true, text: 'Production doubles.\nTheorem.' },
 
+  // ── MÜCADELE KURALI (ticker) ──────────────────────────────────────────
+  // Global besleme cezası her mücadelede geçerlidir; C6 ve C8 bunun üzerine biner.
+  { id: 'r1_challenge_feed', channel: 'ticker', text: 'Every challenge takes a fifth of the chain feed. Then its own penalty starts.' },
+
   // ── KAPI (1.79e308) ───────────────────────────────────────────────────
   { id: 'r1_gate_latch', channel: 'scene', latch: true, text: '1.79e308. The last number that fits.\nThe gate is not a wall.', when: (c) => c.number.gte('1.79e308') },
   { id: 'r1_gate_tick_1', channel: 'ticker', text: 'The gate is close enough to read now. Not close enough to pass.', when: (c) => c.number.gte('1e300') },
-  { id: 'r1_gate_tick_2', channel: 'ticker', text: 'There is no shortcut to the gate. There is no restart before it.', when: (c) => c.number.gte('1e300') },
+  { id: 'r1_gate_tick_2', channel: 'ticker', text: 'The gate takes the boosts back. The challenge rewards stay.', when: (c) => c.number.gte('1e300') },
 
-  // ── TEK KOŞU (sıfırlama yok · B = 5.5 · Max All · sıradaki mücadele) ───
-  { id: 'r1_run_1', channel: 'ticker', text: 'Nothing you build is taken away. The first reset is the gate.' },
-  { id: 'r1_run_2', channel: 'ticker', text: 'Every ten of a ring multiplies it by 5.5. Same number at every ring.' },
+  // ── DÖNGÜ (ADR-0086: sıfırlama + boost · B = 5.3 · Max All) ────────────
+  { id: 'r1_run_1', channel: 'ticker', text: 'Challenges take the number and the chain. They keep the boosts and the rewards.' },
+  { id: 'r1_run_2', channel: 'ticker', text: 'Every ten of a ring multiplies it by 5.3. Same number at every ring.' },
   { id: 'r1_run_3', channel: 'ticker', text: 'Max All starts at the deepest ring your number can afford.' },
-  { id: 'r1_run_4', channel: 'ticker', text: 'A challenge opens on a threshold. The next threshold is a bigger number.' },
-  { id: 'r1_run_5', channel: 'ticker', text: 'Buying never removes a ring. It only moves the number down for a moment.' }
+  { id: 'r1_run_4', channel: 'ticker', text: 'A challenge opens on your best number. The run in front of you can be smaller.' },
+  { id: 'r1_run_5', channel: 'ticker', text: 'Buying never removes a ring. It only moves the number down for a moment.' },
+  { id: 'r1_boost_rule', channel: 'ticker', text: 'A boost costs the number and the chain. It pays back in production.' },
+
+  // ── BOOST (3 sahne, mandallı — sırayla açılır, alınır, kapıda sıfırlanır) ─
+  // Kimlikle çağrılır (pickSceneLine), rastgele sahne havuzuna girmez.
+  { id: 'r1_boost_available', channel: 'scene', latch: true, text: 'The last ring has met its count. The boost is open.\nIt costs the run, not the boost.' },
+  { id: 'r1_boost_purchased', channel: 'scene', latch: true, text: 'The number and the chain are gone. The boost stays.\nIt multiplies what you build next.' },
+  { id: 'r1_boost_reset', channel: 'scene', latch: true, text: 'The gate takes the boosts back.\nThe challenge rewards stay.' }
 ]

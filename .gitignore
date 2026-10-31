@@ -36,6 +36,10 @@ brain/scratchpad/motif-preview/
 
 # Agent runtime state
 .agents/.state/
+.claude/
+
+# Kalibrasyon harness bundle'ları (esbuild üretimi; kaynak .ts ve REPORT.md izlenir)
+brain/scratchpad/rung1-boost-reset/*.mjs
 
 # Geçici çalışma dizinleri (esbuild TEMP yönlendirmesi + motif render kontrolü)
 .tmp-*/

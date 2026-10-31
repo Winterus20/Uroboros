@@ -9,10 +9,11 @@
 [![save](https://img.shields.io/badge/kayıt-LZ--String_+_3_slot-0ea5e9?style=flat-square)](#kayıt)
 [![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square)](LICENSE)
 
-**Tür:** sayı odaklı incremental / idle · **Hedef:** 11 basamak, tek koşu
-**Durum:** Rung 1 v2 — 190 dk tek koşu, 8 sıfırlamasız mücadele, `B = 5.5`, kapı `1.79e308`,
-kayıt şeması v23 ([ADR-0083](brain/decisions/0083-rung-1-single-run-challenge-model.md)); uygulama
-dalgası sürüyor, 2–11 tasarım aşamasında
+**Tür:** sayı odaklı incremental / idle · **Hedef:** 11 basamak, toplam ~85 saat
+(projeksiyon 79,6 sa; 85 saat hedefi için basamak eğrisi ×1,176)
+**Durum:** Rung 1 v3 — boost + sıfırlamalı 8 mücadele, `B = 5.3`, hedef **181 dk**, kapı
+`1.79e308`, kayıt şeması v24 ([ADR-0086](brain/decisions/0086-run-reset-and-boost.md));
+kalibre edildi ve uygulandı (2026-10-31), 2–11 tasarım aşamasında
 
 ---
 
@@ -21,20 +22,26 @@ dalgası sürüyor, 2–11 tasarım aşamasında
 Ortada tek bir sayı var ve o sayı senin cüzdanın. 8 halkalı bir zincir kurarsın —
 **Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician** —
 halka *n+1* halka *n*'i besler, halka 1 sayının kendisini üretir. `+1` butonu gerçekten `+1`
-ekler; 190 dakikalık koşunun sonunda da aynı yerde, aynı boyutta durur.
+ekler; `1.79e308` kapısında da aynı yerde, aynı boyutta durur.
 
-Her halka 10 alımda bir Blok Çarpanı basamağı kazanır (`B^⌊bought/10⌋`, `B = 5.5`); `Max All`
+Her halka 10 alımda bir Blok Çarpanı basamağı kazanır (`B^⌊bought/10⌋`, `B = 5.3`); `Max All`
 bütçenin yettiği en derin halkadan başlayarak alır.
 
-Koşu tek: `1.79e308`e kadar sıfırlama yok. Sayı, halkalar, Blok Çarpanı ve mücadele ödülleri
-baştan sona kalıcıdır. İlerleme 8 **sıfırlamasız mücadele**yle bölünür — girişte hiçbir şey
-sıfırlanmaz, ceza koşunun üstüne biner, hedefe varınca ödül kalıcı açılır. Tek sıfırlama
-kapıdaki **prestijdir**: `+1 Tanım`. 2. basamak bu build'de yok.
+Döngü AD tarzıdır. **Boost** güç kaynağıdır: son halka koşulunu tutturunca açılır, sayıdan
+ödenir ve kapıya kadar süren bir üretim çarpanı verir. Boost alımı veya bir **mücadeleye giriş** sayıyı
+`10`a, zinciri sıfıra indirir; boost sayacı, tamamlanan mücadeleler ve ödülleri kalır.
+8 mücadele mutlak hedefli ve sıralıdır (log10 hedefleri 10,5 · 20,1 · 29,8 · 39,4 · 49,1 ·
+58,7 · 68,4 · 78,0; kilit önceki hedeftir); her biri zincir beslemesini `×0,2` yapar. Boost
+sayacı yalnız kapıdaki **prestijde** sıfırlanır: `+1 Tanım`. 2. basamak bu build'de yok.
+
+Kalibrasyon (2026-10-31, gerçek motor, `dt = 1 s`): intended **181,0 dk** (11 boost);
+challenges-only 289,6 dk (1,60×); boost-only 672,6 dk (3,72×); base 1031,9 dk (5,70×).
+181 × 26,4 ≈ **79,6 sa**; 85 saat hedefi için basamak çarpanı **×1,176**.
 
 Tasarım referansı: [`GAME_DESIGN.md`](GAME_DESIGN.md) · plan v2:
-[`rung-1-plan-2026-10-27.md`](brain/research/rung-1-plan-2026-10-27.md) · kalibrasyon:
-[`rung-1-190-calibration-2026-10-27.md`](brain/research/rung-1-190-calibration-2026-10-27.md) ·
-karar: [ADR-0083](brain/decisions/0083-rung-1-single-run-challenge-model.md) · ses sözleşmesi:
+[`rung-1-plan-2026-10-27.md`](brain/research/rung-1-plan-2026-10-27.md) · eski 190 dk
+kalibrasyonu (ADR-0086 ile geçersiz): [`rung-1-190-calibration-2026-10-27.md`](brain/research/rung-1-190-calibration-2026-10-27.md) ·
+karar: [ADR-0086](brain/decisions/0086-run-reset-and-boost.md) · ses sözleşmesi:
 [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) · görsel dil:
 [`brain/context/visual-language.md`](brain/context/visual-language.md).
 
@@ -72,9 +79,10 @@ npm run dev      # geliştirme sunucusu → http://localhost:3000
 | `+1` | `Space` veya `+` |
 | Halka satın al (1–8) | `1` … `8` |
 | `Max All` | Zincir listesindeki düğme — en derin halkadan geriye, bütçe yettikçe |
-| Mücadeleye gir | Challenges satırındaki `Enter` (kilit açıldıysa) |
-| Mücadeleden çık | GoalBar'daki `Exit` — ceza kalkar, ilerleme korunur |
-| Prestij | `1.79e308` kapı modalındaki `Prestige` |
+| Boost al | Zincir sayfasındaki `Boost` — onay ister, sayı ve zincir sıfırlanır |
+| Mücadeleye gir | Challenges satırındaki `Enter` — onay ister, sayı ve zincir sıfırlanır |
+| Mücadeleden çık | GoalBar'daki `Exit` — sıfırlanmış koşu korunur |
+| Prestij | `1.79e308` kapı modalındaki `Prestige` — boost sayacı sıfırlanır |
 | Ayarlar | `Esc` ile kapat |
 
 Klavye kısayolları ayarlardan kapatılabilir (`hotkeysEnabled`). `Max All`, mücadele `Enter`/`Exit`
@@ -93,7 +101,7 @@ ve kapı `Prestige` eylemlerinin kısayolu yoktur; düğmeyle çalışır.
 | Sayı motoru | **break_eternity.js** — NaN kontrolü küçük harfle: `dec.isNan()` |
 | Stil | **Tailwind CSS 3.4** + CSS değişkenleri — "Laboratuvar" (ADR-0085) |
 | Tipografi | Space Grotesk (hero + UI) · Space Mono (veri) |
-| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v23** (asgari **v20**) |
+| Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v24** (asgari **v20**) |
 | Bulut | **Firebase** Auth + Firestore (isteğe bağlı; anahtarsız oyun tam çalışır) |
 | Ses | **Web Audio API** — harici dosya yok, tamamı sentez |
 | Test | **Vitest** |
@@ -122,10 +130,11 @@ Incremental/
 ## Kayıt
 
 - 3 bağımsız slot + otomatik yedek rotasyonu; bozuk kayıt **karantinaya** alınır.
-- `SAVE_VERSION = 23`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
+- `SAVE_VERSION = 24`, `MIN_SUPPORTED_SAVE_VERSION = 20`: tema pivotu öncesi (v19 ve altı)
   kayıtlar açılmaz; v20/v21 kayıtları açılır ve bir kez yeni gösterime (ADR-0080) taşınır.
-- v22 (ADR-0082) kaldırılan boost/prestij alanlarını şemadan düşürdü; v23 (ADR-0083) `challenges`,
-  `gateReached` ve `tanim` alanlarını geri getirir. v22 kayıtları açılır, bu alanlar varsayılanla gelir.
+- v22 (ADR-0082) boost/prestij alanlarını şemadan düşürdü; v23 (ADR-0083) `challenges`,
+  `gateReached` ve `tanim` alanlarını geri getirdi; v24 (ADR-0086) `boostCount` ekler.
+  v20–v23 kayıtları açılır, eksik alanlar varsayılanla gelir (`boostCount: 0`).
 - Daha yeni bir build'in kaydı reddedilir (`SaveVersionError`), sessizce düşürülmez.
 - Çevrimdışı üretim **12 saatte** tavan yapar.
 

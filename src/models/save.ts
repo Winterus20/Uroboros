@@ -1,4 +1,4 @@
-/** Kayıt tipleri — yeni şema (SAVE_VERSION 23). */
+/** Kayıt tipleri — yeni şema (SAVE_VERSION 24). */
 import type { NotationType } from '../core/format'
 import type { HumorLevel, MotionMode, MusicTrackId } from './settings'
 
@@ -44,20 +44,20 @@ export interface SerializedSettings {
 }
 
 /**
- * 8 mücadelenin kayda yazılan durumu (v23).
+ * 8 mücadelenin kayda yazılan durumu (v23; v24'te ADR-0086 ile anlamı değişti).
  *
- * Mücadele bir örtüdür: giriş sayıyı/halkaları SIFIRLAMAZ. `entryLog10` hedefin
- * alt sınırını kilitler (`goal = max(plan, giriş + Δ)`), böylece hedefe yaklaşıp
- * girme istismarı kapanır. `lastBuyAt` çürüme cezasının okuduğu oyun saatidir.
+ * Mücadele bir KOŞUDUR: giriş sayıyı 10'a, halkaları 0'a çeker (ADR-0086).
+ * Hedef MUTLAKTIR; `entryLog10` yalnız ilerleme çubuğunun başlangıcıdır, hedefi
+ * kaydırmaz. `lastBuyAt` çürüme cezasının okuduğu oyun saatidir.
  */
 export interface SerializedChallenges {
   /** Tamamlanmış mücadele kimlikleri (`C1`…`C8`) — mandal, ödül kalıcı. */
   completed: string[]
   /** Aktif mücadele kimliği; yoksa `null`. */
   active: string | null
-  /** Girişteki sayının log10 değeri; mücadele yoksa `null`. */
+  /** Girişteki sayının log10 değeri (ilerleme çubuğu); mücadele yoksa `null`. */
   entryLog10: number | null
-  /** Girişte kilitlenen hedef (log10); mücadele yoksa `null`. */
+  /** Aktif mücadelenin MUTLAK hedefi (log10); mücadele yoksa `null`. */
   goalLog10: number | null
   /** Son alımın oyun zamanı (sn) — çürüme cezasının okuduğu saat. */
   lastBuyAt: number
@@ -71,7 +71,7 @@ export interface SerializedChallenges {
 }
 
 /**
- * Diske/buluta yazılan tam durum (SAVE_VERSION 23).
+ * Diske/buluta yazılan tam durum (SAVE_VERSION 24).
  *
  * v22 (2026-10-25): boost/prestij/Tanım yükseltmeleri kaldırıldı; kayıttan
  * `boostMult`, `boosts`, `tanim`, `prestiges`, `upgrades` ve `gateReached`
@@ -82,6 +82,10 @@ export interface SerializedChallenges {
  * `challenges` (mücadele durumu), `gateReached` (`1.79e308` mandalı) ve `tanim`
  * (prestij sayacı) alanlarını geri kazandı. v22 kayıtları bu üç alan olmadan da
  * açılır: deserialize onları VARSAYILANLA doldurur, oyuncu ilerlemesi korunur.
+ *
+ * v24 (2026-10-31, ADR-0086): AD tarzı sıfırlama + boost. Kayıt `boostCount`
+ * alanını kazandı. v20-v23 kayıtları bu alan olmadan da açılır: deserialize
+ * 0 ile doldurur; negatif/ondalıklı/NaN değerler temizlenir.
  */
 export interface SerializedPlayerState {
   version: number
@@ -92,6 +96,8 @@ export interface SerializedPlayerState {
   unlocked: boolean[]
   rung: number
   totalBuys: number
+  /** v24 — satın alınmış boost sayısı; mücadele girişinde korunur, prestijde sıfırlanır. */
+  boostCount: number
   taps: number
   uselessTaps: number
   playTime: number

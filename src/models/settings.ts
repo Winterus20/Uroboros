@@ -22,7 +22,7 @@ export interface GameSettings {
   motionMode: MotionMode
   /**
    * Eski `AlgorithmicSwirl` kalitesi. Swirl ADR-0085 ile kaldırıldı; alan kayıt şeklini
-   * (SAVE_VERSION 23) korumak için durur, hiçbir yerden okunmaz.
+   * (SAVE_VERSION 24) korumak için durur, hiçbir yerden okunmaz.
    */
   swirlShaderQuality: 'off' | 'balanced' | 'high'
   batterySaver: boolean

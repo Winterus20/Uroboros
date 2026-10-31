@@ -53,12 +53,27 @@ const RENDER_CONTEXTS: VoiceContext[] = [
 ]
 
 describe('1. basamak havuzu — bütünlük', () => {
-  it('124 satır: 99 ticker + 25 sahne, 14 nadir, hepsi benzersiz kimlik', () => {
-    expect(RUNG1_LINES).toHaveLength(124)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(99)
-    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(25)
+  it('129 satır: 101 ticker + 28 sahne, 14 nadir, hepsi benzersiz kimlik', () => {
+    expect(RUNG1_LINES).toHaveLength(129)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'ticker')).toHaveLength(101)
+    expect(RUNG1_LINES.filter((line) => line.channel === 'scene')).toHaveLength(28)
     expect(RUNG1_LINES.filter((line) => line.rare === true)).toHaveLength(14)
-    expect(new Set(ids(RUNG1_LINES)).size).toBe(124)
+    expect(new Set(ids(RUNG1_LINES)).size).toBe(129)
+  })
+
+  it('mücadele ve boost kimlikleri havuzda durur (ADR-0086)', () => {
+    const pool = new Set(ids(RUNG1_LINES))
+    for (const id of [
+      'r1_challenge_c1',
+      'r1_challenge_c5',
+      'r1_challenge_c6',
+      'r1_challenge_c8',
+      'r1_boost_available',
+      'r1_boost_purchased',
+      'r1_boost_reset'
+    ]) {
+      expect(pool, id).toContain(id)
+    }
   })
 
   it('her sahne mandallıdır (S3): latch olmayan sahne yok', () => {

@@ -1,20 +1,22 @@
 import type { Decimal } from '../../core/math'
 import type { NumberState } from './economy'
 import { BLOCK_SIZE } from './tuning'
+import { resetRun } from './run'
 
 /**
- * 8 MÜCADELE (v2 / 190 dk kalibrasyonu) — SIFIRLAMASIZ KATMANLAR.
+ * 8 MÜCADELE — ADR-0086 SIFIRLAMALI KOŞULAR.
  *
- * Bağlayıcı kaynak: brain/scratchpad/rung-1-implementation-contract.md §1–2 ·
- * brain/research/rung-1-190-calibration-2026-10-27.md ·
- * brain/scratchpad/chain-only-probe/190-calibration/engine.ts.
+ * Bağlayıcı kaynak: brain/decisions/0086-run-reset-and-boost.md.
  *
- * Bir mücadeleye girmek sayıyı, halkaları veya blok çarpanını ASLA sıfırlamaz.
- * Mücadele bir örtüdür: girişte hedef kilitlenir, ceza derhal devreye girer,
- * hedefe ulaşınca ödül kalıcı olarak açılır ve örtü kalkar.
+ * Mücadeleye girmek AD tarzı bir koşu başlatır: sayı 10'a, zincir sıfıra,
+ * kilitler yalnız Fingers'a döner (`resetRun`). Boost sayısı, bestNumber,
+ * tamamlanmış mücadeleler ve ödülleri korunur. Hedefler MUTLAKTIR (plan hedefi);
+ * girişteki sayı hedefi kaydırmaz. Sıra zorunludur: yalnız `nextChallenge`
+ * girilebilir. Tamamlama koşunun sayısını/halkalarını korur; çıkış da öyle.
  *
  * Bu dosya saf: Vue yok, Pinia yok, store yazmaz. Ekonomi (`economy.ts`) aynı
- * tipleri ve sabitleri okur; ilişki tek yönlüdür (economy → challenges).
+ * tipleri ve sabitleri okur; ilişki tek yönlüdür (economy → challenges, ortak
+ * sıfırlama için ikisi de `run.ts` → `resetRun`).
  */
 
 export type PenaltyKind =
@@ -44,9 +46,12 @@ export interface ChallengeDef {
   readonly ringIndex: number
   /** Giriş eşiği: sayı bu log10 değerine ulaşınca mücadele görünür. */
   readonly unlockLog10: number
-  /** Plan hedefi (log10). Nihai hedef `challengeGoalLog` ile hesaplanır. */
+  /** Mutlak plan hedefi (log10). Girişteki sayı bu hedefi kaydırmaz. */
   readonly goalLog10: number
-  /** Anti-istismar payı: hedef en az giriş + delta olur (log10). */
+  /**
+   * @deprecated ADR-0086: hedefler mutlaktır. Alan eski tüketicilerin tip
+   * uyumu için durur; hiçbir hesaplamaya girmez.
+   */
   readonly delta: number
   /** Mücadele sırasında geçerli fiyat çarpanı (g). Normal oyun 1,20. */
   readonly growth: number
@@ -110,31 +115,31 @@ export const CHALLENGES: readonly ChallengeDef[] = [
     id: 'C1',
     ringIndex: 0,
     unlockLog10: 10,
-    goalLog10: 33.242,
+    goalLog10: 10.5,
     delta: 2,
     growth: 1.22,
     penalty: 'fingersCap',
     reward: 'fingers10',
-    penaltyLabel: 'Fingers capped at 10 purchases · price x1.22',
+    penaltyLabel: 'Fingers capped at 10 purchases · feed x0.2 · price x1.22',
     rewardLabel: 'Full Hand: Fingers x10, feed x1.5'
   },
   {
     id: 'C2',
     ringIndex: 1,
-    unlockLog10: 33.242,
-    goalLog10: 37.376,
+    unlockLog10: 10.5,
+    goalLog10: 20.1,
     delta: 2,
-    growth: 1.45,
+    growth: 1.22,
     penalty: 'price145',
     reward: 'all5',
-    penaltyLabel: 'Unit price grows x1.45',
+    penaltyLabel: 'Unit price grows x1.22',
     rewardLabel: 'Five Notches: all rings x5'
   },
   {
     id: 'C3',
     ringIndex: 2,
-    unlockLog10: 37.376,
-    goalLog10: 95.157,
+    unlockLog10: 20.1,
+    goalLog10: 29.8,
     delta: 2,
     growth: 1.22,
     penalty: 'directOff',
@@ -145,8 +150,8 @@ export const CHALLENGES: readonly ChallengeDef[] = [
   {
     id: 'C4',
     ringIndex: 3,
-    unlockLog10: 95.157,
-    goalLog10: 104.688,
+    unlockLog10: 29.8,
+    goalLog10: 39.4,
     delta: 2,
     growth: 1.22,
     penalty: 'decay',
@@ -157,32 +162,32 @@ export const CHALLENGES: readonly ChallengeDef[] = [
   {
     id: 'C5',
     ringIndex: 4,
-    unlockLog10: 104.688,
-    goalLog10: 119.334,
+    unlockLog10: 39.4,
+    goalLog10: 49.1,
     delta: 2,
     growth: 1.22,
     penalty: 'firstFive',
     reward: 'direct5',
-    penaltyLabel: 'Only the first 5 rings open · price x1.22',
+    penaltyLabel: 'Rings 6-8 cannot be purchased · feed x0.2 · price x1.22',
     rewardLabel: 'Immediate Result: direct x5, feed x1.5'
   },
   {
     id: 'C6',
     ringIndex: 5,
-    unlockLog10: 119.334,
-    goalLog10: 122.271,
+    unlockLog10: 49.1,
+    goalLog10: 58.7,
     delta: 2,
     growth: 1.22,
     penalty: 'feedFifth',
     reward: 'feed15',
-    penaltyLabel: 'Chain feeds 5x slower · price x1.22',
+    penaltyLabel: 'Chain feeds 25x slower (x0.2 global, /5) · price x1.22',
     rewardLabel: 'Overclock: feed x1.5'
   },
   {
     id: 'C7',
     ringIndex: 6,
-    unlockLog10: 122.271,
-    goalLog10: 125.573,
+    unlockLog10: 58.7,
+    goalLog10: 68.4,
     delta: 2,
     growth: 1.22,
     penalty: 'newestOnly',
@@ -193,13 +198,13 @@ export const CHALLENGES: readonly ChallengeDef[] = [
   {
     id: 'C8',
     ringIndex: 7,
-    unlockLog10: 125.573,
-    goalLog10: 128.967,
+    unlockLog10: 68.4,
+    goalLog10: 78,
     delta: 2,
-    growth: 1.35,
+    growth: 1.22,
     penalty: 'price135feedHalf',
     reward: 'finisher',
-    penaltyLabel: 'Price x1.35, feed halved',
+    penaltyLabel: 'Price x1.22 · feed 10x slower (x0.2 global, /2)',
     rewardLabel: 'Theorem: production x2'
   }
 ] as const
@@ -215,27 +220,37 @@ export function activeChallenge(state: { challenges: ChallengeState }): Challeng
   return challengeById(state.challenges.active)
 }
 
-/** Mücadele bu koşuda açıldı mı? (sayı eşiği + tamamlanmamış) */
+/**
+ * Mücadele açıldı mı? Eşik `bestNumber`a (hayat boyu zirve) bakar.
+ *
+ * Current number kullanılsaydı, bir mücadeleden 10 ile çıkan oyuncu kendi
+ * açtığı mücadeleye bir daha giremezdi (soft-lock). ADR-0086 §6.
+ */
 export function isChallengeUnlocked(
-  state: { number: Decimal; challenges: ChallengeState },
+  state: { bestNumber: Decimal; challenges: ChallengeState },
   def: ChallengeDef
 ): boolean {
   if (state.challenges.completed.includes(def.id)) return false
-  const log = state.number.log10().toNumber()
+  const log = state.bestNumber.log10().toNumber()
   return Number.isFinite(log) && log >= def.unlockLog10
 }
 
 /**
- * Girişte kilitlenen hedef: plan hedefi ya da giriş + delta, hangisi yüksekse.
- * "Hedefe yaklaş, sonra gir" istismarını kapatır (contract §1).
+ * Mücadele hedefi MUTLAKTIR (ADR-0086 §5): her zaman tanımın plan hedefi.
+ * İkinci argüman eski göreli hedef çağrılarıyla tip uyumu için durur ve yok sayılır.
  */
-export function challengeGoalLog(def: ChallengeDef, entryLog10: number): number {
-  const safeEntry = Number.isFinite(entryLog10) ? entryLog10 : 0
-  return Math.max(def.goalLog10, safeEntry + def.delta)
+export function challengeGoalLog(def: ChallengeDef, _entryLog10?: number): number {
+  return def.goalLog10
 }
 
 /**
- * Mücadeleye gir. Sayı, halkalar, B ve önceki ödüller AYNEN kalır.
+ * Mücadeleye gir: koşuyu sıfırla, örtüyü kur.
+ *
+ * - Sıra zorunlu: yalnız `nextChallenge` (ilk tamamlanmamış) girilebilir.
+ * - Kilit kontrolü bestNumber ile yapılır; current number resetten sonra 10 olur.
+ * - Boost sayısı, bestNumber, tamamlanmış ödüller ve sayaçlar korunur.
+ * - Hedef mutlak plan hedefidir; giriş sayısı hedefi kaydırmaz.
+ *
  * @returns gerçekten girildiyse `true`
  */
 export function enterChallenge(state: NumberState, id: string): boolean {
@@ -243,11 +258,13 @@ export function enterChallenge(state: NumberState, id: string): boolean {
   if (!def) return false
   if (state.challenges.active !== null) return false
   if (state.challenges.completed.includes(id)) return false
+  if (nextChallenge(state)?.id !== id) return false
   if (!isChallengeUnlocked(state, def)) return false
+  resetRun(state)
   const entry = state.number.log10().toNumber()
   state.challenges.active = id
-  state.challenges.entryLog10 = Number.isFinite(entry) ? entry : 0
-  state.challenges.goalLog10 = challengeGoalLog(def, state.challenges.entryLog10)
+  state.challenges.entryLog10 = Number.isFinite(entry) ? entry : 1
+  state.challenges.goalLog10 = def.goalLog10
   state.challenges.lastBuyAt = state.playTime ?? 0
   return true
 }

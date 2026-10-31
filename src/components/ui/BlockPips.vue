@@ -9,7 +9,7 @@ const props = withDefaults(
   defineProps<{
     filled: number
     size?: number
-    /** Mevcut çarpan metni (ör. "x5.50"); boşsa yazılmaz. */
+    /** Mevcut çarpan metni (ör. "x5.30"); boşsa yazılmaz. */
     text?: string
   }>(),
   { size: 10, text: '' }

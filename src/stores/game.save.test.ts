@@ -6,28 +6,26 @@ import { CHALLENGES } from '../game/number/challenges'
 import type { SerializedPlayerState } from '../models/save'
 
 /**
- * KAYIT GÖÇÜ (v22 → v23) — ADR-0083 / contract §5.
+ * KAYIT GÖÇÜ (v22 → v24) — ADR-0086.
  *
- * Şema değişikliğinin sözü şudur: v22 kaydı AÇILIR ve oyuncunun sayısı, halkaları,
- * kilitleri korunur; yeni üç alan (challenges / gateReached / tanim) VARSAYILANLA
- * gelir. Bu dosya o sözü kilitler. v23 kaydı ise mücadele, kapı ve Tanım değerlerini
- * birebir geri vermelidir — aksi hâlde ödüller ve kapı mandalı her yeniden yüklemede
- * kaybolurdu.
+ * Şema sözü: v20-v23 kayıtları AÇILIR; eksik yeni alanlar varsayılanla gelir.
+ * v23'te challenges/gateReached/tanim, v24'te boostCount eklendi. v24 kaydı
+ * boost sayacını birebir geri verir; negatif/ondalıklı/NaN değerler temizlenir.
  */
 
-/** v22 kaydının SON hâli: v23 alanları henüz yok. */
+/** v22 kaydının SON hâli: v23/v24 alanları henüz yok. */
 function v22Payload(): SerializedPlayerState {
   return {
     version: 22,
     number: '1e50',
     bestNumber: '2e50',
-    // Kilitlerle TUTARLI fixture: yalnız açık halkaların alımı vardır (D6).
     rings: Array.from({ length: 8 }, (_, i) =>
       i < 4 ? { a: String((i + 1) * 30), b: (i + 1) * 10 } : { a: '0', b: 0 }
     ),
     unlocked: [true, true, true, true, false, false, false, false],
     rung: 1,
     totalBuys: 110,
+    boostCount: 0,
     taps: 321,
     uselessTaps: 7,
     playTime: 5400,
@@ -51,20 +49,21 @@ function v22Payload(): SerializedPlayerState {
     },
     seenVoice: ['r1_open_1'],
     latched: ['r1_scene_open'],
-    // v23 alanları BİLİNÇLE yok: eski build'in yazdığı kaydı taklit ediyoruz.
     challenges: undefined as unknown as SerializedPlayerState['challenges'],
     gateReached: undefined as unknown as boolean,
     tanim: undefined as unknown as number
   }
 }
 
-/** v23 kaydı: mücadeleler, kapı ve Tanım dolu. */
+/** v23 kaydı: mücadeleler, kapı ve Tanım dolu; boostCount YOK. */
 function v23Payload(): SerializedPlayerState {
   const base = v22Payload()
   return {
     ...base,
     version: 23,
     number: '3.2e130',
+    // bestNumber hayat boyu zirvedir; current number'ın altında olamaz.
+    bestNumber: '4e130',
     challenges: {
       completed: ['C1', 'C2', 'C3'],
       active: 'C4',
@@ -78,14 +77,23 @@ function v23Payload(): SerializedPlayerState {
   }
 }
 
+/** v24 kaydı: v23 + boostCount. */
+function v24Payload(): SerializedPlayerState {
+  return {
+    ...v23Payload(),
+    version: 24,
+    boostCount: 3
+  }
+}
+
 describe('kayıt şeması sürümü', () => {
-  it('v23 yazar, v20 asgari kalır (v22 kayıtları açılır)', () => {
-    expect(SAVE_VERSION).toBe(23)
+  it('v24 yazar, v20 asgari kalır (v22/v23 kayıtları açılır)', () => {
+    expect(SAVE_VERSION).toBe(24)
     expect(MIN_SUPPORTED_SAVE_VERSION).toBe(20)
   })
 })
 
-describe("v22 kaydı v23 build'de açılır", () => {
+describe("v22 kaydı v24 build'de açılır", () => {
   it('sayı, halkalar, kilitler ve sayaçlar korunur', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
@@ -104,7 +112,7 @@ describe("v22 kaydı v23 build'de açılır", () => {
     expect(store.latched).toEqual(['r1_scene_open'])
   })
 
-  it('yeni üç alan varsayılanla gelir: boş mücadele, kapı kapalı, 0 Tanım', () => {
+  it('eksik yeni alanlar varsayılanla gelir: boş mücadele, kapı kapalı, 0 Tanım, 0 boost', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
 
@@ -115,24 +123,30 @@ describe("v22 kaydı v23 build'de açılır", () => {
     expect(store.challenges.lastBuyAt).toBe(0)
     expect(store.gateReached).toBe(false)
     expect(store.tanim).toBe(0)
+    expect(store.boostCount).toBe(0)
   })
 
-  it('v22 oyuncusu mücadele akışına temiz girer (C1 hemen açılabilir)', () => {
+  it('v22 oyuncusu sıralı akışa temiz girer (yalnız C1 girilebilir)', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
 
-    // Sayı 1e50 → C1 (1e10) ve C2 (1e33.242) kilitleri açık; C3 (1e37.376) de.
+    // bestNumber 2e50 → C1/C2/C3 kilit eşikleri açık, ama sıra C1'dedir.
     const open = store.challengeRows.filter((row) => row.status === 'available')
-    expect(open.map((row) => row.id)).toEqual(['C1', 'C2', 'C3'])
+    expect(open.map((row) => row.id)).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6'])
+    expect(store.challengeRows.filter((row) => row.enterable).map((row) => row.id)).toEqual(['C1'])
+
     store.enterChallenge('C1')
     expect(store.challenges.active).toBe('C1')
-    // Hedef girişte kilitlenir: 1e50 + Δ2 = 1e52, plan hedefi 1e33.242'den büyük.
-    expect(store.challenges.goalLog10).toBeCloseTo(52, 6)
+    // ADR-0086: giriş koşuyu sıfırlar; hedef MUTLAK plan hedefidir.
+    expect(store.number.toString()).toBe('10')
+    expect(store.challenges.entryLog10).toBe(1)
+    expect(store.challenges.goalLog10).toBeCloseTo(10.5, 6)
+    expect(store.challengeRows.find((row) => row.id === 'C1')?.enterable).toBe(false)
   })
 })
 
-describe("v23 kaydı birebir geri döner", () => {
-  it('mücadele durumu (tamamlanan + aktif + kilitli hedef) korunur', () => {
+describe("v23 kaydı v24 build'de açılır", () => {
+  it('mücadele durumu (tamamlanan + aktif + hedef) korunur, boost 0 gelir', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
 
@@ -142,6 +156,7 @@ describe("v23 kaydı birebir geri döner", () => {
     expect(store.challenges.goalLog10).toBe(132.5)
     expect(store.challenges.lastBuyAt).toBe(5400)
     expect(store.challenges.lastBoughtRing).toBe(3)
+    expect(store.boostCount).toBe(0)
   })
 
   it('kapı mandalı ve Tanım sayacı korunur', () => {
@@ -152,12 +167,13 @@ describe("v23 kaydı birebir geri döner", () => {
     expect(store.tanim).toBe(2)
   })
 
-  it('serialize → deserialize turu aynı değerleri verir', () => {
+  it('serialize → deserialize turu aynı değerleri verir (v24 yazar)', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
     const saved = store.serialize()
 
     expect(saved.version).toBe(SAVE_VERSION)
+    expect(saved.boostCount).toBe(0)
     expect(saved.challenges.completed).toEqual(['C1', 'C2', 'C3'])
     expect(saved.challenges.active).toBe('C4')
     expect(saved.challenges.entryLog10).toBe(130.5)
@@ -171,15 +187,28 @@ describe("v23 kaydı birebir geri döner", () => {
     expect(round.challenges).toEqual(store.challenges)
     expect(round.gateReached).toBe(true)
     expect(round.tanim).toBe(2)
+    expect(round.boostCount).toBe(0)
     expect(round.number.toString()).toBe(store.number.toString())
     expect(round.rings.map((r) => r.bought)).toEqual(store.rings.map((r) => r.bought))
   })
+})
+
+describe('v24 kaydı boost sayacını birebir geri verir', () => {
+  it('boostCount korunur ve turda kaybolmaz', () => {
+    const store = useGameStore()
+    store.deserialize(v24Payload())
+    expect(store.boostCount).toBe(3)
+
+    const saved = store.serialize()
+    expect(saved.version).toBe(24)
+    expect(saved.boostCount).toBe(3)
+
+    const round = useGameStore()
+    round.deserialize(saved)
+    expect(round.boostCount).toBe(3)
+  })
 
   it('tamamlanan ödüller üretime girer (C1 Fingers x10, C2 x5, C3 x3)', () => {
-    // Ölçüm yalnız Fingers üzerinden yapılır: halka 2–8 in doğrudan katkısı
-    // C1'den x10 almaz (o ödül yalnız halka 0 a ve beslemeye vurur), bu yüzden
-    // toplam üretim oranı tek başına 150 çıkmaz. Tek halkalı durum çarpanı
-    // doğrudan okur.
     const bare = useGameStore()
     bare.deserialize(v22Payload())
     bare.rings.forEach((ring, i) => {
@@ -189,7 +218,9 @@ describe("v23 kaydı birebir geri döner", () => {
     const baseline = bare.perSecond
 
     const awarded = useGameStore()
-    awarded.deserialize(v23Payload())
+    awarded.deserialize(v24Payload())
+    // Boost çarpanı bu ölçümün konusu değil: ödül oranını izole et.
+    awarded.boostCount = 0
     awarded.rings.forEach((ring, i) => {
       ring.amount = i === 0 ? D(100) : D(0)
       ring.bought = i === 0 ? 40 : 0
@@ -201,10 +232,10 @@ describe("v23 kaydı birebir geri döner", () => {
   })
 })
 
-describe("deserialize kurcalanmış veriyi temizler", () => {
+describe('deserialize kurcalanmış veriyi temizler', () => {
   it('bilinmeyen mücadele kimlikleri ve sayı olmayan değerler düşer', () => {
     const store = useGameStore()
-    const payload = v23Payload()
+    const payload = v24Payload()
     payload.challenges = {
       completed: ['C1', 'C99', 'C1', 42 as unknown as string, 'C2'],
       active: 'CX',
@@ -225,7 +256,7 @@ describe("deserialize kurcalanmış veriyi temizler", () => {
 
   it('tamamlanmış bir mücadele aktif kalamaz', () => {
     const store = useGameStore()
-    const payload = v23Payload()
+    const payload = v24Payload()
     payload.challenges.active = 'C1'
     store.deserialize(payload)
     expect(store.challenges.active).toBeNull()
@@ -233,18 +264,16 @@ describe("deserialize kurcalanmış veriyi temizler", () => {
 
   it('hedefi girişten büyük olmayan aktif mücadele iptal edilir', () => {
     const store = useGameStore()
-    const payload = v23Payload()
+    const payload = v24Payload()
     payload.challenges.entryLog10 = 200
     payload.challenges.goalLog10 = 132.5
     store.deserialize(payload)
-
-    // Hedef girişin altında kalırsa mücadele hiç bitmez; yükleme onu bırakır.
     expect(store.challenges.active).toBeNull()
   })
 
   it('negatif Tanım ve ondalıklı sayılar temizlenir', () => {
     const store = useGameStore()
-    const payload = v23Payload()
+    const payload = v24Payload()
     payload.tanim = -4.7
     store.deserialize(payload)
     expect(store.tanim).toBe(0)
@@ -254,9 +283,48 @@ describe("deserialize kurcalanmış veriyi temizler", () => {
     expect(store.tanim).toBe(3)
   })
 
+  it('boostCount alanı hiç yoksa 0 gelir (v20-v23 göçü)', () => {
+    const store = useGameStore()
+    const payload = v24Payload()
+    delete (payload as Partial<SerializedPlayerState>).boostCount
+    store.deserialize(payload)
+    expect(store.boostCount).toBe(0)
+  })
+
+  it('boostCount negatif/ondalıklı/NaN ise güvenli değere çekilir', () => {
+    const store = useGameStore()
+    const payload = v24Payload()
+
+    payload.boostCount = -4
+    store.deserialize(payload)
+    expect(store.boostCount).toBe(0)
+
+    payload.boostCount = 2.9
+    store.deserialize(payload)
+    expect(store.boostCount).toBe(2)
+
+    payload.boostCount = Number.NaN
+    store.deserialize(payload)
+    expect(store.boostCount).toBe(0)
+
+    payload.boostCount = Number.POSITIVE_INFINITY
+    store.deserialize(payload)
+    expect(store.boostCount).toBe(0)
+  })
+
+  it('bestNumber current numberın altındaysa en az sayı kadar olur (soft-lock yok)', () => {
+    const store = useGameStore()
+    const payload = v24Payload()
+    payload.number = '1e50'
+    payload.bestNumber = '1e10'
+    store.deserialize(payload)
+    expect(store.bestNumber.gte(store.number)).toBe(true)
+    expect(store.bestNumber.log10().toNumber()).toBeCloseTo(50, 6)
+  })
+
   it('gateReached yalnız gerçek true ile kurulur', () => {
     const store = useGameStore()
-    const payload = v23Payload()
+    const payload = v24Payload()
     payload.gateReached = 'yes' as unknown as boolean
     store.deserialize(payload)
     expect(store.gateReached).toBe(false)
@@ -272,14 +340,16 @@ describe('prestij', () => {
     expect(store.rung).toBe(1)
   })
 
-  it('kapıda +1 Tanım, rung 2 ve kapı mandalı KORUNUR', () => {
+  it('kapıda +1 Tanım, rung 2, kapı mandalı korunur ve boost sayacı sıfırlanır', () => {
     const store = useGameStore()
-    store.deserialize(v23Payload())
+    store.deserialize(v24Payload())
     expect(store.gateReached).toBe(true)
+    expect(store.boostCount).toBe(3)
 
     store.prestige()
     expect(store.tanim).toBe(3)
     expect(store.rung).toBe(2)
+    expect(store.boostCount).toBe(0)
     // Mandal geri alınmaz: kapıya varıldı, bu kayda öyle yazılır.
     expect(store.gateReached).toBe(true)
     // Modal artık açılmaz (rung 2), aksi hâlde her yüklemede yeniden dikilirdi.
@@ -301,19 +371,27 @@ describe('mücadele paneli satırları', () => {
     expect(rows).toHaveLength(8)
     expect(rows.filter((r) => r.status === 'completed').map((r) => r.id)).toEqual(['C1', 'C2', 'C3'])
     expect(rows.find((r) => r.id === 'C4')?.status).toBe('active')
-    // Sayı 3.2e130: C5/C6/C7 kilitleri çoktan geçildi, C8 (1e125.573) da açık.
     expect(rows.find((r) => r.id === 'C5')?.status).toBe('available')
     expect(rows.find((r) => r.id === 'C8')?.status).toBe('available')
-    // Tamamlanan satır %100, aktif satır girişten hedefe oranı verir.
     expect(rows.find((r) => r.id === 'C3')?.progress).toBe(100)
     const c4 = rows.find((r) => r.id === 'C4')!
     expect(c4.progress).toBeGreaterThanOrEqual(0)
     expect(c4.progress).toBeLessThanOrEqual(100)
   })
 
-  it('her satır ödül adı, halka adı ve mekanik etiket taşır', () => {
+  it('enterable yalnız sıradaki satırda true; aktif mücadele varken hiçbirinde değil', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
+    expect(store.challengeRows.filter((row) => row.enterable)).toHaveLength(0)
+
+    store.exitChallenge()
+    expect(store.challengeRows.filter((row) => row.enterable).map((row) => row.id)).toEqual(['C4'])
+    expect(store.nextChallengeLabel).toBe('C4')
+  })
+
+  it('her satır ödül adı, halka adı ve mekanik etiket taşır', () => {
+    const store = useGameStore()
+    store.deserialize(v24Payload())
     for (const row of store.challengeRows) {
       expect(row.name.length).toBeGreaterThan(0)
       expect(row.name).not.toContain(':')
@@ -322,10 +400,11 @@ describe('mücadele paneli satırları', () => {
       expect(row.rewardLabel.length).toBeGreaterThan(0)
       expect(row.goalText.length).toBeGreaterThan(0)
       expect(row.goal.gt(0)).toBe(true)
+      expect(typeof row.enterable).toBe('boolean')
     }
   })
 
-  it('hedef göreli: giriş sayısı yükseldikçe satır hedefi de yükselir', () => {
+  it('hedef MUTLAK: giriş sayısı yükselse de satır hedefi değişmez', () => {
     const low = useGameStore()
     low.deserialize(v22Payload())
     const lowGoal = low.challengeRows.find((r) => r.id === 'C1')!.goal.log10().toNumber()
@@ -333,11 +412,12 @@ describe('mücadele paneli satırları', () => {
     const high = useGameStore()
     const payload = v22Payload()
     payload.number = '1e60'
+    payload.bestNumber = '1e60'
     high.deserialize(payload)
     const highGoal = high.challengeRows.find((r) => r.id === 'C1')!.goal.log10().toNumber()
 
-    expect(highGoal).toBeCloseTo(62, 4)
-    expect(highGoal).toBeGreaterThan(lowGoal)
+    expect(lowGoal).toBeCloseTo(10.5, 4)
+    expect(highGoal).toBeCloseTo(10.5, 4)
   })
 })
 
@@ -368,29 +448,27 @@ describe('hedef ve kapı okumaları', () => {
     expect(store.goalProgress).toBe(100)
   })
 
-  it('blok çarpanı rozeti x5.50 yazar', () => {
+  it('blok çarpanı rozeti x5.30 yazar', () => {
     const store = useGameStore()
-    expect(store.blockMultText).toBe('x5.50')
+    expect(store.blockMultText).toBe('x5.30')
   })
 
   it('sıradaki mücadele etiketi tamamlananları atlar', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
-    // C1-C3 bitti, C4 aktif: normal mod etiketi boş, aktif satır C4.
     expect(store.nextChallengeLabel).toBe('')
     store.exitChallenge()
     expect(store.nextChallengeLabel).toBe('C4')
   })
 })
 
-describe("update / simulateOffline olay akışı", () => {
+describe('update / simulateOffline olay akışı', () => {
   it('hedefe ulaşınca mücadele tamamlanır, ödül kalıcı olur ve olay satırı yazılır', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
     store.enterChallenge('C1')
     expect(store.challenges.active).toBe('C1')
 
-    // Hedefi aş: girişte kilitlenen hedefin üstüne çık.
     const goal = store.challenges.goalLog10!
     store.number = D(10).pow(goal + 1)
     store.update(0.05)
@@ -401,17 +479,37 @@ describe("update / simulateOffline olay akışı", () => {
     expect(store.latched).toContain('challenge_clear_C1')
   })
 
-  it('çevrimdışı simülasyon aynı tamamlama kontrolünü çalıştırır', () => {
+  it('çevrimdışı simülasyon hedefi geçen adımda tamamlar', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
     store.enterChallenge('C1')
     const goal = store.challenges.goalLog10!
     store.number = D(10).pow(goal + 1)
+    const bestBefore = store.bestNumber.toString()
 
     store.simulateOffline(60)
 
     expect(store.challenges.completed).toContain('C1')
     expect(store.offlineReport).not.toBeNull()
+    // Koşu korunur: bestNumber mandalı da geri gitmez.
+    expect(store.bestNumber.toString()).toBe(bestBefore)
+  })
+
+  it('çevrimdışı tamamlamadan SONRAKİ üretim ödülü kullanır', () => {
+    const store = useGameStore()
+    store.deserialize(v22Payload())
+    store.enterChallenge('C1')
+    // Hedefin hemen üstünde başla: ilk 1 sn adımında tamamlanır.
+    const goal = store.challenges.goalLog10!
+    store.number = D(10).pow(goal + 1e-9)
+    store.rings[0].amount = D(100)
+    store.rings[0].bought = 10
+    store.simulateOffline(10)
+
+    expect(store.challenges.completed).toContain('C1')
+    // Tamamlandıktan sonraki adımlar C1 ödülünü (Fingers x10) kullanır.
+    expect(store.ringRows[0].producesPerSecond.div(store.number).gt(0)).toBe(true)
+    expect(store.perSecond.gt(0)).toBe(true)
   })
 
   it('kapı açılınca gateReached mandalı kurulur ve büyüme durur', () => {
@@ -447,11 +545,10 @@ describe('buyMaxAll', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
     store.enterChallenge('C1')
-    // v22 fixture'ında Fingers 10 alımda: ceza daha fazlasını yasaklar.
-    const before = store.totalBuys
+    // Giriş koşuyu sıfırladı; cezayı ölçmek için bütçeyi yeniden ver.
+    store.number = D('1e30')
     store.buyMaxAll()
-    // Ceza 10'dan fazla Fingers alımını yasaklar: sayı 10'da KALIR.
     expect(store.rings[0].bought).toBe(10)
-    expect(store.totalBuys).toBeGreaterThanOrEqual(before)
+    expect(store.totalBuys).toBeGreaterThanOrEqual(110)
   })
 })

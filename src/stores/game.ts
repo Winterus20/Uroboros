@@ -14,9 +14,18 @@ import {
 import { lineText, pickSceneLine, type VoiceContext } from '../game/voice'
 import {
   advance,
+  applyBoost as applyBoostRaw,
   blockFactor,
+  boostBlockedReason as boostBlockedReasonRaw,
+  boostBought as boostBoughtRaw,
+  boostMultiplier as boostMultiplierRaw,
+  boostPrice as boostPriceRaw,
+  boostRequirement as boostRequirementRaw,
+  boostRingUnlocked as boostRingUnlockedRaw,
+  boostUnlocked as boostUnlockedRaw,
   buyRing as buyRingRaw,
   buyRingMax,
+  canBoost as canBoostRaw,
   canBuyRing,
   checkGate,
   createNumberState,
@@ -29,13 +38,13 @@ import {
   ringGainPerSecond,
   ringNumberRate,
   ringUnlocked,
-  unlockedRingCount
+  unlockedRingCount,
+  type BoostBlockedReason
 } from '../game/number/economy'
 import {
   CHALLENGES,
   activeChallenge,
   challengeById,
-  challengeGoalLog,
   challengeProgress,
   completeChallengeIfReady,
   enterChallenge as enterChallengeRaw,
@@ -122,7 +131,7 @@ function goalToDecimal(log10Value: number): Decimal {
   return D(10).pow(log10Value)
 }
 
-/** Blok çarpanı metni: küçük değerler "x5.50", büyükler notasyonla "x1.2e30". */
+/** Blok çarpanı metni: küçük değerler "x5.30", büyükler notasyonla "x1.2e30". */
 function blockFactorLabel(factor: Decimal, precision: number, notation: NotationType): string {
   if (factor.lt(1000)) {
     const n = factor.toNumber()
@@ -267,21 +276,96 @@ export const useGameStore = defineStore('game', {
       return state.gateReached && state.rung === 1
     },
 
-    /** Blok çarpanı rozeti: "x5.50". */
+    /** Blok çarpanı rozeti: "x5.30". */
     blockMultText(): string {
       return 'x' + BLOCK_MULT.toFixed(2)
     },
 
+    // ── Boost (ADR-0086) ─────────────────────────────────────────────────
+    // UI yalnız bu getter'ları okur; çarpma/biçimlendirme bileşende yapılmaz.
+
+    /** Bir sonraki boost için son halkada gereken alım sayısı. */
+    boostRequirement(state): number {
+      return boostRequirementRaw(state.boostCount)
+    },
+
+    /** Boost sayısı bir artarsa gereken alım sayısı. */
+    boostNextRequirement(state): number {
+      return boostRequirementRaw(state.boostCount + 1)
+    },
+
+    /** Son halkanın bu koşudaki alım sayısı. */
+    boostBought(state): number {
+      return boostBoughtRaw(state)
+    },
+
+    /** Bir sonraki boost'un sayı maliyeti. */
+    boostPrice(state): Decimal {
+      return boostPriceRaw(state)
+    },
+
+    /** Mevcut boost üretim çarpanı (1,5^n). */
+    boostMultiplier(state): Decimal {
+      return boostMultiplierRaw(state.boostCount)
+    },
+
+    /** Mevcut boost çarpanı rozeti: "x2.25". */
+    boostMultiplierText(state): string {
+      return blockFactorLabel(
+        boostMultiplierRaw(state.boostCount),
+        state.settings.decimalPlaces,
+        state.settings.notation
+      )
+    },
+
+    /** Bir sonraki boost'un çarpanı: "x3.38". */
+    boostNextMultiplierText(state): string {
+      return blockFactorLabel(
+        boostMultiplierRaw(state.boostCount + 1),
+        state.settings.decimalPlaces,
+        state.settings.notation
+      )
+    },
+
+    /** Son halka açık mı, ya da daha önce boost alınmış mı? */
+    boostUnlocked(state): boolean {
+      return boostUnlockedRaw(state)
+    },
+
+    /** Son halka bu koşuda açık mı? ('requirement' engelini ayırır) */
+    boostRingUnlocked(state): boolean {
+      return boostRingUnlockedRaw(state)
+    },
+
+    /** Boost'un önündeki ilk engel; null = engel yok (fiyat dahil). */
+    boostBlockedReason(state): BoostBlockedReason | null {
+      return boostBlockedReasonRaw(state)
+    },
+
+    /** Boost satın alınabilir mi? (reason null ise evet) */
+    canBoost(state): boolean {
+      return canBoostRaw(state)
+    },
+
+    /** Son halka gereksinimine ilerleme 0–100 (aşağı kırpılır). */
+    boostProgress(state): number {
+      const requirement = boostRequirementRaw(state.boostCount)
+      if (requirement <= 0) return 100
+      const raw = (boostBoughtRaw(state) / requirement) * 100
+      if (!Number.isFinite(raw)) return 0
+      return Math.min(100, Math.max(0, raw))
+    },
+
     /**
-     * Mücadele paneli satırları (8 sabit, contract §4).
+     * Mücadele paneli satırları (8 sabit, ADR-0086).
      *
-     * Hedef görelidir (`max(plan, giriş + Δ)`), o yüzden aktif olmayan satırda
-     * sabit plan hedefi değil, "şimdi girilse hedef ne olurdu" değeri yazılır:
-     * aksi hâlde oyuncu ulaşamayacağı bir sayıyı hedef sanardı (V4).
+     * Hedefler MUTLAKTIR: her satır kendi plan hedefini yazar, giriş sayısı
+     * hedefi kaydırmaz. Kilit `bestNumber`a bakar. `enterable` yalnız sıradaki
+     * tamamlanmamış mücadelede (ve hiçbir mücadele aktif değilken) true olur:
+     * UI "Enter" düğmesini bu bayrağa bağlar.
      */
     challengeRows(state): ChallengeRow[] {
-      const nowLog = state.number.log10().toNumber()
-      const safeLog = Number.isFinite(nowLog) ? nowLog : 0
+      const nextId = nextChallenge(state)?.id ?? null
       return CHALLENGES.map((def) => {
         const completed = state.challenges.completed.includes(def.id)
         const active = state.challenges.active === def.id
@@ -290,12 +374,7 @@ export const useGameStore = defineStore('game', {
         if (completed) status = 'completed'
         else if (active) status = 'active'
         else if (unlocked) status = 'available'
-        const goalLog =
-          active && state.challenges.goalLog10 !== null
-            ? state.challenges.goalLog10
-            : completed
-              ? def.goalLog10
-              : challengeGoalLog(def, safeLog)
+        const goalLog = active && state.challenges.goalLog10 !== null ? state.challenges.goalLog10 : def.goalLog10
         const goal = goalToDecimal(goalLog)
         const unlockAt = goalToDecimal(def.unlockLog10)
         return {
@@ -308,6 +387,7 @@ export const useGameStore = defineStore('game', {
           unlockAt,
           unlockText: format(unlockAt, state.settings.decimalPlaces, state.settings.notation),
           progress: completed ? 100 : active ? challengeProgress(state) : 0,
+          enterable: status === 'available' && nextId === def.id,
           penaltyLabel: def.penaltyLabel,
           rewardLabel: def.rewardLabel
         }
@@ -362,7 +442,11 @@ export const useGameStore = defineStore('game', {
     resolveChallengeAndGate(): void {
       const completed = completeChallengeIfReady(this)
       if (completed) this.announceChallengeClear(completed.id)
-      if (checkGate(this)) this.announceGate()
+      const gate = checkGate(this)
+      if (gate) this.announceGate()
+      // Aynı tick'te biten mücadele/kapı satırı ezilmez: boost eşiği bir sonraki
+      // tick'te konuşur (tek ticker var; olay önceliği kapı > bitiş > boost).
+      if (!completed && !gate) this.announceBoostAvailable()
     },
 
     /** Mücadele bitişi: sahne satırı + ticker olayı + ses (contract §4). */
@@ -394,6 +478,39 @@ export const useGameStore = defineStore('game', {
     },
 
     /** `+1` — gerçekten 1 ekler (S9); gösterim değişmediyse anlamsız basış sayılır. */
+    /**
+     * Boost eşiği ilk kez açıldığında sahne satırı (ADR-0086).
+     *
+     * Koşul son halkanın AÇIK ve gereksinim kadar alınmış olmasıdır; fiyat şart
+     * değil — satır "boost açıldı" der, "hemen alınabilir" demez. Mandallıdır:
+     * eşik bir kez açılır, her tick'te tekrar konuşmaz.
+     */
+    announceBoostAvailable(): void {
+      if (this.rung !== 1 || this.challenges.active !== null) return
+      if (this.gateReached) return
+      if (this.latched.includes('r1_boost_available')) return
+      if (!this.boostRingUnlocked) return
+      if (this.boostBought < this.boostRequirement) return
+      const ctx = voiceContextFor(this)
+      const scene = pickSceneLine(this.rung, this.latched, 'r1_boost_available', ctx)
+      if (!scene) return
+      this.tickerLine = lineText(scene, ctx)
+      this.markVoiceSeen(scene.id)
+      this.latch(scene.id)
+    },
+
+    /** Boost satın alındı: sahne satırı + ses; sayaç ve çarpan kalıcıdır. */
+    announceBoost(): void {
+      const ctx = voiceContextFor(this)
+      const scene = pickSceneLine(this.rung, this.latched, 'r1_boost_purchased', ctx)
+      if (scene) {
+        this.tickerLine = lineText(scene, ctx)
+        this.markVoiceSeen(scene.id)
+        this.latch(scene.id)
+      }
+      if (this.settings.soundEnabled) sounds.playPayoff()
+    },
+
     tap(): void {
       const before = this.number
       const precision = this.settings.decimalPlaces
@@ -442,7 +559,22 @@ export const useGameStore = defineStore('game', {
     },
 
     /**
-     * Mücadeleye gir — sayı/halkalar/B korunur, ceza üstüne biner (contract §0).
+     * Boost satın al (ADR-0086): fiyatı öde, sayacı artır, koşuyu sıfırla.
+     *
+     * Boost sayısı, bestNumber, tamamlanmış mücadele ödülleri ve Tanım korunur;
+     * sayı 10'a, zincir sıfıra döner. Mücadele aktifken veya 1. basamak dışında
+     * satın alınamaz (`canBoost` engeli).
+     *
+     * @returns gerçekten alındıysa `true`
+     */
+    boost(): boolean {
+      if (!applyBoostRaw(this)) return false
+      this.announceBoost()
+      return true
+    },
+
+    /**
+     * Mücadeleye gir — koşu sıfırlanır, ceza üstüne biner (ADR-0086 §1/§5).
      *
      * Giriş bir OLAYDIR: sahne satırı cezanın ne olduğunu dünyanın dilinde söyler
      * (V1). Satır kimlikle çağrılır, rastgele havuzdan gelmez.
@@ -473,6 +605,7 @@ export const useGameStore = defineStore('game', {
      * alınamaz bir gerçektir ve kayda öyle yazılır. Tekrar tetiklenmesini
      * `checkGate` engeller: rung 2 olduğunda kapı kontrolü çalışmaz.
      *
+     * ADR-0086 §4: boost sayacı BURADA sıfırlanır; mücadele girişinde değil.
      * Koşu korunur: sayı, halkalar, ödüller ve Tanım silinmez. 2. basamak bu
      * build'de yok; modal onu söyler, vaat vermez (V4).
      */
@@ -480,12 +613,21 @@ export const useGameStore = defineStore('game', {
       // Yalnız kapı EKRANDAYKEN: `gateReached` mandal olduğu için tek başına
       // yetmez, aksi hâlde her çağrı +1 Tanım yazardı.
       if (!this.gateOpen) return
+      // Sahne satırı basamak değişmeden seçilir: havuz 1. basamağındır.
+      const ctx = voiceContextFor(this)
+      const scene = pickSceneLine(this.rung, this.latched, 'r1_boost_reset', ctx)
       this.tanim += 1
+      this.boostCount = 0
       this.rung = 2
       // `gateReached` BİLİNÇLE true kalır (contract §4: "keep gateReached"). Kapıya
       // varılmış olmak geri alınamaz bir gerçektir ve kayda öyle yazılır; modalın
       // kapanması bu mandalın değil, basamağın işidir (`gateOpen`).
       this.latch('prestige_' + this.tanim)
+      if (scene) {
+        this.tickerLine = lineText(scene, ctx)
+        this.markVoiceSeen(scene.id)
+        this.latch(scene.id)
+      }
     },
 
     setSetting<K extends keyof GameSettings>(key: K, value: GameSettings[K]): void {
@@ -515,10 +657,10 @@ export const useGameStore = defineStore('game', {
     /**
      * S6 — çevrimdışı ilerleme: 12 saat tavan, 1 sn adımlarla.
      *
-     * Döngü bittikten sonra `update` ile AYNI olay çözümü çalışır: 12 saatlik bir
-     * dönüşte tamamlanan mücadele ödülünü verir, ticker satırını yazar ve sesi
-     * çalar. Aksi hâlde çevrimdışı dönüş, mekaniğin sessizce atlandığı tek yol
-     * olurdu (V4: mekanik hakkında yalan yok).
+     * Her 1 sn'lik adımdan SONRA `update` ile AYNI olay çözümü çalışır: hedefi
+     * aşan mücadele TAM O ADIMDA tamamlanır, ödülü kalan çevrimdışı süreye
+     * derhal uygulanır (ADR-0086 §7). Döngü sonunda tek seferlik çözüm, 12
+     * saatlik bir dönüşte ödülü geç fark ettirirdi.
      *
      * Rapor (`offlineReport`) yalnız `OFFLINE_REPORT_MIN_SECONDS` ve üzerindeki
      * yokluklarda yazılır; daha kısa duraklamalar sessizce simüle edilir ve
@@ -542,8 +684,11 @@ export const useGameStore = defineStore('game', {
         advance(this, dt)
         this.playTime += dt
         remaining -= dt
+        // Mücadele hedefi bu adımda aşıldıysa ödülü HEMEN uygula; kapı da
+        // aynı adımda mandallanır ve büyüme durur.
+        this.resolveChallengeAndGate()
+        if (this.growthStopped) break
       }
-      this.resolveChallengeAndGate()
       if (!report) return
       this.offlineReport = {
         seconds: total,
@@ -562,6 +707,7 @@ export const useGameStore = defineStore('game', {
         unlocked: [...this.unlocked],
         rung: this.rung,
         totalBuys: this.totalBuys,
+        boostCount: this.boostCount,
         taps: this.taps,
         uselessTaps: this.uselessTaps,
         playTime: this.playTime,
@@ -594,8 +740,15 @@ export const useGameStore = defineStore('game', {
         typeof value === 'number' && Number.isFinite(value) ? value : null
       this.number = num(data.number, D(10))
       this.bestNumber = num(data.bestNumber, this.number)
+      // bestNumber hayat boyu zirvedir; bozuk/eski kayıt onu sayının altında
+      // bırakırsa mücadele kilitleri yanlış kapanırdı (ADR-0086 §6 soft-lock).
+      if (this.number.gt(this.bestNumber)) this.bestNumber = this.number
       this.rung = typeof data.rung === 'number' ? Math.min(11, Math.max(1, data.rung)) : 1
       this.totalBuys = typeof data.totalBuys === 'number' ? data.totalBuys : 0
+      // v24: boostCount. v20-v23 kayıtlarında yoktur → 0. Negatif/ondalıklı/NaN
+      // değerler sessizce temizlenir; sayaç asla negatif olamaz.
+      const savedBoost = finite(data.boostCount)
+      this.boostCount = savedBoost === null ? 0 : Math.max(0, Math.floor(savedBoost))
       this.taps = typeof data.taps === 'number' ? data.taps : 0
       this.uselessTaps = typeof data.uselessTaps === 'number' ? data.uselessTaps : 0
       this.playTime = typeof data.playTime === 'number' ? data.playTime : 0

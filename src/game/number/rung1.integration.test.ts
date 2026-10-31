@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { D } from '../../core/math'
-import { BLOCK_MULT, CHALLENGE_FEED_MULT, GATE, GATE_LOG10 } from './tuning'
+import { BLOCK_MULT, BOOST_MULT, CHALLENGE_FEED_MULT, GATE, GATE_LOG10 } from './tuning'
 import {
   advance,
+  applyBoost,
   blockFactor,
-  buyRing,
+  boostMultiplier,
+  boostRequirement,
   checkGate,
   createNumberState,
-  feedMultiplier,
   manualTap,
   maxAll,
   numberPerSecond,
-  ringGainPerSecond,
-  ringProductionMultiplier,
   type NumberState
 } from './economy'
 import {
@@ -21,500 +20,341 @@ import {
   challengeGoalLog,
   completeChallengeIfReady,
   enterChallenge,
-  exitChallenge,
   isChallengeUnlocked,
   nextChallenge
 } from './challenges'
 
 /**
- * RUNG 1 v2 — HEADLESS INTEGRATION TEST (the real src engine).
+ * RUNG 1 — HEADLESS INTEGRATION TEST (gerçek src motoru, ADR-0086 reset+boost).
  *
- * Binding sources: brain/scratchpad/rung-1-implementation-contract.md §1-3,
- * brain/research/rung-1-plan-2026-10-27.md §11,
- * brain/research/rung-1-190-calibration-2026-10-27.md.
+ * Bağlayıcı kaynak: brain/decisions/0086-run-reset-and-boost.md.
+ * Kalibrasyon: brain/scratchpad/rung1-boost-reset/ (task-3, 2026-10-31).
  *
- * This file does NOT copy the engine: it calls src/game/number/*.ts directly.
- * The reference engine under brain/scratchpad is the origin of the calibration,
- * never the subject of the assertion. What is asserted is the SHAPE of the run:
- * no resets, 8 reset-free overlays, the C8 finisher, the 1.79e308 gate.
- * 188.8 minutes is NOT the target here — 150-230 minutes is the whole claim.
+ * Ölçülen (dt=1s, gerçek harness):
+ *   hedeflenen yol (optimal, 0'dan greedy) 181.0 dk · 11 boost · C1..C8 17/8/8/9/9/19/11/14 dk
+ *   challenges-only (0 boost)              289.6 dk · 8/8 tamam
+ *   boost-only (optimal k)                 672.6 dk · no-meta base 1031.9 dk
  *
- * Deterministic player policy (the maxall arm of the calibration):
- *   - every 0.5 s: rings 7..0, buy in blocks of 10 while affordable (maxAll)
- *   - +2 taps/s during the opening (the only income that funds the first ring)
- *   - step size 0.5 s -> 240 minutes = 28,800 steps
+ * Bu dosya motoru KOPYALAMAZ; src/game/number/*.ts'i doğrudan çağırır. Testte
+ * dt=2 kullanılır (120 s testTimeout): süreler dt=1 ölçümünden birkaç dk sapabilir,
+ * bu yüzden eşikler bant olarak yazılır.
  */
 
-/** Simulation step — same resolution as the calibration (0.5 s). */
-const STEP_SECONDS = 0.5
-
-/** Opening tap rate; the game starts at 10 and the first ring costs 25. */
+const STEP_SECONDS = 2
 const TAPS_PER_SEC = 2
 
-/**
- * Opening taps stop once the first Fingers block is bought.
- *
- * The opening is the one stretch where the chain cannot feed itself: production is
- * exactly zero until a ring exists, so +1 is the only income. Ten Fingers cost
- * 25 * (1.2^10 - 1) / 0.2 ~= 649, i.e. ~325 s of tapping at 2 taps/s. A fixed
- * shorter window leaves totalBuys at 0 and the whole run stays frozen at 10.
- */
-function openingTapDone(state: NumberState): boolean {
-  return state.rings[0].bought > 0
+interface Policy {
+  enterChallenges: boolean
+  /** C_i'ye girmeden önce istenen KUMULATİF boost sayısı. */
+  boostTargets: number[]
+  maxBoosts: number
 }
 
-/** Safety cap — the target is 188.8 min, 240 leaves generous headroom. */
-const RUN_CAP_MINUTES = 240
-
-/** C1 plan goal (log10) — contract §1 table. */
-const C1_GOAL_LOG10 = 33.242
-
-/** Opening number; falling back to this would mean a reset happened. */
-const FRESH_NUMBER = 10
-
-interface PhaseRecord {
+interface PhaseResult {
   id: string
-  entryMinute: number
-  endMinute: number
-  entryLog10: number
-  goalLog10: number
+  entryMin: number
+  endMin: number
   completed: boolean
+  entryBoost: number
 }
 
-interface RunReport {
-  state: NumberState
-  minutes: number
-  gateMinute: number | null
+interface RunResult {
+  gateMin: number | null
+  totalMin: number
+  finalLog10: number
+  boostCount: number
+  boostMinutes: number[]
+  phases: PhaseResult[]
+  completed: string[]
   gateTransitions: number
-  phases: PhaseRecord[]
-  unbackedDrops: number
-  boughtRegressions: number
-  bestRegressions: number
-  freshResets: number
   nanSeen: boolean
-  challengeEntries: number
 }
 
-interface RunOptions {
-  minutes: number
-  autoEnter?: boolean
-  stopAfter?: string
+interface Options {
+  policy: Policy
+  maxMinutes: number
+  preCompleted?: string[]
+  preBoost?: number
+  stopAfterBoost?: number
 }
 
-function log10Of(value: { log10(): { toNumber(): number } }): number {
-  return value.log10().toNumber()
+function log10(state: NumberState): number {
+  if (state.number.lte(0)) return -Infinity
+  return state.number.log10().toNumber()
 }
 
-/** Decimals are immutable; sharing references is safe (see core/math.ts). */
-function cloneState(state: NumberState): NumberState {
-  return {
-    ...state,
-    rings: state.rings.map((ring) => ({ amount: ring.amount, bought: ring.bought })),
-    unlocked: [...state.unlocked],
-    challenges: { ...state.challenges, completed: [...state.challenges.completed] }
-  }
-}
-
-/**
- * Play the calibrated run on the real engine.
- *
- * Step order matches the reference engine: advance -> tap -> complete -> enter ->
- * buy -> gate. completeChallengeIfReady and checkGate are called HERE because
- * contract §3 keeps them out of advance: the pure economic step never ends a
- * challenge, the store raises that event. The test therefore replays the store's
- * tick order rather than inventing one.
- */
-function runCalibrated(opts: RunOptions): RunReport {
-  const autoEnter = opts.autoEnter ?? true
+/** Depo tick sırası: advance → açılış tıkı → complete → enter/boost → maxAll → gate. */
+function run(opts: Options): RunResult {
   const state = createNumberState()
-  const phases: PhaseRecord[] = []
+  if (opts.preCompleted) state.challenges.completed = [...opts.preCompleted]
+  if (opts.preBoost) state.boostCount = opts.preBoost
 
+  const phases: PhaseResult[] = []
+  const boostMinutes: number[] = []
   let t = 0
-  let tapsIssued = 0
-  let gateMinute: number | null = null
+  let tapAcc = 0
+  let gateMin: number | null = null
   let gateTransitions = 0
-  let challengeEntries = 0
-  let unbackedDrops = 0
-  let boughtRegressions = 0
-  let bestRegressions = 0
-  let freshResets = 0
   let nanSeen = false
-  let escapedOpening = false
+  let open: PhaseResult | null = null
+  const maxSeconds = opts.maxMinutes * 60
 
-  let prevNumber = state.number
-  let prevBest = state.bestNumber
-  const prevBought = state.rings.map((ring) => ring.bought)
-  let open: { id: string; entryMinute: number; entryLog10: number; goalLog10: number } | null = null
+  const targetForNext = (): number => {
+    if (!opts.policy.enterChallenges) return Infinity
+    const next = nextChallenge(state)
+    if (!next) return state.boostCount
+    return opts.policy.boostTargets[CHALLENGES.indexOf(next)] ?? 0
+  }
 
-  const stepCount = Math.round((opts.minutes * 60) / STEP_SECONDS)
-  for (let step = 0; step < stepCount; step++) {
+  while (t < maxSeconds) {
     state.playTime = t
     advance(state, STEP_SECONDS)
     t += STEP_SECONDS
 
-    // Opening taps: deterministic, and they stop at the first purchase.
-    if (!openingTapDone(state)) {
-      const tapTarget = Math.floor(t * TAPS_PER_SEC + 1e-9)
-      while (tapsIssued < tapTarget) {
+    // Açılış: her reset sonrası ilk Fingers alımına kadar +1.
+    if (state.rings[0].bought === 0 && TAPS_PER_SEC > 0) {
+      tapAcc += STEP_SECONDS
+      while (tapAcc >= 1 / TAPS_PER_SEC) {
+        tapAcc -= 1 / TAPS_PER_SEC
         manualTap(state)
-        tapsIssued++
       }
     }
 
     const finished = completeChallengeIfReady(state)
-    if (finished) {
-      if (open !== null && open.id === finished.id) {
-        phases.push({
-          id: open.id,
-          entryMinute: open.entryMinute,
-          endMinute: t / 60,
-          entryLog10: open.entryLog10,
-          goalLog10: open.goalLog10,
-          completed: true
-        })
-        open = null
-      }
-      if (opts.stopAfter === finished.id) break
+    if (finished && open !== null && open.id === finished.id) {
+      open.endMin = t / 60
+      open.completed = true
+      phases.push(open)
+      open = null
     }
 
-    if (autoEnter && state.challenges.active === null) {
+    if (state.challenges.active === null) {
       const next = nextChallenge(state)
-      if (next !== null && isChallengeUnlocked(state, next) && enterChallenge(state, next.id)) {
-        challengeEntries++
-        open = {
-          id: next.id,
-          entryMinute: t / 60,
-          entryLog10: state.challenges.entryLog10 ?? 0,
-          goalLog10: state.challenges.goalLog10 ?? 0
+      const target = targetForNext()
+      const unlocked = next !== null && isChallengeUnlocked(state, next)
+      if (opts.policy.enterChallenges && next !== null && unlocked && state.boostCount >= target) {
+        if (enterChallenge(state, next.id)) {
+          open = {
+            id: next.id,
+            entryMin: t / 60,
+            endMin: t / 60,
+            completed: false,
+            entryBoost: state.boostCount
+          }
         }
+      } else if (state.boostCount < opts.policy.maxBoosts && state.boostCount < target && applyBoost(state)) {
+        boostMinutes.push(t / 60)
       }
     }
 
-    const buysBefore = state.totalBuys
     maxAll(state)
-    const buys = state.totalBuys - buysBefore
-
-    // --- invariants -------------------------------------------------
-    if (state.number.lt(prevNumber) && buys === 0) unbackedDrops++
-    if (state.bestNumber.lt(prevBest)) bestRegressions++
-    for (let i = 0; i < state.rings.length; i++) {
-      if (state.rings[i].bought < prevBought[i]) boughtRegressions++
-      prevBought[i] = state.rings[i].bought
-    }
-    if (!escapedOpening && state.number.gt(D(1000))) escapedOpening = true
-    if (escapedOpening && state.number.lte(D(FRESH_NUMBER))) freshResets++
-    if (state.number.isNan() || !Number.isFinite(log10Of(state.number))) nanSeen = true
-
-    prevNumber = state.number
-    prevBest = state.bestNumber
+    if (opts.stopAfterBoost !== undefined && state.boostCount >= opts.stopAfterBoost) break
 
     if (checkGate(state)) {
       gateTransitions++
-      if (gateMinute === null) gateMinute = t / 60
+      gateMin = t / 60
+      break
     }
-    if (gateMinute !== null) break
+    if (state.number.isNan() || !Number.isFinite(log10(state))) nanSeen = true
     if (nanSeen) break
   }
 
   if (open !== null) {
-    phases.push({
-      id: open.id,
-      entryMinute: open.entryMinute,
-      endMinute: t / 60,
-      entryLog10: open.entryLog10,
-      goalLog10: open.goalLog10,
-      completed: false
-    })
+    open.endMin = t / 60
+    phases.push(open)
   }
 
   return {
-    state,
-    minutes: t / 60,
-    gateMinute,
-    gateTransitions,
+    gateMin,
+    totalMin: t / 60,
+    finalLog10: log10(state),
+    boostCount: state.boostCount,
+    boostMinutes,
     phases,
-    unbackedDrops,
-    boughtRegressions,
-    bestRegressions,
-    freshResets,
-    nanSeen,
-    challengeEntries
+    completed: [...state.challenges.completed],
+    gateTransitions,
+    nanSeen
   }
 }
 
-/** One full run is shared by the suites below to keep the runtime budget. */
-let cachedFullRun: RunReport | null = null
-function fullRun(): RunReport {
-  if (cachedFullRun === null) cachedFullRun = runCalibrated({ minutes: RUN_CAP_MINUTES })
-  return cachedFullRun
+const intendedPolicy: Policy = {
+  enterChallenges: true,
+  boostTargets: [4, 5, 6, 7, 8, 9, 10, 11],
+  maxBoosts: 99
+}
+const challengesOnlyPolicy: Policy = {
+  enterChallenges: true,
+  boostTargets: [0, 0, 0, 0, 0, 0, 0, 0],
+  maxBoosts: 0
+}
+const boostOnlyPolicy: Policy = { enterChallenges: false, boostTargets: [], maxBoosts: 8 }
+
+/** Bir tam koşu paylaşılır: üç politika da aynı dosyada bir kez ölçülür. */
+let cachedIntended: RunResult | null = null
+function intended(): RunResult {
+  if (cachedIntended === null) cachedIntended = run({ policy: intendedPolicy, maxMinutes: 360 })
+  return cachedIntended
+}
+let cachedChallengesOnly: RunResult | null = null
+function challengesOnly(): RunResult {
+  if (cachedChallengesOnly === null) cachedChallengesOnly = run({ policy: challengesOnlyPolicy, maxMinutes: 420 })
+  return cachedChallengesOnly
+}
+let cachedBoostOnly: RunResult | null = null
+function boostOnly(): RunResult {
+  if (cachedBoostOnly === null) cachedBoostOnly = run({ policy: boostOnlyPolicy, maxMinutes: 900 })
+  return cachedBoostOnly
 }
 
-/** C1 scenario: the run stops the moment C1 completes. */
-let cachedC1Run: RunReport | null = null
-function c1Run(): RunReport {
-  if (cachedC1Run === null) cachedC1Run = runCalibrated({ minutes: RUN_CAP_MINUTES, stopAfter: 'C1' })
-  return cachedC1Run
-}
-
-describe('rung 1 v2 — fresh state and the challenge table', () => {
-  it('starts at 10 with no active challenge and exactly 8 challenges', () => {
+describe('rung 1 — fresh state, reset and boost contract', () => {
+  it('starts at 10 with 8 sequential challenges and the calibrated constants', () => {
     const state = createNumberState()
     expect(state.number.toString()).toBe('10')
+    expect(state.boostCount).toBe(0)
     expect(state.challenges.active).toBeNull()
     expect(state.challenges.completed).toEqual([])
-    expect(state.challenges.entryLog10).toBeNull()
-    expect(state.challenges.goalLog10).toBeNull()
     expect(state.gateReached).toBe(false)
-    expect(state.tanim).toBe(0)
     expect(CHALLENGES).toHaveLength(8)
     expect(CHALLENGES.map((def) => def.id)).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])
-    // The v2 non-negotiables live in tuning, and every def must be well formed.
-    expect(BLOCK_MULT).toBe(5.5)
+
+    // ADR-0086 kalibrasyonu (task-3).
+    expect(BLOCK_MULT).toBe(5.3)
+    expect(BOOST_MULT).toBe(1.8)
     expect(CHALLENGE_FEED_MULT).toBe(0.2)
-    for (const def of CHALLENGES) {
-      expect(def.delta).toBe(2)
-      expect(Number.isFinite(def.goalLog10)).toBe(true)
-      expect(def.growth).toBeGreaterThan(1)
-      expect(challengeById(def.id)).toBe(def)
-    }
-    // The B ladder is what makes the block multiplier a real multiplier.
     expect(blockFactor(0).toNumber()).toBe(1)
     expect(blockFactor(9).toNumber()).toBe(1)
-    expect(blockFactor(10).toNumber()).toBe(5.5)
-    expect(blockFactor(20).toNumber()).toBeCloseTo(5.5 ** 2, 6)
+    expect(blockFactor(10).toNumber()).toBeCloseTo(5.3, 12)
+    expect(blockFactor(20).toNumber()).toBeCloseTo(5.3 ** 2, 9)
+
+    // Mutlak hedef zinciri: her mücadelenin kilidi öncekinin hedefidir (C1 = 1e10).
+    expect(CHALLENGES[0].unlockLog10).toBe(10)
+    for (let i = 1; i < CHALLENGES.length; i++) {
+      expect(CHALLENGES[i].unlockLog10).toBeCloseTo(CHALLENGES[i - 1].goalLog10, 12)
+      expect(CHALLENGES[i].goalLog10).toBeGreaterThan(CHALLENGES[i].unlockLog10)
+    }
   })
 
-  it('unlocks C1 at 1e10 and entering it changes no number, no bought value, no block multiplier', () => {
+  it('entering a challenge resets number + chain + unlocks but keeps boost and rewards', () => {
     const state = createNumberState()
-    const c1 = challengeById('C1')
-    expect(c1).not.toBeNull()
+    state.bestNumber = D('1e60')
+    state.number = D('1e60')
+    state.boostCount = 3
+    state.challenges.completed = ['C1']
+    state.totalBuys = 120
+    state.rings[7].bought = 40
+    state.rings[0].amount = D(500)
+    state.unlocked = state.unlocked.map(() => true)
+    const best = state.bestNumber.toString()
 
-    // Just below the rung: not yet available.
-    state.number = D('1e9')
-    expect(isChallengeUnlocked(state, c1!)).toBe(false)
+    expect(enterChallenge(state, 'C2')).toBe(true)
+    expect(state.number.toString()).toBe('10')
+    expect(state.rings.every((ring) => ring.amount.eq(0) && ring.bought === 0)).toBe(true)
+    expect(state.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(state.boostCount).toBe(3)
+    expect(state.challenges.completed).toEqual(['C1'])
+    expect(state.bestNumber.toString()).toBe(best)
+    expect(state.challenges.goalLog10).toBeCloseTo(challengeById('C2')!.goalLog10, 12)
+    expect(challengeGoalLog(CHALLENGES[1], 999)).toBeCloseTo(CHALLENGES[1].goalLog10, 12)
+  })
 
-    // At 1e10 the row opens, and only the row.
-    state.number = D('1e10')
-    expect(isChallengeUnlocked(state, c1!)).toBe(true)
-    expect(nextChallenge(state)?.id).toBe('C1')
-
-    // Give the run some real holdings so the C1 cap has something to preserve.
-    state.rings[0].bought = 30
-    state.rings[0].amount = D('1e4')
-    const before = cloneState(state)
-    const beforePerSecond = numberPerSecond(state).toString()
-    const beforeBlock = blockFactor(state.rings[0].bought).toString()
-
-    expect(enterChallenge(state, 'C1')).toBe(true)
-
-    // The overlay is an overlay: nothing is reset, nothing is refunded.
-    expect(state.number.toString()).toBe(before.number.toString())
-    for (let i = 0; i < state.rings.length; i++) {
-      expect(state.rings[i].bought).toBe(before.rings[i].bought)
-      expect(state.rings[i].amount.toString()).toBe(before.rings[i].amount.toString())
-    }
-    expect(state.totalBuys).toBe(before.totalBuys)
-    expect(blockFactor(state.rings[0].bought).toString()).toBe(beforeBlock)
-    expect(state.unlocked).toEqual(before.unlocked)
-
-    // The entry locks the goal and leaves the wallet alone.
-    expect(state.challenges.active).toBe('C1')
-    expect(state.challenges.entryLog10).toBeCloseTo(10, 6)
-
-    // C1's penalty is a purchase cap (Fingers <= 10 bought) plus the global feed
-    // cut. Production from the rings already owned is untouched — that is exactly
-    // why the overlay needs no reset: nothing already earned is taken away.
-    expect(numberPerSecond(state).toString()).toBe(beforePerSecond)
-    expect(feedMultiplier(state)).toBeCloseTo(CHALLENGE_FEED_MULT, 9)
-    expect(state.number.toString()).toBe(before.number.toString())
-
-    // The cap is real: Fingers cannot exceed 10 bought while C1 is open.
-    const capped = createNumberState()
-    capped.number = D('1e10')
-    capped.rings[0].bought = 10
-    expect(enterChallenge(capped, 'C1')).toBe(true)
-    const buysAtCap = buyRing(capped, 0, 10)
-    expect(buysAtCap).toBe(0)
-    expect(capped.rings[0].bought).toBe(10)
-
-    // A second entry is refused while one overlay is active.
+  it('enforces sequence and keeps unlocks readable through bestNumber', () => {
+    const state = createNumberState()
+    state.number = D('1e70')
+    state.bestNumber = D('1e70')
+    // C1 is the only enterable challenge, even at 1e70.
     expect(enterChallenge(state, 'C2')).toBe(false)
-
-    exitChallenge(state)
-    expect(state.challenges.active).toBeNull()
-    expect(state.number.toString()).toBe(before.number.toString())
-  })
-})
-
-describe('rung 1 v2 — C1 goal, completion and the fingers10 reward', () => {
-  it('locks the C1 goal to max(1e33.242, entryLog10 + 2)', () => {
-    const c1 = challengeById('C1')!
-    // Entry below the plan goal: the plan goal wins.
-    expect(challengeGoalLog(c1, 10)).toBeCloseTo(C1_GOAL_LOG10, 9)
-    // Entry above it (anti-abuse): entry + delta wins instead.
-    expect(challengeGoalLog(c1, 40)).toBeCloseTo(42, 9)
-
-    const state = createNumberState()
-    state.number = D('1e10')
     expect(enterChallenge(state, 'C1')).toBe(true)
-    expect(state.challenges.goalLog10).toBeCloseTo(C1_GOAL_LOG10, 9)
-
-    // Anti-abuse path on a real state.
-    const late = createNumberState()
-    late.number = D('1e40')
-    expect(enterChallenge(late, 'C1')).toBe(true)
-    expect(late.challenges.goalLog10).toBeCloseTo(42, 9)
+    expect(state.number.toString()).toBe('10')
+    // Current number is 10 again; the unlock check must still see 1e70.
+    expect(isChallengeUnlocked(state, CHALLENGES[1])).toBe(true)
   })
 
-  it('completes C1 at its goal, keeps the number and activates fingers10', () => {
-    const run = c1Run()
-    const c1 = run.phases.find((phase) => phase.id === 'C1')
-    expect(c1).toBeDefined()
-    expect(c1!.completed).toBe(true)
-    expect(run.state.challenges.completed).toContain('C1')
-    expect(run.state.challenges.active).toBeNull()
+  it('buying a boost resets the run, increments the counter and preserves rewards', () => {
+    const state = createNumberState()
+    state.unlocked[7] = true
+    state.rings[7].bought = boostRequirement(0)
+    state.number = D('1e100')
+    state.challenges.completed = ['C1', 'C2']
+    expect(boostRequirement(0)).toBe(50)
+    expect(boostRequirement(1)).toBe(68)
+    expect(boostRequirement(2)).toBe(92)
+    expect(boostMultiplier(1).toNumber()).toBeCloseTo(1.8, 12)
 
-    // Completion is at the locked goal, never below it.
-    expect(log10Of(run.state.number)).toBeGreaterThanOrEqual(c1!.goalLog10 - 1e-9)
-    expect(c1!.goalLog10).toBeCloseTo(Math.max(C1_GOAL_LOG10, c1!.entryLog10 + 2), 9)
-
-    // The number survived completion: it never fell back to the opening.
-    expect(run.freshResets).toBe(0)
-    expect(log10Of(run.state.number)).toBeGreaterThan(C1_GOAL_LOG10 - 1)
-
-    // fingers10: Fingers x10 AND feed x1.5. Compare the same state with and
-    // without the reward by removing C1 from the completed ladder.
-    const withReward = cloneState(run.state)
-    const withoutReward = cloneState(run.state)
-    withoutReward.challenges.completed = withoutReward.challenges.completed.filter((id) => id !== 'C1')
-
-    // The reward is asserted in its own channels, not in aggregate numberPerSecond.
-    //
-    // Why: C1's penalty caps Fingers at 10 purchases, so by the time C1 completes
-    // ring 0 produces ~2e-17 of the total (direct share from rings 1-7 dominates by
-    // ~16 orders of magnitude). A x10 on 2e-17 of the total is below double
-    // precision: the aggregate numberPerSecond is bit-identical with and without
-    // the reward. Asserting an increase there would encode a rounding artefact
-    // rather than the contract, and would break the moment ring 0's share shifts.
-    // The contract's claim is 'Fingers production x10, feed x1.5' (section 1), and
-    // those two channels are exactly what is measured here.
-    const rewardedFingers = ringGainPerSecond(withReward, 0)
-    const plainFingers = ringGainPerSecond(withoutReward, 0)
-    expect(rewardedFingers.gt(plainFingers)).toBe(true)
-    expect(rewardedFingers.div(plainFingers).toNumber()).toBeCloseTo(10, 9)
-    expect(ringProductionMultiplier(withReward, 0) / ringProductionMultiplier(withoutReward, 0)).toBeCloseTo(10, 9)
-
-    // The feed side of the same reward.
-    expect(feedMultiplier(withReward) / feedMultiplier(withoutReward)).toBeCloseTo(1.5, 9)
-
-    // And the aggregate is unchanged to double precision — documented, not asserted
-    // as zero so a future rebalance that makes Fingers matter again still passes.
-    expect(numberPerSecond(withReward).gte(numberPerSecond(withoutReward))).toBe(true)
+    expect(applyBoost(state)).toBe(true)
+    expect(state.boostCount).toBe(1)
+    expect(state.number.toString()).toBe('10')
+    expect(state.unlocked).toEqual([true, false, false, false, false, false, false, false])
+    expect(state.challenges.completed).toEqual(['C1', 'C2'])
   })
 })
 
-describe('rung 1 v2 — C8 finisher and the gate transition', () => {
-  it('fires the finisher on C8 completion and the gate exactly once', () => {
-    const run = fullRun()
-    expect(run.state.challenges.completed).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])
-
-    // The finisher is a production x2 on every ring, not a price trick.
-    const withFinisher = cloneState(run.state)
-    const withoutFinisher = cloneState(run.state)
-    withoutFinisher.challenges.completed = withoutFinisher.challenges.completed.filter((id) => id !== 'C8')
-    expect(numberPerSecond(withFinisher).gt(numberPerSecond(withoutFinisher))).toBe(true)
-
-    // Gate reached, and the latch held: exactly one transition.
-    expect(run.gateMinute).not.toBeNull()
-    expect(run.gateTransitions).toBe(1)
-    expect(run.state.gateReached).toBe(true)
-    expect(run.state.number.gte(GATE)).toBe(true)
-    expect(log10Of(run.state.number)).toBeGreaterThanOrEqual(GATE_LOG10 - 1e-6)
-
-    // checkGate is a latch, not a level test: it never fires twice.
-    expect(checkGate(run.state)).toBe(false)
-    expect(checkGate(run.state)).toBe(false)
-
-    // And a state below the gate never latches it.
-    const unlatched = createNumberState()
-    unlatched.number = D('1e307')
-    expect(checkGate(unlatched)).toBe(false)
-    expect(unlatched.gateReached).toBe(false)
+describe('rung 1 — intended path (boost + 8 challenges)', () => {
+  it('reaches the gate in 160-230 minutes with all 8 challenges and no NaN', () => {
+    const result = intended()
+    expect(result.nanSeen).toBe(false)
+    expect(result.gateMin).not.toBeNull()
+    expect(result.gateMin as number).toBeGreaterThanOrEqual(160)
+    expect(result.gateMin as number).toBeLessThanOrEqual(230)
+    expect(result.completed).toEqual(CHALLENGES.map((def) => def.id))
+    expect(result.phases).toHaveLength(8)
+    expect(result.phases.every((phase) => phase.completed)).toBe(true)
+    expect(result.gateTransitions).toBe(1)
+    expect(result.finalLog10).toBeGreaterThanOrEqual(GATE_LOG10 - 1e-6)
   })
-})
 
-describe('rung 1 v2 — full calibrated run', () => {
-  it('reaches the gate inside the sanity window with no resets and no NaN', () => {
-    const run = fullRun()
-
-    // 1. The gate is reached at all, inside the safety cap.
-    expect(run.gateMinute).not.toBeNull()
-    expect(run.gateMinute!).toBeLessThanOrEqual(RUN_CAP_MINUTES)
-
-    // 2. The sanity band. NOT the 188.8 target: the calibration number is a
-    //    measurement of one policy, this test only claims the shape holds.
-    expect(run.minutes).toBeGreaterThanOrEqual(150)
-    expect(run.minutes).toBeLessThanOrEqual(230)
-
-    // 3. All eight overlays ran, in order, and every one completed.
-    expect(run.phases).toHaveLength(8)
-    expect(run.phases.every((phase) => phase.completed)).toBe(true)
-    expect(run.phases.map((phase) => phase.id)).toEqual(CHALLENGES.map((def) => def.id))
-
-    // 4. No NaN and no runaway at any point of the run.
-    expect(run.nanSeen).toBe(false)
-    expect(run.state.number.isNan()).toBe(false)
-
-    // 5. Monotone except purchases: the only drops are block purchases, the
-    //    bought counters never go backwards and bestNumber is a ratchet.
-    expect(run.unbackedDrops).toBe(0)
-    expect(run.boughtRegressions).toBe(0)
-    expect(run.bestRegressions).toBe(0)
-    expect(run.state.bestNumber.gte(run.state.number)).toBe(true)
-
-    // 6. Never reset after a challenge entry, and every entry was recorded.
-    expect(run.freshResets).toBe(0)
-    expect(run.challengeEntries).toBe(8)
-    expect(run.state.totalBuys).toBeGreaterThan(0)
-
-    // 7. Each overlay's goal was the locked max(plan, entry + delta).
-    for (const phase of run.phases) {
-      const def = challengeById(phase.id)!
-      expect(phase.goalLog10).toBeCloseTo(Math.max(def.goalLog10, phase.entryLog10 + def.delta), 6)
-      // A challenge can only end at or above its own goal.
-      expect(phase.endMinute).toBeGreaterThanOrEqual(phase.entryMinute)
+  it('keeps every challenge run inside the sanity band', () => {
+    for (const phase of intended().phases) {
+      const duration = phase.endMin - phase.entryMin
+      expect(duration, phase.id).toBeGreaterThanOrEqual(6)
+      expect(duration, phase.id).toBeLessThanOrEqual(40)
     }
+    // C1 is the tutorial wall: it is not skipped, it is the longest early run.
+    const c1 = intended().phases[0]
+    expect(c1.id).toBe('C1')
+    expect(c1.endMin - c1.entryMin).toBeGreaterThanOrEqual(10)
+  })
 
-    // 8. The block multiplier actually accumulated: deep rings were bought.
-    expect(run.state.rings[7].bought).toBeGreaterThanOrEqual(10)
-    expect(run.state.rings[0].bought).toBeGreaterThanOrEqual(10)
+  it('chooses boosts on the optimal path and farms the first one before C1', () => {
+    const result = intended()
+    expect(result.boostCount).toBeGreaterThanOrEqual(9)
+    expect(result.boostMinutes.length).toBe(result.boostCount)
+    expect(result.boostMinutes[0]).toBeLessThan(45)
+    expect(intendedPolicy.boostTargets).toEqual([...intendedPolicy.boostTargets].sort((a, b) => a - b))
+  })
+
+  it('latches the gate exactly once and never fires twice', () => {
+    const result = intended()
+    const state = createNumberState()
+    state.number = GATE
+    expect(checkGate(state)).toBe(true)
+    expect(checkGate(state)).toBe(false)
+    expect(result.gateTransitions).toBe(1)
   })
 })
 
-describe('rung 1 v2 — offline equivalent', () => {
-  it('grows for 60 offline minutes without auto-completing an inactive challenge', () => {
-    // Offline replay is the same advance() loop with no UI in between. autoEnter
-    // is off here on purpose: an unattended run must never open or close a
-    // challenge on its own — that is the store's job.
-    const offline = runCalibrated({ minutes: 60, autoEnter: false })
+describe('rung 1 — boost-only vs challenges-only', () => {
+  it('boost-only is dramatically slower than the intended path', () => {
+    const intendedMinutes = intended().gateMin as number
+    const boost = boostOnly()
+    expect(boost.gateMin).not.toBeNull()
+    expect(boost.gateMin as number).toBeGreaterThanOrEqual(540)
+    expect(boost.gateMin as number).toBeGreaterThan(intendedMinutes * 2.5)
+    expect(boost.completed).toEqual([])
+  })
 
-    // The number grew, and it grew because the chain produced, not because a
-    // challenge was silently resolved.
-    expect(offline.state.number.gt(D(FRESH_NUMBER))).toBe(true)
-    expect(log10Of(offline.state.number)).toBeGreaterThan(1)
+  it('challenges-only completes, but is much harder than the intended path', () => {
+    const intendedMinutes = intended().gateMin as number
+    const only = challengesOnly()
+    expect(only.gateMin).not.toBeNull()
+    expect(only.completed).toEqual(CHALLENGES.map((def) => def.id))
+    expect(only.boostCount).toBe(0)
+    expect(only.gateMin as number).toBeGreaterThan(intendedMinutes * 1.35)
+    expect(only.gateMin as number).toBeLessThanOrEqual(420)
+    // Ve boost-only'den kısa: boost'u hiç almamak, boost-only'den iyidir.
+    expect(only.gateMin as number).toBeLessThan(boostOnly().gateMin as number)
+  })
 
-    // Nothing was entered, so nothing could be completed.
-    expect(offline.challengeEntries).toBe(0)
-    expect(offline.state.challenges.active).toBeNull()
-    expect(offline.state.challenges.completed).toEqual([])
-    expect(offline.phases).toHaveLength(0)
-
-    // An offline stretch does not latch the gate either (the run is far below it).
-    expect(offline.state.gateReached).toBe(false)
-    expect(offline.nanSeen).toBe(false)
-
-    // And the same no-accidental-drop invariant holds.
-    expect(offline.unbackedDrops).toBe(0)
-    expect(offline.freshResets).toBe(0)
+  it('a fresh state produces nothing, so the opening tap is the only income', () => {
+    expect(numberPerSecond(createNumberState()).toNumber()).toBe(0)
   })
 })

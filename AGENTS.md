@@ -11,10 +11,10 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 - **Temel Felsefe:** "Sessiz meta." Oyun kendisinin oyun olduğunu bilir, **asla söylemez**; mizah dünyada değil, oyun ile oyuncu arasındaki ilişkidedir. Ekranın tek kahramanı sayıdır.
 - **Sütunlar:**
   1. **Zincir:** 8 halka (Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician). Halka *n+1* halka *n*'i üretir; halka 1 sayıyı üretir. `+1` zincirin köküdür.
-  2. **Tek havuz:** Cüzdan sayının kendisidir. Alım sayıyı düşürür (AD / Cookie Clicker modeli); eşikler mandallıdır, geri gitmez.
-  3. **Döngü:** **Tek koşu (ADR-0083):** 1,79e308 e kadar sıfırlama yok; 8 sıfırlamasız mücadele (ceza → ödül) → kapı → prestij (`+1 Tanım`).
+  2. **Tek havuz:** Cüzdan sayının kendisidir. Alım sayıyı düşürür (AD / Cookie Clicker modeli); kilitler koşu içinde mandallıdır, boost veya mücadele sıfırması zinciri yeniden kurar (ADR-0086).
+  3. **Döngü:** **AD tarzı sıfırlama (ADR-0086):** boost güç kaynağıdır ve mücadelelerden önce açılır; boost alımı veya mücadele girişi sayıyı (`10`) ve zinciri (yalnız Fingers açık) sıfırlar, boost sayacı ve mücadele ödülleri kalır. Blok çarpanı `B = 5.3`, boost çarpanı `1,8^n`. 8 mücadele mutlak hedefli ve sıralıdır (log10: 10,5 · 20,1 · 29,8 · 39,4 · 49,1 · 58,7 · 68,4 · 78,0; kilit = önceki hedef, C1 = 10); her biri zincir beslemesini `×0,2` yapar. Kapıda prestij (`+1 Tanım`) boost sayacını sıfırlar.
   4. **Ses:** Sahne · ticker · başarım · açıklama. Tooltip ve sayısal etiket **asla** şaka yapmaz.
-- **Hedef:** 11 basamak, ~85 saat, tek koşu. `LNGN` oyunun sonudur; kuyruk yoktur.
+- **Hedef:** 11 basamak, toplam ~85 saat; 1. basamak **181 dk** (intended, 11 boost; 2026-10-31 kalibrasyonu). Projeksiyon 79,6 sa (×1,165), 85 saat hedefi için eğri **×1,176**. `LNGN` oyunun sonudur; kuyruk yoktur.
 - **Bağlayıcı kaynaklar:** [`brain/research/theme-pivot-grilling-2026-10-23.md`](brain/research/theme-pivot-grilling-2026-10-23.md) (kararlar) · [`brain/context/visual-language.md`](brain/context/visual-language.md) (görsel sözleşme) · [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) (ses sözleşmesi) · [`GAME_DESIGN.md`](GAME_DESIGN.md).
 
 ---
@@ -29,7 +29,7 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 | **Sayı Motoru** | **`break_eternity.js`** | **ÖNEMLİ:** `isNaN` yerine küçük harfle **`isNan()`** — `dec.isNan() \|\| Number.isNaN(dec.mag)`. Tip tanımı `plus/minus/times` ister; `add/sub/mul` runtime'da var ama tipte yok. |
 | **Stil** | **Tailwind CSS 3.4** + CSS değişkenleri | "Laboratuvar" (ADR-0085): kabuk (üst çubuk · sol menü · ana alan · durum çubuğu), `s1–s3` yüzeyler, 1px çizgi, 6–8 px köşe; gölge/blur/gradyan YOK; vurgu = basamak rengi (`--pn-rung`) |
 | **Tipografi** | **Space Grotesk** (hero+UI) · **Space Mono** (veri) | `tabular-nums` zorunlu; hero asla `font-bold` (300 sabit) |
-| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 23`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
+| **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 24`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
 | **Ses** | **Web Audio API** | Harici ses dosyası yok; osilatör sentezi |
 
 ---
@@ -72,7 +72,7 @@ Incremental/
     │   ├── math.ts            # break_eternity Decimal sarmalayıcısı ve sabitler
     │   ├── format.ts          # Notasyon biçimleri + hero dizgi parçaları
     │   ├── save.ts            # LZ-String, slotlar, karantina, import/export
-    │   ├── save-version.ts    # SAVE_VERSION (v23) ve asgari sürüm
+    │   ├── save-version.ts    # SAVE_VERSION (v24) ve asgari sürüm
     │   ├── game-loop.ts       # 20 TPS sabit adımlı döngü + çevrimdışı devir
     │   ├── audio.ts           # Ses cephesi (efekt + müzik köprüsü)
     │   ├── music/             # Prosedürel müzik motoru

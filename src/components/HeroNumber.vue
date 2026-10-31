@@ -28,6 +28,10 @@ interface NextLine {
 }
 
 const nextLine = computed<NextLine | null>(() => {
+  // Basamak 2+ için 1. basamağın kapı hedefi yoktur; "Next Gate" yazmak yalan olurdu (V4).
+  if (store.rung > 1) {
+    return { tag: 'Next', title: 'Rung ' + store.rung, detail: 'not implemented in this build' }
+  }
   const active = store.activeChallengeRow
   if (active) {
     return { tag: 'Active', title: active.id + ' · ' + active.ringName, detail: 'goal ' + active.goalText }

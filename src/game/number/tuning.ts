@@ -7,9 +7,14 @@ import { Decimal, D } from '../../core/math'
  * brain/research/ring-pricing-2026-10-23.md (fiyat kuralı) ·
  * brain/research/ad-pricing-and-chain-math-2026-10-23.md §6 (A+ ölçümü).
  *
- * Model (ADR-0083): 1,79e308 kapısına kadar tek koşu, sıfırlama yok; 8 sıfırlamasız
- * mücadele (`challenges.ts`) ceza/ödül overlay'i olarak üstüne biner; kapıda prestij
- * (+1 Tanım). Bu dosya zincirin tek sabit kaynağıdır.
+ * Model (ADR-0086): 1,79e308 kapısına kadar AD tarzı sıfırlamalı koşular. Boost ve
+ * mücadele girişi sayıyı 10'a, zinciri sıfıra çeker; boost sayacı, bestNumber ve
+ * mücadele ödülleri kalıcıdır. 8 mücadele mutlak hedefli ve sıralıdır; kapıda prestij
+ * (+1 Tanım) boost sayacını sıfırlar. Bu dosya zincirin tek sabit kaynağıdır.
+ *
+ * Kalibrasyon (task-3, 2026-10-31): B=5,3 · boost ×1,8 · taban gereksinim 50 ·
+ * gereksinim büyümesi 1,35 · fiyat büyümesi 1,5. Ölçülen: hedeflenen yol 181 dk,
+ * challenges-only 290 dk, boost-only 673 dk, no-meta base 1032 dk.
  *
  * ── ÜRETİM (Antimatter Dimensions kuralı, S9) ────────────────────────────
  * Bir parmak saniyede TAM 1 sayı üretir; her halka kendinden bir aşağıdakini
@@ -68,25 +73,48 @@ export const RING_DIRECT_SHARE = 1
 export const BLOCK_SIZE = 10
 
 /**
- * Blok çarpanı (v2 / 190 dk kalibrasyonu): her 10 alımda üretim ×5,5.
+ * Blok çarpanı (ADR-0086 kalibrasyonu): her 10 alımda üretim ×5,3.
  *
- * Kaynak: brain/research/rung-1-190-calibration-2026-10-27.md ·
- * brain/scratchpad/chain-only-probe/190-calibration/engine.ts.
+ * Kaynak: brain/decisions/0086-run-reset-and-boost.md ·
+ * brain/scratchpad/rung1-boost-reset/ (task-3 ölçümü).
  *
- *     blockFactor(bought) = 5,5 ^ floor(bought / 10)
+ * B=5,3 no-meta tabanı 190 dk'dan ~1032 dk'ya çeker; boost + mücadele yolu
+ * (181 dk) tabanın ~5,7 katı hızlıdır. B 5,5'te taban 190 dk kalıyordu ve
+ * boost-only yolu hedeflenen yoldan yavaş olmuyordu.
+ *
+ *     blockFactor(bought) = 5,3 ^ floor(bought / 10)
  *
  * Yalnız ÜRETİME uygulanır: Fingers’ın sayı üretimi ve halka 2–8’in doğrudan
  * katkısı. Zincir BESLEMESİNE uygulanmaz (besleme 0,11/sn kalır) — bu yüzden
  * derin halka sayıyı blok çarpanıyla, alt halkayı ise çarpansız besler.
  */
-export const BLOCK_MULT = 5.5
+export const BLOCK_MULT = 5.3
 
 /**
- * Mücadele sırasında global besleme çarpanı (190 dk kalibrasyonunun ana kolu).
- * Açılış ve final itişi tam besleme kullanır; herhangi bir mücadele aktifken
- * zincir beslemesi ×0,2 olur (feedFifth / price135feedHalf bunun üzerine biner).
+ * Mücadele sırasında global besleme çarpanı (ADR-0086: her mücadele koşusu
+ * zincir beslemesini ×0,2 yapar). Açılış ve final itişi tam besleme kullanır;
+ * feedFifth / price135feedHalf bunun üzerine biner.
  */
 export const CHALLENGE_FEED_MULT = 0.2
+
+/**
+ * ── BOOST (ADR-0086) ──────────────────────────────────────────────────────
+ * Boost, 1. basamağın GÜÇ KAYNAĞIDIR: son halka (Mathematician) yeterince
+ * alındığında satın alınır; sayıyı ve zinciri sıfırlar, kalıcı üretim çarpanı
+ * verir. Mücadele girişinde boost sayısı KORUNUR; kapıdaki prestijde sıfırlanır.
+ *
+ *     boostRequirement(n) = ceil(50 · 1,35^n)       (son halka bought)
+ *     boostPrice(n)       = sonHalka10Bloğu · 1,5^n (sayıdan ödenir)
+ *     boostMultiplier(n)  = 1,8^n                   (yalnız sayı üretimi)
+ *
+ * Bu değerler ADR-0086 kalibrasyonunun (task-3) nihai sonucudur: hedeflenen yol
+ * 181 dk, boost-only 673 dk, no-meta taban 1032 dk. Boost-only yolun kapıya çok
+ * yavaş gitmesi, boost + mücadele yolunun ise verimli olması hedeflenir.
+ */
+export const BOOST_BASE_REQUIREMENT = 50
+export const BOOST_REQUIREMENT_GROWTH = 1.35
+export const BOOST_MULT = 1.8
+export const BOOST_PRICE_GROWTH = 1.5
 
 /** 1. basamak kapısı: standart JS float sınırı (İlk Tekillik). */
 export const GATE = D('1.79e308')

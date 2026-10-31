@@ -99,7 +99,7 @@ alan eklenmez.
 
 | Kanal | Nerede yaşıyor | Ritim | Durum |
 | :--- | :--- | :--- | :--- |
-| **Sahne** (`scene`) | `RungScene.vue` + `voice/index.ts` sahne seçicisi | 2,5 sn (`G8`), **mandallı** (`S3`) | ⚠️ havuz (11 satır) + seçici hazır; `RungScene` henüz havuzu göstermiyor, `humor` kapısı yok |
+| **Sahne** (`scene`) | `RungScene.vue` + `voice/index.ts` sahne seçicisi | 2,5 sn (`G8`), **mandallı** (`S3`) | ⚠️ havuz (28 satır: basamak · mücadele · ödül · kapı · boost) + seçici hazır; `RungScene` henüz havuzu göstermiyor, `humor` kapısı yok |
 | **Ticker** (`ticker`) | `TickerBar.vue` → `src/game/voice/` | 20 sn (`measured`) / 12 sn (`full`); %22 sessizlik | ✅ çalışıyor |
 | **Başarım** (`achievement`) | başarım adı + açıklaması | olay başına bir kez | içerik yok — `A6` |
 | **Açıklama** (`description`) | yükseltme/halka açıklamaları | kalıcı metin | kısmi |
@@ -295,7 +295,7 @@ güncellenir — sayı uydurulmaz.
 | :--- | :--- | :--- |
 | `src/game/voice/types.ts` | `VoiceChannel` + `VoiceContext` (`V3` veri sınırı) | ✅ |
 | `src/game/voice/index.ts` | havuz, sessizlik 0,22, nadir ağırlık 0,1, tekrar önleme | ✅ |
-| `src/game/voice/lines-rung1.ts` | 1. basamak havuzu (İngilizce) | ✅ 110 ticker + 11 sahne satırı |
+| `src/game/voice/lines-rung1.ts` | 1. basamak havuzu (İngilizce) | ✅ 101 ticker + 28 sahne satırı (2026-10-31) |
 | `src/components/TickerBar.vue` | 20/12 sn kadans, `humor` kapısı | ✅ |
 | 2–11. basamak havuzları | — | ⛔ boş (`E5`: her basamak kendi turunda) |
 | `src/components/RungScene.vue` | `G8` sahne motoru (2.500 ms, mandallı) | ⚠️ var; yalnız basamak adını gösteriyor, havuz bağlı değil, `humor` kapısı yok |

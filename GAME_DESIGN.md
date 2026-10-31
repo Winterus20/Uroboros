@@ -1,6 +1,6 @@
 # HOLD THAT NUMBER — Oyun Tasarım Dokümanı (GDD)
 
-> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-31 · **Durum:** 1. basamak **tek koşu + 8 sıfırlamasız mücadele** (ADR-0083) oynanabilir; 2–11 tasarlanmadı
+> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-31 · **Durum:** 1. basamak **boost + sıfırlamalı mücadele döngüsü** (ADR-0086) oynanabilir; 2–11 tasarlanmadı
 > **Bu belge 2026-10-23'te BAŞTAN YAZILDI.** Eski "Kozmik Oburluk / UROBOROS" içeriği
 > (kütle ekonomisi, D1–D8 boyutları, Lab, Crisis, Neural, Time Clock, Colony, Singularity,
 > başarımlar, meydan okumalar) **tamamen kaldırıldı** — kod da, bu belge de.
@@ -9,15 +9,21 @@
 > [`brain/research/theme-pivot-grilling-2026-10-23.md`](brain/research/theme-pivot-grilling-2026-10-23.md) (50 karar) ·
 > [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) (ses) ·
 > [`brain/context/visual-language.md`](brain/context/visual-language.md) (görsel dil) ·
-> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi) · ADR-0082 (zincir-only) · **ADR-0083 (rung 1 tek koşu — güncel model)**
+> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi) · ADR-0082 (zincir-only) · **ADR-0086 (boost + sıfırlamalı koşu — güncel model)**
 >
-> **Güncel model (ADR-0083, 2026-10-27):** 1,79e308 kapısına kadar **tek koşu**, sıfırlama yok;
-> 8 halka + blok çarpanı `B = 5.5`; 8 sıfırlamasız mücadele (ceza → kalıcı ödül); kapıda prestij
-> (`+1 Tanım`, 2. basamak). Hedef ~190 dk. Bağlayıcı özet §8'dedir.
+> **Güncel model (ADR-0086, 2026-10-31):** Boost güç kaynağıdır ve mücadelelerden **önce** açılır.
+> Mücadele girişi ve boost alımı sayıyı (`10`) ve zinciri (tüm halkalar 0, kilitler yalnız
+> Fingers) sıfırlar; **boost sayacı, tamamlanan mücadeleler ve ödülleri kalır**. Boost sayacı
+> yalnız `1,79e308` kapısında/prestijde sıfırlanır. Her mücadele global zincir beslemesini
+> **×0,2** yapar. 8 halka + blok çarpanı `B = 5.3`; mücadele kilidi **`bestNumber`** (ömür boyu
+> zirve) ile ölçülür. **Kalibre edildi (2026-10-31, gerçek motor):** intended **181,0 dk**;
+> challenges-only 289,6 dk (1,60×); boost-only 672,6 dk (3,72×); base 1031,9 dk (5,70×).
+> Hedefler log10 10,5 → 78,0. Bağlayıcı özet §8'dedir.
 >
-> **Arşiv:** ADR-0082 (2026-10-25) mini boost'u ve `Tanım` yükseltmelerini kaldırdı; geri
-> gelmediler. Aşağıdaki §5.3–§5.5, §6 ve §11 **tasarım arşividir** — kapı ve prestij ADR-0083
-> ile §8'deki sade biçimde geri döndü, arşivdeki formüller (`Birikim`, `log10(1+A)`) uygulanmıyor.
+> **Arşiv:** ADR-0082 (2026-10-25) mini boost'u ve `Tanım` yükseltmelerini kaldırmıştı; ADR-0086
+> boost'u sıfırlamalı bir güç kaynağı olarak geri getirdi. Aşağıdaki §5.4–§5.6, §6 ve §11
+> **tasarım arşividir** — eski formüller (`Birikim`, `log10(1+A)`, `(zirve/başlangıç)^0,2`)
+> uygulanmıyor.
 
 ---
 
@@ -26,16 +32,19 @@
 Tek bir sayı var. Oyuncu onu büyütür, 11 basamaklık bir notasyon merdiveninde yukarı taşır ve
 merdivenin sonunda (`LNGN`) oyun biter.
 
-**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri; her basamak tek
-koşu, kapıda prestij (ADR-0083). **Süre:** tek koşu, ~**85 saat**, kuyruk yok, NG+ yok (`S4`).
+**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri; her basamak kendi
+sıfırlama döngüsüyle oynanır, kapıda prestij (ADR-0086). **Süre:** 1. basamak **181 dk**;
+11 basamak projeksiyonu **79,6 sa** (×1,165) ve 85 saat hedefi için eğri **×1,176**; kuyruk yok,
+NG+ yok (`S4`).
 
 ---
 
 ## 2. Tasarım tezi
 
-1. **Ekranın tek kahramanı sayıdır** (`S1`, ADR-0078 `G1`). Sayı hiçbir basamakta küçülmez;
-   onu kutuya koyan kart yoktur.
-2. **Cüzdan sayının kendisidir** (`E1`). Alım sayıyı düşürür; eşikler mandallıdır, geri gitmez (`S3`).
+1. **Ekranın tek kahramanı sayıdır** (`S1`, ADR-0078 `G1`). Sayı ayrı bir kutuya veya para
+   birimine taşınmaz; yalnız boost/mücadele sıfırması onu `10`a indirir (ADR-0086).
+2. **Cüzdan sayının kendisidir** (`E1`). Alım sayıyı düşürür; kilitler **koşu içinde**
+   mandallıdır (`S3`), boost veya mücadele sıfırması zinciri yeniden kurar (ADR-0086).
 3. **Jeneratörler zincirdir** (`E3`, `E6`). Halka *n+1* halka *n*'i üretir; halka 1 sayıyı
    üretir. `+1` zincirin köküne dokunur — 85. saatte de.
 4. **Ses = oyunun kendisi** (`V1`), sessiz meta (`V2`), gerçek "sen" (`V3`). Mizah dünyada
@@ -47,30 +56,34 @@ koşu, kapıda prestij (ADR-0083). **Süre:** tek koşu, ~**85 saat**, kuyruk yo
 
 ## 3. 11 basamak (notasyon merdiveni)
 
-Süre eğrisi **×1,25** geometrik artış; 1. basamak **190 dk (3,17 sa)** — ADR-0083.
-Varsayılan toplam **~135 saat**. 85 saatte kalmak istenirse basamak çarpanı **×1.165**
-(190 dk × 26,97 ≈ 85,4 sa).
+Süre eğrisi **×1,176** geometrik artış; 1. basamak **181 dk** (ADR-0086 kalibrasyonu,
+2026-10-31). 181 dk × 26,4 = **79,6 sa** (×1,165 eğrisi); 85 saat hedefi için eğri **×1,176**'ya
+çekildi → 181 dk × 28,1 ≈ **84,8 sa**. Eski 190 dk / ×1,165 tablosu tarihsel referanstır ve
+kullanılmaz.
 
 | # | Basamak adı (kod: `rungs.ts`) | Gösterim | Süre | Kümülatif |
 | --: | :--- | :--- | ---: | ---: |
-| 1 | I thought it was a wall | `1.79e308` | 3,17 sa | 3,17 |
-| 2 | The end of the shelf | `1e(9e15)` | 3,96 sa | 7,13 |
-| 3 | The tower is done | `10^^1.79e308` | 4,95 sa | 12,08 |
-| 4 | The arrows are done | `6 arrows` (ekranda `↑⁶`) | 6,18 sa | 18,26 |
-| 5 | It did not write it. It showed it. | `G` | 7,73 sa | 25,99 |
-| 6 | We do not know | `TREE(3)` | 9,66 sa | 35,65 |
-| 7 | The room | `SSCG(3)` | 12,08 sa | 47,73 |
-| 8 | *Untitled* (geçici ad) | `Rayo` | 15,10 sa | 62,83 |
-| 9 | The door | `Fish 7` | 18,87 sa | 81,70 |
-| 10 | Does it count? | `BIG FOOT` | 23,59 sa | 105,29 |
-| 11 | *Last* (geçici ad — final sahnesi `A5`) | `LNGN` | 29,49 sa | **134,78** |
+| 1 | I thought it was a wall | `1.79e308` | 3,02 sa | 3,02 |
+| 2 | The end of the shelf | `1e(9e15)` | 3,55 sa | 6,56 |
+| 3 | The tower is done | `10^^1.79e308` | 4,17 sa | 10,74 |
+| 4 | The arrows are done | `6 arrows` (ekranda `↑⁶`) | 4,91 sa | 15,64 |
+| 5 | It did not write it. It showed it. | `G` | 5,77 sa | 21,41 |
+| 6 | We do not know | `TREE(3)` | 6,79 sa | 28,20 |
+| 7 | The room | `SSCG(3)` | 7,98 sa | 36,18 |
+| 8 | *Untitled* (geçici ad) | `Rayo` | 9,38 sa | 45,56 |
+| 9 | The door | `Fish 7` | 11,04 sa | 56,60 |
+| 10 | Does it count? | `BIG FOOT` | 12,98 sa | 69,57 |
+| 11 | *Last* (geçici ad — final sahnesi `A5`) | `LNGN` | 15,26 sa | **84,84** |
 
-**Dağılım:** 1–5 ≈ 26 sa (%19) · 6–11 ≈ 109 sa (%81). Oran v1 ile aynıdır; yalnız taban
-190 dakikaya çıktığı için toplam 135 saate taşındı.
+**Dağılım:** 1–5 ≈ 21,4 sa (%25) · 6–11 ≈ 63,4 sa (%75). Oran v1 ile aynıdır; taban 181 dakika
+ve eğri ×1,176 ile 85 saat hedefi korunur.
+
+> **Kalibrasyon (ADR-0086, 2026-10-31):** 1. basamak **181 dk**; 181 × 26,4 = 79,6 sa (×1,165).
+> 85 saat hedefi için eğri ×1,176 (84,8 sa). Eski 190 dk tabanlı tablo geçersizdir.
 
 **Kadran (basamak 5+):** `rank` (ok seviyesi) + `mag ∈ [2.00, 10.00)`. `mag` asla büyümez,
 her hücrede döner; hücreler `a ↑ⁿ 2 = a ↑ⁿ⁻¹ a` özdeşliğiyle kusursuz birleşir (`T2`).
-Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 116,8 saat ÷ 42 ≈ **2 sa 47 dk/hücre**.
+Kadran bölgesi 7 çapa × 6 hücre = **42 hücre · 336 mag adımı**; 69,2 saat ÷ 42 ≈ **1 sa 39 dk/hücre**.
 
 **Motorlar (`T1`):** 1–3 `break_eternity` gerçek aritmetik · 4 için `OmegaNum` adaptörü
 (henüz yazılmadı) · 5–11 kadran.
@@ -98,9 +111,9 @@ o zaten sayının kendisidir, "1 parmak = 1 sayı/sn" bozulmaz.
 | 7 | Supercomputer | **6 553 600** | 0,11 /sn | 170 122 819 | 73 sn | 14,5 dk |
 | 8 | **Mathematician** | **52 428 800** | 0,11 /sn | 1 360 982 553 | 73 sn | **17,1 dk** |
 
-> **v2 notu (ADR-0083):** bu tablo zincir-only dönemin ölçümüdür. Rung 1 v2
-> `B = 5.5` blok çarpanıyla çalışır; halka açılışları ve süreler değişti. Güncel süre
-> tablosu: [`brain/research/rung-1-190-calibration-2026-10-27.md`](brain/research/rung-1-190-calibration-2026-10-27.md).
+> **v3 notu (ADR-0086):** bu tablo zincir-only dönemin ölçümüdür. Rung 1 v3 `B = 5.3` + boost +
+> sıfırlamalı mücadele ile çalışır; halka açılışları ve süreler değişti. Güncel kalibrasyon
+> §7'de ve ADR-0086'dadır.
 
 Blok sütunu, o halkadan **ilk 10 birimin** toplam fiyatıdır: `c_i · (g^10 − 1)/(g − 1)`.
 
@@ -129,10 +142,33 @@ halka 1'in 1/sn'si `+1`in gerçek bir birim olmasını sağlar (`S9`). Tam çal�
 - **Alım:** sınırsız, tek havuz (`E2`, `E10`). Birim fiyatı her alımda **×1,20**; blok
   fiyatı AD'nin "Buy 10" formülüyle `c_i · g^b · (g^10 − 1)/(g − 1)`.
 - **Kilit:** bir halkadan **10 birim** alınınca sonraki halka açılır (`E11`) — 10 birim **tek
-  blok**, yani bloğu tamamlayan oyuncu kilidi kendiliğinden açar; kilit **mandallı** —
-  boost/prestij kapatmaz (`D6`).
+  blok**, yani bloğu tamamlayan oyuncu kilidi kendiliğinden açar; kilit **koşu içinde
+  mandallıdır**. Boost alımı veya mücadele girişi zinciri sıfırlayınca kilitler de sıfırlanır,
+  yalnız Fingers açık kalır (ADR-0086).
 - **`+1`:** gerçekten 1 ekler, hiçbir çarpan uygulanmaz (`S9`). Üst basamaklarda gösterim
   çözünürlüğünün altında kaldığı için ekranda hiçbir şey değişmez — bu **yuvarlama**, yalan değil.
+
+### Mücadele koşuları (ADR-0086, kalibre 2026-10-31)
+
+Sıra zorunludur; yalnız sıradaki mücadeleye girilebilir. Kilit eşiği **önceki hedef**tir
+(C1 = 10), hedefler **mutlak** log10 değerleridir ve `bestNumber` ile ölçülür. Giriş sayıyı
+`10`a, zinciri 0'a indirir; boost sayacı ve tamamlanmış ödüller kalır. Her mücadelede global
+besleme `×0,2`; fiyat büyümesi C1–C8 boyunca **1,22**.
+
+| # | Kilit (log10) | Hedef (log10) | Hedef | Koşu |
+| --: | --: | --: | :--- | --: |
+| C1 | 10 | 10,5 | `1e10.5` | 17,1 dk |
+| C2 | 10,5 | 20,1 | `1e20.1` | 7,7 dk |
+| C3 | 20,1 | 29,8 | `1e29.8` | 8,0 dk |
+| C4 | 29,8 | 39,4 | `1e39.4` | 8,8 dk |
+| C5 | 39,4 | 49,1 | `1e49.1` | 9,3 dk |
+| C6 | 49,1 | 58,7 | `1e58.7` | 18,8 dk |
+| C7 | 58,7 | 68,4 | `1e68.4` | 10,5 dk |
+| C8 | 68,4 | 78,0 | `1e78.0` | 14,2 dk |
+
+Intended toplam **181,0 dk** (11 boost); final itiş 52,7 dk, boost farmı 9.–114. dk arasında.
+Diğer politikalar: 0-greedy 195,8 dk · challenges-only 289,6 dk (1,60×) · boost-only 672,6 dk
+(3,72×) · base 1031,9 dk (5,70×).
 
 ---
 
@@ -150,23 +186,43 @@ blok_i(b, 10) = c_i · g^b · (g^10 − 1)/(g − 1)     AD'nin "Buy 10" formül
 ### 5.2 Üretim
 
 ```
-sayı/sn    = (A₁·p₁·B^⌊b₁/10⌋ + Σ_{i≥2} A_i·d_i·B^⌊b_i/10⌋) · R
+sayı/sn    = (A₁·p₁·B^⌊b₁/10⌋ + Σ_{i≥2} A_i·d_i·B^⌊b_i/10⌋) · R · M^n
 halka_i/sn = A_{i+1}·p_{i+1} · F                         (i = 1..6)
 halka_8/sn = 0                                            (zincirin tepesi)
 
-B = 5.5 (sabit blok tabanı)   R = mücadele ödül çarpanları (kalıcı)
+B = 5.3 (sabit blok tabanı)   R = mücadele ödül çarpanları (kalıcı)
 F = besleme çarpanı           F = 0.2 iken mücadele aktif; açılış/finalde 1
+M = 1.8 (boost çarpanı)       n = boostCount (kapı/prestijde 0)
 ```
 
 `A_i` = halkadaki birim sayısı, `b_i` = bu koşuda alınan birim, `p_i` = taban üretim
 (`p_1 = 1`, `p_i = 0,11` için `i ≥ 2`), `d_i = p_i · RING_DIRECT_SHARE` = sayıya **doğrudan**
 katkı (`0,11/sn`). Zincir satırındaki `+x/s` okuması bu katkıdır.
 
-**`D1` (ADR-0083):** blok çarpanı **yalnız sayı üretimine** uygulanır (Fingers tabanı +
-doğrudan katkı), zincir beslemesine **uygulanmaz**. Aksi hâlde `N ∝ B⁸` olur ve sistem
-patlar. Blok çarpanı `B^⌊b_i/10⌋`; 10 alımda bir kademe, kalıcı (sıfırlama yok).
+**`D1` (ADR-0083/0086):** blok çarpanı ve boost çarpanı **yalnız sayı üretimine** uygulanır
+(Fingers tabanı + doğrudan katkı), zincir beslemesine **uygulanmaz**. Aksi hâlde `N ∝ B⁸`
+(veya `M^8`) olur ve sistem patlar. Blok çarpanı `B^⌊b_i/10⌋`; 10 alımda bir kademe, koşu
+sıfırlanana kadar kalıcı.
 
-### 5.3 `Birikim` — kapı aşımı verim cezası (`E7`) — **ARŞİV, build'de yok**
+### 5.3 Boost — güç kaynağı (ADR-0086)
+
+```
+koşul       : son halka (Mathematician) açık ve bu koşuda alınan birim ≥ boostRequirement(n)
+requirement : ceil(50 · 1,35^n)                          (kalibre 2026-10-31)
+fiyat       : blok_fiyatı(son halka, 10) · 1,5^n          (sayıdan ödenir)
+çarpan      : 1,8^n — yalnız sayı üretimine, zincir beslemesine değil
+etki        : boostCount += 1; sayı = 10; tüm halkalar 0; kilitler yalnız Fingers açık
+kalıcılık   : boostCount mücadele girişinde KALIR; kapı/prestijde 0'a döner
+```
+
+Boost **mücadelelerden önce** açılır; açmak için mücadele tamamlamak gerekmez ve boost
+mücadele girişinde korunur. Aktif bir mücadele sırasında boost **alınamaz** (koşu ortasında
+sıfırlama olmaz). Boost-only yol (hiç mücadele oynamadan `1,79e308`) kasten çok yavaştır:
+boost sayı üretimini büyütür ama zincir beslemesini büyütmediği için her sıfırlama zinciri
+yeniden kurmayı gerektirir. Hedef yol **boost + mücadele**dir; sabitler 2026-10-31'de
+kilitlendi (ADR-0086): 11 boost ile intended **181,0 dk**, boost-only **672,6 dk** (3,72×).
+
+### 5.4 `Birikim` — kapı aşımı verim cezası (`E7`) — **ARŞİV, build'de yok**
 
 ```
 A = sayı / kapı(1,79e308)
@@ -177,7 +233,7 @@ N > kapı  → verim = 0,9^log10(A)
 Kapı aşıldıktan sonra beklemek ödülü büyütür, üretimi yavaşlatır: "şimdi mi, biraz daha mı?"
 kararı (`E4`). Ceza **yalnız sayı üretimine** uygulanır (`D1` ile aynı gerekçe).
 
-### 5.4 Mini boost (`E12`–`E14`) — **ARŞİV, build'de yok**
+### 5.5 Mini boost (`E12`–`E14`) — **ARŞİV, build'de yok**
 
 ```
 koşul  : halka 8 (Mathematician) bu koşuda en az 1 kez alınmış
@@ -190,7 +246,7 @@ Tanım  : VERMEZ
 8 halkayı yeniden kurmak zorunda kalır (ölçüldü: ~250 alım). **`D4`** (oyuncu politikası):
 boost, zirve bir önceki zirveyi geri kazanınca yapılır; "alır almaz boost" döngüyü 2 saniyeye indirir.
 
-### 5.5 Kapı ve prestij — **ARŞİV, build'de yok**
+### 5.6 Kapı ve prestij — **ARŞİV, build'de yok**
 
 ```
 kapı      : sayı ≥ 1,79e308  (aynı zamanda JS float tavanı)
@@ -221,7 +277,15 @@ vermez, yalnızca tıklama yükünü alır.
 
 ---
 
-## 7. Ölçüm — 1. basamak (`K5`, Set A → A+)
+## 7. Ölçüm — 1. basamak (`K5`, Set A → A+ → ADR-0086)
+
+> **Kalibre edildi (ADR-0086, 2026-10-31).** Gerçek motor, `dt = 1 s`, sıfırlamalı model:
+> intended **181,0 dk** (optimal, 11 boost) · 0-greedy 195,8 dk · challenges-only **289,6 dk**
+> (1,60×) · boost-only **672,6 dk** (3,72×) · base **1031,9 dk** (5,70×).
+> Mücadele koşuları: C1 17,1 · C2 7,7 · C3 8,0 · C4 8,8 · C5 9,3 · C6 18,8 · C7 10,5 ·
+> C8 14,2 dk; final itiş 52,7 dk; 11 boost farmı 9.–114. dk. Projeksiyon: 181 × 26,4 ≈
+> **79,6 sa** (×1,165); 85 saat hedefi için eğri **×1,176** (84,8 sa).
+> Aşağıdaki Set A/A+ bölümleri **tarihseldir** ve artık geçerli değildir.
 
 > **Not (ADR-0082):** Aşağıdaki 119 dk'lık koşu boost/prestij dönemine aittir ve **arşivdir**.
 > Zincir-only build'in ölçümü `balance.test.ts` içindedir: 60. dk **7,9e15**, 120. dk **4,3e19**,
@@ -281,26 +345,27 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 
 ---
 
-## 8. 1. basamak spec'i (kilitli, ADR-0083)
+## 8. 1. basamak spec'i (kilitli, ADR-0086)
 
 | Alan | Karar |
 | :--- | :--- |
 | Zincir | Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician |
 | Yön | Aşağıdan yukarı; **Fingers sayıyı üretir**; `+1` = elle Fingers |
-| Alım | Sınırsız, birim fiyatı **×1,20** (mücadelelerde 1,22 / 1,35 / 1,45); 10'lu blok = bir halka |
-| Kilit | Bir halkadan 10 birim (= tek blok) → sonraki halka (mandallı) |
-| Blok Çarpanı | `B = 5.5`; her halkada `B^⌊bought/10⌋`; yalnız Fingers tabanı + doğrudan katkı |
-| Döngü | **Yok** — `1,79e308`e kadar tek koşu; hiçbir sıfırlama yok (ADR-0083) |
-| Mücadele | 8 sıfırlamasız overlay; girişte sayı/halkalar/B korunur; cezalar 21–22 dk |
-| Kapı | `1,79e308` → prestij: `+1 Tanım`, 2. basamak |
-| Süre | 190 dk (3 sa 10 dk); kalibrasyon 188,8 / 189,1 dk |
+| Alım | Sınırsız, birim fiyatı **×1,20** (tüm mücadelelerde **1,22**); 10'lu blok = bir halka |
+| Kilit | Bir halkadan 10 birim (= tek blok) → sonraki halka; koşu sıfırlanınca yalnız Fingers açık |
+| Blok Çarpanı | `B = 5.3`; her halkada `B^⌊bought/10⌋`; yalnız Fingers tabanı + doğrudan katkı |
+| Boost | `1,8^n` üretim çarpanı; `ceil(50 · 1,35^n)` son halka koşulu, fiyat `1,5^n`; alım sayıyı ve zinciri sıfırlar |
+| Döngü | **Var** — boost alımı veya mücadele girişi sayıyı `10`a, zinciri 0'a indirir; boost sayacı ve ödüller kalır (ADR-0086) |
+| Mücadele | 8 sıfırlamalı koşu; hedefler log10 **10,5 · 20,1 · 29,8 · 39,4 · 49,1 · 58,7 · 68,4 · 78,0**, kilit = önceki hedef (C1 = 10); sıra zorunlu, her mücadelede global besleme `×0,2`; çıkış sıfır koşuyu korur |
+| Kapı | `1,79e308` → prestij: `+1 Tanım`, 2. basamak; boost sayacı burada sıfırlanır |
+| Süre | **181,0 dk** (intended, 11 boost); challenges-only 289,6 · boost-only 672,6 · base 1031,9 dk. Projeksiyon 79,6 sa (×1,165), 85 saat hedefi ×1,176 |
 | Ses | Ticker konuşur (`V4`); tooltip ve sayısal etiket **asla** şaka yapmaz |
 
 ---
 
-## 9. Kayıt şeması — v23
+## 9. Kayıt şeması — v24
 
-[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 23` (ADR-0083),
+[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 24` (ADR-0086),
 `MIN_SUPPORTED_SAVE_VERSION = 20`.
 
 - **P5 — sert temizlik:** v19 ve altı kayıtlar **açılmaz**; oyuncu sıfırdan başlar. Veda ekranı
@@ -311,29 +376,14 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 - **v22 zincir-only (ADR-0082):** boost/prestij/yükseltme alanları şemadan düştü.
 - **v23 rung 1 v2 (ADR-0083):** `challenges`, `gateReached`, `tanim` eklendi. v22 kayıtları
   açılır; boş mücadele listesi ve `gateReached: false` ile gelir.
+- **v24 boost (ADR-0086):** `boostCount` eklendi. v20–v23 kayıtları açılır; `boostCount: 0`
+  varsayılanıyla gelir, geçersiz/negatif değer 0'a kırpılır. Mücadele ve boost sıfırması
+  şemayı değiştirmez — `boostCount` kalıcı bir sayaçtır, yalnız kapı/prestijde sıfırlanır.
 - **Daha yeni kayıt korunur:** `SaveVersionError` — yeni build'in kaydı eski build'de reddedilir,
   sessizce düşürülmez.
-- **Şema (v23):** `number`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
+- **Şema (v24):** `number`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
   `rung`, `totalBuys`, `taps`, `uselessTaps`, `playTime`, `startedAt`, `lastSeenAt`,
-  `settings`, `seenVoice[]`, `latched[]`, `challenges{}`, `gateReached`, `tanim`.
-- **Uçucu alanlar kayda yazılmaz:** `offlineReport`.
-
-[`src/core/save-version.ts`](src/core/save-version.ts): `SAVE_VERSION = 22`,
-`MIN_SUPPORTED_SAVE_VERSION = 20`.
-
-- **P5 — sert temizlik:** v19 ve altı kayıtlar **açılmaz**; oyuncu sıfırdan başlar. Veda ekranı
-  yok, arşiv yok (`P4`). Gerekçe: pivot hem temayı hem ekonomiyi değiştirdi; eski kayıt hem
-  teknik hem anlam olarak yüklenemez.
-- **v21 yalnız gösterim göçü (ADR-0080):** şema değişmedi; v20 kayıtlarındaki `scientific`
-  değeri *eski varsayılan* olduğu için bir kez `standard`'a taşınır. Asgari sürüm 20'de kaldı,
-  yani v20 kayıtları açılır — sıfırlanmaz.
-- **v22 zincir-only (ADR-0082):** boost/prestij/yükseltme alanları şemadan düştü. Asgari sürüm
-  yine 20: v20/v21 kayıtları açılır, sayı + zincir korunur, kaldırılan alanlar yok sayılır.
-- **Daha yeni kayıt korunur:** `SaveVersionError` — yeni build'in kaydı eski build'de reddedilir,
-  sessizce düşürülmez.
-- **Şema (v22):** `number`, `bestNumber`, `rings[]` (`a`=miktar, `b`=alım), `unlocked[]`,
-  `rung`, `totalBuys`, `taps`, `uselessTaps`, `playTime`, `startedAt`, `lastSeenAt`,
-  `settings`, `seenVoice[]`, `latched[]`.
+  `settings`, `seenVoice[]`, `latched[]`, `challenges{}`, `boostCount`, `gateReached`, `tanim`.
 - **Uçucu alanlar kayda yazılmaz:** `offlineReport`.
 - **Depolama:** LZ-String + LocalStorage, 3 slot + otomatik yedek + karantina; Firebase/Firestore
   bulut kayıt isteğe bağlı (anahtarsız oyun tam çalışır).
@@ -345,6 +395,10 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 Üretim kapalıyken de sürer, **12 saatte tavan** yapar (`OFFLINE_CAP_SECONDS = 12·3600`).
 Simülasyon **1 saniyelik adımlarla** ilerletilir; sonuç
 `OfflineReport` (`seconds`, `capped`, `gained`) olarak "welcome back" modalına gider.
+
+Aktif bir mücadele çevrimdışı blokta hedefi aştığı **adımda** tamamlanır ve ödülü derhal
+uygulanır; blok bitince tek seferde çözülmez (ADR-0086 §7). Böylece blok sonrası ekranda
+"bitti ama ödül yok" durumu oluşmaz.
 
 Gerekçe: 85 saatlik oyunda uyuyan oyuncuyu cezalandırmak düşmanca; ama bir hafta kapatıp gelince
 oyunu atlamış olmak oyunu anlamsız kılar.
@@ -402,10 +456,10 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | Katman | Dosya | Durum |
 | :--- | :--- | :--- |
-| Ekonomi | `src/game/number/` (tuning · challenges · economy · rungs) | 🟡 Rung 1 v2 — B=5.5 + 8 mücadele (ADR-0083) |
-| Store | `src/stores/game.ts` (tick, alım, mücadele, prestij, serialize/deserialize) | 🟡 save v23 |
-| Ses | `src/game/voice/` + `TickerBar.vue` | 🟡 mücadele/kapı satırları ekleniyor |
-| UI | `App.vue` + GoalBar · ChallengePanel · GateModal + mevcut 9 bileşen | 🟡 |
+| Ekonomi | `src/game/number/` (tuning · challenges · economy · rungs) | ✅ Rung 1 v3 — B=5.3 + boost + sıfırlamalı mücadele, 181 dk (ADR-0086) |
+| Store | `src/stores/game.ts` (tick, alım, boost, mücadele, prestij, serialize/deserialize) | 🟡 save v24 |
+| Ses | `src/game/voice/` + `TickerBar.vue` | 🟡 mücadele/kapı/boost satırları |
+| UI | `App.vue` + GoalBar · ChallengePanel · BoostPanel · GateModal + mevcut bileşenler | 🟡 |
 | Sahne (`G8`) | `RungScene.vue` | 🟡 kapı anı GateModal ile bağlanacak |
 | Altyapı | 20 TPS loop · LZ-String + slot + karantina · Firebase auth/bulut · audio + müzik · arayüz kabuğu | ✅ |
 | 2–11. basamak | — | ⛔ tasarlanmadı |
@@ -419,10 +473,12 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 
 | # | Konu | Durum |
 | :-- | :--- | :--- |
-| `K5` | Zincir-only denge ölçümü — **geçersiz**; B=5.5 + mücadele kalibrasyonu | ✅ `rung-1-190-calibration-2026-10-27.md` |
-| `R1` | **Rung 1 v2** — tek koşu, 190 dk, 8 sıfırlamasız mücadele, C8 ×2 | 🟡 uygulanıyor (ADR-0083) |
-| `R2` | Boost reset modeli ("boost alınca sayı sıfırlansın") | 🟡 sahip oyun içi testte karar verecek |
-| `R3` | C5 ödülü (+7,7%) ve C3 58 basamak sıçraması | 🟡 his testi |
+| `K5` | 190 dk kalibrasyonu **geçersiz**; ADR-0086 kalibrasyonu **181,0 dk** (2026-10-31) | ✅ kalibre edildi |
+| `R1` | **Rung 1 v3** — B=5.3, boost `1,8^n`, 8 mücadele hedefi 10,5–78,0; intended 181 dk | ✅ uygulandı (ADR-0086) |
+| `R2` | Boost reset modeli ("boost alınca sayı ve zincir sıfırlansın") | ✅ ADR-0086 ile karara bağlandı |
+| `R3` | Üç yolun ölçümü — challenges-only 1,60× · boost-only 3,72× · base 5,70× | ✅ kalibre edildi |
+| `R4` | Toplam süre — 85 saat hedefi, eğri ×1,176 (projeksiyon 79,6 sa) | ✅ |
+| — | **Denetim** — `npm run verify` + commit | 🟡 sıradaki |
 | — | **2. basamak tasarımı** (`E5`: kendi turunda; `OmegaNum` adaptörü + kadran) | ⛔ sıradaki büyük iş |
 | `A4` | Mizah yoğunluğu — ticker kapısı var; sahne (`RungScene`) ve başarım kapısı yok | 🟡 |
 | `A5` | `LNGN` final sahnesi (ton kırılması, `G8` motoru) | 🟡 en son |

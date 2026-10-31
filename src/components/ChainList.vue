@@ -10,6 +10,7 @@ import SectionHeader from './ui/SectionHeader.vue'
 import SegmentedControl from './ui/SegmentedControl.vue'
 import BuyButton from './ui/BuyButton.vue'
 import BlockPips from './ui/BlockPips.vue'
+import BoostPanel from './BoostPanel.vue'
 
 const store = useGameStore()
 
@@ -121,7 +122,7 @@ function lockHint(row: RingRow): string {
 }
 
 /**
- * Blok çarpanı (contract §0): 5.5 ** floor(bought / 10). Metin satırdan gelir —
+ * Blok çarpanı (contract §0): 5.3 ** floor(bought / 10). Metin satırdan gelir —
  * biçim tek kaynakta kalır ki zincir satırı ile `blockMultText` ayrı düşmesin (V4).
  * Çarpan 1 iken (henüz blok yok) metin susar: göstergeler yalnız ilerlemeyi okur.
  */
@@ -217,6 +218,12 @@ function buyMaxAll(): void {
       </tbody>
     </table>
   </section>
+
+  <!--
+    Boost (ADR-0086): güç kaynağı, mücadelelerden önce açılır; zincirin altında yaşar.
+    2. basamakta ekonomi yok: panel orada görünmez (kapı hedefi geri gelmez).
+  -->
+  <BoostPanel v-if="store.boostUnlocked && store.rung === 1" />
 </template>
 
 <style scoped>
