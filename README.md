@@ -31,11 +31,15 @@ Döngü AD tarzıdır. **Boost** güç kaynağıdır: son halka koşulunu tuttur
 ödenir ve kapıya kadar süren bir üretim çarpanı verir. Boost alımı veya bir **mücadeleye giriş** sayıyı
 `10`a, zinciri sıfıra indirir; boost sayacı, tamamlanan mücadeleler ve ödülleri kalır.
 8 mücadele mutlak hedefli ve sıralıdır (log10 hedefleri 10,5 · 20,1 · 29,8 · 39,4 · 49,1 ·
-58,7 · 68,4 · 78,0; kilit önceki hedeftir); her biri zincir beslemesini `×0,2` yapar. Boost
-sayacı yalnız kapıdaki **prestijde** sıfırlanır: `+1 Tanım`. 2. basamak bu build'de yok.
+58,7 · 68,4 · 78,0; kilit önceki hedef **ve en az 4 boost** — ADR-0087). 4 boost olmadan C1'e
+girilemez; boost'lar mücadelede kalıcı olduğu için kapı C1 sonrası açık kalır. Her mücadele
+zincir beslemesini `×0,2` yapar. Boost sayacı yalnız kapıdaki **prestijde** sıfırlanır:
+`+1 Tanım`. 2. basamak bu build'de yok.
 
-Kalibrasyon (2026-10-31, gerçek motor, `dt = 1 s`): intended **181,0 dk** (11 boost);
-challenges-only 289,6 dk (1,60×); boost-only 672,6 dk (3,72×); base 1031,9 dk (5,70×).
+İlk mücadele ~32 dk boost farmı + 17,1 dk C1'dir (C1 0 boostta 36 dk sürerdi; artık erişilemez).
+Kalibrasyon (2026-10-31, gerçek motor, `dt = 1 s`): intended **181,0 dk** (11 boost, 8/8);
+boost-only 672,6 dk; base 1031,9 dk. Boost kapısı ölçümü: 3 → 184,2 dk (8/8) · **4 → 181,0 dk
+(8/8)** · 5 → 174,5 dk (7/8) · 6 → 4/8. Challenges-only yolu (289,6 dk) tasarım gereği kalktı.
 181 × 26,4 ≈ **79,6 sa**; 85 saat hedefi için basamak çarpanı **×1,176**.
 
 Tasarım referansı: [`GAME_DESIGN.md`](GAME_DESIGN.md) · plan v2:

@@ -1,6 +1,6 @@
 import type { Decimal } from '../../core/math'
 import type { NumberState } from './economy'
-import { BLOCK_SIZE } from './tuning'
+import { BLOCK_SIZE, CHALLENGE_BOOST_GATE } from './tuning'
 import { resetRun } from './run'
 
 /**
@@ -101,7 +101,7 @@ export function createChallengeState(): ChallengeState {
  * Contract §2: mücadele katmanının okuduğu blok sabitleri. Tanımın tek kaynağı
  * `tuning.ts`; buradan yeniden dışa aktarılır ki store/UI tek yerden okusun.
  */
-export { BLOCK_MULT, CHALLENGE_FEED_MULT } from './tuning'
+export { BLOCK_MULT, CHALLENGE_BOOST_GATE, CHALLENGE_FEED_MULT } from './tuning'
 
 /** Mücadele blok boyu (10) — tuning ile tek kaynak. */
 export const BLOCK_SIZE_CHALLENGE = BLOCK_SIZE
@@ -221,16 +221,23 @@ export function activeChallenge(state: { challenges: ChallengeState }): Challeng
 }
 
 /**
- * Mücadele açıldı mı? Eşik `bestNumber`a (hayat boyu zirve) bakar.
+ * Mücadele açıldı mı?
  *
- * Current number kullanılsaydı, bir mücadeleden 10 ile çıkan oyuncu kendi
- * açtığı mücadeleye bir daha giremezdi (soft-lock). ADR-0086 §6.
+ * İki kapı vardır:
+ *   1. Boost kapısı (ADR-0087): `boostCount >= CHALLENGE_BOOST_GATE` (4).
+ *      C1 daha 0. saniyede açık olduğu için oyuncu boost'u görmeden 36 dk'lık
+ *      duvara giriyordu; kapı boost'u öğretir. Boost'lar mücadelede kalıcı
+ *      olduğundan C1 sonrası bu kapı otomatik sağlanır.
+ *   2. Sayı kapısı: eşik `bestNumber`a (hayat boyu zirve) bakar. Current number
+ *      kullanılsaydı, bir mücadeleden 10 ile çıkan oyuncu kendi açtığı
+ *      mücadeleye bir daha giremezdi (soft-lock). ADR-0086 §6.
  */
 export function isChallengeUnlocked(
-  state: { bestNumber: Decimal; challenges: ChallengeState },
+  state: { bestNumber: Decimal; boostCount: number; challenges: ChallengeState },
   def: ChallengeDef
 ): boolean {
   if (state.challenges.completed.includes(def.id)) return false
+  if (state.boostCount < CHALLENGE_BOOST_GATE) return false
   const log = state.bestNumber.log10().toNumber()
   return Number.isFinite(log) && log >= def.unlockLog10
 }
@@ -247,6 +254,7 @@ export function challengeGoalLog(def: ChallengeDef, _entryLog10?: number): numbe
  * Mücadeleye gir: koşuyu sıfırla, örtüyü kur.
  *
  * - Sıra zorunlu: yalnız `nextChallenge` (ilk tamamlanmamış) girilebilir.
+ * - Boost kapısı: en az `CHALLENGE_BOOST_GATE` (4) boost gerekir (ADR-0087).
  * - Kilit kontrolü bestNumber ile yapılır; current number resetten sonra 10 olur.
  * - Boost sayısı, bestNumber, tamamlanmış ödüller ve sayaçlar korunur.
  * - Hedef mutlak plan hedefidir; giriş sayısı hedefi kaydırmaz.

@@ -16,8 +16,8 @@
 > Fingers) sıfırlar; **boost sayacı, tamamlanan mücadeleler ve ödülleri kalır**. Boost sayacı
 > yalnız `1,79e308` kapısında/prestijde sıfırlanır. Her mücadele global zincir beslemesini
 > **×0,2** yapar. 8 halka + blok çarpanı `B = 5.3`; mücadele kilidi **`bestNumber`** (ömür boyu
-> zirve) ile ölçülür. **Kalibre edildi (2026-10-31, gerçek motor):** intended **181,0 dk**;
-> challenges-only 289,6 dk (1,60×); boost-only 672,6 dk (3,72×); base 1031,9 dk (5,70×).
+> zirve) **ve en az 4 boost** ile ölçülür (ADR-0087). **Kalibre edildi (2026-10-31, gerçek motor):**
+> intended **181,0 dk** (11 boost, 8/8); boost-only 672,6 dk (3,72×); base 1031,9 dk (5,70×).
 > Hedefler log10 10,5 → 78,0. Bağlayıcı özet §8'dedir.
 >
 > **Arşiv:** ADR-0082 (2026-10-25) mini boost'u ve `Tanım` yükseltmelerini kaldırmıştı; ADR-0086
@@ -148,12 +148,14 @@ halka 1'in 1/sn'si `+1`in gerçek bir birim olmasını sağlar (`S9`). Tam çal�
 - **`+1`:** gerçekten 1 ekler, hiçbir çarpan uygulanmaz (`S9`). Üst basamaklarda gösterim
   çözünürlüğünün altında kaldığı için ekranda hiçbir şey değişmez — bu **yuvarlama**, yalan değil.
 
-### Mücadele koşuları (ADR-0086, kalibre 2026-10-31)
+### Mücadele koşuları (ADR-0086/0087, kalibre 2026-10-31)
 
 Sıra zorunludur; yalnız sıradaki mücadeleye girilebilir. Kilit eşiği **önceki hedef**tir
-(C1 = 10), hedefler **mutlak** log10 değerleridir ve `bestNumber` ile ölçülür. Giriş sayıyı
-`10`a, zinciri 0'a indirir; boost sayacı ve tamamlanmış ödüller kalır. Her mücadelede global
-besleme `×0,2`; fiyat büyümesi C1–C8 boyunca **1,22**.
+(C1 = 10), hedefler **mutlak** log10 değerleridir ve `bestNumber` ile ölçülür. Ek olarak
+**`boostCount >= 4`** gerekir (ADR-0087): 4 boost olmadan C1'e girilemez; boost'lar mücadelede
+kalıcı olduğu için kapı C1 sonrası açık kalır. Giriş sayıyı `10`a, zinciri 0'a indirir; boost
+sayacı ve tamamlanmış ödüller kalır. Her mücadelede global besleme `×0,2`; fiyat büyümesi
+C1–C8 boyunca **1,22**.
 
 | # | Kilit (log10) | Hedef (log10) | Hedef | Koşu |
 | --: | --: | --: | :--- | --: |
@@ -166,9 +168,11 @@ besleme `×0,2`; fiyat büyümesi C1–C8 boyunca **1,22**.
 | C7 | 58,7 | 68,4 | `1e68.4` | 10,5 dk |
 | C8 | 68,4 | 78,0 | `1e78.0` | 14,2 dk |
 
-Intended toplam **181,0 dk** (11 boost); final itiş 52,7 dk, boost farmı 9.–114. dk arasında.
-Diğer politikalar: 0-greedy 195,8 dk · challenges-only 289,6 dk (1,60×) · boost-only 672,6 dk
-(3,72×) · base 1031,9 dk (5,70×).
+Intended toplam **181,0 dk** (11 boost, 8/8); ilk mücadele ~32 dk boost farmı + 17,1 dk C1;
+final itiş 52,7 dk, boost farmı 9.–114. dk arasında. Boost-only 672,6 dk (3,72×) · base 1031,9 dk
+(5,70×). **Boost kapısı ölçümü:** 3 → 184,2 dk (8/8) · **4 → 181,0 dk (8/8)** · 5 → 174,5 dk
+(7/8) · 6 → 4/8. C1 0 boostta 36 dk sürerdi; artık **erişilemez**. Challenges-only yolu (289,6 dk)
+tasarım gereği kaldırıldı.
 
 ---
 
@@ -277,15 +281,16 @@ vermez, yalnızca tıklama yükünü alır.
 
 ---
 
-## 7. Ölçüm — 1. basamak (`K5`, Set A → A+ → ADR-0086)
+## 7. Ölçüm — 1. basamak (`K5`, Set A → A+ → ADR-0086/0087)
 
-> **Kalibre edildi (ADR-0086, 2026-10-31).** Gerçek motor, `dt = 1 s`, sıfırlamalı model:
-> intended **181,0 dk** (optimal, 11 boost) · 0-greedy 195,8 dk · challenges-only **289,6 dk**
-> (1,60×) · boost-only **672,6 dk** (3,72×) · base **1031,9 dk** (5,70×).
-> Mücadele koşuları: C1 17,1 · C2 7,7 · C3 8,0 · C4 8,8 · C5 9,3 · C6 18,8 · C7 10,5 ·
-> C8 14,2 dk; final itiş 52,7 dk; 11 boost farmı 9.–114. dk. Projeksiyon: 181 × 26,4 ≈
-> **79,6 sa** (×1,165); 85 saat hedefi için eğri **×1,176** (84,8 sa).
-> Aşağıdaki Set A/A+ bölümleri **tarihseldir** ve artık geçerli değildir.
+> **Kalibre edildi (ADR-0086/0087, 2026-10-31).** Gerçek motor, `dt = 1 s`, sıfırlamalı model:
+> intended **181,0 dk** (optimal, 11 boost, 8/8) · 0-greedy 195,8 dk · boost-only **672,6 dk**
+> (3,72×) · base **1031,9 dk** (5,70×). Boost kapısı: 3 → 184,2 (8/8) · **4 → 181,0 (8/8)** ·
+> 5 → 174,5 (7/8) · 6 → 4/8. Challenges-only (289,6 dk) ADR-0087 sonrası **erişilemez**; tarihsel.
+> Mücadele koşuları: C1 17,1 (4 boost; 0 boostta 36 dk) · C2 7,7 · C3 8,0 · C4 8,8 · C5 9,3 ·
+> C6 18,8 · C7 10,5 · C8 14,2 dk; ilk mücadele ~32 dk farm + 17,1 dk; final itiş 52,7 dk;
+> 11 boost farmı 9.–114. dk. Projeksiyon: 181 × 26,4 ≈ **79,6 sa** (×1,165); 85 saat hedefi için
+> eğri **×1,176** (84,8 sa). Aşağıdaki Set A/A+ bölümleri **tarihseldir** ve artık geçerli değildir.
 
 > **Not (ADR-0082):** Aşağıdaki 119 dk'lık koşu boost/prestij dönemine aittir ve **arşivdir**.
 > Zincir-only build'in ölçümü `balance.test.ts` içindedir: 60. dk **7,9e15**, 120. dk **4,3e19**,
@@ -356,9 +361,9 @@ gerekir. Tıklamasız oyuncu başlayamaz; bu bir hata değil, `S9`/`+1` tasarım
 | Blok Çarpanı | `B = 5.3`; her halkada `B^⌊bought/10⌋`; yalnız Fingers tabanı + doğrudan katkı |
 | Boost | `1,8^n` üretim çarpanı; `ceil(50 · 1,35^n)` son halka koşulu, fiyat `1,5^n`; alım sayıyı ve zinciri sıfırlar |
 | Döngü | **Var** — boost alımı veya mücadele girişi sayıyı `10`a, zinciri 0'a indirir; boost sayacı ve ödüller kalır (ADR-0086) |
-| Mücadele | 8 sıfırlamalı koşu; hedefler log10 **10,5 · 20,1 · 29,8 · 39,4 · 49,1 · 58,7 · 68,4 · 78,0**, kilit = önceki hedef (C1 = 10); sıra zorunlu, her mücadelede global besleme `×0,2`; çıkış sıfır koşuyu korur |
+| Mücadele | 8 sıfırlamalı koşu; hedefler log10 **10,5 · 20,1 · 29,8 · 39,4 · 49,1 · 58,7 · 68,4 · 78,0**, kilit = önceki hedef (C1 = 10) **+ `boostCount >= 4`** (ADR-0087); sıra zorunlu, her mücadelede global besleme `×0,2`; çıkış sıfır koşuyu korur |
 | Kapı | `1,79e308` → prestij: `+1 Tanım`, 2. basamak; boost sayacı burada sıfırlanır |
-| Süre | **181,0 dk** (intended, 11 boost); challenges-only 289,6 · boost-only 672,6 · base 1031,9 dk. Projeksiyon 79,6 sa (×1,165), 85 saat hedefi ×1,176 |
+| Süre | **181,0 dk** (intended, 11 boost, 8/8); ilk mücadele ~32 dk farm + 17,1 dk C1; boost-only 672,6 · base 1031,9 dk. Projeksiyon 79,6 sa (×1,165), 85 saat hedefi ×1,176 |
 | Ses | Ticker konuşur (`V4`); tooltip ve sayısal etiket **asla** şaka yapmaz |
 
 ---
@@ -476,7 +481,8 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 | `K5` | 190 dk kalibrasyonu **geçersiz**; ADR-0086 kalibrasyonu **181,0 dk** (2026-10-31) | ✅ kalibre edildi |
 | `R1` | **Rung 1 v3** — B=5.3, boost `1,8^n`, 8 mücadele hedefi 10,5–78,0; intended 181 dk | ✅ uygulandı (ADR-0086) |
 | `R2` | Boost reset modeli ("boost alınca sayı ve zincir sıfırlansın") | ✅ ADR-0086 ile karara bağlandı |
-| `R3` | Üç yolun ölçümü — challenges-only 1,60× · boost-only 3,72× · base 5,70× | ✅ kalibre edildi |
+| `R3` | Boost kapısı — 3: 184,2 (8/8) · **4: 181,0 (8/8)** · 5: 174,5 (7/8) · 6: 4/8; challenges-only kaldırıldı | ✅ ADR-0087 |
+| `R5` | `CHALLENGE_BOOST_GATE = 4` + UI "4 boost gerekli" durumu | ✅ uygulandı |
 | `R4` | Toplam süre — 85 saat hedefi, eğri ×1,176 (projeksiyon 79,6 sa) | ✅ |
 | — | **Denetim** — `npm run verify` + commit | 🟡 sıradaki |
 | — | **2. basamak tasarımı** (`E5`: kendi turunda; `OmegaNum` adaptörü + kadran) | ⛔ sıradaki büyük iş |

@@ -29,7 +29,7 @@ ekler.
 | :-- | :--- | :--- |
 | 1 | **Zincir** | 8 halka: Fingers → Notch → Abacus → Pencil → Calculator → Computer → Supercomputer → Mathematician. Halka *n+1* halka *n*'i üretir; halka 1 sayıyı üretir; `+1` zincirin köküdür |
 | 2 | **Tek havuz** | Cüzdan sayının kendisidir. Alım sayıyı düşürür; kilitler koşu içinde mandallıdır, boost/mücadele sıfırması zinciri yeniden kurar |
-| 3 | **Döngü** | AD tarzı sıfırlama: boost güç kaynağıdır ve önce açılır; boost alımı veya mücadele girişi sayıyı + zinciri sıfırlar, boost ve ödüller kalır. `B = 5.3`, boost `1,8^n`; 8 mutlak hedefli mücadele (log10 10,5–78,0, her biri besleme `×0,2`) → kapı `1.79e308` → prestij (`+1 Tanım`, boost sayacı sıfırlanır) |
+| 3 | **Döngü** | AD tarzı sıfırlama: boost güç kaynağıdır ve önce açılır; boost alımı veya mücadele girişi sayıyı + zinciri sıfırlar, boost ve ödüller kalır. `B = 5.3`, boost `1,8^n`; 8 mutlak hedefli mücadele (log10 10,5–78,0, **≥4 boost**, her biri besleme `×0,2`) → kapı `1.79e308` → prestij (`+1 Tanım`, boost sayacı sıfırlanır) |
 | 4 | **Ses** | Sahne · ticker · başarım · açıklama. Tooltip ve sayısal etiket **asla** şaka yapmaz |
 | 5 | **Görsel** | "Laboratuvar" (ADR-0085): sakin ölçüm aleti kabuğu, vurgu = basamak rengi. Gölge/blur/süs yok |
 
@@ -48,10 +48,12 @@ oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-vo
 
 ## 6. Bugünkü durum (2026-10-31)
 
-- ✅ **1. basamak v3 uygulandı ve kalibre edildi** (ADR-0086): boost + sıfırlamalı 8 mücadele,
-  `B = 5.3`, boost `1,8^n`, save v24. Hedefler log10 10,5 · 20,1 · 29,8 · 39,4 · 49,1 · 58,7 ·
-  68,4 · 78,0. Ölçüm: intended **181,0 dk** (11 boost) · challenges-only 289,6 dk (1,60×) ·
-  boost-only 672,6 dk (3,72×) · base 1031,9 dk (5,70×). 181 × 26,4 ≈ 79,6 sa; 85 saat için ×1,176.
+- ✅ **1. basamak v3 uygulandı ve kalibre edildi** (ADR-0086 + ADR-0087): boost + sıfırlamalı
+  8 mücadele, `B = 5.3`, boost `1,8^n`, save v24. Hedefler log10 10,5 · 20,1 · 29,8 · 39,4 · 49,1 ·
+  58,7 · 68,4 · 78,0; **mücadeleler `boostCount >= 4` ister**. Ölçüm: intended **181,0 dk**
+  (11 boost, 8/8) · boost-only 672,6 dk (3,72×) · base 1031,9 dk (5,70×). İlk mücadele ~32 dk
+  farm + 17,1 dk C1; C1 0 boostta 36 dk (erişilemez). Boost kapısı: 3 → 184,2 · **4 → 181,0** ·
+  5 → 174,5 (7/8) · 6 → 4/8. Challenges-only yolu kaldırıldı. 181 × 26,4 ≈ 79,6 sa; 85 saat için ×1,176.
 - ✅ 8 halka, tek havuz, 10 birim kilidi, `+1`, İngilizce ticker altyapısı korunuyor.
 - ✅ Altyapı: kayıt (LZ-String + 3 slot + karantina), 20 TPS loop, audio + müzik, Firebase,
   "Laboratuvar" arayüz kabuğu (bölüm/kaynak kayıt defterleri), ayarlar.

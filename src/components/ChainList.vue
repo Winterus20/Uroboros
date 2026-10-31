@@ -220,10 +220,11 @@ function buyMaxAll(): void {
   </section>
 
   <!--
-    Boost (ADR-0086): güç kaynağı, mücadelelerden önce açılır; zincirin altında yaşar.
-    2. basamakta ekonomi yok: panel orada görünmez (kapı hedefi geri gelmez).
+    Boost (ADR-0086/0087): güç kaynağı, mücadelelerden önce açılır; zincirin altında yaşar.
+    Panel ilk günden görünür (kilitli hâlde) ki oyuncu boost'u ve 4 boost'luk mücadele
+    kapısını görmeden C1 duvarına girmesin. 2. basamakta ekonomi yok: panel görünmez.
   -->
-  <BoostPanel v-if="store.boostUnlocked && store.rung === 1" />
+  <BoostPanel v-if="store.rung === 1" />
 </template>
 
 <style scoped>

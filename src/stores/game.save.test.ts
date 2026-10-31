@@ -129,6 +129,8 @@ describe("v22 kaydı v24 build'de açılır", () => {
   it('v22 oyuncusu sıralı akışa temiz girer (yalnız C1 girilebilir)', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
+    // ADR-0087: eski kayıtta boost yok; kapıyı test için aç.
+    store.boostCount = 4
 
     // bestNumber 2e50 → C1/C2/C3 kilit eşikleri açık, ama sıra C1'dedir.
     const open = store.challengeRows.filter((row) => row.status === 'available')
@@ -365,6 +367,7 @@ describe('mücadele paneli satırları', () => {
   it('8 satır verir ve durumları kayıttan türetir', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
+    store.boostCount = 4
     const rows = store.challengeRows
 
     expect(rows).toHaveLength(CHALLENGES.length)
@@ -382,6 +385,7 @@ describe('mücadele paneli satırları', () => {
   it('enterable yalnız sıradaki satırda true; aktif mücadele varken hiçbirinde değil', () => {
     const store = useGameStore()
     store.deserialize(v23Payload())
+    store.boostCount = 4
     expect(store.challengeRows.filter((row) => row.enterable)).toHaveLength(0)
 
     store.exitChallenge()
@@ -466,6 +470,7 @@ describe('update / simulateOffline olay akışı', () => {
   it('hedefe ulaşınca mücadele tamamlanır, ödül kalıcı olur ve olay satırı yazılır', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
+    store.boostCount = 4
     store.enterChallenge('C1')
     expect(store.challenges.active).toBe('C1')
 
@@ -482,6 +487,7 @@ describe('update / simulateOffline olay akışı', () => {
   it('çevrimdışı simülasyon hedefi geçen adımda tamamlar', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
+    store.boostCount = 4
     store.enterChallenge('C1')
     const goal = store.challenges.goalLog10!
     store.number = D(10).pow(goal + 1)
@@ -498,6 +504,7 @@ describe('update / simulateOffline olay akışı', () => {
   it('çevrimdışı tamamlamadan SONRAKİ üretim ödülü kullanır', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
+    store.boostCount = 4
     store.enterChallenge('C1')
     // Hedefin hemen üstünde başla: ilk 1 sn adımında tamamlanır.
     const goal = store.challenges.goalLog10!
@@ -544,6 +551,7 @@ describe('buyMaxAll', () => {
   it('mücadele cezası alımı engelliyorsa dokunmaz (C1 Fingers on alım)', () => {
     const store = useGameStore()
     store.deserialize(v22Payload())
+    store.boostCount = 4
     store.enterChallenge('C1')
     // Giriş koşuyu sıfırladı; cezayı ölçmek için bütçeyi yeniden ver.
     store.number = D('1e30')

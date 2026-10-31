@@ -24,6 +24,9 @@ const rows = computed(() => store.challengeRows)
 /** Başlıktaki sayaç: tamamlanan / toplam (8 sabit, türetilmiş). */
 const doneCount = computed(() => rows.value.filter((row) => row.status === 'completed').length)
 
+/** Boost kapısı (ADR-0087): satırlardan gelir, bileşen sabit yazmaz. */
+const boostGate = computed(() => rows.value[0]?.requiredBoosts ?? store.challengeBoostGate)
+
 /**
  * Aynı anda tek mücadele açık olabilir (contract §0: cezalar stacklenmez).
  * Bir mücadele aktifken diğer açık satırlar "Open" yazar, "Enter" düğmesi basmaz:
@@ -99,7 +102,7 @@ function confirmEnter(): void {
   <section class="challenges" aria-label="Challenges">
     <SectionHeader
       title="Challenges"
-      description="One at a time, in order. Entering resets the number to 10 and the chain to 0; unlocks return to Fingers only. Boosts and completed rewards are kept."
+      :description="'Challenges open after ' + boostGate + ' boosts. One at a time, in order. Entering resets the number to 10 and the chain to 0; unlocks return to Fingers only. Boosts and completed rewards are kept.'"
     >
       <span class="challenges__note data">{{ doneCount }} / {{ rows.length }} done</span>
     </SectionHeader>
@@ -166,7 +169,12 @@ function confirmEnter(): void {
               eşik oyuncunun notasyonunda, sayısal etiket şaka yapmaz (V4).
             -->
             <span v-else class="ch__state ch__state--locked data">
-              {{ 'Unlocks at ' + row.unlockText }}
+              <template v-if="!row.boostGateMet">
+                {{ 'Requires ' + row.requiredBoosts + ' boosts (' + store.boostCount + '/' + row.requiredBoosts + ')' }}
+              </template>
+              <template v-else>
+                {{ 'Unlocks at ' + row.unlockText }}
+              </template>
             </span>
           </td>
         </tr>

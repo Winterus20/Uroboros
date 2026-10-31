@@ -67,6 +67,7 @@ function enterRun(id: string, isolate = true): NumberState {
   const index = CHALLENGES.findIndex((def) => def.id === id)
   const s = createNumberState()
   s.bestNumber = D(10).pow(CHALLENGES[index].unlockLog10)
+  s.boostCount = 4
   s.challenges.completed = CHALLENGES.slice(0, index).map((def) => def.id)
   expect(enterChallenge(s, id)).toBe(true)
   if (isolate) s.challenges.completed = []
@@ -157,6 +158,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('sıra zorunlu: C1 bitmeden C2, C1 aktifken ikinci giriş reddedilir', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C2')).toBe(false)
     expect(s.challenges.active).toBeNull()
@@ -167,6 +169,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('C1 tamamlanınca C2 açılır; C3 hâlâ sırası değil', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e34')
@@ -177,6 +180,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('tamamlanmış mücadeleye yeniden girilmez (mandal)', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     s.challenges.completed = ['C1']
     expect(enterChallenge(s, 'C1')).toBe(false)
@@ -184,6 +188,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('bilinmeyen kimlikle giriş reddedilir', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C99')).toBe(false)
     expect(s.challenges.active).toBeNull()
@@ -191,6 +196,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('çıkış cezayı kaldırır; sıfırlanmış koşu aynen kalır (eski koşu geri gelmez)', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     s.number = D('1e12')
     s.rings[0].bought = 10
@@ -206,6 +212,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('hedefe varınca tamamlanır: koşunun sayısı/halkaları korunur, ödül kalıcı', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e30')
@@ -223,6 +230,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('hedefin altında tamamlanmaz; aktif mücadele yoksa null döner', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e5')
@@ -236,6 +244,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('hedef girişte mutlak değere kilitlenir ve sonradan değişmez', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     const goal = s.challenges.goalLog10
@@ -246,6 +255,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('ilerleme 1 → 10,5 arasında 0–100 ve monoton', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     expect(challengeProgress(s)).toBeCloseTo(0, 6)
@@ -259,6 +269,7 @@ describe('mücadele girişi — koşu sıfırlanır, kalıcılar korunur', () =>
 
   it('boost sayısı mücadele girişinde korunur', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     s.boostCount = 7
     expect(enterChallenge(s, 'C1')).toBe(true)
@@ -563,6 +574,7 @@ describe('maxAll — en derin halkadan blok blok', () => {
 
   it('mücadele cezası blok alımını da engeller (C1 Fingers 10 alımda durur)', () => {
     const s = createNumberState()
+    s.boostCount = 4
     s.bestNumber = D('1e30')
     expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e30')
@@ -590,12 +602,26 @@ describe('kilit ve sıra — bestNumber tabanlı', () => {
     const s = createNumberState()
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
     s.bestNumber = D('1e10')
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
+    s.boostCount = 4
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
     // Koşu sıfırlandı: current number 10, kilit yine de açık (soft-lock yok).
     s.number = D(10)
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
     s.challenges.completed = ['C1']
     expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
+  })
+
+  it('boost kapısı: 4 boost olmadan kilit açılsa da girilmez', () => {
+    const s = createNumberState()
+    s.bestNumber = D('1e40')
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
+    expect(enterChallenge(s, 'C1')).toBe(false)
+    s.boostCount = 3
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
+    s.boostCount = 4
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
+    expect(enterChallenge(s, 'C1')).toBe(true)
   })
 
   it('boş mücadele durumu doğru başlar', () => {
@@ -610,6 +636,7 @@ describe('kilit ve sıra — bestNumber tabanlı', () => {
   it('activeChallenge aktif kimliği çözer', () => {
     const s = createNumberState()
     expect(activeChallenge(s)).toBeNull()
+    s.boostCount = 4
     s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     expect(activeChallenge(s)?.id).toBe('C1')
@@ -619,8 +646,8 @@ describe('kilit ve sıra — bestNumber tabanlı', () => {
 describe('sıralı koşu akışı', () => {
   it('C1 tamamlanınca C2 girişi koşuyu yeniden sıfırlar, boost korunur', () => {
     const s = createNumberState()
-    s.bestNumber = D('1e40')
     s.boostCount = 4
+    s.bestNumber = D('1e40')
     expect(enterChallenge(s, 'C1')).toBe(true)
     s.number = D('1e34')
     expect(completeChallengeIfReady(s)?.id).toBe('C1')

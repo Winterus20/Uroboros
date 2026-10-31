@@ -132,6 +132,13 @@ function confirmBoost(): void {
 
     <p v-if="blockedText" class="boost__blocked data">{{ blockedText }}</p>
 
+    <!-- ADR-0087: mücadeleler 4 boost'ta açılır; panel bunu ilk günden söyler. -->
+    <p v-if="store.boostCount < store.challengeBoostGate" class="boost__gate data">
+      {{ store.challengeBoostGate - store.boostCount }} more
+      {{ store.challengeBoostGate - store.boostCount === 1 ? 'boost' : 'boosts' }}
+      open the challenges.
+    </p>
+
     <ConfirmDialog
       v-if="dialogOpen"
       :open="dialogOpen"
@@ -214,6 +221,13 @@ function confirmBoost(): void {
   font-size: 11px;
   line-height: 1.5;
   color: var(--pn-text-dim);
+}
+
+.boost__gate {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--pn-text);
 }
 
 /* ≤ 900 px: satır ızgaraya katlanır — [sayı] [çarpan] [düğme] / [şart] / [fiyat]. */

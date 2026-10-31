@@ -24,6 +24,8 @@ be extremely slow; boost + challenges is the intended efficient path.
    challenges and their rewards persist.
 3. Boost availability: last ring (Mathematician) is unlocked and bought >= boostRequirement(n).
    Boost is available before challenges; no challenge gate.
+   **Superseded by ADR-0087 (challenge entry):** boost is still available before challenges, but
+   every challenge now also requires boostCount >= 4.
 4. Boost count resets at the 1e308 gate / prestige, not on challenge entry.
 5. Challenge goals are absolute plan goals; sequence is enforced (only nextChallenge can be
    entered). Completion keeps the challenge run's number and rings. Exit keeps the reset run;
@@ -62,12 +64,13 @@ Challenge goals are absolute log10 values; unlock is the previous goal (C1 unloc
 | :--- | --: | --: |
 | Intended (optimal, 11 boosts) | **181.0 min** | 1.00x |
 | 0-greedy | 195.8 min | 1.08x |
-| Challenges only (no boost) | 289.6 min | 1.60x |
+| Challenges only (no boost) | 289.6 min | 1.60x · historical after ADR-0087 |
 | Boost only (no challenges) | 672.6 min | 3.72x |
 | Base (no boost, no challenges) | 1031.9 min | 5.70x |
 
-The intended path is the only efficient one: challenges-only is hard but possible, boost-only is
-dramatically slower, and the base run is slower still. Challenge runs: C1 17.1 · C2 7.7 · C3 8.0 ·
+The intended path is the only efficient one: boost-only is dramatically slower, and the base run is
+slower still. The challenges-only row was measured before ADR-0087; the 4-boost gate makes that
+mode unreachable, so it is historical data only. Challenge runs: C1 17.1 · C2 7.7 · C3 8.0 ·
 C4 8.8 · C5 9.3 · C6 18.8 · C7 10.5 · C8 14.2 min; final push 52.7 min; the 11 boosts are farmed
 between minute 9 and minute 114. Projection: 181 * 26.4 = **79.6 h** on the x1.165 curve; the 85 h
 target needs a **x1.176** curve (181 * 28.1 = 84.8 h).

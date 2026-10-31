@@ -29,6 +29,11 @@ export const BLOCK_SIZE = 10
 export const CHAIN_RATE = 0.11
 export const RING_DIRECT_SHARE = 1
 export const CHALLENGE_FEED_MULT = 0.2
+/** ADR-0086 rev: mücadeleler bu boost sayısına kadar kapalıdır. */
+export let CHALLENGE_BOOST_GATE = 4
+export function setChallengeBoostGate(n: number): void {
+  CHALLENGE_BOOST_GATE = Math.max(0, Math.floor(n))
+}
 export const BASE_GROWTH = 1.2
 export const RING_COUNT = 8
 const RING_NAMES = ['Fingers', 'Notch', 'Abacus', 'Pencil', 'Calculator', 'Computer', 'Supercomputer', 'Mathematician']
@@ -321,6 +326,7 @@ export function maxAll(state: ModelState): number {
 // ── Mucadeleler (reset modeli) ───────────────────────────────────────────
 export function challengeUnlocked(state: ModelState, def: ChallengeDef): boolean {
   if (state.completed.includes(def.id)) return false
+  if (state.boostCount < CHALLENGE_BOOST_GATE) return false
   const log = state.bestNumber.log10().toNumber()
   return Number.isFinite(log) && log >= def.unlockLog10
 }

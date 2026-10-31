@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0086**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0087**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -18,6 +18,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
   motoru, 0029/0070 kayıt ve bulut) hâlâ geçerlidir.
   Bağlayıcı olanlar **ADR-0077 ve sonrası** (özellikle 0078 görsel dil, 0080 notasyon, 0082
   zincir-only, **0086 boost + sıfırlamalı koşu — 0083'ün tek koşu maddesini geçersiz kılar**,
+  **0087 mücadele boost kapısı — 0086 karar 3'ün mücadele girişini değiştirir**,
   **0085 Laboratuvar arayüz kabuğu**). Çelişkide yeni ADR kazanır.
 - **Numara çakışması notu (2026-10-19):** 0033 numarası iki dosyada birden kullanılıyordu (cloud-sync 2026-10-03 · üç boyutlu başlangıç 2026-10-04). Çakışma cloud-sync dosyasının **0070**'e yeniden numaralandırılmasıyla çözüldü; 0033 artık yalnızca üç boyutlu başlangıç ADR'ine aittir.
 
@@ -108,4 +109,5 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0083 | 1. Basamak — Tek Koşu, 190 Dakika ve Sıfırlamasız Mücadele Modeli | 2026-10-27 | **Kabul edildi** — v1 in resetli 120 dk modelini geçersiz kılar: B=5.5 sabit, 8 sıfırlamasız mücadele, C8 ×2, save v23. Kalibrasyon 188,8/189,1 dk | [0083-rung-1-single-run-challenge-model.md](0083-rung-1-single-run-challenge-model.md) |
 | 0084 | Swirl Parlaklık Tavanı — Ortam Sayıyla Yarışmaz | 2026-10-31 | **Kabul edildi & uygulandı** — `AlgorithmicSwirl` en parlak pikseli L ≤ 0,03 (ek: 0,016 → 0,03; menü sütununa düz zemin); piksel kuantizasyonu, opaklık/blend ve gradyan fallback kaldırıldı. ADR-0078 `G2`'yi sınırlar, iptal etmez | [0084-swirl-luminance-cap.md](0084-swirl-luminance-cap.md) |
 | 0085 | "Laboratuvar" Arayüz Kabuğu — Uygulama Kabuğu, Bölüm Kayıt Defteri, Basamak Vurgusu | 2026-10-31 | **Kabul edildi & uygulandı** — üst çubuk · sol menü · ana alan · durum çubuğu; bölüm/kaynak kayıt defterleri (`src/ui/`); vurgu = basamak rengi (`--pn-rung`); swirl kaldırıldı. ADR-0078 `G2`/`G3`/§5'i ve ADR-0084'ü geçersiz kılar | [0085-laboratuvar-ui-shell.md](0085-laboratuvar-ui-shell.md) |
-| 0086 | Boost-First Reset Loop ve Sıfırlamalı Mücadele Koşuları | 2026-10-31 | **Kabul edildi, kalibre edildi & uygulandı** — boost güç kaynağı; boost/mücadele girişi sayı + zincir sıfırlar, boost sayacı kapıda sıfırlanır; `B = 5.3`, `BOOST_MULT = 1.8`, hedefler log10 10.5–78.0; intended **181 dk** (boost-only 672.6, challenges-only 289.6); save v24. ADR-0083'ün tek koşu maddesini geçersiz kılar | [0086-run-reset-and-boost.md](0086-run-reset-and-boost.md) |
+| 0086 | Boost-First Reset Loop ve Sıfırlamalı Mücadele Koşuları | 2026-10-31 | **Kabul edildi, kalibre edildi & uygulandı** — boost güç kaynağı; boost/mücadele girişi sayı + zincir sıfırlar, boost sayacı kapıda sıfırlanır; `B = 5.3`, `BOOST_MULT = 1.8`, hedefler log10 10.5–78.0; intended **181 dk** (boost-only 672.6; challenges-only 289.6 tarihsel); save v24. ADR-0083'ün tek koşu maddesini geçersiz kılar; mücadele girişi ADR-0087 ile değişti | [0086-run-reset-and-boost.md](0086-run-reset-and-boost.md) |
+| 0087 | Mücadele Boost Kapısı — 4 Boost Zorunluluğu | 2026-10-31 | **Kabul edildi** — `CHALLENGE_BOOST_GATE = 4`; C1 ve tüm mücadeleler `boostCount >= 4` ister, sıra + `bestNumber` kilidi korunur. Gate 3 = 184.2 dk, gate 4 = **181.0 dk** (8/8, 11 boost), gate 5 = 174.5 dk (7/8), gate 6 = 4/8. Challenges-only yolu tasarım gereği kalktı; C1 0 boostta 36 dk (erişilemez), 4 boostta 17.1 dk | [0087-challenge-boost-gate.md](0087-challenge-boost-gate.md) |

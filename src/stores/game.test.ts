@@ -226,6 +226,7 @@ describe('boost sözleşmesi — ADR-0086', () => {
 describe('ChallengeRow.enterable — sıra kilidi', () => {
   it('yalnız sıradaki mücadele girilebilir; girişten sonra hiçbiri', () => {
     const store = useGameStore()
+    store.boostCount = 4
     store.bestNumber = D('1e10')
     const rows = store.challengeRows
     expect(rows.filter((row) => row.enterable).map((row) => row.id)).toEqual(['C1'])

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { D } from '../../core/math'
-import { BLOCK_MULT, BOOST_MULT } from './tuning'
+import { BLOCK_MULT, BOOST_MULT, CHALLENGE_BOOST_GATE } from './tuning'
 import {
   advance,
   applyBoost,
@@ -18,6 +18,7 @@ import {
   CHALLENGES,
   completeChallengeIfReady,
   enterChallenge,
+  isChallengeUnlocked,
   nextChallenge
 } from './challenges'
 
@@ -25,10 +26,10 @@ import {
  * RUNG 1 — EKONOMİ ŞEKLİ (gerçek motor, ADR-0086 sıfırlamalı model).
  *
  * Kalibrasyon: brain/scratchpad/rung1-boost-reset/ (task-3, 2026-10-31).
- * B=5,3 · boost ×1,8 · boost-only 673 dk · challenges-only 290 dk · hedeflenen 181 dk.
+ * B=5,3 · boost ×1,8 · boost kapısı 4 (ADR-0087) · boost-only 673 dk · hedeflenen 181 dk.
  *
  * Bu dosya üç yolun tamamını ölçmez (o rung1.integration.test.ts'in işi);
- * açılışı, C1'in boostsuz duvarını ve boost merdivenini ölçer.
+ * açılışı, boost kapısını (C1 girişi) ve boost merdivenini ölçer.
  */
 
 const STEP_SECONDS = 1
@@ -112,12 +113,27 @@ describe('1. basamak — açılış (B=5,3)', () => {
   })
 })
 
-describe('C1 — boostsuz duvar', () => {
-  it('C1 boostsuz 25-45 dk sürer (hedef 1e10.5)', () => {
+describe('boost kapısı — C1 en az 4 boost ister (ADR-0087)', () => {
+  it('0-3 boost ile C1 ne açılır ne girilir, 4 boost ile giriş serbest', () => {
     const s = fresh()
-    // C1 kilidi bestNumber ile 1e10'da açılır; oyuncu oraya zaten gelmiş sayılır.
     s.bestNumber = D('1e11')
     s.number = D(10)
+    for (let n = 0; n < CHALLENGE_BOOST_GATE; n++) {
+      s.boostCount = n
+      expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(false)
+      expect(enterChallenge(s, 'C1')).toBe(false)
+      expect(s.challenges.active).toBeNull()
+    }
+    s.boostCount = CHALLENGE_BOOST_GATE
+    expect(isChallengeUnlocked(s, CHALLENGES[0])).toBe(true)
+    expect(enterChallenge(s, 'C1')).toBe(true)
+  })
+
+  it('4 boost ile C1 15-20 dk sürer (hedef 1e10.5)', () => {
+    const s = fresh()
+    s.bestNumber = D('1e11')
+    s.number = D(10)
+    s.boostCount = 4
     expect(CHALLENGES[0].goalLog10).toBeCloseTo(10.5, 12)
     expect(enterChallenge(s, 'C1')).toBe(true)
 
@@ -125,8 +141,8 @@ describe('C1 — boostsuz duvar', () => {
     const snapshot = runUntil(s, 60, (state) => state.challenges.completed.length > before)
     const duration = snapshot.minutes
     expect(s.challenges.completed).toEqual(['C1'])
-    expect(duration).toBeGreaterThanOrEqual(25)
-    expect(duration).toBeLessThanOrEqual(45)
+    expect(duration).toBeGreaterThanOrEqual(15)
+    expect(duration).toBeLessThanOrEqual(20)
   })
 
   it('C1 ödülü Fingers üretimini ×10 ve beslemeyi ×1.5 yapar', () => {

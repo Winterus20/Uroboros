@@ -97,6 +97,10 @@ export interface ChallengeRow {
    * mücadele, açık ve aktif mücadele yok. Sıra zorunludur (ADR-0086 §5).
    */
   enterable: boolean
+  /** Mücadelelerin açılması için gereken boost sayısı (ADR-0087). */
+  requiredBoosts: number
+  /** Oyuncu boost kapısını geçti mi? Kilitli satır gerekçesini bu belirler. */
+  boostGateMet: boolean
   penaltyLabel: string
   rewardLabel: string
 }

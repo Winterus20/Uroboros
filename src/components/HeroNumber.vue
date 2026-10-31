@@ -36,6 +36,15 @@ const nextLine = computed<NextLine | null>(() => {
   if (active) {
     return { tag: 'Active', title: active.id + ' · ' + active.ringName, detail: 'goal ' + active.goalText }
   }
+  // ADR-0087: mücadeleler 4 boost'ta açılır. Oyuncu boost panelini görmeden
+  // C1'in 36 dk'lık duvarına girmesin; sıradaki iş boost'tur.
+  if (store.boostCount < store.challengeBoostGate) {
+    return {
+      tag: 'Next',
+      title: 'Boost ' + store.boostCount + ' / ' + store.challengeBoostGate,
+      detail: 'challenges open at ' + store.challengeBoostGate + ' boosts'
+    }
+  }
   const label = store.nextChallengeLabel
   if (label === 'Gate') return { tag: 'Next', title: 'Gate', detail: store.goalText }
   const row = store.challengeRows.find((item) => item.id === label)

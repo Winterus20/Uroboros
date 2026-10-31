@@ -6,6 +6,7 @@ import { sounds } from '../core/audio'
 import {
   BLOCK_MULT,
   BLOCK_SIZE,
+  CHALLENGE_BOOST_GATE,
   GATE,
   GATE_LOG10,
   NUMBER_TUNING,
@@ -253,6 +254,11 @@ export const useGameStore = defineStore('game', {
       return Math.min(100, Math.max(0, (log / GATE_LOG10) * 100))
     },
 
+    /** Mücadelelerin açılması için gereken boost sayısı (ADR-0087). */
+    challengeBoostGate(): number {
+      return CHALLENGE_BOOST_GATE
+    },
+
     /** Normal modda sıradaki mücadele; hepsi bittiyse kapı. */
     nextChallengeLabel(state): string {
       if (activeChallenge(state)) return ''
@@ -366,6 +372,7 @@ export const useGameStore = defineStore('game', {
      */
     challengeRows(state): ChallengeRow[] {
       const nextId = nextChallenge(state)?.id ?? null
+      const gateMet = state.boostCount >= CHALLENGE_BOOST_GATE
       return CHALLENGES.map((def) => {
         const completed = state.challenges.completed.includes(def.id)
         const active = state.challenges.active === def.id
@@ -387,7 +394,9 @@ export const useGameStore = defineStore('game', {
           unlockAt,
           unlockText: format(unlockAt, state.settings.decimalPlaces, state.settings.notation),
           progress: completed ? 100 : active ? challengeProgress(state) : 0,
-          enterable: status === 'available' && nextId === def.id,
+          enterable: status === 'available' && nextId === def.id && gateMet,
+          requiredBoosts: CHALLENGE_BOOST_GATE,
+          boostGateMet: gateMet,
           penaltyLabel: def.penaltyLabel,
           rewardLabel: def.rewardLabel
         }

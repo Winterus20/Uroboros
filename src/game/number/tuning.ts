@@ -98,6 +98,16 @@ export const BLOCK_MULT = 5.3
 export const CHALLENGE_FEED_MULT = 0.2
 
 /**
+ * Mücadelelerin açılması için gereken boost sayısı (ADR-0087).
+ *
+ * C1, 0 boostta 36 dk'lık bir duvardı; 4 boostta 17 dk. Ölçüm (dt=1):
+ * gate 3 = 184,2 dk · gate 4 = 181,0 dk (8/8) · gate 5 = 174,5 dk ama
+ * yalnız 7/8 (12. boost C8'den önce ulaşılamıyor) · gate 6 = 4/8.
+ * Bu yüzden kapı 4'tür: ilk mücadele 4 boost farmından sonra gelir.
+ */
+export const CHALLENGE_BOOST_GATE = 4
+
+/**
  * ── BOOST (ADR-0086) ──────────────────────────────────────────────────────
  * Boost, 1. basamağın GÜÇ KAYNAĞIDIR: son halka (Mathematician) yeterince
  * alındığında satın alınır; sayıyı ve zinciri sıfırlar, kalıcı üretim çarpanı

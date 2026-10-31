@@ -28,13 +28,18 @@
   yalnız kapı/prestijde sıfırlanır. Mücadele kilidi `bestNumber` ile ölçülür; aksi hâlde
   sıfırlanmış koşu (sayı 10) oyuncuyu kilitler. Her mücadele zincir beslemesini `×0,2` yapar;
   boost çarpanı yalnız sayı üretimine uygulanır.
-- **Kalibrasyon (ADR-0086, 2026-10-31):** `BLOCK_MULT = 5.3`, `BOOST_MULT = 1.8`,
+- **Mücadele boost kapısı (ADR-0087, 2026-10-31):** `CHALLENGE_BOOST_GATE = 4`; C1 ve tüm
+  mücadeleler `boostCount >= 4` ister. Sıra ve `bestNumber` kilidi korunur; boost'lar mücadelede
+  kalıcı olduğu için kapı C1 sonrası açık kalır, prestijde yeniden kazanılır. 4 boost olmadan C1
+  girilemez (0 boostta 36 dk; 4 boostta 17,1 dk). Kapı ölçümü: 3 → 184,2 · **4 → 181,0** ·
+  5 → 174,5 (7/8) · 6 → 4/8. Challenges-only yolu tasarım gereği kalktı.
+- **Kalibrasyon (ADR-0086/0087, 2026-10-31):** `BLOCK_MULT = 5.3`, `BOOST_MULT = 1.8`,
   `BOOST_BASE_REQUIREMENT = 50`, `BOOST_REQUIREMENT_GROWTH = 1.35`, `BOOST_PRICE_GROWTH = 1.5`,
   `CHALLENGE_FEED_MULT = 0.2`, mücadele fiyat büyümesi `1.22`. Hedefler log10: 10,5 · 20,1 ·
   29,8 · 39,4 · 49,1 · 58,7 · 68,4 · 78,0 (kilit = önceki hedef, C1 = 10). Ölçüm: intended
-  **181,0 dk** (11 boost) · 0-greedy 195,8 · challenges-only 289,6 (1,60×) · boost-only 672,6
-  (3,72×) · base 1031,9 (5,70×). Projeksiyon: 181 × 26,4 ≈ **79,6 sa** (×1,165); 85 saat hedefi
-  için eğri **×1,176** (84,8 sa).
+  **181,0 dk** (11 boost, 8/8) · 0-greedy 195,8 · boost-only 672,6 (3,72×) · base 1031,9
+  (5,70×). İlk mücadele ~32 dk farm + 17,1 dk C1. Projeksiyon: 181 × 26,4 ≈ **79,6 sa** (×1,165);
+  85 saat hedefi için eğri **×1,176** (84,8 sa).
 
 ## 3. Kayıt, Bulut, Ses ve Test Altyapısı
 - **Kayıt:** LZ-String + LocalStorage; 3 slot + otomatik yedek + bozuk kayıt karantinası;

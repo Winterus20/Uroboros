@@ -1,5 +1,29 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-31] 🚧 — ADR-0087: mücadele boost kapısı (dokümanlar)
+
+### Ne yapıldı
+
+Sahip kararı: mücadeleler **4 boost** sayısına ulaşınca açılır. Yalnız markdown; `src/` değişmedi.
+
+- **Yeni ADR:** `brain/decisions/0087-challenge-boost-gate.md` — `CHALLENGE_BOOST_GATE = 4`;
+  C1 ve tüm mücadeleler `boostCount >= 4` ister; sıra ve `bestNumber` kilidi korunur; boost'lar
+  mücadelede kalıcı olduğu için kapı C1 sonrası açık kalır, prestijde yeniden kazanılır.
+- **Gerekçe/ölçüm:** C1 0 boostta 36 dk duvar, 4 boostta 17,1 dk. Kapı: 3 → 184,2 dk (8/8) ·
+  **4 → 181,0 dk (8/8, 11 boost)** · 5 → 174,5 dk (7/8) · 6 → 4/8.
+- **Sonuç:** challenges-only yolu (289,6 dk) tasarım gereği kalktı; ilk mücadele ~32 dk boost
+  farmı + 17,1 dk C1. Intended 181,0 dk, boost-only 672,6 dk, base 1031,9 dk.
+- **ADR-0086:** karar 3'e "superseded by ADR-0087" notu; challenges-only ölçümü tarihsel
+  işaretlendi. `decisions/README.md` 0087 satırı ve "en yüksek 0087".
+- **Belgeler:** `README.md`, `GAME_DESIGN.md` (model, mücadele tablosu, §7, §8, §15),
+  `AGENTS.md`, `project-brief.md`, `tech-context.md`, `todo.md`, `in-progress.md`.
+- **Kod sıradaki:** `CHALLENGE_BOOST_GATE = 4` + `ChallengeRow.enterable` + UI "Requires 4 boosts"
+  ve testler (`R5`, task-6 kapsamı).
+
+### Doğrulama
+
+`git diff --check` temiz (markdown). ADR indeksi 87/87. Bu görevde `src/` değişmedi.
+
 ## [2026-10-31] 📊 — ADR-0086 final kalibrasyonu ve doküman hizalaması (T3 + doküman)
 
 ### Ne yapıldı
@@ -12,7 +36,7 @@ Sıfırlamalı modelin ilk kalibrasyonu bitti; tüm belgeler nihai sayılarla hi
 - **Hedefler (log10):** C1 10,5 · C2 20,1 · C3 29,8 · C4 39,4 · C5 49,1 · C6 58,7 · C7 68,4 ·
   C8 78,0; kilit = önceki hedef (C1 = 10).
 - **Ölçüm (gerçek motor, `dt = 1 s`):** intended **181,0 dk** (optimal, 11 boost) · 0-greedy
-  195,8 dk · challenges-only **289,6 dk** (1,60×) · boost-only **672,6 dk** (3,72×) · base
+  195,8 dk · challenges-only **289,6 dk** (1,60×, ADR-0087 sonrası erişilemez) · boost-only **672,6 dk** (3,72×) · base
   **1031,9 dk** (5,70×). Mücadele koşuları: C1 17,1 · C2 7,7 · C3 8,0 · C4 8,8 · C5 9,3 ·
   C6 18,8 · C7 10,5 · C8 14,2 dk; final itiş 52,7 dk; 11 boost farmı 9.–114. dk.
 - **Projeksiyon:** 181 × 26,4 ≈ **79,6 sa** (×1,165); 85 saat hedefi için eğri **×1,176**

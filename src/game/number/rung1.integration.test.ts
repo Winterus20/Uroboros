@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { D } from '../../core/math'
-import { BLOCK_MULT, BOOST_MULT, CHALLENGE_FEED_MULT, GATE, GATE_LOG10 } from './tuning'
+import {
+  BLOCK_MULT,
+  BOOST_MULT,
+  CHALLENGE_BOOST_GATE,
+  CHALLENGE_FEED_MULT,
+  GATE,
+  GATE_LOG10
+} from './tuning'
 import {
   advance,
   applyBoost,
@@ -30,10 +37,10 @@ import {
  * Bağlayıcı kaynak: brain/decisions/0086-run-reset-and-boost.md.
  * Kalibrasyon: brain/scratchpad/rung1-boost-reset/ (task-3, 2026-10-31).
  *
- * Ölçülen (dt=1s, gerçek harness):
- *   hedeflenen yol (optimal, 0'dan greedy) 181.0 dk · 11 boost · C1..C8 17/8/8/9/9/19/11/14 dk
- *   challenges-only (0 boost)              289.6 dk · 8/8 tamam
+ * Ölçülen (dt=1s, gerçek harness, boost kapısı 4):
+ *   hedeflenen yol (4..11 boost hedefli)   181.0 dk · 11 boost · C1..C8 17/8/8/9/9/19/11/14 dk
  *   boost-only (optimal k)                 672.6 dk · no-meta base 1031.9 dk
+ *   boost kapısı <4                        hiçbir mücadele açılmaz (ADR-0087)
  *
  * Bu dosya motoru KOPYALAMAZ; src/game/number/*.ts'i doğrudan çağırır. Testte
  * dt=2 kullanılır (120 s testTimeout): süreler dt=1 ölçümünden birkaç dk sapabilir,
@@ -182,23 +189,13 @@ const intendedPolicy: Policy = {
   boostTargets: [4, 5, 6, 7, 8, 9, 10, 11],
   maxBoosts: 99
 }
-const challengesOnlyPolicy: Policy = {
-  enterChallenges: true,
-  boostTargets: [0, 0, 0, 0, 0, 0, 0, 0],
-  maxBoosts: 0
-}
 const boostOnlyPolicy: Policy = { enterChallenges: false, boostTargets: [], maxBoosts: 8 }
 
-/** Bir tam koşu paylaşılır: üç politika da aynı dosyada bir kez ölçülür. */
+/** Bir tam koşu paylaşılır: iki politika da aynı dosyada bir kez ölçülür. */
 let cachedIntended: RunResult | null = null
 function intended(): RunResult {
   if (cachedIntended === null) cachedIntended = run({ policy: intendedPolicy, maxMinutes: 360 })
   return cachedIntended
-}
-let cachedChallengesOnly: RunResult | null = null
-function challengesOnly(): RunResult {
-  if (cachedChallengesOnly === null) cachedChallengesOnly = run({ policy: challengesOnlyPolicy, maxMinutes: 420 })
-  return cachedChallengesOnly
 }
 let cachedBoostOnly: RunResult | null = null
 function boostOnly(): RunResult {
@@ -238,7 +235,7 @@ describe('rung 1 — fresh state, reset and boost contract', () => {
     const state = createNumberState()
     state.bestNumber = D('1e60')
     state.number = D('1e60')
-    state.boostCount = 3
+    state.boostCount = CHALLENGE_BOOST_GATE
     state.challenges.completed = ['C1']
     state.totalBuys = 120
     state.rings[7].bought = 40
@@ -250,7 +247,7 @@ describe('rung 1 — fresh state, reset and boost contract', () => {
     expect(state.number.toString()).toBe('10')
     expect(state.rings.every((ring) => ring.amount.eq(0) && ring.bought === 0)).toBe(true)
     expect(state.unlocked).toEqual([true, false, false, false, false, false, false, false])
-    expect(state.boostCount).toBe(3)
+    expect(state.boostCount).toBe(CHALLENGE_BOOST_GATE)
     expect(state.challenges.completed).toEqual(['C1'])
     expect(state.bestNumber.toString()).toBe(best)
     expect(state.challenges.goalLog10).toBeCloseTo(challengeById('C2')!.goalLog10, 12)
@@ -261,6 +258,7 @@ describe('rung 1 — fresh state, reset and boost contract', () => {
     const state = createNumberState()
     state.number = D('1e70')
     state.bestNumber = D('1e70')
+    state.boostCount = CHALLENGE_BOOST_GATE
     // C1 is the only enterable challenge, even at 1e70.
     expect(enterChallenge(state, 'C2')).toBe(false)
     expect(enterChallenge(state, 'C1')).toBe(true)
@@ -332,7 +330,7 @@ describe('rung 1 — intended path (boost + 8 challenges)', () => {
   })
 })
 
-describe('rung 1 — boost-only vs challenges-only', () => {
+describe('rung 1 — boost-only vs intended', () => {
   it('boost-only is dramatically slower than the intended path', () => {
     const intendedMinutes = intended().gateMin as number
     const boost = boostOnly()
@@ -342,16 +340,29 @@ describe('rung 1 — boost-only vs challenges-only', () => {
     expect(boost.completed).toEqual([])
   })
 
-  it('challenges-only completes, but is much harder than the intended path', () => {
-    const intendedMinutes = intended().gateMin as number
-    const only = challengesOnly()
-    expect(only.gateMin).not.toBeNull()
-    expect(only.completed).toEqual(CHALLENGES.map((def) => def.id))
-    expect(only.boostCount).toBe(0)
-    expect(only.gateMin as number).toBeGreaterThan(intendedMinutes * 1.35)
-    expect(only.gateMin as number).toBeLessThanOrEqual(420)
-    // Ve boost-only'den kısa: boost'u hiç almamak, boost-only'den iyidir.
-    expect(only.gateMin as number).toBeLessThan(boostOnly().gateMin as number)
+  it('never opens a challenge below the 4-boost gate, even past the number unlock', () => {
+    const blocked = run({
+      // C1 hedefi 4; maxBoosts 3 onu hiçbir zaman karşılayamaz.
+      policy: { enterChallenges: true, boostTargets: [CHALLENGE_BOOST_GATE, 0, 0, 0, 0, 0, 0, 0], maxBoosts: 3 },
+      maxMinutes: 90
+    })
+    expect(blocked.boostCount).toBe(3)
+    expect(blocked.finalLog10).toBeGreaterThan(CHALLENGES[0].unlockLog10)
+    expect(blocked.phases).toHaveLength(0)
+    expect(blocked.completed).toEqual([])
+  })
+
+  it('opens C1 exactly at the 4-boost gate', () => {
+    const state = createNumberState()
+    state.bestNumber = D('1e11')
+    for (let n = 0; n < CHALLENGE_BOOST_GATE; n++) {
+      state.boostCount = n
+      expect(isChallengeUnlocked(state, CHALLENGES[0])).toBe(false)
+      expect(enterChallenge(state, 'C1')).toBe(false)
+    }
+    state.boostCount = CHALLENGE_BOOST_GATE
+    expect(isChallengeUnlocked(state, CHALLENGES[0])).toBe(true)
+    expect(enterChallenge(state, 'C1')).toBe(true)
   })
 
   it('a fresh state produces nothing, so the opening tap is the only income', () => {
