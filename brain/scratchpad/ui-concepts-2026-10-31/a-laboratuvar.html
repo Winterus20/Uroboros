@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concept A — Laboratory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090c; --s1: #0e1015; --s2: #14161d; --s3: #1b1e27;
+  --line: #1d2029; --line2: #2a2e3a;
+  --tx: #ecebe6; --dim: #8e8d88; --faint: #5a5b63;
+  --ac: #98e500; --ac-soft: rgba(152,229,0,.10); --ac-line: rgba(152,229,0,.45);
+  --amber: #f59e0b;
+  --ui: 'Space Grotesk', system-ui, sans-serif; --mono: 'Space Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--tx); font-family: var(--ui); -webkit-font-smoothing: antialiased; user-select: none; overflow: hidden; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; }
+
+.app { display: grid; grid-template-rows: 52px 1fr 30px; grid-template-columns: 232px 1fr; height: 100vh; }
+
+/* Üst bar */
+.top { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px; padding: 0 20px; border-bottom: 1px solid var(--line); background: var(--s1); }
+.brand { display: flex; align-items: center; gap: 10px; width: 192px; }
+.mark { width: 22px; height: 22px; border: 1.5px solid var(--ac); border-radius: 5px; display: grid; place-items: center; font-size: 11px; color: var(--ac); }
+.brand span { font-size: 12px; letter-spacing: .16em; color: var(--dim); }
+.res { display: flex; gap: 8px; }
+.chip { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 6px; background: var(--s2); font-size: 12px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ac); }
+.chip .sub { color: var(--dim); font-size: 11px; }
+.goal { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--dim); }
+.bar { width: 220px; height: 6px; border-radius: 3px; background: var(--s3); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--ac); border-radius: 3px; transition: width .2s; }
+.icon-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid transparent; background: transparent; display: grid; place-items: center; color: var(--dim); cursor: pointer; }
+.icon-btn:hover { border-color: var(--line2); color: var(--tx); }
+
+/* Sol menü */
+.nav { border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; background: var(--s1); }
+.nav h6 { margin: 6px 10px 8px; font: 10px var(--mono); letter-spacing: .14em; color: var(--faint); font-weight: 400; }
+.item { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; font-size: 13px; color: var(--dim); cursor: pointer; border: 1px solid transparent; }
+.item:hover { color: var(--tx); background: var(--s2); }
+.item.on { color: var(--tx); background: var(--s2); border-color: var(--line2); }
+.item.on svg { color: var(--ac); }
+.item.locked { color: var(--faint); cursor: default; }
+.item.locked:hover { background: transparent; }
+.badge { margin-left: auto; font: 10px var(--mono); color: var(--faint); }
+.spacer { flex: 1; }
+
+/* Ana alan */
+.main { overflow-y: auto; padding: 28px 48px 40px; }
+.main > * { max-width: 1040px; margin-left: auto; margin-right: auto; }
+.hero { display: flex; align-items: flex-end; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.hero-l { flex: 1; min-width: 0; }
+.kicker { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--dim); }
+.pill { font: 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 4px; color: var(--ac); background: var(--ac-soft); border: 1px solid var(--ac-line); }
+.num { margin-top: 10px; font-weight: 300; font-size: 104px; line-height: .95; letter-spacing: -.035em; color: var(--ac); font-variant-numeric: tabular-nums; }
+.num small { font-size: 38px; letter-spacing: -.01em; opacity: .9; margin-left: 4px; }
+.rate { margin-top: 10px; font-size: 14px; color: var(--dim); }
+.rate b { color: var(--tx); font-weight: 400; }
+.tap { display: inline-flex; align-items: center; gap: 10px; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--line2); background: var(--s2); cursor: pointer; font-size: 13px; transition: background .1s, border-color .1s, transform .06s; }
+.tap:hover { border-color: var(--ac-line); }
+.tap:active { transform: translateY(1px); background: var(--s3); }
+.tap kbd { font: 10px var(--mono); color: var(--faint); border: 1px solid var(--line2); border-radius: 3px; padding: 1px 5px; }
+.tap-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; position: relative; }
+.tap-col .count { font-size: 10px; color: var(--faint); }
+.float { position: absolute; top: -6px; right: 18px; font: 13px var(--mono); color: var(--ac); pointer-events: none; animation: up .6s ease-out forwards; }
+@keyframes up { to { opacity: 0; transform: translateY(-30px); } }
+@keyframes pop { 40% { transform: scale(1.025); } }
+.pop { animation: pop .16s ease-out; transform-origin: left bottom; }
+
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
+.sec-head h2 { margin: 0; font-size: 15px; font-weight: 500; }
+.sec-head p { margin: 2px 0 0; font-size: 12px; color: var(--dim); }
+.seg { display: flex; padding: 2px; border: 1px solid var(--line2); border-radius: 7px; background: var(--s1); }
+.seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 5px; font: 11px var(--mono); color: var(--dim); cursor: pointer; }
+.seg button.on { background: var(--s3); color: var(--tx); }
+.ghost { height: 30px; padding: 0 12px; margin-left: 8px; border-radius: 6px; border: 1px solid var(--line2); background: transparent; font-size: 12px; color: var(--dim); cursor: pointer; }
+.ghost:hover { color: var(--tx); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font: 10px var(--mono); letter-spacing: .12em; color: var(--faint); font-weight: 400; padding: 0 12px 8px; }
+th.r, td.r { text-align: right; }
+td { padding: 0 12px; height: 56px; border-top: 1px solid var(--line); font-size: 13px; }
+tr.row:hover td { background: var(--s1); }
+.idx { font: 11px var(--mono); color: var(--faint); width: 36px; }
+.name { font-size: 14px; }
+.pips { display: flex; gap: 3px; align-items: center; }
+.pips i { width: 10px; height: 4px; border-radius: 1px; background: var(--s3); }
+.pips i.on { background: var(--ac); }
+.pips span { margin-left: 8px; font: 11px var(--mono); color: var(--dim); }
+.buy { position: relative; overflow: hidden; width: 128px; height: 34px; border-radius: 6px; border: 1px solid var(--line2); background: var(--s2); font: 12px var(--mono); color: var(--faint); cursor: default; text-align: right; padding: 0 12px; }
+.buy .fill { position: absolute; inset: 0; background: var(--ac-soft); transform-origin: left; }
+.buy span { position: relative; }
+.buy.ok { border-color: var(--ac-line); color: var(--tx); cursor: pointer; }
+.buy.ok:hover { background: #1a2014; }
+.buy.ok:active { transform: translateY(1px); }
+tr.lock td { color: var(--faint); }
+tr.lock .name { color: var(--faint); }
+
+.nextline { margin-top: 14px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+.nextline b { font-weight: 400; color: var(--tx); }
+.nextline .sep { color: var(--faint); }
+
+/* Durum çubuğu = ticker */
+.status { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 0 20px; border-top: 1px solid var(--line); background: var(--s1); font-size: 12px; color: var(--dim); }
+.status .live { width: 6px; height: 6px; border-radius: 50%; background: var(--ac); box-shadow: 0 0 0 3px var(--ac-soft); }
+.status .right { margin-left: auto; font: 11px var(--mono); color: var(--faint); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="mark mono">#</div><span>HOLD THAT NUMBER</span></div>
+    <div class="res">
+      <div class="chip"><i class="dot"></i><span class="mono" id="chipNum"></span><span class="sub mono" id="chipRate"></span></div>
+    </div>
+    <div class="goal"><span>Goal</span><div class="bar"><i id="goalBar"></i></div><span class="mono" id="goalPct"></span><span class="mono" style="color:var(--faint)">1.79e308</span></div>
+    <button class="icon-btn" aria-label="Settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </header>
+
+  <nav class="nav">
+    <h6>RUNG 1</h6>
+    <div class="item on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>Chain</div>
+    <div class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg>Challenges<span class="badge">3/8</span></div>
+    <div class="item locked"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>???</div>
+    <div class="item locked"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>???</div>
+    <div class="spacer"></div>
+    <div class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistics</div>
+  </nav>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-l">
+        <div class="kicker"><span class="pill">RUNG 1 / 11</span><span>I thought it was a wall</span></div>
+        <div class="num" id="num"></div>
+        <div class="rate mono"><b id="rate"></b> per second</div>
+        <div class="nextline"><span>Next</span><b>C4 · Pencil</b><span class="sep">·</span><span>opens at 1e40</span></div>
+      </div>
+      <div class="tap-col" id="tapCol">
+        <button class="tap mono" id="tap">+1 <kbd>space</kbd></button>
+        <span class="count mono" id="taps"></span>
+      </div>
+    </section>
+
+    <div class="sec-head">
+      <div><h2>Chain</h2><p>Each ring feeds the one above it. Ten of a ring opens the next.</p></div>
+      <div style="display:flex;align-items:center">
+        <div class="seg" id="modes"><button data-m="1" class="on">×1</button><button data-m="10">×10</button><button data-m="max">Max</button></div>
+        <button class="ghost" id="maxAll">Max all</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th></th><th>RING</th><th>OWNED</th><th>PRODUCES</th><th>BLOCK</th><th class="r">COST</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </main>
+
+
+  <footer class="status"><i class="live"></i><span id="ticker"></span><span class="right">20 tps · saved 4s ago</span></footer>
+</div>
+
+<script type="module">
+import { createSim, tick, buy, cost, block, unlocked, produces, perSecond, goalPct, fmt, heroParts, TICKER } from './sim.js'
+const s = createSim()
+const $ = (id) => document.getElementById(id)
+
+function render() {
+  const h = heroParts(s.number)
+  $('num').innerHTML = h.base + (h.tail ? '<small>' + h.tail + '</small>' : '')
+  $('rate').textContent = '+' + fmt(perSecond(s))
+  $('chipNum').textContent = fmt(s.number)
+  $('chipRate').textContent = '+' + fmt(perSecond(s)) + '/s'
+  $('goalPct').textContent = goalPct(s).toFixed(1) + '%'
+  $('goalBar').style.width = Math.max(1, goalPct(s)) + '%'
+  $('taps').textContent = s.taps + ' presses'
+  $('rows').innerHTML = s.rings.map((r) => {
+    const open = unlocked(s, r)
+    if (!open) {
+      const prev = s.rings[r.i - 1]
+      const visible = r.i <= 4
+      return visible ? `<tr class="lock"><td class="idx">${String(r.i + 1).padStart(2, '0')}</td><td class="name">${r.name}</td><td colspan="3">${10 - prev.bought} more ${prev.name}</td><td class="r">—</td></tr>` : ''
+    }
+    const c = cost(r), ok = s.number >= c
+    const pips = Array.from({ length: 10 }, (_, k) => `<i class="${k < r.bought % 10 ? 'on' : ''}"></i>`).join('')
+    return `<tr class="row"><td class="idx">${String(r.i + 1).padStart(2, '0')}</td>
+      <td class="name">${r.name}</td><td class="mono">${fmt(r.amount, 0)}</td><td class="mono" style="color:var(--dim)">${fmt(produces(r))}/s</td>
+      <td><div class="pips">${pips}<span>×${block(r).toFixed(2)}</span></div></td>
+      <td class="r"><button class="buy ${ok ? 'ok' : ''}" data-i="${r.i}"><i class="fill" style="transform:scaleX(${Math.min(1, s.number / c)})"></i><span>${fmt(c)}</span></button></td></tr>`
+  }).join('')
+}
+
+$('rows').addEventListener('click', (e) => { const b = e.target.closest('.buy'); if (b && buy(s, +b.dataset.i)) { pop(); render() } })
+$('modes').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; s.buyMode = b.dataset.m === 'max' ? 'max' : +b.dataset.m; [...$('modes').children].forEach((x) => x.classList.toggle('on', x === b)) })
+$('maxAll').onclick = () => { const m = s.buyMode; s.buyMode = 'max'; s.rings.forEach((r) => buy(s, r.i)); s.buyMode = m; pop(); render() }
+function pop() { const n = $('num'); n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop') }
+function press() {
+  s.number += 1; s.taps++
+  const f = document.createElement('span'); f.className = 'float'; f.textContent = '+1'; $('tapCol').appendChild(f); setTimeout(() => f.remove(), 600)
+  render()
+}
+$('tap').onclick = press
+addEventListener('keydown', (e) => { if (e.key === ' ') { e.preventDefault(); $('tap').classList.add('active'); press() } })
+
+let t = 0; $('ticker').textContent = TICKER[0]
+setInterval(() => { $('ticker').textContent = TICKER[++t % TICKER.length] }, 7000)
+let last = performance.now()
+setInterval(() => { const now = performance.now(); tick(s, (now - last) / 1000); last = now; render() }, 100)
+render()
+</script>
+</body>
+</html>

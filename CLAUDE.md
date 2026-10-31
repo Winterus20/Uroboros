@@ -53,5 +53,5 @@ npx vitest run src/game/number/challenges.test.ts -t "part of test name"
 ## Gotchas
 
 - `break_eternity.js`: NaN check is `dec.isNan() || Number.isNaN(dec.mag)`; use `plus/minus/times` (the typings lack `add/sub/mul`).
-- Visual work follows `brain/context/visual-language.md` ("Saf Sayı": no cards/blur/rounded corners/shadows, 1px hairlines; hero number weight 300, `tabular-nums`).
+- Visual work follows `brain/context/visual-language.md` ("Laboratuvar", ADR-0085: s1–s3 surfaces, 1px lines, 6–8px radius, no shadows/blur/gradients; accent = rung color via `--pn-rung`; hero number weight 300, `tabular-nums`). New layers/mechanics are added as a `src/ui/sections.ts` entry + one page component (and `src/ui/resources.ts` for currencies), reusing `components/ui/*` and the `.dt`/`.btn` classes.
 - Workflow per AGENTS.md §3: move the task from `brain/tasks/todo.md` to `in-progress.md`, open an ADR for economy/architecture changes, and log finished work in `brain/tasks/completed.md`.

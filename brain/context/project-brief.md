@@ -31,7 +31,7 @@ ekler.
 | 2 | **Tek havuz** | Cüzdan sayının kendisidir. Alım sayıyı düşürür; eşikler mandallıdır, geri gitmez |
 | 3 | **Döngü** | Tek koşu: sıfırlama yok. 8 sıfırlamasız mücadele (ceza → ödül) → kapı `1.79e308` → prestij (`+1 Tanım`) |
 | 4 | **Ses** | Sahne · ticker · başarım · açıklama. Tooltip ve sayısal etiket **asla** şaka yapmaz |
-| 5 | **Görsel** | "Saf Sayı": zemin + hairline + tipografi + basamak rengi. Kart/blur/süs yok |
+| 5 | **Görsel** | "Laboratuvar" (ADR-0085): sakin ölçüm aleti kabuğu, vurgu = basamak rengi. Gölge/blur/süs yok |
 
 ## 4. İlerleme ve ölçek
 
@@ -52,7 +52,7 @@ oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-vo
   mücadele, C8 ×2, save v23. Kalibrasyon: **188,8 dk** (Max All) / **189,1 dk** (idle).
 - ✅ 8 halka, tek havuz, 10 birim kilidi, `+1`, İngilizce ticker altyapısı korunuyor.
 - ✅ Altyapı: kayıt (LZ-String + 3 slot + karantina), 20 TPS loop, audio + müzik, Firebase,
-  `AlgorithmicSwirl`, ayarlar.
+  "Laboratuvar" arayüz kabuğu (bölüm/kaynak kayıt defterleri), ayarlar.
 - 🟡 2–11. basamaklar tasarlanmadı; prestij `+1 Tanım` verip 2. basamağa geçer (stub).
 - ⚠️ Eski v1 planı (4 öğrenme + 6 Math sıfırlaması, 120 dk) **geçersiz**; `rung1-full-sim.ts`
   kanıt değil. Yerine gerçek motor kalibrasyonu: `brain/research/rung-1-190-calibration-2026-10-27.md`.
@@ -63,7 +63,7 @@ oyuncu arasındaki ilişkidedir. Sözleşme: [`narrative-voice.md`](narrative-vo
 | :--- | :--- |
 | [`GAME_DESIGN.md`](../GAME_DESIGN.md) | Ekonomi formülleri, 11 basamak, 1. basamak spec'i |
 | [`narrative-voice.md`](narrative-voice.md) | Ses sözleşmesi (`V1`–`V6`, `A4`, `A8`) |
-| [`visual-language.md`](visual-language.md) | "Saf Sayı" görsel sözleşmesi (ADR-0078) |
+| [`visual-language.md`](visual-language.md) | "Laboratuvar" görsel sözleşmesi (ADR-0085) |
 | [`tech-context.md`](tech-context.md) | Teknoloji yığını ve kısıtlar |
 | [`../decisions/0079-number-economy-vertical-slice.md`](../decisions/0079-number-economy-vertical-slice.md) | Uygulanan ekonominin karar kaydı |
 | [`../decisions/0083-rung-1-single-run-challenge-model.md`](../decisions/0083-rung-1-single-run-challenge-model.md) | Rung 1 v2: tek koşu, 190 dk, 8 mücadele |

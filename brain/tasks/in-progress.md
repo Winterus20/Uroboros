@@ -11,7 +11,12 @@
 Sıradaki iş [`todo.md`](todo.md) → "Sıradaki işler" §1: **2. basamak tasarımı**. Başlarken buraya
 taşıyın.
 
-## ✅ Son kapanan — Rung 1 v2 uygulaması (2026-10-28)
+## ✅ Son kapanan — "Laboratuvar" arayüz yeniden tasarımı (2026-10-31)
+
+**Durum:** Uygulama tamam, `npm run verify` yeşil, commit edilmedi (sahip karar verecek).
+Kayıt: [ADR-0085](../decisions/0085-laboratuvar-ui-shell.md) · `completed.md` [2026-10-31].
+
+## ✅ Önceki — Rung 1 v2 uygulaması (2026-10-28)
 
 **Durum:** Uygulama tamam, kapılar yeşil. Kayıt: ADR-0083 · `completed.md` [2026-10-28].
 

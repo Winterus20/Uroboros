@@ -1,5 +1,46 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-31] 🧪 — "Laboratuvar" arayüz yeniden tasarımı (ADR-0085)
+
+### Ne yapıldı
+
+Sahip arayüzü "oyun gibi değil" buldu; dört konsept arasından **A — Laboratuvar** seçildi
+(`brain/scratchpad/ui-concepts-2026-10-31/a-laboratuvar.html`). Arayüz kabuğu baştan kuruldu.
+**Ekonomi çekirdeği, store mantığı ve kayıt şeması değişmedi (SAVE_VERSION 23).**
+
+- **Kabuk** (`App.vue`): üst çubuk 52 · sol menü 232 · ana alan (≤ 1040 px) · durum çubuğu 30;
+  ≤ 900 px menü alt sekme çubuğu, tek sütun. Sağ panel yok (sahip reddetti).
+- **Kayıt defterleri** (`src/ui/`): `sections.ts` (menü + aktif sayfa; kilitli/yer tutucu kayıt
+  "???" + kilit, rozet = gerçek veri) · `resources.ts` (üst çubuk çipleri: sayı + `tanim > 0` iken
+  amber Definitions). Yeni katman = bir kayıt + bir sayfa bileşeni.
+- **Vurgu = basamak rengi:** `--pn-rung` kök elemana yazılır, `-soft/-line/-hover` `color-mix` ile türer.
+- **Yeni bileşenler:** `components/shell/` (TopBar · NavRail · StatusBar), `components/ui/`
+  (SegmentedControl · BuyButton · BlockPips · SectionHeader · ProgressBar).
+- **Yeniden yazılanlar:** `HeroNumber` (hap + ad · sayı 104 px · /sn · "Next …" satırı store
+  verisinden · sağda `+1`), `TapButton` (36 px normal tuş + `space` kbd + basış sayısı + 600 ms
+  yüzen "+1"; hero 160 ms vuruş, klavye dahil), `GoalBar` (üst çubukta; logaritmik % bir ondalık
+  aşağı yuvarlanır; mücadele modu + Exit), `ChainList` (tablo: idx · RING · OWNED · PRODUCES ·
+  BLOCK göstergesi · dolgulu alım düğmesi; kilitli halkalardan ilk ikisi + "+N more rings"),
+  `ChallengePanel` ve `StatsPanel` (aynı tablo dili), `TickerBar` (durum çubuğunda).
+- **Modallar** yeni tokenlara taşındı (düz karartma, `s1` panel, 8 px; blur/gölge/gradyan yok):
+  Settings (Swirl seçimi kaldırıldı), Offline, Gate (amber), Auth, CloudConflict. z-index sırası aynı.
+- **Silinenler:** `AlgorithmicSwirl.vue`, `TelemetryLine.vue` (oran hero'ya taşındı).
+  `settings.swirlShaderQuality` modelde kalır (kayıt şekli), okunmaz.
+- **`core/game-loop.ts`:** `TICK_MS` / `AUTOSAVE_MS` dışa açıldı; durum çubuğu "20 tps · autosave 10s"
+  yazar (gerçek sabitler, sahte "saved Ns ago" yok).
+- **Belgeler:** ADR-0085; `visual-language.md` baştan yazıldı ("Laboratuvar"); `AGENTS.md`,
+  `CLAUDE.md`, `README.md`, `GAME_DESIGN.md` §12, `tech-context.md`, `project-brief.md`,
+  `decisions/README.md` güncellendi.
+- **Doğrulama:** `npm run verify` yeşil (typecheck 0 hata · 203 test · build). Tarayıcıda 1440×900,
+  1024×768 ve 390×844 kontrol edildi (+1, space, alım modları, Max all, mücadeleye gir/çık,
+  Challenges/Statistics, Settings, Escape); konsolda hata yok.
+
+### Açık kalanlar
+
+- 8. basamak vurgusu (`#5a78ff`) küçük metinde `s2`/`s3` üstünde 4,8/4,4:1 — basamak tasarlanırken ölç.
+- Auth/CloudConflict metinleri hâlâ Türkçe (P3 ihlali, bu işin kapsamı dışında bırakıldı).
+- Mini boost anı (§6) hâlâ uygulanmadı; 2. basamak/Definitions sayfası yok (menüde "???" yer tutucu).
+
 ## [2026-10-31] ✨ — 1. basamak oyun testi cilası + swirl parlaklık tavanı (ADR-0084)
 
 ### Ne yapıldı

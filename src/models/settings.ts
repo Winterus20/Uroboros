@@ -20,7 +20,10 @@ export interface GameSettings {
   musicVolume: number
   musicTrack: MusicTrackId
   motionMode: MotionMode
-  /** `AlgorithmicSwirl` kalitesi (G2: oyunun tek ortamı). */
+  /**
+   * Eski `AlgorithmicSwirl` kalitesi. Swirl ADR-0085 ile kaldırıldı; alan kayıt şeklini
+   * (SAVE_VERSION 23) korumak için durur, hiçbir yerden okunmaz.
+   */
   swirlShaderQuality: 'off' | 'balanced' | 'high'
   batterySaver: boolean
   confirmDialogs: boolean

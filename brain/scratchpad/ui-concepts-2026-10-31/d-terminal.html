@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concept D — Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070808; --win: #0c0d0e; --bar: #121415;
+  --line: #24272a; --line2: #34383c;
+  --tx: #d9d7d0; --dim: #85847e; --faint: #4f5154;
+  --ac: #98e500; --ac-ink: #0a1200; --amber: #f59e0b;
+  --mono: 'Space Mono', ui-monospace, monospace; --ui: 'Space Grotesk', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--tx); font: 13px/1.6 var(--mono); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; user-select: none; overflow: hidden; }
+button { font: inherit; color: inherit; }
+.app { display: grid; grid-template-rows: 30px 1fr; height: 100vh; }
+
+/* Çalışma alanları: her mekanik bir workspace — yeni katman = yeni numara */
+.bar { display: flex; align-items: stretch; background: var(--bar); border-bottom: 1px solid var(--line); font-size: 12px; }
+.ws { display: flex; align-items: center; padding: 0 12px; color: var(--dim); cursor: pointer; border-right: 1px solid var(--line); }
+.ws:hover { color: var(--tx); }
+.ws.on { background: var(--ac); color: var(--ac-ink); }
+.ws.lk { color: #3a3c3f; cursor: default; }
+.bar .title { padding: 0 14px; display: flex; align-items: center; color: var(--faint); }
+.bar .r { margin-left: auto; display: flex; align-items: center; gap: 16px; padding: 0 14px; color: var(--dim); }
+.bar .r b { color: var(--tx); font-weight: 400; }
+.asc { letter-spacing: -.5px; }
+.asc em { color: var(--ac); font-style: normal; }
+
+/* Döşeme */
+.tiles { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: minmax(0, 1fr) 210px; gap: 8px; padding: 8px; min-height: 0; }
+.win { border: 1px solid var(--line); background: var(--win); display: flex; flex-direction: column; min-height: 0; }
+.win.focus { border-color: var(--ac); }
+.win > header { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--dim); background: var(--bar); }
+.win.focus > header { color: var(--tx); }
+.win.focus > header .pid { color: var(--ac); }
+.win > header .x { margin-left: auto; color: var(--faint); }
+.win .in { padding: 14px 16px; overflow: auto; flex: 1; min-height: 0; }
+.chain-win { grid-row: 1 / 3; grid-column: 2; }
+
+/* Sayı penceresi */
+.prompt { color: var(--dim); }
+.prompt span { color: var(--ac); }
+.big { margin: 14px 0 4px; font: 300 92px/1 var(--ui); letter-spacing: -.035em; color: var(--ac); }
+.big small { font-size: 34px; margin-left: 4px; }
+.kv { display: grid; grid-template-columns: 110px 1fr; color: var(--dim); }
+.kv b { color: var(--tx); font-weight: 400; }
+.tapline { margin-top: 18px; display: flex; align-items: center; gap: 14px; position: relative; }
+.tap { height: 32px; padding: 0 12px; border: 1px solid var(--line2); background: var(--bar); cursor: pointer; }
+.tap:hover { border-color: var(--ac); color: var(--ac); }
+.tap:active { background: var(--ac); color: var(--ac-ink); }
+.tapline small { color: var(--faint); font-size: 11px; }
+.float { position: absolute; left: 22px; top: -8px; color: var(--ac); pointer-events: none; animation: up .6s ease-out forwards; }
+@keyframes up { to { opacity: 0; transform: translateY(-28px); } }
+@keyframes pop { 40% { transform: scale(1.025); } }
+.pop { animation: pop .15s ease-out; transform-origin: left bottom; }
+
+/* Zincir penceresi */
+.cmd { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; color: var(--dim); }
+.opt { padding: 0 6px; cursor: pointer; color: var(--dim); }
+.opt:hover { color: var(--tx); }
+.opt.on { color: var(--ac-ink); background: var(--tx); }
+.cmd .all { margin-left: auto; color: var(--ac); cursor: pointer; }
+.cmd .all:hover { background: var(--ac); color: var(--ac-ink); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 400; color: var(--faint); font-size: 11px; padding: 0 8px 6px; border-bottom: 1px dashed var(--line2); }
+td { padding: 9px 8px; border-bottom: 1px dashed #1a1c1e; white-space: nowrap; }
+th.r, td.r { text-align: right; }
+tr.sel td { background: #101410; }
+.blk { color: var(--faint); letter-spacing: -1px; }
+.blk em { color: var(--ac); font-style: normal; }
+.buy { border: 0; background: transparent; padding: 2px 8px; color: var(--faint); cursor: default; }
+.buy.ok { color: var(--ac); cursor: pointer; }
+.buy.ok::before { content: '> '; }
+.buy.ok:hover { background: var(--ac); color: var(--ac-ink); }
+tr.lk td { color: #3d3f42; }
+.help { margin-top: 18px; color: var(--faint); font-size: 11px; }
+.help b { color: var(--dim); font-weight: 400; }
+
+/* Log penceresi = ticker */
+.log .in { padding: 10px 14px; font-size: 12px; display: flex; flex-direction: column; justify-content: flex-end; }
+.log p { margin: 0; color: var(--dim); }
+.log p .ts { color: var(--faint); margin-right: 10px; }
+.log p.sys { color: var(--faint); }
+.log p:last-child { color: var(--tx); }
+.cur { display: inline-block; width: 7px; height: 13px; background: var(--ac); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="ws on">1:chain</div>
+    <div class="ws">2:challenges [3/8]</div>
+    <div class="ws lk">3:········</div>
+    <div class="ws lk">4:······</div>
+    <div class="ws">9:sys</div>
+    <div class="title">hold-that-number — rung 1</div>
+    <div class="r"><span>goal <span class="asc" id="goalAsc"></span> <b id="goalPct"></b></span><span id="clock"></span></div>
+  </div>
+
+  <div class="tiles">
+    <section class="win focus">
+      <header><span class="pid">[01]</span> number <span class="x">─ □ ×</span></header>
+      <div class="in">
+        <div class="prompt"><span>rung 1/11</span> · i thought it was a wall</div>
+        <div class="big" id="num"></div>
+        <div class="kv"><span>rate</span><b id="rate"></b></div>
+        <div class="kv"><span>next</span><b>c4 · pencil @ 1e40</b></div>
+        <div class="kv"><span>presses</span><b id="taps"></b></div>
+        <div class="tapline" id="tapLine"><button class="tap" id="tap">[ +1 ]</button><small>space</small></div>
+      </div>
+    </section>
+
+    <section class="win chain-win">
+      <header><span class="pid">[02]</span> chain <span class="x">─ □ ×</span></header>
+      <div class="in">
+        <div class="cmd" id="modes">buy mode:<span class="opt on" data-m="1">x1</span><span class="opt" data-m="10">x10</span><span class="opt" data-m="max">max</span><span class="all" id="maxAll">[ max all ]</span></div>
+        <table>
+          <thead><tr><th>#</th><th>ring</th><th class="r">owned</th><th class="r">prod/s</th><th>block</th><th class="r">mult</th><th class="r">cost</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="help"><b>1–8</b> buy ring · <b>space</b> +1 · <b>m</b> mode · each ring feeds the one above it, 10 opens the next.</div>
+      </div>
+    </section>
+
+    <section class="win log">
+      <header><span class="pid">[03]</span> log <span class="x">─ □ ×</span></header>
+      <div class="in" id="log"></div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { createSim, tick, buy, cost, block, unlocked, produces, perSecond, goalPct, fmt, heroParts, TICKER } from './sim.js'
+const s = createSim()
+const $ = (id) => document.getElementById(id)
+const pad = (t, n) => String(t).padStart(n, '0')
+
+function render() {
+  const h = heroParts(s.number)
+  $('num').innerHTML = h.base + (h.tail ? '<small>' + h.tail + '</small>' : '')
+  $('rate').textContent = '+' + fmt(perSecond(s)) + '/s'
+  $('taps').textContent = s.taps
+  const g = goalPct(s), filled = Math.max(1, Math.round(g / 5))
+  $('goalAsc').innerHTML = '[<em>' + '|'.repeat(filled) + '</em>' + '.'.repeat(20 - filled) + ']'
+  $('goalPct').textContent = g.toFixed(1) + '%'
+  $('rows').innerHTML = s.rings.filter((r) => r.i <= 4).map((r) => {
+    if (!unlocked(s, r)) {
+      const prev = s.rings[r.i - 1]
+      return `<tr class="lk"><td>${pad(r.i + 1, 2)}</td><td>${r.name.toLowerCase()}</td><td colspan="5">locked — ${10 - prev.bought} more ${prev.name.toLowerCase()}</td></tr>`
+    }
+    const c = cost(r), ok = s.number >= c, b = r.bought % 10
+    return `<tr class="${ok ? 'sel' : ''}"><td style="color:var(--faint)">${pad(r.i + 1, 2)}</td><td>${r.name.toLowerCase()}</td>
+      <td class="r">${pad(fmt(r.amount, 0), 3)}</td><td class="r" style="color:var(--dim)">${fmt(produces(r))}</td>
+      <td class="blk"><em>${'■'.repeat(b)}</em>${'□'.repeat(10 - b)}</td><td class="r">x${block(r).toFixed(2)}</td>
+      <td class="r"><button class="buy ${ok ? 'ok' : ''}" data-i="${r.i}">${fmt(c)}</button></td></tr>`
+  }).join('')
+}
+
+const lines = []
+function log(text, sys = false) {
+  const d = new Date()
+  lines.push(`<p class="${sys ? 'sys' : ''}"><span class="ts">${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}:${pad(d.getSeconds(), 2)}</span>${text}</p>`)
+  if (lines.length > 8) lines.shift()
+  $('log').innerHTML = lines.join('') + '<p><span class="ts">&gt;</span><span class="cur"></span></p>'
+}
+
+$('rows').addEventListener('click', (e) => { const b = e.target.closest('.buy'); if (b && buy(s, +b.dataset.i)) { log('bought ' + s.rings[+b.dataset.i].name.toLowerCase(), true); pop(); render() } })
+$('modes').addEventListener('click', (e) => { const b = e.target.closest('.opt'); if (!b) return; s.buyMode = b.dataset.m === 'max' ? 'max' : +b.dataset.m; $('modes').querySelectorAll('.opt').forEach((x) => x.classList.toggle('on', x === b)) })
+$('maxAll').onclick = () => { const m = s.buyMode; s.buyMode = 'max'; s.rings.forEach((r) => buy(s, r.i)); s.buyMode = m; log('max all', true); pop(); render() }
+function pop() { const n = $('num'); n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop') }
+function press() {
+  s.number += 1; s.taps++
+  const f = document.createElement('span'); f.className = 'float'; f.textContent = '+1'; $('tapLine').appendChild(f); setTimeout(() => f.remove(), 600)
+  render()
+}
+$('tap').onclick = press
+addEventListener('keydown', (e) => { if (e.key === ' ') { e.preventDefault(); press() } })
+
+log('session restored · offline 0s', true)
+log(TICKER[0].toLowerCase())
+let t = 0
+setInterval(() => log(TICKER[++t % TICKER.length].toLowerCase()), 6000)
+setInterval(() => { const d = new Date(); $('clock').textContent = pad(d.getHours(), 2) + ':' + pad(d.getMinutes(), 2) }, 1000)
+let last = performance.now()
+setInterval(() => { const now = performance.now(); tick(s, (now - last) / 1000); last = now; render() }, 100)
+render()
+</script>
+</body>
+</html>

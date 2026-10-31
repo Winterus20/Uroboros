@@ -120,7 +120,7 @@ onUnmounted(() => {
   line-height: 1.18;
   letter-spacing: -0.015em;
   text-align: center;
-  color: var(--pn-text);
+  color: var(--pn-rung);
 }
 
 .scene--animated .scene__name {

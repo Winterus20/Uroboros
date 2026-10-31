@@ -5,7 +5,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 
 ## Nasıl kullanılır
 
-- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0083**).
+- **Yeni ADR:** mevcut en yüksek numara + 1 (şu an en yüksek: **0085**).
 - **Dosya adı:** `<numara>-<kısa-slug>.md` (örnek: `0070-cloud-sync-decision-layer-and-etag-conflict-detection.md`).
 - **Başlık bloğu:** dosyanın başında `# ADR-<numara>: <başlık>` + `Tarih` + `Durum` satırları bulunmalı.
 - **Durum sütunu:** bir karar başka bir kararın maddesini geçersiz kılıyorsa hangi ADR'in neyi iptal ettiği burada yazılır (örnek: ADR-0034 → ADR-0032 §F).
@@ -17,7 +17,7 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
   eşleşmez. Altyapı kararları (ör. 0001 Vue/Pinia, 0002 break_eternity, 0003 game loop, 0004 müzik
   motoru, 0029/0070 kayıt ve bulut) hâlâ geçerlidir.
   Bağlayıcı olanlar **ADR-0077 ve sonrası** (özellikle 0078 görsel dil, 0080 notasyon, 0082
-  zincir-only, **0083 rung 1 tek koşu**). Çelişkide yeni ADR kazanır.
+  zincir-only, **0083 rung 1 tek koşu**, **0085 Laboratuvar arayüz kabuğu**). Çelişkide yeni ADR kazanır.
 - **Numara çakışması notu (2026-10-19):** 0033 numarası iki dosyada birden kullanılıyordu (cloud-sync 2026-10-03 · üç boyutlu başlangıç 2026-10-04). Çakışma cloud-sync dosyasının **0070**'e yeniden numaralandırılmasıyla çözüldü; 0033 artık yalnızca üç boyutlu başlangıç ADR'ine aittir.
 
 | # | Başlık | Tarih | Durum | Dosya |
@@ -106,3 +106,4 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 | 0082 | Zincir-Only Dilim — Boost, Prestij ve `Tanım` Yükseltmelerinin Kaldırılması | 2026-10-25 | **Kabul edildi & uygulandı** — sahibin talebiyle döngü geçici olarak çıkarıldı; oyun yalnız zinciri büyütür. Save v22; v20/v21 kayıtları açılır. Boost/prestij geri gelmeden önce ayrı tasarım turu | [0082-chain-only-slice.md](0082-chain-only-slice.md) |
 | 0083 | 1. Basamak — Tek Koşu, 190 Dakika ve Sıfırlamasız Mücadele Modeli | 2026-10-27 | **Kabul edildi** — v1 in resetli 120 dk modelini geçersiz kılar: B=5.5 sabit, 8 sıfırlamasız mücadele, C8 ×2, save v23. Kalibrasyon 188,8/189,1 dk | [0083-rung-1-single-run-challenge-model.md](0083-rung-1-single-run-challenge-model.md) |
 | 0084 | Swirl Parlaklık Tavanı — Ortam Sayıyla Yarışmaz | 2026-10-31 | **Kabul edildi & uygulandı** — `AlgorithmicSwirl` en parlak pikseli L ≤ 0,03 (ek: 0,016 → 0,03; menü sütununa düz zemin); piksel kuantizasyonu, opaklık/blend ve gradyan fallback kaldırıldı. ADR-0078 `G2`'yi sınırlar, iptal etmez | [0084-swirl-luminance-cap.md](0084-swirl-luminance-cap.md) |
+| 0085 | "Laboratuvar" Arayüz Kabuğu — Uygulama Kabuğu, Bölüm Kayıt Defteri, Basamak Vurgusu | 2026-10-31 | **Kabul edildi & uygulandı** — üst çubuk · sol menü · ana alan · durum çubuğu; bölüm/kaynak kayıt defterleri (`src/ui/`); vurgu = basamak rengi (`--pn-rung`); swirl kaldırıldı. ADR-0078 `G2`/`G3`/§5'i ve ADR-0084'ü geçersiz kılar | [0085-laboratuvar-ui-shell.md](0085-laboratuvar-ui-shell.md) |

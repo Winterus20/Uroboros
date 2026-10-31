@@ -109,27 +109,16 @@ function markInteraction(): void {
 </script>
 
 <template>
-  <!-- G14: ekranın en üstü · tek satır · hairline altında · düz metin (kutu/blur yok).
-       A4: humor 'off' iken başlık tamamen gizlenir (narrative-voice §9). -->
-  <header v-if="store.settings.humor !== 'off'" class="ticker">
-    <p class="ticker__text" aria-live="polite">{{ text }}</p>
-  </header>
+  <!-- ADR-0085: bant durum çubuğunda yaşar (StatusBar.vue) — tek satır, düz metin.
+       A4: humor 'off' iken bant tamamen gizlenir (narrative-voice §9). -->
+  <p v-if="store.settings.humor !== 'off'" class="ticker" aria-live="polite">{{ text }}</p>
 </template>
 
 <style scoped>
 .ticker {
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 10px 20px 11px;
-  border-bottom: 1px solid var(--pn-hairline);
-}
-.ticker__text {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
+  margin: 0;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
   letter-spacing: 0.01em;
   color: var(--pn-text-dim);

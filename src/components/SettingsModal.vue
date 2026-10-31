@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth'
 import { SaveSystem } from '../core/save'
 import type { HumorLevel, MotionMode, MusicTrackId } from '../models/settings'
 import type { NotationType } from '../core/format'
+import { X } from 'lucide-vue-next'
 
 const store = useGameStore()
 const auth = useAuthStore()
@@ -70,119 +71,149 @@ function hardReset(): void {
 </script>
 
 <template>
-  <div class="overlay" role="dialog" aria-modal="true" @click.self="emit('close')">
-    <div class="sheet">
-      <header class="sheet__head">
-        <h2>Settings</h2>
-        <button type="button" class="x" @click="emit('close')">Close</button>
+  <div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" @click.self="emit('close')">
+    <div class="modal__panel">
+      <header class="modal__head">
+        <h2 id="settings-title" class="modal__title">Settings</h2>
+        <button type="button" class="settings__x" aria-label="Close" @click="emit('close')">
+          <X :size="16" :stroke-width="1.6" aria-hidden="true" />
+        </button>
       </header>
 
-      <label class="field">
-        <span>Notation</span>
-        <select :value="store.settings.notation" @change="store.setSetting('notation', ($event.target as HTMLSelectElement).value as NotationType)">
-          <option v-for="n in NOTATIONS" :key="n" :value="n">{{ n }}</option>
-        </select>
-      </label>
+      <div class="modal__body">
+        <p class="modal__kicker">Display</p>
+        <label class="field">
+          <span>Notation</span>
+          <select class="field-input" :value="store.settings.notation" @change="store.setSetting('notation', ($event.target as HTMLSelectElement).value as NotationType)">
+            <option v-for="n in NOTATIONS" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </label>
 
-      <label class="field">
-        <span>Decimals</span>
-        <input type="range" min="0" max="4" :value="store.settings.decimalPlaces" @input="store.setSetting('decimalPlaces', Number(($event.target as HTMLInputElement).value))" />
-      </label>
+        <label class="field">
+          <span>Decimals</span>
+          <span class="field__range">
+            <input type="range" min="0" max="4" :value="store.settings.decimalPlaces" @input="store.setSetting('decimalPlaces', Number(($event.target as HTMLInputElement).value))" />
+            <span class="field__value data">{{ store.settings.decimalPlaces }}</span>
+          </span>
+        </label>
 
-      <label class="field">
-        <span>Humour</span>
-        <select :value="store.settings.humor" @change="store.setSetting('humor', ($event.target as HTMLSelectElement).value as HumorLevel)">
-          <option v-for="h in HUMOR" :key="h" :value="h">{{ h }}</option>
-        </select>
-      </label>
+        <label class="field">
+          <span>Humour</span>
+          <select class="field-input" :value="store.settings.humor" @change="store.setSetting('humor', ($event.target as HTMLSelectElement).value as HumorLevel)">
+            <option v-for="h in HUMOR" :key="h" :value="h">{{ h }}</option>
+          </select>
+        </label>
 
-      <label class="field">
-        <span>Motion</span>
-        <select :value="store.settings.motionMode" @change="store.setSetting('motionMode', ($event.target as HTMLSelectElement).value as MotionMode)">
-          <option v-for="m in MOTION" :key="m" :value="m">{{ m }}</option>
-        </select>
-      </label>
+        <label class="field">
+          <span>Motion</span>
+          <select class="field-input" :value="store.settings.motionMode" @change="store.setSetting('motionMode', ($event.target as HTMLSelectElement).value as MotionMode)">
+            <option v-for="m in MOTION" :key="m" :value="m">{{ m }}</option>
+          </select>
+        </label>
 
-      <label class="field">
-        <span>Sound</span>
-        <input type="checkbox" :checked="store.settings.soundEnabled" @change="store.setSetting('soundEnabled', ($event.target as HTMLInputElement).checked)" />
-      </label>
+        <p class="modal__kicker settings__group">Audio</p>
+        <label class="field">
+          <span>Sound</span>
+          <input type="checkbox" :checked="store.settings.soundEnabled" @change="store.setSetting('soundEnabled', ($event.target as HTMLInputElement).checked)" />
+        </label>
 
-      <label class="field">
-        <span>Music</span>
-        <input type="checkbox" :checked="store.settings.musicEnabled" @change="store.setSetting('musicEnabled', ($event.target as HTMLInputElement).checked)" />
-      </label>
+        <label class="field">
+          <span>Music</span>
+          <input type="checkbox" :checked="store.settings.musicEnabled" @change="store.setSetting('musicEnabled', ($event.target as HTMLInputElement).checked)" />
+        </label>
 
-      <label class="field">
-        <span>Track</span>
-        <select :value="store.settings.musicTrack" @change="store.setMusicTrack(($event.target as HTMLSelectElement).value as MusicTrackId)">
-          <option v-for="t in TRACKS" :key="t" :value="t">{{ t }}</option>
-        </select>
-      </label>
+        <label class="field">
+          <span>Track</span>
+          <select class="field-input" :value="store.settings.musicTrack" @change="store.setMusicTrack(($event.target as HTMLSelectElement).value as MusicTrackId)">
+            <option v-for="t in TRACKS" :key="t" :value="t">{{ t }}</option>
+          </select>
+        </label>
 
-      <label class="field">
-        <span>Swirl</span>
-        <select :value="store.settings.swirlShaderQuality" @change="store.setSetting('swirlShaderQuality', ($event.target as HTMLSelectElement).value as 'off' | 'balanced' | 'high')">
-          <option value="off">off</option>
-          <option value="balanced">balanced</option>
-          <option value="high">high</option>
-        </select>
-      </label>
-
-      <div class="block">
-        <button type="button" class="ghost" @click="exportSave">Copy save</button>
-        <textarea v-model="importText" class="area" placeholder="Paste a save string" />
-        <button type="button" class="ghost" @click="importSave">Load save</button>
-      </div>
-
-      <div class="block block--cloud">
-        <div class="block__head">
-          <p class="block__title">Cloud save</p>
-          <p class="block__state data" :class="{ 'block__state--on': auth.isAuthenticated }">{{ cloudStatus }}</p>
+        <p class="modal__kicker settings__group">Save</p>
+        <div class="block">
+          <button type="button" class="btn btn--solid" @click="exportSave">Copy save</button>
+          <textarea v-model="importText" class="field-input" placeholder="Paste a save string" />
+          <button type="button" class="btn" @click="importSave">Load save</button>
         </div>
-        <div class="cloud__actions">
-          <button
-            v-if="!auth.isAuthenticated"
-            type="button"
-            class="ghost"
-            :disabled="!auth.isConfigured"
-            @click="openSignIn"
-          >
-            Sign in
-          </button>
-          <template v-else>
-            <button type="button" class="ghost" :disabled="cloudBusy" @click="pushToCloud">Save to cloud</button>
-            <button type="button" class="ghost" :disabled="cloudBusy" @click="signOut">Sign out</button>
-          </template>
+
+        <div class="block block--cloud">
+          <div class="block__head">
+            <p class="block__title">Cloud save</p>
+            <p class="block__state data" :class="{ 'block__state--on': auth.isAuthenticated }">{{ cloudStatus }}</p>
+          </div>
+          <div class="cloud__actions">
+            <button
+              v-if="!auth.isAuthenticated"
+              type="button"
+              class="btn"
+              :disabled="!auth.isConfigured"
+              @click="openSignIn"
+            >
+              Sign in
+            </button>
+            <template v-else>
+              <button type="button" class="btn" :disabled="cloudBusy" @click="pushToCloud">Save to cloud</button>
+              <button type="button" class="btn" :disabled="cloudBusy" @click="signOut">Sign out</button>
+            </template>
+          </div>
         </div>
-      </div>
 
-      <div class="block">
-        <button type="button" class="danger" @click="hardReset">Hard reset</button>
-      </div>
+        <div class="block block--danger">
+          <button type="button" class="btn btn--danger" @click="hardReset">Hard reset</button>
+        </div>
 
-      <p v-if="status" class="status">{{ status }}</p>
+        <p v-if="status" class="status data" role="status">{{ status }}</p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.overlay { position: fixed; inset: 0; background: rgba(3,3,5,0.86); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 40; }
-.sheet { width: min(560px, 100%); max-height: 86vh; overflow-y: auto; border: 1px solid var(--pn-hairline); background: var(--pn-bg); padding: 22px 22px 26px; }
-.sheet__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-h2 { margin: 0; font-family: var(--font-ui); font-weight: 400; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
-.x, .ghost, .danger { appearance: none; background: transparent; border: 1px solid var(--pn-hairline); color: var(--pn-text-dim); font-family: var(--font-data); font-size: 12px; padding: 6px 12px; cursor: pointer; }
-.danger { color: var(--pn-rose); border-color: color-mix(in srgb, var(--pn-rose) 40%, transparent); }
-.field { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px solid var(--pn-hairline); font-family: var(--font-ui); font-size: 13px; color: var(--pn-text-dim); }
-select, input[type='range'] { background: transparent; color: var(--pn-text); border: 1px solid var(--pn-hairline); font-family: var(--font-data); font-size: 12px; padding: 4px 6px; }
-.block { display: flex; flex-direction: column; gap: 8px; padding: 14px 0 0; }
-.area { min-height: 76px; background: transparent; border: 1px solid var(--pn-hairline); color: var(--pn-text-dim); font-family: var(--font-data); font-size: 11px; padding: 8px; resize: vertical; }
-.status { margin: 12px 0 0; font-family: var(--font-data); font-size: 11px; color: var(--pn-amber); }
-.block--cloud { border-top: 1px solid var(--pn-hairline); margin-top: 14px; }
+.settings { z-index: 40; }
+
+.settings__x {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--pn-r);
+  background: transparent;
+  color: var(--pn-text-dim);
+  cursor: pointer;
+}
+.settings__x:hover { border-color: var(--pn-line-strong); color: var(--pn-text); }
+
+.settings__group { margin-top: 20px; }
+.modal__kicker { margin-bottom: 6px; }
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 46px;
+  border-top: 1px solid var(--pn-line);
+  font-size: 13px;
+  color: var(--pn-text-dim);
+}
+.field .field-input { min-width: 150px; }
+.field__range { display: inline-flex; align-items: center; gap: 10px; }
+.field__value { min-width: 12px; font-size: 12px; color: var(--pn-text); text-align: right; }
+input[type='range'],
+input[type='checkbox'] { accent-color: var(--pn-rung); }
+input[type='checkbox'] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+
+.block { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 10px; }
+.block textarea { width: 100%; font-size: 11px; color: var(--pn-text-dim); }
+.block--cloud { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--pn-line); align-items: stretch; }
+.block--danger { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--pn-line); }
 .block__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.block__title { margin: 0; font-family: var(--font-ui); font-size: 13px; color: var(--pn-text-dim); }
+.block__title { margin: 0; font-size: 13px; color: var(--pn-text-dim); }
 .block__state { margin: 0; font-size: 11px; line-height: 1.5; color: var(--pn-text-dim); text-align: right; max-width: 60%; }
 .block__state--on { color: var(--pn-text); }
 .cloud__actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.ghost:disabled { color: var(--pn-locked); cursor: default; }
+
+.status { margin: 14px 0 0; font-size: 11px; color: var(--pn-text); }
 </style>

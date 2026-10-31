@@ -2,7 +2,9 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { format, formatTime } from '../core/format'
+import SectionHeader from './ui/SectionHeader.vue'
 
+/** İstatistikler: zincir/mücadele tablolarıyla aynı satır dili (ADR-0085). Yalnız kayıtlı veri. */
 const store = useGameStore()
 
 const rows = computed(() => [
@@ -16,47 +18,35 @@ const rows = computed(() => [
 
 <template>
   <section class="stats" aria-label="Statistics">
-    <div v-for="row in rows" :key="row.label" class="stat">
-      <p class="stat__label">{{ row.label }}</p>
-      <p class="stat__value data">{{ row.value }}</p>
-    </div>
+    <SectionHeader title="Statistics" description="Totals for this save." />
+
+    <table class="dt stats__table">
+      <tbody>
+        <tr v-for="row in rows" :key="row.label">
+          <th scope="row" class="stats__label">{{ row.label }}</th>
+          <td class="r data stats__value">{{ row.value }}</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 </template>
 
 <style scoped>
-.stats {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Kutu yok: satırlar yalnız hairline ile ayrılır. */
-.stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 12px 0;
-  border-top: 1px solid var(--pn-hairline);
-}
-.stat:last-child { border-bottom: 1px solid var(--pn-hairline); }
-
-.stat__label {
-  margin: 0;
+.stats__table tbody tr:first-child th,
+.stats__table tbody tr:first-child td { border-top: 1px solid var(--pn-line); }
+.stats__label {
+  height: 48px;
+  padding: 0 12px;
+  border-top: 1px solid var(--pn-line);
   font-family: var(--font-ui);
   font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: left;
   color: var(--pn-text-dim);
+  white-space: normal;
 }
-.stat__value {
-  margin: 0;
-  font-size: 13px;
-  color: var(--pn-text);
-  text-align: right;
-}
-
-@media (max-width: 560px) {
-  .stats { padding: 0 16px; }
-  .stat__label { font-size: 12px; }
-  .stat__value { font-size: 12px; }
-}
+.stats__table tbody tr:last-child th { border-bottom: 1px solid var(--pn-line); }
+.stats__table td { height: 48px; }
+.stats__value { color: var(--pn-text); }
 </style>

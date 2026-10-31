@@ -3,45 +3,65 @@
 @tailwind utilities;
 
 /*
- * "Saf Sayı" görsel sözleşmesi — ADR-0078 / brain/context/visual-language.md.
- * Kural: sayı ekranın en büyük nesnesidir; kart, blur, yuvarlak köşe, gölge, gradyan YOK.
- * Hiyerarşi yalnız üç araçla kurulur: punto · kontrast · boşluk.
+ * "Laboratuvar" görsel sözleşmesi — ADR-0085 / brain/context/visual-language.md.
+ * Sakin, sayı öncelikli bir ölçüm aleti: koyu yüzey katmanları, 1px çizgiler, 6–8 px köşe,
+ * gölge/blur/gradyan YOK. Vurgu rengi = basamak rengi (`--pn-rung`); kök elemana tek değişkenle
+ * yazılır (App.vue), yumuşak/çizgi türevleri buradan `color-mix` ile türer → her basamak tüm
+ * arayüzü tek değişkenle yeniden boyar.
  */
 
 :root {
-  /* Tuval + metin ölçeği (sözleşme §2.1) */
-  --pn-bg: #060608;
-  --pn-hairline: rgba(255, 255, 255, 0.07);
-  --pn-hairline-strong: rgba(255, 255, 255, 0.14);
-  --pn-text: #f6f3ec;
-  --pn-text-dim: #8d8a80;
-  --pn-text-faint: #4e4e58;
-  --pn-locked: #33333a;
+  /* Yüzey merdiveni (§2.1): tuval → kabuk → kontrol → basılı/dolgu */
+  --pn-bg: #08090c;
+  --pn-s1: #0e1015;
+  --pn-s2: #14161d;
+  --pn-s3: #1b1e27;
 
-  /* Rezerve renkler (sözleşme §2.3): amber = prestij/milestone · rose = tehlike · gri = kilitli */
-  --pn-amber: #f59e0b;
-  --pn-rose: #f43f5e;
+  /* Çizgiler: 1px, gölge yerine */
+  --pn-line: #1d2029;
+  --pn-line-strong: #2a2e3a;
 
-  /* Basamak rengi yalnız iki yerde yaşar: hero sayı + AlgorithmicSwirl (§2.2). */
+  /* Metin ölçeği */
+  --pn-text: #ecebe6;
+  --pn-text-dim: #8e8d88;
+  --pn-text-faint: #5a5b63;
+  /* Kilitli = gri (rezerve anlam): soluk tonla aynı değer, ayrı ad — anlam ayrı kalsın. */
+  --pn-locked: var(--pn-text-faint);
+
+  /* Eski adlar (ADR-0078 dönemi): dışarıda kalan okuyucular yeni çizgilere bağlanır. */
+  --pn-hairline: var(--pn-line);
+  --pn-hairline-strong: var(--pn-line-strong);
+
+  /* Vurgu = basamak rengi. App.vue kök elemana `store.rungInfo.color` yazar; bu satır yedektir. */
   --pn-rung: #98e500;
+  --pn-rung-soft: color-mix(in srgb, var(--pn-rung) 10%, transparent);
+  --pn-rung-line: color-mix(in srgb, var(--pn-rung) 45%, transparent);
+  --pn-rung-hover: color-mix(in srgb, var(--pn-rung) 7%, var(--pn-s2));
 
-  --font-hero: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-ui: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  /* Rezerve renkler (§2.3): amber = prestij/milestone · rose = tehlike · gri = kilitli */
+  --pn-amber: #f59e0b;
+  --pn-amber-soft: color-mix(in srgb, var(--pn-amber) 10%, transparent);
+  --pn-amber-line: color-mix(in srgb, var(--pn-amber) 45%, transparent);
+  --pn-rose: #f43f5e;
+  --pn-rose-soft: color-mix(in srgb, var(--pn-rose) 10%, transparent);
+  --pn-rose-line: color-mix(in srgb, var(--pn-rose) 45%, transparent);
+
+  /* Köşe ölçeği: küçük işaretler 3–4, kontroller 6, paneller 8 */
+  --pn-r-xs: 3px;
+  --pn-r-sm: 4px;
+  --pn-r: 6px;
+  --pn-r-lg: 8px;
+
+  /* Kabuk ölçüleri (§5) */
+  --shell-top: 52px;
+  --shell-nav: 232px;
+  --shell-status: 30px;
+  --shell-tabbar: 58px;
+  --content-max: 1040px;
+
+  --font-hero: 'Space Grotesk', system-ui, sans-serif;
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
   --font-data: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
-
-  /*
-   * Eski --ds-* adları (eski temadan kalma önek) hâlâ dışarıdan (AlgorithmicSwirl
-   * fallback'i, AuthModal, CloudConflictModal) okunuyor. ADR-0078 sözleşmesi bu dosyanın
-   * sahibi olduğu için tokenlar "Saf Sayı" tuvaline bağlanır: panel = tuval,
-   * kart = tuval (kart yüzeyi yok), çizgi = hairline.
-   */
-  --ds-bg: var(--pn-bg);
-  --ds-abyss: #000000;
-  --ds-panel: var(--pn-bg);
-  --ds-panel-strong: var(--pn-bg);
-  --ds-card: var(--pn-bg);
-  --ds-border: var(--pn-hairline);
-  --ds-hero: var(--pn-text);
 
   color-scheme: dark;
 }
@@ -58,7 +78,7 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow: hidden;
   user-select: none;
 }
 
@@ -66,10 +86,10 @@ body {
 
 button { font: inherit; color: inherit; }
 
-/* G10: klavye ile odaklanabilir her buton tek bir odak diliyle konuşur. */
+/* G10: klavye ile odaklanabilir her kontrol tek bir odak diliyle konuşur. */
 :focus-visible {
-  outline: 1px solid var(--pn-text-dim);
-  outline-offset: 3px;
+  outline: 1px solid var(--pn-rung-line);
+  outline-offset: 2px;
 }
 :focus:not(:focus-visible) { outline: none; }
 
@@ -80,32 +100,206 @@ button { font: inherit; color: inherit; }
   font-feature-settings: 'tnum' 1;
 }
 
+/* ── Ortak yapı taşları ──────────────────────────────────────────────────────
+ * Yeni bir mekanik/katman sayfası bu sınıfları kullanır; kendi tablo/düğme dilini kurmaz.
+ */
+
+/* Veri tablosu (§5.3): satırlar 1px çizgiyle, başlık mono mikro etiket, satır üstünde s1. */
+.dt {
+  width: 100%;
+  border-collapse: collapse;
+}
+.dt th {
+  padding: 0 12px 8px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-align: left;
+  color: var(--pn-text-faint);
+  white-space: nowrap;
+}
+.dt td {
+  height: 56px;
+  padding: 0 12px;
+  border-top: 1px solid var(--pn-line);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.dt tbody tr:last-child td { border-bottom: 1px solid var(--pn-line); }
+.dt tbody tr:hover td { background: var(--pn-s1); }
+.dt .r { text-align: right; }
+.dt__idx {
+  width: 44px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--pn-text-faint);
+}
+.dt__name { font-size: 14px; color: var(--pn-text); }
+.dt__sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--pn-text-dim);
+}
+
+/* Düğmeler: tek dil. ghost = ikincil eylem · accent = birincil eylem · danger = geri alınamaz. */
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--pn-text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+.btn:hover { color: var(--pn-text); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { color: var(--pn-text-faint); cursor: default; transform: none; }
+.btn--solid { background: var(--pn-s2); color: var(--pn-text); }
+.btn--solid:hover { background: var(--pn-s3); }
+.btn--accent { border-color: var(--pn-rung-line); background: var(--pn-rung-soft); color: var(--pn-text); }
+.btn--accent:hover { background: var(--pn-rung-hover); }
+.btn--amber { border-color: var(--pn-amber-line); background: var(--pn-amber-soft); color: var(--pn-text); }
+.btn--amber:hover { color: var(--pn-amber); }
+.btn--danger { border-color: var(--pn-rose-line); color: var(--pn-rose); }
+.btn--danger:hover { background: var(--pn-rose-soft); color: var(--pn-rose); }
+.btn--lg { height: 38px; padding: 0 18px; font-size: 13px; }
+.btn--block { width: 100%; }
+
+/* Hap etiket: basamak/durum işareti (mono, küçük). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r-sm);
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--pn-text-dim);
+  white-space: nowrap;
+}
+.pill--accent { color: var(--pn-rung); background: var(--pn-rung-soft); border-color: var(--pn-rung-line); }
+.pill--amber { color: var(--pn-amber); background: var(--pn-amber-soft); border-color: var(--pn-amber-line); }
+
+.kbd {
+  font-family: var(--font-data);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--pn-text-faint);
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r-xs);
+  padding: 0 5px;
+}
+
+/* Form alanları (ayarlar, giriş): s1 zemin, 1px çizgi, 6 px köşe. */
+.field-input {
+  appearance: none;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r);
+  background: var(--pn-s1);
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--pn-text);
+}
+.field-input:focus { outline: none; border-color: var(--pn-rung-line); }
+textarea.field-input { height: auto; min-height: 76px; padding: 8px 10px; resize: vertical; }
+select.field-input {
+  padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--pn-text-dim) 50%),
+    linear-gradient(135deg, var(--pn-text-dim) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 14px, calc(100% - 10px) 14px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* Modal kabuğu: düz karartma (blur yok) + s1 panel, 8 px köşe, 1px çizgi, gölge yok. */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 5, 7, 0.82);
+}
+.modal__panel {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r-lg);
+  background: var(--pn-s1);
+  outline: none;
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--pn-line);
+}
+.modal__title {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--pn-text);
+}
+.modal__body { padding: 16px 18px 20px; }
+.modal__kicker {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pn-text-faint);
+}
+
+/* Bildirim kutusu: hata = rose, bilgi = vurgu. Yalnız ince çizgi + yumuşak zemin. */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r);
+  font-size: 12px;
+  color: var(--pn-text-dim);
+}
+.notice--error { border-color: var(--pn-rose-line); background: var(--pn-rose-soft); color: var(--pn-text); }
+.notice--ok { border-color: var(--pn-rung-line); background: var(--pn-rung-soft); color: var(--pn-text); }
+
 /*
  * Anlar (sözleşme §6). Keyframe'ler global: sahneler tek yerden, tek dil ile konuşur.
- * boost = yalnız hareket · sahne = renk + isim. İki dil asla karışmaz.
  */
-@keyframes pn-tap-stroke {
-  0% { transform: scale(0.94); }
-  55% { transform: scale(1.03); }
+
+/* +1 yüzen etiketi: 600 ms yükselir ve söner. */
+@keyframes pn-float-up {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+/* Sayı vuruşu: basış/alımda hero sayı 160 ms'lik küçük bir "pop" yapar. */
+@keyframes pn-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.025); }
   100% { transform: scale(1); }
-}
-
-@keyframes pn-boost-collapse {
-  0% { transform: scale(1); opacity: 1; }
-  38% { transform: scale(0.9); opacity: 0.55; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes pn-boost-badge {
-  0% { opacity: 0; transform: translateY(-7px); }
-  45% { opacity: 1; }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pn-swirl-breath {
-  0% { transform: scale(1); filter: brightness(1); }
-  42% { transform: scale(1.04); filter: brightness(1.32); }
-  100% { transform: scale(1); filter: brightness(1); }
 }
 
 /* G8 — 2,5 sn sahne: sönme (0-500 ms) · isim (500-1850 ms) · sayının doğuşu (1850-2500 ms). */
@@ -141,7 +335,14 @@ html[data-motion='off'] *::before {
   transition: none !important;
 }
 
-::selection { background: color-mix(in srgb, var(--pn-text) 18%, transparent); }
+::selection { background: var(--pn-rung-soft); }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: var(--pn-hairline-strong); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--pn-s3);
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--pn-line-strong); }

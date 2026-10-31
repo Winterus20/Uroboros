@@ -6,10 +6,16 @@ import { OFFLINE_CAP_SECONDS } from '../stores/game'
 // offline yakalamaya devreden eşik (sn cinsinden).
 const BACKGROUND_CATCHUP_THRESHOLD = 5
 
+/** Sabit adım süresi (ms) — 20 TPS. Durum çubuğu da bu değeri okur (ADR-0085). */
+export const TICK_MS = 50
+
+/** Otomatik kayıt aralığı (ms). Durum çubuğu da bu değeri okur (ADR-0085). */
+export const AUTOSAVE_MS = 10000
+
 export class GameLoop {
   private lastTime = performance.now()
   private accumulator = 0
-  private readonly TICK_RATE = 50 // ms cinsinden adım süresi (20 TPS)
+  private readonly TICK_RATE = TICK_MS // ms cinsinden adım süresi (20 TPS)
   private autoSaveTimer = 0
   private isRunning = false
   private animFrameId: number | null = null
@@ -53,9 +59,9 @@ export class GameLoop {
         }
       }
 
-      // Otomatik Kayıt (Her 10 saniyede bir)
+      // Otomatik Kayıt (AUTOSAVE_MS — her 10 saniyede bir)
       this.autoSaveTimer += Math.max(0, Math.min(rawDelta, 1000))
-      if (this.autoSaveTimer >= 10000) {
+      if (this.autoSaveTimer >= AUTOSAVE_MS) {
         this.autoSaveTimer = 0
         SaveSystem.save(store.serialize())
       }

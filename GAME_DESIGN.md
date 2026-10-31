@@ -40,7 +40,7 @@ koşu, kapıda prestij (ADR-0083). **Süre:** tek koşu, ~**85 saat**, kuyruk yo
    üretir. `+1` zincirin köküne dokunur — 85. saatte de.
 4. **Ses = oyunun kendisi** (`V1`), sessiz meta (`V2`), gerçek "sen" (`V3`). Mizah dünyada
    değil, oyun ile oyuncu arasındaki ilişkide.
-5. **Görsel dil "Saf Sayı"** (ADR-0078): zemin + 1px hairline + tipografi + basamak rengi.
+5. **Görsel dil "Laboratuvar"** (ADR-0085): sakin ölçüm aleti kabuğu, vurgu = basamak rengi.
    Kart, blur, yuvarlak köşe, gölge, neon süs yok.
 
 ---
@@ -364,17 +364,17 @@ bir eksik değil. 2. basamak yazıldığında basamak geçişi buraya bağlanır
 
 ---
 
-## 12. Görsel dil referansı (ADR-0078 — "Saf Sayı")
+## 12. Görsel dil referansı (ADR-0085 — "Laboratuvar")
 
 Tam sözleşme: [`brain/context/visual-language.md`](brain/context/visual-language.md).
 
 | Öğe | Kural |
 | :--- | :--- |
-| Zemin | `#060608`; tek istisna `AlgorithmicSwirl` (oyunun tek ortamı, basamak rengini taşır) |
-| Yüzey | 1px hairline + tipografi + boşluk. **Kart, blur, yuvarlak köşe, gölge, neon süs yok** |
+| Zemin | `#08090c` tuval · `s1/s2/s3` yüzeyler · 1px çizgi · 6–8 px köşe (swirl kaldırıldı) |
+| Yüzey | Kabuk: üst çubuk · sol menü (≤ 900 px alt sekme) · ana alan · durum çubuğu. **Gölge, blur, gradyan, neon süs yok**; sağ panel yok |
 | Tipografi | **Space Grotesk** (hero 300 + UI 400–500) · **Space Mono** (veri, `tabular-nums`) |
 | Basamak rengi | 11 hue, tek OKLCH formülü; kontrast **5,4:1–13,4:1**, komşu hue farkı **25,1°** |
-| Renk nerede yaşar | Yalnız hero sayı + swirl. Buton/rozet/çubuk basamak rengi **almaz** |
+| Renk nerede yaşar | Basamak rengi arayüzün vurgusudur (`--pn-rung`): hero sayı + yalnız eyleme açık/aktif durum |
 | Rezerve | Amber `#f59e0b` prestij · Rose `#f43f5e` tehlike · Gri `#33333a` kilitli |
 | Basamak geçişi | 2,5 sn sahne (`G8`); 11 × 2,5 sn = 27 sn / 85 saat |
 | Mini boost | 400 ms "tek nefes" (`G11`); sahne diliyle karışmaz |
@@ -407,7 +407,7 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 | Ses | `src/game/voice/` + `TickerBar.vue` | 🟡 mücadele/kapı satırları ekleniyor |
 | UI | `App.vue` + GoalBar · ChallengePanel · GateModal + mevcut 9 bileşen | 🟡 |
 | Sahne (`G8`) | `RungScene.vue` | 🟡 kapı anı GateModal ile bağlanacak |
-| Altyapı | 20 TPS loop · LZ-String + slot + karantina · Firebase auth/bulut · audio + müzik · swirl | ✅ |
+| Altyapı | 20 TPS loop · LZ-String + slot + karantina · Firebase auth/bulut · audio + müzik · arayüz kabuğu | ✅ |
 | 2–11. basamak | — | ⛔ tasarlanmadı |
 
 **Doğrulama kapıları:** `npm run typecheck` (vue-tsc, 0 hata) · `npm test` (vitest) ·

@@ -53,136 +53,163 @@ const { dialogRef } = useFocusTrap(
 </script>
 
 <template>
-  <div v-if="authStore.showConflictModal && conflict" class="layer-modal fixed inset-0 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+  <!-- ADR-0085: düz karartma (blur yok) + s1 panel, 8 px köşe, 1px çizgi, gölge/gradyan yok. -->
+  <div v-if="authStore.showConflictModal && conflict" class="modal conflict">
     <div
       ref="dialogRef"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
       tabindex="-1"
-      class="relative w-full max-w-2xl bg-[var(--ds-panel-strong)] border border-slate-600/60 rounded-2xl shadow-2xl overflow-hidden p-6 max-h-[90vh] overflow-y-auto outline-none"
+      class="modal__panel conflict__panel"
     >
-      
+
       <!-- Başlık Çubuğu -->
-      <div class="flex items-center gap-3 pb-4 border-b border-[var(--ds-border)]">
-        <div class="p-2.5 rounded-xl bg-slate-500/10 border border-slate-400/30 text-slate-300">
-          <AlertTriangle class="w-6 h-6 animate-pulse" />
-        </div>
+      <div class="modal__head conflict__head">
+        <span class="conflict__icon" aria-hidden="true"><AlertTriangle :size="18" :stroke-width="1.6" /></span>
         <div>
-          <h2 :id="titleId" class="text-xl font-black text-slate-100 tracking-wide">Bulut Kayıt Çakışması Algılandı</h2>
-          <p class="text-xs text-slate-400 mt-0.5">
+          <h2 :id="titleId" class="modal__title">Bulut Kayıt Çakışması Algılandı</h2>
+          <p class="conflict__sub">
             Bu cihazdaki ilerlemeniz ile buluttaki ilerleme arasında fark bulundu. Lütfen devam etmek istediğiniz kaydı seçin.
           </p>
         </div>
       </div>
 
-      <!-- İki Sütunlu Karşılaştırma Bento Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-        
-        <!-- Sol: Bu Cihazdaki İlerleme -->
-        <div class="flex flex-col justify-between p-4 rounded-xl bg-[var(--ds-panel)] border border-slate-700/60 hover:border-slate-500/60 transition-all">
-          <div>
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span class="flex items-center gap-2 text-sm font-bold text-slate-300">
-                <HardDrive class="w-4 h-4 text-cyan-400" />
-                Bu Cihazdaki Kayıt
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
-                Yerel
-              </span>
+      <div class="modal__body">
+        <!-- İki sütunlu karşılaştırma -->
+        <div class="conflict__grid">
+
+          <!-- Sol: Bu Cihazdaki İlerleme -->
+          <div class="conflict__card">
+            <div>
+              <div class="conflict__card-head">
+                <span class="conflict__card-title">
+                  <HardDrive :size="15" :stroke-width="1.6" aria-hidden="true" />
+                  Bu Cihazdaki Kayıt
+                </span>
+                <span class="pill">Yerel</span>
+              </div>
+
+              <dl class="conflict__facts">
+                <div class="conflict__fact">
+                  <dt>Sayı:</dt>
+                  <dd class="data conflict__num">{{ formatNumber(conflict.localMeta.number) }}</dd>
+                </div>
+                <div class="conflict__fact">
+                  <dt>Oynama Süresi:</dt>
+                  <dd class="data">{{ formatTime(conflict.localMeta.playtime) }}</dd>
+                </div>
+                <div class="conflict__fact">
+                  <dt>Son Güncelleme:</dt>
+                  <dd class="data conflict__date">{{ formatDate(conflict.localMeta.clientTimestamp) }}</dd>
+                </div>
+              </dl>
             </div>
 
-            <div class="space-y-3 mt-4 text-xs">
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Sayı:</span>
-                <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatNumber(conflict.localMeta.number) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Oynama Süresi:</span>
-                <span class="font-mono tabular-nums text-slate-300">
-                  {{ formatTime(conflict.localMeta.playtime) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Son Güncelleme:</span>
-                <span class="font-mono tabular-nums text-slate-400 text-[11px]">
-                  {{ formatDate(conflict.localMeta.clientTimestamp) }}
-                </span>
-              </div>
-            </div>
+            <button type="button" class="btn btn--solid btn--lg btn--block" @click="choose('local')">
+              Bu Cihazdakini Sakla (Bulutu Güncelle)
+            </button>
           </div>
 
-          <button
-            @click="choose('local')"
-            class="btn-tactile mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            Bu Cihazdakini Sakla (Bulutu Güncelle)
-          </button>
-        </div>
+          <!-- Sağ: Buluttaki İlerleme -->
+          <div class="conflict__card" :class="{ 'conflict__card--ahead': isCloudAhead }">
+            <div>
+              <div class="conflict__card-head">
+                <span class="conflict__card-title">
+                  <Cloud :size="15" :stroke-width="1.6" aria-hidden="true" />
+                  Buluttaki Kayıt
+                </span>
+                <span v-if="isCloudAhead" class="pill pill--accent">
+                  <Sparkles :size="10" :stroke-width="1.8" aria-hidden="true" />
+                  Daha İleride
+                </span>
+                <span v-else class="pill">Bulut</span>
+              </div>
 
-        <!-- Sağ: Buluttaki İlerleme -->
-        <div
-          class="flex flex-col justify-between p-4 rounded-xl bg-[var(--ds-panel)] border transition-all"
-          :class="isCloudAhead ? 'ds-ramp-ready border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30' : 'border-slate-700/60'"
-        >
-          <div>
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span class="flex items-center gap-2 text-sm font-bold text-cyan-400">
-                <Cloud class="w-4 h-4 text-cyan-400" />
-                Buluttaki Kayıt
-              </span>
-              <span
-                v-if="isCloudAhead"
-                class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold flex items-center gap-1"
-              >
-                <Sparkles class="w-2.5 h-2.5" />
-                Daha İleride
-              </span>
-              <span v-else class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
-                Bulut
-              </span>
+              <dl class="conflict__facts">
+                <div class="conflict__fact">
+                  <dt>Sayı:</dt>
+                  <dd class="data conflict__num">{{ formatNumber(conflict.cloudMeta.number) }}</dd>
+                </div>
+                <div class="conflict__fact">
+                  <dt>Oynama Süresi:</dt>
+                  <dd class="data">{{ formatTime(conflict.cloudMeta.playtime) }}</dd>
+                </div>
+                <div class="conflict__fact">
+                  <dt>Son Güncelleme:</dt>
+                  <dd class="data conflict__date">
+                    {{ formatDate(toMillis(conflict.cloudPayload.updatedAt) ?? conflict.cloudMeta.clientTimestamp) }}
+                  </dd>
+                </div>
+              </dl>
             </div>
 
-            <div class="space-y-3 mt-4 text-xs">
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Sayı:</span>
-                <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatNumber(conflict.cloudMeta.number) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Oynama Süresi:</span>
-                <span class="font-mono tabular-nums text-slate-300">
-                  {{ formatTime(conflict.cloudMeta.playtime) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">Son Güncelleme:</span>
-                <span class="font-mono tabular-nums text-slate-400 text-[11px]">
-                  {{ formatDate(toMillis(conflict.cloudPayload.updatedAt) ?? conflict.cloudMeta.clientTimestamp) }}
-                </span>
-              </div>
-            </div>
+            <button type="button" class="btn btn--accent btn--lg btn--block" @click="choose('cloud')">
+              <RefreshCw :size="14" :stroke-width="1.6" aria-hidden="true" />
+              Buluttakini Yükle (Cihazı Güncelle)
+            </button>
           </div>
 
-          <button
-            @click="choose('cloud')"
-            class="btn-tactile ds-ramp-ready mt-6 w-full py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <RefreshCw class="w-3.5 h-3.5" />
-            Buluttakini Yükle (Cihazı Güncelle)
-          </button>
         </div>
 
-      </div>
-
-      <!-- Bilgilendirme Çubuğu -->
-      <div class="text-[11px] text-slate-500 text-center">
-        ⚠️ Seçtiğiniz ilerleme aktif hale gelecektir. Yanlışlıkla yapılan seçimlerde mevcut slot yedeği yerel çöp kutusunda tutulur.
+        <!-- Bilgilendirme -->
+        <p class="conflict__note">
+          Seçtiğiniz ilerleme aktif hale gelecektir. Yanlışlıkla yapılan seçimlerde mevcut slot yedeği yerel çöp kutusunda tutulur.
+        </p>
       </div>
 
     </div>
   </div>
 </template>
+
+<style scoped>
+.conflict__panel { width: min(680px, 100%); max-height: 90vh; }
+.conflict__head { justify-content: flex-start; align-items: flex-start; }
+.conflict__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--pn-amber-line);
+  border-radius: var(--pn-r);
+  background: var(--pn-amber-soft);
+  color: var(--pn-amber);
+}
+.conflict__sub { margin: 3px 0 0; font-size: 12px; line-height: 1.5; color: var(--pn-text-dim); }
+
+.conflict__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.conflict__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px;
+  border: 1px solid var(--pn-line-strong);
+  border-radius: var(--pn-r-lg);
+  background: var(--pn-s2);
+}
+.conflict__card--ahead { border-color: var(--pn-rung-line); }
+.conflict__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--pn-line);
+}
+.conflict__card-title { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--pn-text); }
+
+.conflict__facts { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 0; }
+.conflict__fact { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
+.conflict__fact dt { color: var(--pn-text-dim); }
+.conflict__fact dd { margin: 0; color: var(--pn-text); }
+.conflict__num { font-size: 14px; color: var(--pn-rung) !important; }
+.conflict__date { font-size: 11px; color: var(--pn-text-dim) !important; }
+
+.conflict__note { margin: 16px 0 0; font-size: 11px; line-height: 1.5; text-align: center; color: var(--pn-text-dim); }
+
+@media (max-width: 640px) {
+  .conflict__grid { grid-template-columns: 1fr; }
+}
+</style>

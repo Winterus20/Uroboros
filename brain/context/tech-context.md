@@ -6,7 +6,7 @@
 - **Tip Sistemi:** TypeScript 5.7+ (Strict mode, noImplicitAny, `any` yasak)
 - **State Yönetimi:** Pinia 3.x
 - **Büyük Sayı Kütüphanesi:** `break_eternity.js` (1e308 ötesi; tetrasyon `10^^1e308`'e kadar)
-- **Stil & Tasarım:** Tailwind CSS 3.4 + CSS değişkenleri — **"Saf Sayı"** (ADR-0078)
+- **Stil & Tasarım:** Tailwind CSS 3.4 + CSS değişkenleri — **"Laboratuvar"** (ADR-0085; önceki "Saf Sayı" ADR-0078)
 - **Tipografi:** Space Grotesk (hero + UI) · Space Mono (veri); `tabular-nums` zorunlu
 - **İkon Seti:** `lucide-vue-next`
 - **Sıkıştırma:** `lz-string` (v1.5)

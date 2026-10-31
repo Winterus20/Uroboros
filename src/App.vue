@@ -5,15 +5,11 @@ import { useAuthStore } from './stores/auth'
 import { SaveSystem } from './core/save'
 import { gameLoop } from './core/game-loop'
 import type { MotionMode } from './models/settings'
-import AlgorithmicSwirl from './components/AlgorithmicSwirl.vue'
-import TickerBar from './components/TickerBar.vue'
+import { DEFAULT_SECTION_ID, sectionById } from './ui/sections'
+import TopBar from './components/shell/TopBar.vue'
+import NavRail from './components/shell/NavRail.vue'
+import StatusBar from './components/shell/StatusBar.vue'
 import HeroNumber from './components/HeroNumber.vue'
-import TapButton from './components/TapButton.vue'
-import TelemetryLine from './components/TelemetryLine.vue'
-import GoalBar from './components/GoalBar.vue'
-import ChainList from './components/ChainList.vue'
-import ChallengePanel from './components/ChallengePanel.vue'
-import StatsPanel from './components/StatsPanel.vue'
 import RungScene from './components/RungScene.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import AuthModal from './components/AuthModal.vue'
@@ -21,26 +17,34 @@ import CloudConflictModal from './components/CloudConflictModal.vue'
 import OfflineModal from './components/OfflineModal.vue'
 import GateModal from './components/GateModal.vue'
 
-type Tab = 'number' | 'challenges' | 'stats' | 'settings'
-
 const store = useGameStore()
 const auth = useAuthStore()
-const tab = ref<Exclude<Tab, 'settings'>>('number')
+
+/**
+ * Aktif bölüm (ADR-0085): kimlik `ui/sections.ts` kayıt defterinden çözülür. Kilitli ya da
+ * bilinmeyen kimlik varsayılan bölüme düşer — menü ve sayfa aynı kaynaktan okur.
+ */
+const activeId = ref(DEFAULT_SECTION_ID)
+const activeSection = computed(() => sectionById(activeId.value, store))
 const showSettings = ref(false)
+const mainEl = ref<HTMLElement | null>(null)
 
-const TABS: Tab[] = ['number', 'challenges', 'stats', 'settings']
-
-/** Dock: aktif sekme alt çizgiyle. Ayarlar bir sekme gibi davranır (modal açar). */
-const activeTab = computed<Tab>(() => (showSettings.value ? 'settings' : tab.value))
-
-function selectTab(next: Tab): void {
-  if (next === 'settings') {
-    showSettings.value = !showSettings.value
-    return
-  }
-  showSettings.value = false
-  tab.value = next
+function selectSection(id: string): void {
+  if (id === activeId.value) return
+  activeId.value = id
+  // Yeni sayfa baştan okunur: önceki sayfanın kaydırma konumu taşınmaz.
+  if (mainEl.value) mainEl.value.scrollTop = 0
 }
+
+/**
+ * Vurgu = basamak rengi (ADR-0085): tek değişken kök elemana yazılır; `style.css` yumuşak/çizgi
+ * türevlerini `color-mix` ile ondan üretir. Yeni basamak tüm arayüzü bu satırla yeniden boyar.
+ */
+watch(
+  () => store.rungInfo.color,
+  (color) => document.documentElement.style.setProperty('--pn-rung', color),
+  { immediate: true }
+)
 
 /** Hareket kapısı (ADR-0058): ayar tek yerden kök elementi mühürler. */
 function syncMotionGate(mode: MotionMode): void {
@@ -102,169 +106,102 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app">
-    <!-- G2/G12: oyunun tek ortamı swirl; basamak rengini taşıyan tek yüzey. -->
-    <div class="app__swirl" aria-hidden="true">
-      <AlgorithmicSwirl />
-    </div>
+  <!--
+    Kabuk (ADR-0085): üst çubuk 52 · sol menü 232 · ana alan · durum çubuğu 30.
+    ≤ 900 px: menü alt sekme çubuğu olur, tek sütun. Sağ panel YOK (sahip kararı).
+  -->
+  <div class="shell">
+    <TopBar class="shell__top" @settings="showSettings = !showSettings" />
 
-    <div class="app__inner">
-      <TickerBar />
+    <NavRail class="shell__nav" :active-id="activeSection.id" @select="selectSection" />
 
-      <!-- Hedef satırı sayının ÜSTÜNDE ve kalıcı (contract §6): sekme değişse de yerinde kalır. -->
-      <GoalBar />
+    <main ref="mainEl" class="shell__main">
+      <div class="shell__content">
+        <HeroNumber v-if="activeSection.hero !== false" />
+        <component :is="activeSection.page" v-if="activeSection.page" />
+      </div>
+    </main>
 
-      <main class="stage">
-        <HeroNumber />
-
-        <TapButton />
-
-        <TelemetryLine />
-
-        <nav class="dock" aria-label="Sections">
-          <button
-            v-for="item in TABS"
-            :key="item"
-            type="button"
-            class="dock__item"
-            :class="{ 'dock__item--active': activeTab === item }"
-            :aria-current="activeTab === item ? 'page' : undefined"
-            @click="selectTab(item)"
-          >
-            {{ item }}
-          </button>
-        </nav>
-
-        <section class="panel">
-          <ChainList v-if="tab === 'number'" />
-          <ChallengePanel v-else-if="tab === 'challenges'" />
-          <StatsPanel v-else />
-        </section>
-      </main>
-
-      <footer class="foot data">
-        <span>{{ store.taps }} presses</span>
-      </footer>
-    </div>
-
-    <!-- G8: basamak geçişi motoru (mandallı, 2.500 ms). -->
-    <RungScene />
-
-    <!--
-      Kapı (contract §6): 1.79e308'de büyüme durur ve tek bir an açılır.
-      Katman sırası: ayarlar (40) ve çevrimdışı (45) kapının ALTINDA kalır — oyuncu
-      kapıyı görmeden ayar/rapor penceresi onu kesmez. Bulut katmanları (55/60) üstte
-      kalır: giriş ve çakışma çözümü sistem yüzeyleridir, sayıyı kapatmaz.
-    -->
-    <GateModal v-if="store.gateOpen" />
-
-    <SettingsModal v-if="showSettings" @close="showSettings = false" />
-
-    <!--
-      Bulut kayıt katmanı: hazır bileşenler kendi görünümlerini kurar.
-      Sarmalayıcı z-index'i buradan verilir — ayarlar (40) ve çevrimdışı (45)
-      katmanlarının ÜSTÜNDE kalmalı, aksi hâlde giriş formu sayfanın arkasına düşer.
-    -->
-    <div v-if="auth.showAuthModal" class="modal-layer">
-      <AuthModal @close="auth.closeAuthModal()" />
-    </div>
-    <div v-if="auth.showConflictModal && auth.conflictData" class="modal-layer modal-layer--conflict">
-      <CloudConflictModal />
-    </div>
-
-    <OfflineModal />
+    <StatusBar class="shell__status" />
   </div>
+
+  <!-- G8: basamak geçişi motoru (mandallı, 2.500 ms). -->
+  <RungScene />
+
+  <!--
+    Kapı (contract §6): 1.79e308'de büyüme durur ve tek bir an açılır.
+    Katman sırası: sahne (30) · ayarlar (40) · çevrimdışı (45) kapının (50) ALTINDA kalır —
+    oyuncu kapıyı görmeden ayar/rapor penceresi onu kesmez. Bulut katmanları (55/60) üstte
+    kalır: giriş ve çakışma çözümü sistem yüzeyleridir, sayıyı kapatmaz.
+  -->
+  <GateModal v-if="store.gateOpen" />
+
+  <SettingsModal v-if="showSettings" @close="showSettings = false" />
+
+  <!--
+    Bulut kayıt katmanı: sarmalayıcı z-index'i buradan verilir — ayarlar (40) ve çevrimdışı (45)
+    katmanlarının ÜSTÜNDE kalmalı, aksi hâlde giriş formu sayfanın arkasına düşer.
+  -->
+  <div v-if="auth.showAuthModal" class="modal-layer">
+    <AuthModal @close="auth.closeAuthModal()" />
+  </div>
+  <div v-if="auth.showConflictModal && auth.conflictData" class="modal-layer modal-layer--conflict">
+    <CloudConflictModal />
+  </div>
+
+  <OfflineModal />
 </template>
 
 <style scoped>
-.app {
-  position: relative;
-  min-height: 100vh;
+.shell {
+  display: grid;
+  grid-template-columns: var(--shell-nav) minmax(0, 1fr);
+  grid-template-rows: var(--shell-top) minmax(0, 1fr) var(--shell-status);
+  grid-template-areas:
+    'top top'
+    'nav main'
+    'status status';
+  height: 100vh;
+  height: 100dvh;
 }
 
-/* Swirl sarmalayıcı: yalnız ölçek — renk/isim yok. */
-.app__swirl {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.shell__top { grid-area: top; }
+.shell__nav { grid-area: nav; }
+.shell__status { grid-area: status; }
+
+.shell__main {
+  grid-area: main;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 28px 48px 40px;
+  scrollbar-gutter: stable;
 }
 
-.app__inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.stage {
-  flex: 1;
-  width: 100%;
-  max-width: 1000px;
+.shell__content {
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding-bottom: 24px;
-}
-
-/* Dock: metin sekmeler, aktif olan alt çizgiyle. İkon-only sekme yok. */
-.dock {
-  display: flex;
-  justify-content: center;
-  gap: 26px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--pn-hairline);
-}
-.dock__item {
-  appearance: none;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: var(--pn-text-dim);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  padding: 10px 0 9px;
-  margin-bottom: -1px;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease;
-}
-.dock__item:hover { color: var(--pn-text); }
-.dock__item--active {
-  color: var(--pn-text);
-  border-bottom-color: var(--pn-hairline-strong);
-}
-
-/*
- * Menü zemini: liste/mücadele/istatistik sütununu swirl'den ayırır. Kart değil — ayrı
- * yüzey rengi, gölge, blur, köşe yok (§2.1); yalnız tuval rengi (`--pn-bg`) swirl'ü
- * örter ve sütun kenarı 1px hairline ile biter. Swirl hero alanında ve sütunun
- * iki yanında yaşamaya devam eder.
- */
-.panel {
-  max-width: 720px;
-  margin: 0 auto;
-  padding-top: 2px;
-  background: var(--pn-bg);
-  border: 1px solid var(--pn-hairline);
-  border-top: 0;
 }
 
 /* Bulut katmanları: modal bileşenlerinin kendi kökleri position:fixed; sıra buradan. */
 .modal-layer { position: fixed; inset: 0; z-index: 60; }
 .modal-layer--conflict { z-index: 55; }
 
-.foot {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px 20px 26px;
-  font-size: 11px;
-  color: var(--pn-text-dim);
+@media (max-width: 1180px) {
+  .shell { --shell-nav: 200px; }
+  .shell__main { padding: 24px 28px 36px; }
 }
-.foot__dot { opacity: 0.55; }
 
-@media (max-width: 560px) {
-  .dock { gap: 20px; }
+/* ≤ 900 px: tek sütun; menü ekranın dibinde sekme çubuğu, ticker onun üstünde. */
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--shell-top) minmax(0, 1fr) var(--shell-status) auto;
+    grid-template-areas:
+      'top'
+      'main'
+      'status'
+      'nav';
+  }
+  .shell__main { padding: 18px 16px 28px; }
 }
 </style>

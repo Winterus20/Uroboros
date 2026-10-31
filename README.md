@@ -91,7 +91,7 @@ ve kapı `Prestige` eylemlerinin kısayolu yoktur; düğmeyle çalışır.
 | Derleyici | **Vite 6** |
 | Dil | **TypeScript 5.7** (`strict: true`, `any` yasak) |
 | Sayı motoru | **break_eternity.js** — NaN kontrolü küçük harfle: `dec.isNan()` |
-| Stil | **Tailwind CSS 3.4** + CSS değişkenleri — "Saf Sayı" (ADR-0078) |
+| Stil | **Tailwind CSS 3.4** + CSS değişkenleri — "Laboratuvar" (ADR-0085) |
 | Tipografi | Space Grotesk (hero + UI) · Space Mono (veri) |
 | Kayıt | **LZ-String** + LocalStorage, 3 slot + karantina, şema **v23** (asgari **v20**) |
 | Bulut | **Firebase** Auth + Firestore (isteğe bağlı; anahtarsız oyun tam çalışır) |
@@ -116,7 +116,7 @@ Incremental/
     ├── models/        # Tip tanımları
     ├── components/    # HeroNumber, ChainList, TapButton, TickerBar,
     │                  # GoalBar, ChallengePanel, GateModal, …
-    └── App.vue        # Tek ekran: ticker · hedef satırı · sayı · +1 · zincir · dock
+    └── App.vue        # Kabuk: üst çubuk (çipler · hedef) · sol menü · sayfa · durum çubuğu (ticker)
 ```
 
 ## Kayıt

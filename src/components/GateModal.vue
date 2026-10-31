@@ -8,7 +8,7 @@ import { rungDef } from '../game/number/rungs'
  * Kapı (contract §6): sayı 1.79e308'e ulaştığında büyüme durur ve tek bir an açılır.
  *
  * Kural: burada kutlama yok — sayı, tek bir satır bilgi ve tek bir eylem.
- * Zemin tek renk (--pn-bg), kart / blur / yuvarlak köşe / gölge yok (ADR-0078).
+ * Zemin tek renk (--pn-bg), blur / gölge / gradyan yok (ADR-0085); tek panel, 8 px köşe.
  * Amber rezerve renk: prestij/milestone (sözleşme §2.3).
  */
 const store = useGameStore()
@@ -72,32 +72,37 @@ function prestige(): void {
 .gate__inner {
   width: 100%;
   max-width: 520px;
-  padding: 26px 0 28px;
+  padding: 30px 28px 32px;
   text-align: center;
-  border-top: 1px solid var(--pn-hairline);
-  border-bottom: 1px solid var(--pn-hairline);
+  border: 1px solid var(--pn-amber-line);
+  border-radius: var(--pn-r-lg);
+  background: var(--pn-s1);
 }
 
-/* Mikro etiket: mono, seyrek harf aralığı; renk taşımaz. */
+/* Mikro etiket: amber hap — prestij anı (§2.3). */
 .gate__kicker {
+  display: inline-block;
   margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  padding: 3px 8px;
+  border: 1px solid var(--pn-amber-line);
+  border-radius: var(--pn-r-sm);
+  background: var(--pn-amber-soft);
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--pn-text-faint);
+  color: var(--pn-amber);
 }
 
 /* Sayı ekranın en büyük nesnesidir (G1); hero 300 ağırlık kuralı burada da geçerli. */
 .gate__number {
-  margin: 14px 0 0;
+  margin: 18px 0 0;
   font-family: var(--font-hero);
   font-weight: 300;
   font-size: clamp(46px, 11vw, 92px);
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
   color: var(--pn-amber);
-  text-shadow: 0 0 40px color-mix(in srgb, var(--pn-amber) 22%, transparent);
 }
 
 .gate__line {
@@ -111,32 +116,31 @@ function prestige(): void {
   margin: 6px 0 0;
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: var(--pn-text-faint);
+  color: var(--pn-text-dim);
 }
 
-/* Tek eylem: kutu yok, 1px çerçeve (G10 odak dili aynı kalır). */
+/* Tek eylem: amber birincil düğme (prestij). */
 .gate__action {
   appearance: none;
   margin-top: 26px;
-  border: 1px solid var(--pn-hairline-strong);
-  border-radius: 0;
-  background: transparent;
-  padding: 11px 30px;
+  height: 40px;
+  padding: 0 30px;
+  border: 1px solid var(--pn-amber-line);
+  border-radius: var(--pn-r);
+  background: var(--pn-amber-soft);
   font-size: 13px;
   letter-spacing: 0.06em;
   color: var(--pn-text);
   cursor: pointer;
-  transition: border-color 120ms ease, color 120ms ease;
+  transition: color 120ms ease, background-color 120ms ease;
 }
-.gate__action:hover {
-  border-color: var(--pn-amber);
-  color: var(--pn-amber);
-}
+.gate__action:hover { color: var(--pn-amber); }
+.gate__action:active { transform: translateY(1px); }
 
 @media (max-width: 560px) {
-  .gate { padding: 24px; }
-  .gate__inner { padding: 22px 0 24px; }
+  .gate { padding: 20px; }
+  .gate__inner { padding: 24px 18px 26px; }
   .gate__number { font-size: clamp(40px, 13vw, 64px); }
-  .gate__action { margin-top: 22px; padding: 10px 24px; font-size: 12px; }
+  .gate__action { margin-top: 22px; padding: 0 24px; font-size: 12px; }
 }
 </style>

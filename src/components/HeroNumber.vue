@@ -1,120 +1,176 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { RUNGS } from '../game/number/rungs'
+import TapButton from './TapButton.vue'
 
+/**
+ * Hero başlığı (ADR-0085): basamak hapı + adı · SAYI · oran · "sıradaki" satırı; sağda `+1`.
+ *
+ * G9: yapısal dizgi — taban büyük / kuyruk küçük, auto-fit YOK (punto dizeye göre küçülmez;
+ * yalnız ekran genişliği eşiğinde sabit bir ölçeğe iner).
+ * §8.4: basamak bilgisi renkle değil, her zaman yazıyla da verilir (hap + ad).
+ */
 const store = useGameStore()
 const parts = computed(() => store.heroParts)
 const rung = computed(() => store.rungInfo)
 const rungTotal = RUNGS.length
+
+/**
+ * "Sıradaki" satırı — yalnız store'un gerçek verisinden türer (V4: sayısal etiket yalan söylemez).
+ * Aktif mücadelede o mücadelenin kilitli hedefi; değilse sıradaki mücadele ve açılma eşiği;
+ * hepsi bittiyse kapı.
+ */
+interface NextLine {
+  tag: string
+  title: string
+  detail: string
+}
+
+const nextLine = computed<NextLine | null>(() => {
+  const active = store.activeChallengeRow
+  if (active) {
+    return { tag: 'Active', title: active.id + ' · ' + active.ringName, detail: 'goal ' + active.goalText }
+  }
+  const label = store.nextChallengeLabel
+  if (label === 'Gate') return { tag: 'Next', title: 'Gate', detail: store.goalText }
+  const row = store.challengeRows.find((item) => item.id === label)
+  if (!row) return null
+  const detail = row.status === 'available' ? 'open now' : 'opens at ' + row.unlockText
+  return { tag: 'Next', title: row.id + ' · ' + row.ringName, detail }
+})
+
+/**
+ * Sayı vuruşu: basış ya da alım olduğunda 160 ms'lik küçük bir ölçek. Sınıf kaldırılıp
+ * yeniden eklenir ki art arda basışlarda animasyon baştan başlasın. Hareket kapısı CSS'te.
+ */
+const numberEl = ref<HTMLElement | null>(null)
+
+function pop(): void {
+  const el = numberEl.value
+  if (!el) return
+  el.classList.remove('hero__number--pop')
+  void el.offsetWidth
+  el.classList.add('hero__number--pop')
+}
+
+watch(
+  () => [store.taps, store.totalBuys] as const,
+  ([taps, buys], [prevTaps, prevBuys]) => {
+    // Kayıt yüklemesi sıçraması vuruş değildir: yalnız küçük artışlar.
+    const tapped = taps === prevTaps + 1
+    const bought = buys > prevBuys && buys - prevBuys < 10000
+    if (tapped || bought) pop()
+  }
+)
 </script>
 
 <template>
-  <!--
-    G9: yapısal dizgi — taban büyük / kuyruk küçük, auto-fit YOK.
-    G13: 390px'te uzun notasyon iki satıra iner, punto küçültülmez.
-    §8.4: basamak bilgisi renkle değil, her zaman yazıyla da verilir (etiket + ad).
-  -->
-  <section class="hero">
-    <div class="hero__top">
-      <p class="hero__label data">{{ rung.label }}</p>
+  <section class="hero" aria-label="Number">
+    <div class="hero__main">
+      <p class="hero__kicker">
+        <span class="pill pill--accent">RUNG {{ rung.index }} / {{ rungTotal }}</span>
+        <span class="hero__name">{{ rung.name }}</span>
+      </p>
+
+      <div ref="numberEl" class="hero__number" aria-live="off">
+        <span class="hero__base">{{ parts.base }}</span>
+        <span v-if="parts.tail" class="hero__tail">{{ parts.tail }}</span>
+      </div>
+
+      <p class="hero__rate data"><b>+{{ store.perSecondText }}</b> per second</p>
+
+      <p v-if="nextLine" class="hero__next">
+        <span>{{ nextLine.tag }}</span>
+        <b class="hero__next-title">{{ nextLine.title }}</b>
+        <span class="hero__sep" aria-hidden="true">·</span>
+        <span class="data">{{ nextLine.detail }}</span>
+      </p>
     </div>
 
-    <div class="hero__number" :style="{ color: rung.color }">
-      <span class="hero__base">{{ parts.base }}</span>
-      <span v-if="parts.tail" class="hero__tail">{{ parts.tail }}</span>
-    </div>
-
-    <p class="hero__name">
-      <span class="hero__rung data">rung {{ rung.index }} / {{ rungTotal }}</span>
-      <span class="hero__name-sep" aria-hidden="true">·</span>
-      <span class="hero__name-text">{{ rung.name }}</span>
-    </p>
+    <TapButton class="hero__tap" />
   </section>
 </template>
 
 <style scoped>
 .hero {
-  --hero-base: clamp(56px, 12vw, 112px);
-  --hero-tail: calc(var(--hero-base) * 0.34);
-  position: relative;
-  padding: 42px 20px 6px;
-  text-align: center;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--pn-line);
 }
 
-.hero__top {
-  position: relative;
+.hero__main { flex: 1; min-width: 0; }
+
+.hero__kicker {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 16px;
-}
-
-/* Notasyon mikro etiketi — KÜÇÜK HARF kalır (text-transform yok): "1.79e308". */
-.hero__label {
+  flex-wrap: wrap;
+  gap: 6px 10px;
   margin: 0;
-  font-family: var(--font-data);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
   color: var(--pn-text-dim);
 }
 
+/* Sayı: 300 ağırlık sabit (§3.2), basamak renginde, tabular. Taban + küçük kuyruk (§4). */
 .hero__number {
   display: flex;
   align-items: baseline;
-  justify-content: center;
-  gap: 0.04em;
+  flex-wrap: wrap;
   margin-top: 10px;
   font-family: var(--font-hero);
   font-weight: 300;
+  font-size: 104px;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--pn-rung);
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  text-shadow: 0 0 44px color-mix(in srgb, currentColor 32%, transparent);
+  transform-origin: left bottom;
   transition: color 700ms ease;
 }
-
-.hero__base {
-  display: block;
-  font-size: var(--hero-base);
-}
-
+.hero__number--pop { animation: pn-pop 160ms ease-out; }
 .hero__tail {
-  display: block;
-  font-size: var(--hero-tail);
-  line-height: 1;
-  opacity: 0.88;
+  margin-left: 4px;
+  font-size: 38px;
+  letter-spacing: -0.01em;
+  opacity: 0.9;
 }
 
-.hero__name {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0 8px;
-  margin: 14px 0 0;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.5;
+.hero__rate {
+  margin: 10px 0 0;
+  font-size: 14px;
   color: var(--pn-text-dim);
 }
-.hero__rung { font-size: 11px; letter-spacing: 0.1em; color: var(--pn-text-dim); }
-.hero__name-sep { opacity: 0.55; }
-.hero__name-text { color: var(--pn-text-dim); }
+.hero__rate b { font-weight: 400; color: var(--pn-text); }
 
-/* G13 — mobil: taban üstte, notasyon altta; punto küçültülmez. */
+.hero__next {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--pn-text-dim);
+}
+.hero__next-title { font-weight: 400; color: var(--pn-text); }
+.hero__sep { color: var(--pn-text-faint); }
+
+.hero__tap { flex: none; }
+
+/* ≤ 900 px: sabit daha küçük ölçek (auto-fit değil); taban/kuyruk yapısı aynı. */
+@media (max-width: 900px) {
+  .hero { gap: 16px; padding-bottom: 20px; }
+  .hero__number { font-size: 72px; }
+  .hero__tail { font-size: 27px; }
+}
+
+/* Dar telefon: +1 sayının altına iner, satır boyunca sağa yaslanır. */
 @media (max-width: 560px) {
-  .hero {
-    padding: 32px 20px 4px;
-  }
-  .hero__number {
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-  .hero__base { line-height: 0.9; }
-  .hero__tail { line-height: 1.1; }
-  .hero__name { font-size: 12px; margin-top: 12px; }
+  .hero { flex-direction: column; align-items: stretch; }
+  .hero__number { font-size: 60px; }
+  .hero__tail { font-size: 22px; }
+  .hero__tap { flex-direction: row-reverse; justify-content: flex-start; align-items: center; gap: 12px; }
 }
 </style>

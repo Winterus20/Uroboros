@@ -3,7 +3,7 @@ import type { Decimal } from '../../core/math'
 /**
  * 11 basamak (çapa) — S1 "çıplak sayı": her eşiğin yalnızca bir ADI var.
  * Renkler ADR-0078 §G5 formülünden ÖLÇÜLMÜŞ hex'lerdir (kontrast 5,4:1–13,4:1).
- * Renk yalnız iki yerde yaşar: hero sayı + `AlgorithmicSwirl` (G5 sınırı).
+ * Renk arayüzün vurgu rengidir (ADR-0085): App.vue kök elemana `--pn-rung` olarak yazar.
  *
  * 8 ve 11. basamak adları hâlâ tasarım bekliyor (S1 triyajı); 1. basamak kilitli.
  */

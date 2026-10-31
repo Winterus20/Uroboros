@@ -27,7 +27,7 @@ Bu belge, **Hold That Number** projesinde çalışacak tüm yapay zeka kodlama a
 | **Paketleyici** | **Vite 6** | Hızlı derleme, katı TypeScript kontrolleri |
 | **Dil** | **TypeScript 5.7+** | `strict: true`. Kesinlikle `any` tipi kullanılmamalı. |
 | **Sayı Motoru** | **`break_eternity.js`** | **ÖNEMLİ:** `isNaN` yerine küçük harfle **`isNan()`** — `dec.isNan() \|\| Number.isNaN(dec.mag)`. Tip tanımı `plus/minus/times` ister; `add/sub/mul` runtime'da var ama tipte yok. |
-| **Stil** | **Tailwind CSS 3.4** + CSS değişkenleri | "Saf Sayı" (ADR-0078): kart/blur/yuvarlak köşe/gölge YOK; 1px hairline + tipografi + boşluk |
+| **Stil** | **Tailwind CSS 3.4** + CSS değişkenleri | "Laboratuvar" (ADR-0085): kabuk (üst çubuk · sol menü · ana alan · durum çubuğu), `s1–s3` yüzeyler, 1px çizgi, 6–8 px köşe; gölge/blur/gradyan YOK; vurgu = basamak rengi (`--pn-rung`) |
 | **Tipografi** | **Space Grotesk** (hero+UI) · **Space Mono** (veri) | `tabular-nums` zorunlu; hero asla `font-bold` (300 sabit) |
 | **Kayıt Sistemi** | **LZ-String + LocalStorage** | `SAVE_VERSION = 23`, `MIN_SUPPORTED_SAVE_VERSION = 20`; slot + karantina + bulut (Firestore) |
 | **Ses** | **Web Audio API** | Harici ses dosyası yok; osilatör sentezi |
@@ -40,7 +40,7 @@ Her agent çalışmaya başlamadan önce ve işi bitirdiğinde repo içindeki **
 
 1. **İşe Başlarken (Context Hydration):**
    - [`brain/context/project-brief.md`](brain/context/project-brief.md) ve [`brain/context/tech-context.md`](brain/context/tech-context.md) dosyalarını oku.
-   - **Görsel/stil işlerinde ek olarak [`brain/context/visual-language.md`](brain/context/visual-language.md) sözleşmesini oku** ("Saf Sayı", ADR-0078).
+   - **Görsel/stil işlerinde ek olarak [`brain/context/visual-language.md`](brain/context/visual-language.md) sözleşmesini oku** ("Laboratuvar", ADR-0085).
    - **Metin/ses işlerinde [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) sözleşmesini oku.**
    - [`brain/tasks/todo.md`](brain/tasks/todo.md) üzerindeki sıradaki görevi incele ve [`brain/tasks/in-progress.md`](brain/tasks/in-progress.md) dosyasına taşı.
 2. **Kritik Kararlar Alındığında (ADR):** Yeni kütüphane, temel mimari değişikliği veya yeni ekonomi kuralı → [`brain/decisions/`](brain/decisions/) altına ADR aç.
@@ -65,8 +65,9 @@ Incremental/
 │   └── scratchpad/            # Anlık ölçüm/karalama alanı
 └── src/
     ├── main.ts                # Uygulama giriş noktası (Vue + Pinia)
-    ├── App.vue                # Tek ekran: ticker · hero sayı · +1 · zincir · dock
-    ├── style.css              # "Saf Sayı" tokenları (renk, tipografi, hareket kapısı)
+    ├── App.vue                # Kabuk: üst çubuk · sol menü · aktif sayfa · durum çubuğu (ticker)
+    ├── style.css              # "Laboratuvar" tokenları + ortak sınıflar (.dt, .btn, .pill, .modal …)
+    ├── ui/                    # Kayıt defterleri: sections.ts (menü/sayfalar) · resources.ts (çipler)
     ├── core/
     │   ├── math.ts            # break_eternity Decimal sarmalayıcısı ve sabitler
     │   ├── format.ts          # Notasyon biçimleri + hero dizgi parçaları
@@ -83,7 +84,7 @@ Incremental/
     │   ├── game.ts            # Merkezi Pinia store (state, getters, actions)
     │   └── auth.ts            # Oturum + bulut senkronizasyonu
     ├── models/                # Tip tanımları (number, save, settings, auth)
-    └── components/            # HeroNumber, ChainList, ChallengePanel, GoalBar, GateModal, …
+    └── components/            # shell/ (TopBar, NavRail, StatusBar) · ui/ (yapı taşları) · sayfalar + modallar
 ```
 
 ---
