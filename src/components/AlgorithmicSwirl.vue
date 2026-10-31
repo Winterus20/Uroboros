@@ -25,13 +25,14 @@ const isSupported = ref(true)
  * hesaplamaz; zemin (`--pn-bg`) + tavanlı tint × [0,1] gölge üretir. Tint, JS'te WCAG
  * göreli parlaklığına göre çözülür — böylece tavan basamak renginden bağımsız tutar.
  *
- * Tavan L ≤ 0.016 (tüm ekran, tek kural): en parlak swirl pikseli üzerinde
- * `--pn-text-dim` ≥ 4,6:1, 1. basamak hero ≥ 10:1, `--pn-text` ≥ 14:1.
+ * Tavan L ≤ 0.03 (tüm ekran, tek kural; ADR-0084 eki): en parlak swirl pikseli üzerinde
+ * `--pn-text-dim` ≥ 3,8:1, `--pn-text` ≥ 11,8:1. Menü sütunu (App.vue `.panel`) düz zemin
+ * üstündedir; bu tepe değerleri yalnız hero çevresindeki metne dokunur.
  */
 const SWIRL_BG: [number, number, number] = [6 / 255, 6 / 255, 8 / 255] // --pn-bg
-const SWIRL_MAX_LUMINANCE = 0.016
+const SWIRL_MAX_LUMINANCE = 0.03
 /** Basamak renginin korunan doygunluk payı (1 = tam neon, 0 = gri). */
-const SWIRL_SATURATION = 0.55
+const SWIRL_SATURATION = 0.8
 
 // Shader Uniform Lokasyonları
 interface UniformLocations {

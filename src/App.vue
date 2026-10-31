@@ -235,7 +235,20 @@ onUnmounted(() => {
   border-bottom-color: var(--pn-hairline-strong);
 }
 
-.panel { padding-top: 2px; }
+/*
+ * Menü zemini: liste/mücadele/istatistik sütununu swirl'den ayırır. Kart değil — ayrı
+ * yüzey rengi, gölge, blur, köşe yok (§2.1); yalnız tuval rengi (`--pn-bg`) swirl'ü
+ * örter ve sütun kenarı 1px hairline ile biter. Swirl hero alanında ve sütunun
+ * iki yanında yaşamaya devam eder.
+ */
+.panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 2px;
+  background: var(--pn-bg);
+  border: 1px solid var(--pn-hairline);
+  border-top: 0;
+}
 
 /* Bulut katmanları: modal bileşenlerinin kendi kökleri position:fixed; sıra buradan. */
 .modal-layer { position: fixed; inset: 0; z-index: 60; }

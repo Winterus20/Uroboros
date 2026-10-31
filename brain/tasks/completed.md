@@ -18,6 +18,9 @@
 - **Swirl (ADR-0084):** `AlgorithmicSwirl` son rengi shader'da üretir, en parlak piksel
   L ≤ 0,016 (11 basamağın hepsinde); piksel kuantizasyonu, opaklık/blend ve gradyan fallback
   kaldırıldı. `--pn-text-dim` en parlak girdap üstünde 1,69:1 → 4,62:1. Sözleşme §2.4 eklendi.
+- **ADR-0084 eki (sahip):** tavan 0,016 swirl'ü görünmez yapıyordu → L ≤ 0,03, doygunluk %80
+  (`dim` girdap tepesinde 3,8:1). Menü sütunu (`App.vue` `.panel`, ≤ 720 px) düz `--pn-bg` +
+  1px hairline kenar alır; menü metni artık swirl üstüne düşmez.
 - **Testler:** `src/stores/game.test.ts` (11 yeni test).
 
 ### Açık kalanlar

@@ -100,8 +100,9 @@ Kural ölçülebilir olsun diye renk shader'da son hâliyle üretilir: `--pn-bg 
 
 | Kural | Değer | Gerekçe |
 | :--- | :--- | :--- |
-| En parlak swirl pikselinin göreli parlaklığı | **L ≤ 0,016** (tüm ekran, tek kural) | `--pn-text-dim` ≥ **4,6:1** · `--pn-text` ≥ 14,4:1 · 1. basamak hero ≥ 10,3:1 |
-| Tint | basamak rengi, doygunluk **%55**'e çekilmiş | basamak kimliği kalır, neon kalmaz |
+| En parlak swirl pikselinin göreli parlaklığı | **L ≤ 0,03** (tüm ekran, tek kural) | `--pn-text-dim` ≥ **3,8:1** · `--pn-text` ≥ 11,8:1 — yalnız girdap tepelerinde; çoğu piksel çok daha koyu |
+| Tint | basamak rengi, doygunluk **%80**'e çekilmiş | basamak kimliği okunur, neon kalmaz |
+| Menü zemini | `.panel` (liste · mücadele · istatistik sütunu, ≤ 720 px) düz `--pn-bg` + 1px `--pn-hairline` kenar | menü metni hiçbir zaman swirl üstüne düşmez; kart değil — ayrı yüzey rengi, gölge, köşe yok |
 | Tint ölçeği | JS'te WCAG parlaklığına göre ikiye bölmeyle çözülür | tavan 11 basamağın hepsinde aynı kodla tutar |
 | Basamak geçişi | iki tavanlı tint arasında lineer karışım | sRGB→lineer konveks: karışım tavanı aşamaz |
 | Çözünürlük | CSS pikselinin 0,5× (dengeli) / 0,75× (yüksek), viewport ile **aynı en-boy oranı**, bilinear büyütme | piksel kuantizasyonu + `image-rendering: pixelated` Balatro mirasıydı (piksel font `G4`, retro/CRT ADR-0069 ile ölü) |
@@ -250,3 +251,4 @@ değişir. Kararlar `G#` kimlikleriyle ADR-0078'de tutulur; kimlikler yeniden nu
 | 2026-10-23 | Tema pivotu (ADR-0077): oburluk teması silindi; görsel dil ertelendi (`A1`) |
 | **2026-10-23** | **Bu belge baştan yazıldı: "Saf Sayı" (ADR-0078, `G1`–`G12`).** ADR-0060 ve ADR-0066 iptal |
 | 2026-10-31 | §2.4 swirl parlaklık tavanı (L ≤ 0,016); piksel kuantizasyonu ve fallback gradyanı kaldırıldı (ADR-0084) |
+| 2026-10-31 | ADR-0084 eki (sahip): tavan 0,016 → 0,03, doygunluk %55 → %80 (swirl görünmez olmuştu); menü sütununa düz `--pn-bg` zemin |

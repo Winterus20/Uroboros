@@ -70,3 +70,18 @@ satırlarının (`Notch`, `0 · 0/s`, `10 more Fingers`) arkasından geçerken m
   1,9:1 / 1,3:1. Bunlar pasif tonlardır; bilgi taşıyan metin bunlara düşürülmez (§2.4 Sınırlar).
 - `style.css`'teki kullanılmayan `pn-swirl-breath` (`filter: brightness(1.32)`) bir yere bağlanırsa
   tavanı deler — bağlanmadan önce bu ADR'ye göre yeniden ayarlanmalı.
+
+## Ek — 2026-10-31 (sahip kararı): tavan yükseltildi, menü zemini eklendi
+
+Oyunda bakıldığında L ≤ 0,016 swirl'ü pratikte görünmez yaptı (ekran düz siyah okunuyordu; `G2`
+fiilen boşaldı). Sahip iki değişiklik istedi:
+
+- **Tavan 0,016 → 0,03, doygunluk %55 → %80.** Girdap tepelerinde `--pn-text-dim` 4,6:1 → **3,8:1**,
+  `--pn-text` 14,4:1 → 11,8:1 (L* ≈ 13 → 20). AA (4,5:1) yalnız tepelerde, yalnız `dim` küçük
+  metinde kaybedilir; menü metni artık swirl üstünde değil (aşağıda), kalan `dim` metin hero
+  çevresindeki etiketler ve dock'tur.
+- **Menü zemini:** "Reddedilen seçenekler"deki düz içerik bölgesi kısmen geri alındı — yalnız
+  `.panel` (≤ 720 px sütun) düz `--pn-bg` + 1px `--pn-hairline` kenar alır. Swirl hero alanında ve
+  geniş ekranda sütunun iki yanında yaşar; dar ekranda listenin arkasında kaybolur ama hero
+  alanında kalır, bu yüzden `G2` boşalmaz. Ayrı yüzey rengi, gölge, köşe yok → §2.1 kart yasağı
+  ihlal edilmez.
