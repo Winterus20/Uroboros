@@ -22,11 +22,9 @@ export class SoundManagerBase {
   public suppressed = false
   private suppressTimer: ReturnType<typeof setTimeout> | null = null
 
-  // Hızlı tıklama / kombo frekans takibi (Pitch ramp — P0 Balatro: pentatonik C-D-E-G-A)
+  // `+1` hızlı tıklama kombosu (perde rampası: pentatonik C-D-E-G-A)
   protected lastClickTime = 0
   protected clickCombo = 0
-  // Tally tick spam koruması: sayaç her kare tetikleyebilir, ses en sık 45ms'de bir
-  protected lastTallyTime = 0
   protected readonly PITCH_SCALES = [1.0, 1.125, 1.25, 1.5, 1.667]
 
   constructor() {

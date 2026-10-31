@@ -6,6 +6,7 @@ import { SaveSystem } from '../core/save'
 import { useGameStore } from './game'
 import type { AuthUser, CloudSaveMeta, CloudSavePayload, CloudConflictData, SyncStatus } from '../models/auth-types'
 
+// Eski tema önekli anahtar bilinçli olarak korunur (yeniden adlandırma oyuncu tercihini siler).
 const AUTO_SYNC_KEY = 'DOOMSCROLL_AUTO_CLOUD_SYNC'
 
 export const useAuthStore = defineStore('auth', {

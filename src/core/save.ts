@@ -434,6 +434,7 @@ export const SaveSystem = {
       localStorage.removeItem(LEGACY_MAIN_KEY)
       localStorage.removeItem(LEGACY_OLD_KEY)
       localStorage.removeItem(ACTIVE_SLOT_KEY)
+      // Eski temanın (Uroboros) kalıntı anahtarı: tam sıfırlamada yine temizlenir.
       localStorage.removeItem('uroboros-stance-seen')
       localStorage.removeItem('DOOMSCROLL_MOCK_AUTH_USER')
       ;[1, 2, 3].forEach((slot) => {

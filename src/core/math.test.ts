@@ -43,7 +43,7 @@ describe('sayı motoru sözleşmesi', () => {
     expect(Object.isFrozen(D_1)).toBe(true)
   })
 
-  it('D_INFINITY ilk tekillik eşiğidir (1.7976931348623157e308)', () => {
+  it('D_INFINITY JS float sınırıdır (1.7976931348623157e308)', () => {
     expect(D_INFINITY.eq('1.7976931348623157e308')).toBe(true)
     expect(new Decimal('1e308').lt(D_INFINITY)).toBe(true)
     expect(new Decimal('1.8e308').gte(D_INFINITY)).toBe(true)

@@ -1,5 +1,51 @@
 # Tamamlanan Görevler ve Değişiklik Günlüğü (Changelog)
 
+## [2026-10-31] 🧹 — Eski tema kalıntısı temizliği + görev belgelerinin ADR-0083'e hizalanması
+
+### Ne yapıldı
+
+Kod ve belgelerde eski temalardan (Doomscroll/Reels, Uroboros, Quantum Horizon, "Kozmik Oburluk")
+kalan yorum, metin ve ölü kod temizlendi. **Ekonomi, tuning ve kayıt şeması değişmedi.**
+
+- **Ses efektleri:** `core/audio/effects.ts` 1 285 → 174 satır. Oyunun çağırdığı 5 ses kaldı
+  (`playHapticTap` · `playClick` · `playBuy` · `playPayoff` · `playMilestone`); eski temanın 34
+  efekti (viral drop, anomaly, crisis, singularity, clock, guilt …) hiçbir yerden çağrılmıyordu.
+  `manager.ts`'ten yalnız silinen efektin kullandığı `lastTallyTime` çıktı.
+- **Ölü dosyalar silindi:** `core/music-engine.ts` (eski "Doomscroll" cephesi; tek kullanıcısı
+  `music-controller.ts` artık doğrudan `core/music`'ten alır, modül haritası `music/index.ts`
+  başlığına taşındı) · `components/ConfirmModal.vue` ve `composables/useModals.ts` (hiçbir yerden
+  import edilmiyordu).
+- **Metin:** `AuthModal` başlığı "Uroboros Bulut Bağlantısı" → "Bulut Bağlantısı";
+  `CloudConflictModal` "Kütle:" → "Sayı:" (+ `formatMatter`/`localDop` adları); müzik parçası alt
+  başlığı "Viral Akış" → "Senkoplu Funk".
+- **Yorumlar:** `math.ts`/`math.test.ts` "ilk tekillik eşiği" → JS float sınırı;
+  `cloud-conflict.test.ts` "dopamin" → "sayı"; `cloud-save-service.ts` `prestiges: 0` açıklaması;
+  `tuning.ts` başlığı ("sıfırlama ve kapı yoktur") ADR-0083 modeline güncellendi.
+- **Eski önekli localStorage anahtarları** (`DOOMSCROLL_…`, `QUANTUM_HORIZON_…`) **yeniden
+  adlandırılmadı**; `slots.ts`, `auth-service.ts`, `cloud-save-service.ts`, `stores/auth.ts` ve
+  `save.ts` `hardReset`'e neden korunduklarını söyleyen kısa yorum eklendi.
+- **Belgeler:** `todo.md` ve `in-progress.md` ADR-0083'e göre yeniden yazıldı (K2/K3/K5/v1/P1
+  "ADR-0083 ile geçersiz" olarak işaretlendi); `GAME_DESIGN.md` başlığı ve §1 güncel modele,
+  §14'teki çift "Doğrulama kapıları" paragrafı tekilleşti; `npm run verify` tanımı (typecheck +
+  test + build) `AGENTS.md`, `README.md`, `tech-context.md`, `GAME_DESIGN.md`'de düzeltildi;
+  `brain/decisions/README.md`'ye "0001–0076 çoğunlukla eski tema, 0077+ bağlayıcı" notu eklendi.
+
+### Bilinçli olarak bırakılanlar
+
+- `AlgorithmicSwirl` bileşen adı ve "Balatro" shader yorumu — görsel sözleşmede (ADR-0078) adıyla
+  geçen canlı bileşen; Balatro tema değil, görsel referans.
+- `--ds-*` CSS değişken önekleri — Auth/Conflict modalları ve swirl fallback'i okuyor.
+- `AuthModal`/`CloudConflictModal`'ın Türkçe metni ve eski kart/gölge görünümü — P3 + ADR-0078
+  uyumu ayrı bir UI işi (`todo.md` §5).
+- `src/core/music/*` parçaları (lofi · synthwave · ambient · subway) — tema değil, müzik; `A7`.
+- Store'daki `buyCheapest` eylemi — yalnız silinen `useModals` çağırıyordu ama zincir özelliği,
+  eski tema değil.
+
+### Doğrulama
+
+`npm run verify` → typecheck **0 hata** · vitest **192/192 (9 dosya)** · build **başarılı**
+(1683 modül).
+
 ## [2026-10-28] 🚀 — Rung 1 v2 uygulaması: tek koşu + 8 sıfırlamasız mücadele (ADR-0083)
 
 ### Ne yapıldı

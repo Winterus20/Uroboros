@@ -12,6 +12,12 @@ Satır sayısı = klasördeki ADR dosyası sayısı.
 - **Kırık araştırma bağlantıları (2026-10-23):** tema pivotu sonrası eski temanın araştırma ve ölçüm
   dosyaları silindi. Bazı ADR'lerdeki `../research/...` bağlantıları bu yüzden kırıktır; dosyalar git
   geçmişinde durur (`git log --diff-filter=D -- brain/research`). ADR'lerin kendisi silinmez.
+- **Güncel tasarım (2026-10-31):** ADR-0001–0076'nın çoğu eski temalara aittir (Doomscroll/Reels,
+  Uroboros, Quantum Horizon, nöral koloni, gece krizleri, boyutlar …) ve tarihsel kayıttır; kodla
+  eşleşmez. Altyapı kararları (ör. 0001 Vue/Pinia, 0002 break_eternity, 0003 game loop, 0004 müzik
+  motoru, 0029/0070 kayıt ve bulut) hâlâ geçerlidir.
+  Bağlayıcı olanlar **ADR-0077 ve sonrası** (özellikle 0078 görsel dil, 0080 notasyon, 0082
+  zincir-only, **0083 rung 1 tek koşu**). Çelişkide yeni ADR kazanır.
 - **Numara çakışması notu (2026-10-19):** 0033 numarası iki dosyada birden kullanılıyordu (cloud-sync 2026-10-03 · üç boyutlu başlangıç 2026-10-04). Çakışma cloud-sync dosyasının **0070**'e yeniden numaralandırılmasıyla çözüldü; 0033 artık yalnızca üç boyutlu başlangıç ADR'ine aittir.
 
 | # | Başlık | Tarih | Durum | Dosya |

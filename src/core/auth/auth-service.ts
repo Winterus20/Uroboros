@@ -12,6 +12,7 @@ import { auth, isFirebaseConfigured } from './firebase-config'
 import { CloudTimeoutError } from './cloud-save-service'
 import type { AuthUser } from '../../models/auth-types'
 
+// Eski tema önekli anahtar bilinçli olarak korunur (yeniden adlandırma oturumu düşürür).
 const MOCK_USER_STORAGE_KEY = 'DOOMSCROLL_MOCK_AUTH_USER'
 
 /**

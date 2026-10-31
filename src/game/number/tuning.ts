@@ -7,9 +7,9 @@ import { Decimal, D } from '../../core/math'
  * brain/research/ring-pricing-2026-10-23.md (fiyat kuralı) ·
  * brain/research/ad-pricing-and-chain-math-2026-10-23.md §6 (A+ ölçümü).
  *
- * 2026-10-25: mini boost, prestij ve Tanım yükseltmeleri kaldırıldı. Oyun şimdilik
- * yalnız zinciri büyütür; sıfırlama ve kapı yoktur. Bu dosya zincirin tek sabit
- * kaynağıdır.
+ * Model (ADR-0083): 1,79e308 kapısına kadar tek koşu, sıfırlama yok; 8 sıfırlamasız
+ * mücadele (`challenges.ts`) ceza/ödül overlay'i olarak üstüne biner; kapıda prestij
+ * (+1 Tanım). Bu dosya zincirin tek sabit kaynağıdır.
  *
  * ── ÜRETİM (Antimatter Dimensions kuralı, S9) ────────────────────────────
  * Bir parmak saniyede TAM 1 sayı üretir; her halka kendinden bir aşağıdakini
@@ -31,7 +31,7 @@ import { Decimal, D } from '../../core/math'
  * Zincir 7 katlı bir integraldir. Sekiz halka da 1/sn olsaydı zincir
  * (1/0,11)⁷ ≈ 5,1e6 kat güçlenirdi. `CHAIN_RATE = 0,11` zincirin ritmini koruyan sayıdır.
  *
- * ── ÖLÇÜLEN AÇILIŞLAR (zincir-only, 2 tık/sn) ───────────────────────────
+ * ── ÖLÇÜLEN AÇILIŞLAR (zincir-only, blok çarpanı öncesi, 2 tık/sn; tarihsel) ─
  * Halka açılışları 0 · 1,6 · 4,2 · 6,8 · 9,3 · 11,9 · 14,5 · 17,0 dk.
  */
 

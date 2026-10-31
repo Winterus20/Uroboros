@@ -38,5 +38,5 @@ export const D_1: Decimal = Object.freeze(new Decimal(1)) as Decimal
 export const D_2: Decimal = Object.freeze(new Decimal(2)) as Decimal
 export const D_10: Decimal = Object.freeze(new Decimal(10)) as Decimal
 
-// 1.7976931348623157e308 (Standart JS float sınırı - İlk Tekillik eşiği)
+// 1.7976931348623157e308 (Number.MAX_VALUE: JS float sınırı; 1. basamak kapısı `GATE` bunun yuvarlanmış hâlidir)
 export const D_INFINITY: Decimal = Object.freeze(new Decimal('1.7976931348623157e308')) as Decimal

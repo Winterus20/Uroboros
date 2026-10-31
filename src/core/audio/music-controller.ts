@@ -5,7 +5,7 @@
  * sonrasi resumeMusicOnInteraction ile uyandirilir; burada otomatik baslatma yoktur.
  */
 import { SoundEffects } from "./effects"
-import { musicEngine } from "../music-engine"
+import { musicEngine } from "../music"
 import type { MusicTrackId } from "../../models/types"
 
 export class SoundManager extends SoundEffects {

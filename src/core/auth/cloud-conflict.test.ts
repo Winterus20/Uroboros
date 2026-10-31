@@ -81,7 +81,7 @@ describe('isSameSave', () => {
     expect(isSameSave(meta(), meta({ clientTimestamp: meta().clientTimestamp + 9000 }))).toBe(true)
   })
 
-  it('dopamin farklıysa çakışmadır', () => {
+  it('sayı farklıysa çakışmadır', () => {
     expect(isSameSave(meta(), meta({ number: '1e51' }))).toBe(false)
   })
 

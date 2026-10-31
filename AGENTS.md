@@ -92,7 +92,7 @@ Incremental/
 
 - **Sıfır Tembellik (Zero Laziness):** `// TODO`, `// existing code`, `/* rest of code */` gibi geçiştirici ifadeler KESİNLİKLE YASAKTIR. Dosyalar eksiksiz, çalışan gövdelerle güncellenmelidir.
 - **Cerrahi Düzenleme:** Dosyaları gereksiz yere baştan yazmak yerine en az 2-3 satır bağlam içeren hassas hedeflemeler yapılmalıdır.
-- **Doğrulama Zorunluluğu:** Kod değişikliğinden sonra `npm run typecheck`, `npm run test` ve `npm run build` çalıştırılarak kanıtlanmalıdır. `npm run verify` = `typecheck` + `test` (hızlı kapı); **yayın kapısı ayrıca `npm run build`**.
+- **Doğrulama Zorunluluğu:** Kod değişikliğinden sonra `npm run typecheck`, `npm run test` ve `npm run build` çalıştırılarak kanıtlanmalıdır. `npm run verify` = `typecheck` + `test` + `build` (üçü tek komutta).
 - **Otomatik Commit Refleksi:** Her büyük değişiklikte, doğrulama geçtikten hemen sonra anlamlı bir Conventional Commit (`feat:`, `fix:`, `refactor:`) oluşturulmalı ve push edilmelidir.
 - **Windows Uyumluluğu:** Terminal komutlarında tek tırnak yerine çift tırnak veya PowerShell escape kuralları kullanılmalıdır.
 - **Görsel işlerde:** `brain/context/visual-language.md` dışına çıkılmaz; sapma gerekiyorsa önce o belge değişir.
@@ -112,6 +112,6 @@ npm run build
 # Testler (vitest)
 npm run test
 
-# Hızlı kapı: typecheck + test (yayın için ayrıca npm run build)
+# Tam kapı: typecheck + test + build
 npm run verify
 ```

@@ -41,7 +41,7 @@
 - **Test kapıları:**
   - `npm run typecheck` — `vue-tsc --noEmit`, 0 hata beklenir.
   - `npm test` — `vitest run`.
-  - `npm run verify` — typecheck + test (hızlı kapı).
+  - `npm run verify` — typecheck + test + build (tam kapı).
   - `npm run build` — `vue-tsc && vite build` (yayın kapısı).
   - Eski `harness:*` script'leri **kaldırıldı** (dosyaları yok); denge ölçümü artık
     `node brain/scratchpad/balance-2026-10-23/sim.mjs --all` ile yapılır.

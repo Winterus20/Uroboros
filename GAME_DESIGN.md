@@ -1,6 +1,6 @@
 # HOLD THAT NUMBER — Oyun Tasarım Dokümanı (GDD)
 
-> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-25 · **Durum:** 1. basamak **zincir-only** oynanabilir; 2–11 tasarlanmadı
+> **Sürüm:** 0.40.0 · **Tarih:** 2026-10-31 · **Durum:** 1. basamak **tek koşu + 8 sıfırlamasız mücadele** (ADR-0083) oynanabilir; 2–11 tasarlanmadı
 > **Bu belge 2026-10-23'te BAŞTAN YAZILDI.** Eski "Kozmik Oburluk / UROBOROS" içeriği
 > (kütle ekonomisi, D1–D8 boyutları, Lab, Crisis, Neural, Time Clock, Colony, Singularity,
 > başarımlar, meydan okumalar) **tamamen kaldırıldı** — kod da, bu belge de.
@@ -9,12 +9,15 @@
 > [`brain/research/theme-pivot-grilling-2026-10-23.md`](brain/research/theme-pivot-grilling-2026-10-23.md) (50 karar) ·
 > [`brain/context/narrative-voice.md`](brain/context/narrative-voice.md) (ses) ·
 > [`brain/context/visual-language.md`](brain/context/visual-language.md) (görsel dil) ·
-> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi) · ADR-0082 (zincir-only)
+> ADR-0077 (pivot) · ADR-0078 (görsel dil) · ADR-0079 (sayı ekonomisi dikey dilimi) · ADR-0082 (zincir-only) · **ADR-0083 (rung 1 tek koşu — güncel model)**
 >
-> **2026-10-25 — ADR-0082:** mini boost, kapı/prestij ve `Tanım` yükseltmeleri **geçici olarak
-> oyundan kaldırıldı**. Mevcut build yalnız zinciri büyütür (8 halka, tek havuz, `+1`); sıfırlama
-> ve kapı yoktur. Aşağıdaki §5.3–§5.5, §6 ve §11 **tasarım arşividir** — bunlar geri eklenecekse
-> önce uzun bir tasarım turu yapılacak.
+> **Güncel model (ADR-0083, 2026-10-27):** 1,79e308 kapısına kadar **tek koşu**, sıfırlama yok;
+> 8 halka + blok çarpanı `B = 5.5`; 8 sıfırlamasız mücadele (ceza → kalıcı ödül); kapıda prestij
+> (`+1 Tanım`, 2. basamak). Hedef ~190 dk. Bağlayıcı özet §8'dedir.
+>
+> **Arşiv:** ADR-0082 (2026-10-25) mini boost'u ve `Tanım` yükseltmelerini kaldırdı; geri
+> gelmediler. Aşağıdaki §5.3–§5.5, §6 ve §11 **tasarım arşividir** — kapı ve prestij ADR-0083
+> ile §8'deki sade biçimde geri döndü, arşivdeki formüller (`Birikim`, `log10(1+A)`) uygulanmıyor.
 
 ---
 
@@ -23,8 +26,8 @@
 Tek bir sayı var. Oyuncu onu büyütür, 11 basamaklık bir notasyon merdiveninde yukarı taşır ve
 merdivenin sonunda (`LNGN`) oyun biter.
 
-**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri. Prestij döngüsü
-geçici olarak kaldırıldı (ADR-0082). **Süre:** tek koşu, ~**85 saat**, kuyruk yok, NG+ yok (`S4`).
+**Tür:** sayı odaklı incremental / idle — *Antimatter Dimensions* zinciri; her basamak tek
+koşu, kapıda prestij (ADR-0083). **Süre:** tek koşu, ~**85 saat**, kuyruk yok, NG+ yok (`S4`).
 
 ---
 
@@ -408,10 +411,7 @@ Tam sözleşme: [`brain/context/narrative-voice.md`](brain/context/narrative-voi
 | 2–11. basamak | — | ⛔ tasarlanmadı |
 
 **Doğrulama kapıları:** `npm run typecheck` (vue-tsc, 0 hata) · `npm test` (vitest) ·
-`npm run build` (vue-tsc + vite). `npm run verify` = typecheck + test.
-
-**Doğrulama kapıları:** `npm run typecheck` (vue-tsc, 0 hata) · `npm test` (vitest) ·
-`npm run build` (vue-tsc + vite). `npm run verify` = typecheck + test.
+`npm run build` (vue-tsc + vite). `npm run verify` = typecheck + test + build.
 
 ---
 

@@ -11,6 +11,8 @@ import {
   type SyncDecision
 } from './cloud-conflict'
 
+// DOOMSCROLL_ önekli anahtarlar eski temadan kalmadır ve bilinçli olarak korunur:
+// yeniden adlandırma mevcut bulut referanslarını ve simülasyon kayıtlarını sahipsiz bırakır.
 const MOCK_CLOUD_STORAGE_PREFIX = 'DOOMSCROLL_MOCK_CLOUD_SAVE_'
 
 /**
@@ -52,7 +54,8 @@ function getDeviceName(): string {
 function extractMeta(state: SerializedPlayerState, slot: number): CloudSaveMeta {
   return {
     number: typeof state.number === 'string' ? state.number : '10',
-    // v22: prestij kaldırıldı; alan bulut meta'sında uyumluluk için 0 kalır.
+    // Bulut meta şeması eski temadan `prestiges` alanını taşır; v22'den beri 0 yazılır.
+    // v23'teki `tanim` sayacı buraya bağlanmadı (çakışma tespiti sayı + süre ile yeterli).
     prestiges: 0,
     playtime: typeof state.playTime === 'number' ? state.playTime : 0,
     version: typeof state.version === 'number' ? state.version : 1,

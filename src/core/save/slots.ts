@@ -2,6 +2,8 @@
  * Slot anahtar cozumleme ve ham slot okuma/yazma yardimcilari.
  * Saf localStorage islemleri buradadir; surum ve migrate karari save.ts icindedir.
  */
+// Anahtar adları eski temalardan (Doomscroll, Quantum Horizon) kalmadır ve BİLİNÇLİ olarak
+// korunur: yeniden adlandırmak mevcut oyuncu kayıtlarını sahipsiz bırakır. Değiştirmeyin.
 export const SAVE_KEY_PREFIX = 'DOOMSCROLL_SAVE_SLOT_'
 export const LEGACY_MAIN_KEY = 'DOOMSCROLL_SAVE_V1'
 export const LEGACY_OLD_KEY = 'QUANTUM_HORIZON_SAVE_V1'

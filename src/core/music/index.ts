@@ -1,3 +1,16 @@
+/**
+ * Prosedürel müzik motoru (Web Audio, harici ses dosyası yok — ADR-0004).
+ *
+ * Modül yapısı:
+ * - `types.ts`: parça metadatası, parça listesi ve SynthContext sözleşmesi
+ * - `notes.ts`: 12-ton kromatik ve caz frekans tablosu
+ * - `audio-graph.ts`: Web Audio zinciri, tape saturation, kaset ve yağmur yatağı
+ * - `instruments/*`: keys (Rhodes, pluck, supersaw, lead) · bass · drums · ambient
+ * - `tracks/*`: lofi-chill · synthwave · ambient-drone · subway-groove sekansörleri
+ * - `index.ts` (bu dosya): MusicEngine orkestratör sınıfı ve `musicEngine` singleton'ı
+ *
+ * Oyun tarafı motora yalnız `core/audio/music-controller.ts` üzerinden erişir.
+ */
 import type { MusicTrackId } from '../../models/types'
 import { MUSIC_TRACKS, type MusicTrackInfo, type SynthContext } from './types'
 import { AudioGraph } from './audio-graph'

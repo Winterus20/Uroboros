@@ -13,7 +13,7 @@ const gameStore = useGameStore()
 
 const conflict = computed(() => authStore.conflictData)
 
-function formatMatter(val: string): string {
+function formatNumber(val: string): string {
   try {
     return format(new Decimal(val), 2, gameStore.settings.notation)
   } catch {
@@ -30,9 +30,9 @@ function formatDate(ts: number): string {
 const isCloudAhead = computed(() => {
   if (!conflict.value) return false
   try {
-    const localDop = new Decimal(conflict.value.localMeta.number)
-    const cloudDop = new Decimal(conflict.value.cloudMeta.number)
-    return cloudDop.gt(localDop)
+    const localNumber = new Decimal(conflict.value.localMeta.number)
+    const cloudNumber = new Decimal(conflict.value.cloudMeta.number)
+    return cloudNumber.gt(localNumber)
   } catch {
     return false
   }
@@ -94,9 +94,9 @@ const { dialogRef } = useFocusTrap(
 
             <div class="space-y-3 mt-4 text-xs">
               <div class="flex justify-between items-center">
-                <span class="text-slate-400">Kütle:</span>
+                <span class="text-slate-400">Sayı:</span>
                 <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatMatter(conflict.localMeta.number) }}
+                  {{ formatNumber(conflict.localMeta.number) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
@@ -147,9 +147,9 @@ const { dialogRef } = useFocusTrap(
 
             <div class="space-y-3 mt-4 text-xs">
               <div class="flex justify-between items-center">
-                <span class="text-slate-400">Kütle:</span>
+                <span class="text-slate-400">Sayı:</span>
                 <span class="font-mono font-bold tabular-nums text-cyan-300 text-sm">
-                  {{ formatMatter(conflict.cloudMeta.number) }}
+                  {{ formatNumber(conflict.cloudMeta.number) }}
                 </span>
               </div>
               <div class="flex justify-between items-center">

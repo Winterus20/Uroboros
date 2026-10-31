@@ -30,8 +30,8 @@
   --font-data: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
 
   /*
-   * Eski --ds-* adları hâlâ dışarıdan (AlgorithmicSwirl fallback'i, AuthModal,
-   * CloudConflictModal, ConfirmModal) okunuyor. ADR-0078 sözleşmesi bu dosyanın
+   * Eski --ds-* adları (eski temadan kalma önek) hâlâ dışarıdan (AlgorithmicSwirl
+   * fallback'i, AuthModal, CloudConflictModal) okunuyor. ADR-0078 sözleşmesi bu dosyanın
    * sahibi olduğu için tokenlar "Saf Sayı" tuvaline bağlanır: panel = tuval,
    * kart = tuval (kart yüzeyi yok), çizgi = hairline.
    */

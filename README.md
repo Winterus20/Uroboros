@@ -58,7 +58,7 @@ npm run dev      # geliştirme sunucusu → http://localhost:3000
 | `npm test` | `vitest run` — birim testleri |
 | `npm run build` | `vue-tsc && vite build` — üretim derlemesi |
 | `npm run preview` | `dist/` çıktısını yerelde sunar |
-| `npm run verify` | `typecheck` + `test` (hızlı kapı) |
+| `npm run verify` | `typecheck` + `test` + `build` (tam kapı) |
 | `npm run test:watch` | Vitest izleme modu |
 
 **Kural:** temiz `npm run typecheck` ve `npm test` olmadan hiçbir iş bitmiş sayılmaz.

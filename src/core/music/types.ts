@@ -38,7 +38,7 @@ export const MUSIC_TRACKS: MusicTrackInfo[] = [
   {
     id: 'subway_groove',
     name: 'Subway Beats & Groove',
-    subtitle: 'Viral Akış & Taktil Ritim',
+    subtitle: 'Senkoplu Funk & Taktil Ritim',
     icon: '🛹',
     bpm: 88,
     description: 'Senkoplu funk bas, ghost snare ve swingli groove.'
