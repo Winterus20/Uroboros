@@ -48,7 +48,7 @@ Kimlik üç yerden gelir ve **sadece** üç yerden: **(1)** notasyonun kendi tip
 
 **Yasak:** kart yüzeyi (`bg-[var(--ds-panel)]`), `backdrop-blur`, `rounded-xl`, gölge, gradyan
 dolgu, neon glow (yalnız sayının kendisinde hafif ışıma serbest). Zemin tek renktir;
-tek istisna `AlgorithmicSwirl`'dür.
+tek istisna `AlgorithmicSwirl`'dür — o da §2.4'teki parlaklık tavanının altında kalır.
 
 ### 2.2 Basamak yayı — 11 renk, tek formül
 
@@ -91,6 +91,31 @@ yerinde çok neon gelirse o katsayı çevrilir — **11 hex elle düzenlenmez.**
 
 **Durum ≠ hue kuralı korunur:** uygunluk `ds-ramp-ready / partial / locked` üçlüsüyle (parlaklık),
 kilitlilik griyle verilir. Hue kimlik taşır, durum taşımaz.
+
+### 2.4 Swirl parlaklık tavanı (ADR-0084)
+
+Swirl bir **ortam**dır, ikinci bir kahraman değil: sayının ve metnin arkasında fısıldar.
+Kural ölçülebilir olsun diye renk shader'da son hâliyle üretilir: `--pn-bg + tint × gölge`
+(gölge ∈ [0,1]). Opaklık, `mix-blend` ve beyaz ışık eklemesi **yoktur**.
+
+| Kural | Değer | Gerekçe |
+| :--- | :--- | :--- |
+| En parlak swirl pikselinin göreli parlaklığı | **L ≤ 0,016** (tüm ekran, tek kural) | `--pn-text-dim` ≥ **4,6:1** · `--pn-text` ≥ 14,4:1 · 1. basamak hero ≥ 10,3:1 |
+| Tint | basamak rengi, doygunluk **%55**'e çekilmiş | basamak kimliği kalır, neon kalmaz |
+| Tint ölçeği | JS'te WCAG parlaklığına göre ikiye bölmeyle çözülür | tavan 11 basamağın hepsinde aynı kodla tutar |
+| Basamak geçişi | iki tavanlı tint arasında lineer karışım | sRGB→lineer konveks: karışım tavanı aşamaz |
+| Çözünürlük | CSS pikselinin 0,5× (dengeli) / 0,75× (yüksek), viewport ile **aynı en-boy oranı**, bilinear büyütme | piksel kuantizasyonu + `image-rendering: pixelated` Balatro mirasıydı (piksel font `G4`, retro/CRT ADR-0069 ile ölü) |
+| Kapalı / azaltılmış hareket / WebGL yok | düz `--pn-bg` | gradyan dolgu yok (§2.1) |
+
+Ölçüm (2026-10-31, GPU `readPixels`, 1600×900 ve 390×844, 1. basamak): en parlak piksel
+`rgb(30,36,20)`, L = 0,0159. Önceki sürüm: `rgb(89,107,55)`, L = 0,130 → `--pn-text-dim` **1,7:1**,
+hero 3,8:1; ekranın ~%10'unda `dim` metin AA altındaydı.
+
+**Sınırlar:** `--pn-text-faint` (2,5:1) ve `--pn-locked` (1,6:1) düz zeminde bile AA altıdır —
+ikisi bilinçli *pasif* tondur; bilgi taşıyan metin (kilit gerekçesi, satır verisi) `dim` ya da
+üstündedir. Swirl'ün en parlak pikseli üzerinde bu iki ton 1,9:1 / 1,3:1'e iner. Bilgi taşıyan
+bir metin bu tonlara düşürülecekse önce bu belge değişir. Tavanın üstüne çıkan her efekt
+(ör. "nefes" için `filter: brightness()`) bu tabloyu bozar ve ADR ister.
 
 ---
 
@@ -201,7 +226,8 @@ Silinecek tokenlar: `--feast`, `--bicycle`, `--substrate-opacity`, `--motif-band
 1. **Sayı asla bozulmaz.** Hiçbir efekt, maske, filtre veya renk oyunu sayının okunmasını
    engelleyemez. Sayı katmanı her zaman en üsttedir.
 2. **Sayısal etiket ve tooltip asla şaka yapmaz** (`V4`). Mekanik bilgiye güven zorunludur.
-3. **Kontrast:** hero sayı ≥ 10:1, gövde metni ≥ 4,5:1 (`--pn-bg` üzerinde).
+3. **Kontrast:** hero sayı ≥ 10:1, gövde metni ≥ 4,5:1 (`--pn-bg` üzerinde **ve** en parlak
+   swirl pikseli üzerinde — §2.4 tavanı bunu garanti eder).
 4. **Renk körlüğü ikinci kanalı:** basamak rengi tek başına anlam taşımaz — basamak adı
    ve notasyon her zaman yazıyla da vardır (renk kimlik verir, bilgi vermez).
 5. **Tek semantik = tek görsel.** Kilitli = gri + soluk; prestij = amber + halka;
@@ -223,3 +249,4 @@ değişir. Kararlar `G#` kimlikleriyle ADR-0078'de tutulur; kimlikler yeniden nu
 | 2026-10-18 | Tooltip katmanı kaldırıldı · CRT resmen iptal (ADR-0069) |
 | 2026-10-23 | Tema pivotu (ADR-0077): oburluk teması silindi; görsel dil ertelendi (`A1`) |
 | **2026-10-23** | **Bu belge baştan yazıldı: "Saf Sayı" (ADR-0078, `G1`–`G12`).** ADR-0060 ve ADR-0066 iptal |
+| 2026-10-31 | §2.4 swirl parlaklık tavanı (L ≤ 0,016); piksel kuantizasyonu ve fallback gradyanı kaldırıldı (ADR-0084) |
